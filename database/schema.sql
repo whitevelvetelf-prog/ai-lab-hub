@@ -66,25 +66,34 @@ CREATE TABLE subcategories (
 
 -- ---------------------------------------------------------------------
 -- products
---   platform    — SET, бо продукт може працювати на кількох платформах
---   skill_level — none / basic / course
---   status      — none / in_progress / published
+--   platform           — SET, бо продукт може працювати на кількох платформах
+--   skill_level        — none / basic / course
+--   status             — none / in_progress / published (виставляється автоматично)
+--   partnership_status — етап роботи з партнеркою:
+--       found                 — інструмент знайдено, партнерки ще немає
+--       pending_registration  — очікує реєстрації в партнерській програмі
+--       partner_connected     — партнерку підключено
+--       no_partnership        — партнерська програма відсутня / не потрібна
+--   internal_registration_url / affiliate_url — службові посилання, лише для admin
 -- ---------------------------------------------------------------------
 CREATE TABLE products (
-    id                INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name              VARCHAR(255) NOT NULL,
-    logo_url          VARCHAR(512) NULL,
-    official_url      VARCHAR(512) NULL,
-    short_description VARCHAR(500) NULL,
-    full_description  TEXT NULL,
-    main_features     TEXT NULL,
-    target_audience   TEXT NULL,
-    platform          SET('web', 'mobile', 'desktop') NULL,
-    skill_level       ENUM('none', 'basic', 'course') NOT NULL DEFAULT 'none',
-    status            ENUM('none', 'in_progress', 'published') NOT NULL DEFAULT 'none',
-    created_by        INT UNSIGNED NULL,
-    created_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    id                        INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name                      VARCHAR(255) NOT NULL,
+    logo_url                  VARCHAR(512) NULL,
+    official_url              VARCHAR(512) NULL,
+    internal_registration_url TEXT NULL,
+    affiliate_url             TEXT NULL,
+    short_description         VARCHAR(500) NULL,
+    full_description          TEXT NULL,
+    main_features             TEXT NULL,
+    target_audience           TEXT NULL,
+    platform                  SET('web', 'mobile', 'desktop') NULL,
+    skill_level               ENUM('none', 'basic', 'course') NOT NULL DEFAULT 'none',
+    status                    ENUM('none', 'in_progress', 'published') NOT NULL DEFAULT 'none',
+    partnership_status        ENUM('found', 'pending_registration', 'partner_connected', 'no_partnership') NOT NULL DEFAULT 'found',
+    created_by                INT UNSIGNED NULL,
+    created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     KEY idx_products_created_by (created_by),
     KEY idx_products_status (status),
