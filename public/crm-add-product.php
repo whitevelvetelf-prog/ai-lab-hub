@@ -45,6 +45,39 @@ function normalize_url(string $url): string
     return mb_strtolower($url);
 }
 
+/** Нормалізоване розширення завантаженого файлу (jpe -> jpg). */
+function uploaded_ext(string $originalName): string
+{
+    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+    return $ext === 'jpe' ? 'jpg' : $ext;
+}
+
+/** Транслітерація + очищення назви продукту для імені файлу логотипа. */
+function product_slug(string $name): string
+{
+    static $map = [
+        'а' => 'a', 'б' => 'b', 'в' => 'v', 'г' => 'h', 'ґ' => 'g', 'д' => 'd', 'е' => 'e',
+        'є' => 'ie', 'ж' => 'zh', 'з' => 'z', 'и' => 'y', 'і' => 'i', 'ї' => 'i', 'й' => 'i',
+        'к' => 'k', 'л' => 'l', 'м' => 'm', 'н' => 'n', 'о' => 'o', 'п' => 'p', 'р' => 'r',
+        'с' => 's', 'т' => 't', 'у' => 'u', 'ф' => 'f', 'х' => 'kh', 'ц' => 'ts', 'ч' => 'ch',
+        'ш' => 'sh', 'щ' => 'shch', 'ь' => '', 'ю' => 'iu', 'я' => 'ia',
+        'ъ' => '', 'ы' => 'y', 'э' => 'e', 'ё' => 'e',
+    ];
+
+    $s = strtr(mb_strtolower(trim($name), 'UTF-8'), $map);
+    $s = preg_replace('/[^a-z0-9]+/', '-', $s) ?? '';
+    $s = trim($s, '-');
+
+    return $s !== '' ? mb_substr($s, 0, 60) : 'logo';
+}
+
+// --- Логотип: куди зберігати і що приймати ------------------------------
+$logoUploadDir  = __DIR__ . '/assets/images/logos';
+$logoUploadRel  = 'assets/images/logos';
+$logoAllowedExt = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
+$logoMaxBytes   = 2 * 1024 * 1024; // 2 МБ
+
 // --- Довідники для форми --------------------------------------------------
 $allCategories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
 $allSubcategories = $pdo->query('SELECT id, category_id, name FROM subcategories ORDER BY name')->fetchAll();
@@ -109,6 +142,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['logo_url'] = trim((string) ($_POST['logo_url'] ?? ''));
     $old['official_url'] = trim((string) ($_POST['official_url'] ?? ''));
     $old['short_description'] = trim((string) ($_POST['short_description'] ?? ''));
+
+    // --- Логотип: завантажений файл має пріоритет над полем URL ------------
+    $logoFile = $_FILES['logo_file'] ?? null;
+    $logoFileProvided = is_array($logoFile)
+        && (int) ($logoFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
+
+    if ($logoFileProvided) {
+        $uploadErr = (int) $logoFile['error'];
+        if ($uploadErr === UPLOAD_ERR_INI_SIZE || $uploadErr === UPLOAD_ERR_FORM_SIZE) {
+            $errors[] = 'Файл логотипа завеликий: максимум 2 МБ.';
+        } elseif ($uploadErr !== UPLOAD_ERR_OK) {
+            $errors[] = 'Не вдалося завантажити файл логотипа (код ' . $uploadErr . ').';
+        } elseif ((int) $logoFile['size'] > $logoMaxBytes) {
+            $errors[] = 'Файл логотипа завеликий: максимум 2 МБ.';
+        } elseif ((int) $logoFile['size'] <= 0) {
+            $errors[] = 'Файл логотипа порожній.';
+        } elseif (!in_array(uploaded_ext((string) $logoFile['name']), $logoAllowedExt, true)) {
+            $errors[] = 'Дозволені формати логотипа: PNG, JPG, JPEG, WEBP, SVG.';
+        }
+    }
 
     // Статус партнерства — лише з дозволеного переліку.
     $submittedPartnership = (string) ($_POST['partnership_status'] ?? '');
@@ -214,9 +267,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // --- Збереження -------------------------------------------------------
     if ($errors === [] && ($similar === [] || $forceSave)) {
+        $movedLogoAbsPath = null;
         try {
             // Публічне посилання «Офіційний сайт»: партнерське, якщо задане, інакше офіційне.
             $publicOfficialUrl = $old['affiliate_url'] !== '' ? $old['affiliate_url'] : $old['official_url'];
+
+            // --- Логотип --------------------------------------------------
+            // Пріоритет: валідний завантажений файл → інакше вписаний URL → інакше порожньо.
+            $logoValue = $old['logo_url'] !== '' ? $old['logo_url'] : null;
+
+            if ($logoFileProvided) {
+                if (!is_dir($logoUploadDir) && !mkdir($logoUploadDir, 0775, true) && !is_dir($logoUploadDir)) {
+                    throw new RuntimeException('Не вдалося створити теку public/' . $logoUploadRel . '/.');
+                }
+                if (!is_writable($logoUploadDir)) {
+                    throw new RuntimeException('Тека public/' . $logoUploadRel . '/ недоступна для запису.');
+                }
+
+                $ext = uploaded_ext((string) $logoFile['name']);
+                $base = product_slug($old['name']);
+                $filename = $base . '-' . time() . '.' . $ext;
+                for ($n = 1; file_exists($logoUploadDir . '/' . $filename); $n++) {
+                    $filename = $base . '-' . time() . '-' . $n . '.' . $ext;
+                }
+
+                $dest = $logoUploadDir . '/' . $filename;
+                if (!is_uploaded_file($logoFile['tmp_name']) || !move_uploaded_file($logoFile['tmp_name'], $dest)) {
+                    throw new RuntimeException('Не вдалося зберегти файл логотипа.');
+                }
+                @chmod($dest, 0644);
+
+                $movedLogoAbsPath = $dest;
+                $logoValue = $logoUploadRel . '/' . $filename;
+            }
 
             // --- AUTOSTATUS -------------------------------------------------
             // published — лише коли всі обов'язкові поля заповнені І партнерка
@@ -244,7 +327,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             );
             $insert->execute([
                 ':name' => $old['name'],
-                ':logo_url' => $old['logo_url'] !== '' ? $old['logo_url'] : null,
+                ':logo_url' => $logoValue,
                 ':official_url' => $publicOfficialUrl,
                 ':internal_registration_url' => $old['internal_registration_url'] !== '' ? $old['internal_registration_url'] : null,
                 ':affiliate_url' => $old['affiliate_url'] !== '' ? $old['affiliate_url'] : null,
@@ -309,6 +392,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Throwable $ex) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
+            }
+            // Прибираємо осиротілий файл логотипа, якщо запис у БД не вдався.
+            if ($movedLogoAbsPath !== null && is_file($movedLogoAbsPath)) {
+                @unlink($movedLogoAbsPath);
             }
             $errors[] = 'Помилка збереження: ' . $ex->getMessage();
         }
@@ -474,6 +561,22 @@ $displayPlans = $plans !== []
         .input::placeholder,
         .textarea::placeholder {
             color: rgba(255, 255, 255, 0.45);
+        }
+
+        input[type="file"].input {
+            padding: 9px 12px;
+            cursor: pointer;
+        }
+
+        input[type="file"].input::file-selector-button {
+            margin-right: 12px;
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font: inherit;
+            cursor: pointer;
         }
 
         option {
@@ -728,7 +831,7 @@ $displayPlans = $plans !== []
             </div>
         <?php endif; ?>
 
-        <form class="form" method="post" action="crm-add-product.php" novalidate>
+        <form class="form" method="post" action="crm-add-product.php" enctype="multipart/form-data" novalidate>
             <div class="field">
                 <label class="field__label" for="name">Назва продукту <span class="req">*</span></label>
                 <input class="input" type="text" id="name" name="name" required
@@ -736,9 +839,13 @@ $displayPlans = $plans !== []
             </div>
 
             <div class="field">
-                <label class="field__label" for="logo_url">URL логотипу</label>
-                <input class="input" type="text" id="logo_url" name="logo_url"
-                       value="<?= e($old['logo_url']) ?>" placeholder="https://…/logo.png">
+                <span class="field__label">Логотип</span>
+                <input class="input" type="file" id="logo_file" name="logo_file"
+                       accept="image/png,image/jpeg,image/webp,image/svg+xml">
+                <p class="field__hint">PNG, JPG, JPEG, WEBP або SVG, до 2&nbsp;МБ. Файл зберігається на нашому сервері.</p>
+                <input class="input" type="text" id="logo_url" name="logo_url" style="margin-top:10px;"
+                       value="<?= e($old['logo_url']) ?>" placeholder="або URL логотипа: https://…/logo.png">
+                <p class="field__hint">Якщо файл не вибрано — використовується це посилання (на чужому сервері). Файл має пріоритет над URL.</p>
             </div>
 
             <div class="field">

@@ -1,3 +1,8 @@
 .env
 /vendor
 /node_modules
+/config/database.php
+
+# Завантажені через CRM логотипи продуктів — користувацький контент,
+# змінюється незалежно від коду.
+/public/assets/images/logos/
