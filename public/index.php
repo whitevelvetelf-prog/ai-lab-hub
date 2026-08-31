@@ -13,18 +13,29 @@ declare(strict_types=1);
 $pdo = require __DIR__ . '/../config/database.php';
 
 $categories = $pdo->query(
-    "SELECT id, name
+    "SELECT id, name, slug
      FROM categories
      ORDER BY id"
 )->fetchAll();
 
-// Палітра для карток напрямків (за порядком категорій).
-$cardColors = [
-    'linear-gradient(135deg, #2116ad, #5b8cff)',
-    'linear-gradient(135deg, #0f9d58, #34d399)',
-    'linear-gradient(135deg, #db2777, #f472b6)',
-    'linear-gradient(135deg, #d97706, #fbbf24)',
-    'linear-gradient(135deg, #0891b2, #22d3ee)',
+/**
+ * Тематична піктограма Lucide для кожного напряму (за slug).
+ * Повний перелік назв: https://lucide.dev/icons/
+ */
+$categoryIcons = [
+    'multimedia'            => 'film',
+    'text-chatbots'         => 'message-circle',
+    'development-it'        => 'code',
+    'business-marketing'    => 'trending-up',
+    'data-analytics'        => 'bar-chart-3',
+    'productivity'          => 'target',
+    'seo-content'           => 'search',
+    'design-creative'       => 'palette',
+    'education-knowledge'   => 'graduation-cap',
+    'translation-languages' => 'languages',
+    'finance-legal'         => 'scale',
+    'health-beauty'         => 'heart-pulse',
+    'tools-automation'      => 'settings',
 ];
 
 ?>
@@ -76,6 +87,49 @@ $cardColors = [
             height: 50px;
             width: auto;
             display: block;
+        }
+
+        .site-nav {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .site-nav__link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .site-nav__link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Заклик до дії — виділений пункт меню «Викликати Асистента» */
+        .site-nav__link--cta {
+            color: #00032c;
+            background: linear-gradient(135deg, #5b8cff, #a5c0ff);
+            box-shadow: 0 6px 18px rgba(91, 140, 255, 0.4);
+        }
+
+        .site-nav__link--cta:hover {
+            color: #00032c;
+            background: linear-gradient(135deg, #6f9bff, #b8ceff);
+        }
+
+        .site-nav__link--cta svg {
+            width: 16px;
+            height: 16px;
         }
 
         .main {
@@ -178,10 +232,14 @@ $cardColors = [
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.15rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+            color: var(--accent);
+            background: rgba(91, 140, 255, 0.12);
+            border: 1px solid rgba(91, 140, 255, 0.25);
+        }
+
+        .direction-card__icon svg {
+            width: 26px;
+            height: 26px;
         }
 
         .direction-card__name {
@@ -194,6 +252,8 @@ $cardColors = [
             .site-header {
                 justify-content: center;
                 padding: 16px;
+                flex-wrap: wrap;
+                gap: 12px;
             }
         }
     </style>
@@ -201,6 +261,14 @@ $cardColors = [
 <body>
     <header class="site-header">
         <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
+        <nav class="site-nav">
+            <a class="site-nav__link" href="catalog.php">Каталог</a>
+            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link site-nav__link--cta" href="eli.php">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
+                Викликати Асистента
+            </a>
+        </nav>
     </header>
 
     <main class="main">
@@ -213,14 +281,14 @@ $cardColors = [
         <section class="directions">
             <h2 class="directions__title">Напрямки AI</h2>
             <div class="direction-grid">
-                <?php foreach ($categories as $i => $category): ?>
+                <?php foreach ($categories as $category): ?>
                     <?php
                     $cid = (int) $category['id'];
-                    $color = $cardColors[$i % count($cardColors)];
+                    $icon = $categoryIcons[$category['slug']] ?? 'shapes';
                     ?>
                     <a class="direction-card" href="category.php?id=<?= $cid ?>">
-                        <span class="direction-card__icon" style="background: <?= htmlspecialchars($color, ENT_QUOTES) ?>;">
-                            <?= htmlspecialchars(mb_strtoupper(mb_substr((string) $category['name'], 0, 2)), ENT_QUOTES) ?>
+                        <span class="direction-card__icon">
+                            <i data-lucide="<?= htmlspecialchars($icon, ENT_QUOTES) ?>"></i>
                         </span>
                         <h3 class="direction-card__name"><?= htmlspecialchars((string) $category['name'], ENT_QUOTES) ?></h3>
                     </a>
@@ -228,5 +296,8 @@ $cardColors = [
             </div>
         </section>
     </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>lucide.createIcons();</script>
 </body>
 </html>

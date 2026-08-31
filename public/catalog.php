@@ -84,16 +84,6 @@ foreach ($pdo->query("SELECT product_id, price, period FROM pricing_plans ORDER 
     $plansByProduct[(int) $plan['product_id']][] = $plan;
 }
 
-/** Ініціали продукту для логотипа-заглушки (по словах / CamelCase). */
-function product_initials(string $name): string
-{
-    $parts = preg_split('/\s+|(?<=\p{Ll})(?=\p{Lu})/u', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
-    if (count($parts) >= 2) {
-        return mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr($parts[1], 0, 1));
-    }
-    return mb_strtoupper(mb_substr($name, 0, 2));
-}
-
 /** Бейдж ціни: [текст, чи безкоштовний]. */
 function price_badge(array $plans): array
 {
@@ -108,7 +98,9 @@ function price_badge(array $plans): array
     return ['Від $' . $price . ($periods[$cheapest['period']] ?? ''), false];
 }
 
-// Палітра логотипів-заглушок (за порядком продуктів).
+// Палітра квадратів-заглушок замість логотипів (за порядком продуктів).
+// Тимчасово: просто колір, без тексту — поки продукт не отримає реальний
+// логотип при доданні через CRM.
 $cardColors = [
     'linear-gradient(135deg, #2116ad, #5b8cff)',
     'linear-gradient(135deg, #0f9d58, #34d399)',
@@ -166,6 +158,49 @@ $cardColors = [
             height: 42px;
             width: auto;
             display: block;
+        }
+
+        .site-nav {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .site-nav__link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .site-nav__link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Заклик до дії — виділений пункт меню «Викликати Асистента» */
+        .site-nav__link--cta {
+            color: #00032c;
+            background: linear-gradient(135deg, #5b8cff, #a5c0ff);
+            box-shadow: 0 6px 18px rgba(91, 140, 255, 0.4);
+        }
+
+        .site-nav__link--cta:hover {
+            color: #00032c;
+            background: linear-gradient(135deg, #6f9bff, #b8ceff);
+        }
+
+        .site-nav__link--cta svg {
+            width: 16px;
+            height: 16px;
         }
 
         .page {
@@ -234,16 +269,11 @@ $cardColors = [
             border-color: rgba(91, 140, 255, 0.5);
         }
 
+        /* Тимчасовий квадрат-заглушка замість логотипа продукту */
         .product-card__logo {
             width: 52px;
             height: 52px;
             border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
         }
 
@@ -312,6 +342,8 @@ $cardColors = [
             .site-header {
                 justify-content: center;
                 padding: 16px;
+                flex-wrap: wrap;
+                gap: 12px;
             }
         }
     </style>
@@ -319,6 +351,14 @@ $cardColors = [
 <body>
     <header class="site-header">
         <a href="index.php"><img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB"></a>
+        <nav class="site-nav">
+            <a class="site-nav__link" href="catalog.php">Каталог</a>
+            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link site-nav__link--cta" href="eli.php">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
+                Викликати Асистента
+            </a>
+        </nav>
     </header>
 
     <div class="page">
@@ -339,9 +379,7 @@ $cardColors = [
                 $color = $cardColors[$i % count($cardColors)];
                 ?>
                 <article class="product-card">
-                    <div class="product-card__logo" style="background: <?= htmlspecialchars($color, ENT_QUOTES) ?>;">
-                        <?= htmlspecialchars(product_initials($product['name']), ENT_QUOTES) ?>
-                    </div>
+                    <div class="product-card__logo" style="background: <?= htmlspecialchars($color, ENT_QUOTES) ?>;"></div>
                     <h2 class="product-card__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h2>
                     <p class="product-card__desc"><?= htmlspecialchars((string) $product['short_description'], ENT_QUOTES) ?></p>
                     <div class="product-card__footer">
