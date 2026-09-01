@@ -8,15 +8,21 @@ declare(strict_types=1);
  * Доступ лише для ролей employee / admin (гість і звичайний user
  * перенаправляються в кабінет).
  *
- * Таблиця охоплює всі поля, що заповнюються при доданні продукту:
- * назва, логотип (мініатюра), офіційний сайт, короткий і повний опис,
- * категорії, підкатегорії, модель монетизації, основні функції, для
- * кого призначений, ціна / тарифні плани, платформа, рівень навичок,
- * статус (з тултипом-поясненням), статус партнерства (лише admin),
- * хто додав, дата оновлення, кнопка «Редагувати». Довгі тексти
- * скорочені до ~50 символів, повний текст — у title при наведенні.
- * Багато стовпців → таблиця з горизонтальною прокруткою (.table-wrap).
- * Форму редагування буде додано окремо (crm-edit-product.php).
+ * Порядок стовпців зліва направо:
+ *   1. Статус (бейдж + тултип-пояснення)
+ *   2–14. Поля картки продукту в тому ж порядку, що й у формі
+ *         crm-add-product.php: назва, логотип, офіційний сайт,
+ *         короткий опис, категорія, підкатегорія, модель монетизації,
+ *         повний опис, основні функції, для кого призначений,
+ *         ціна / тарифні плани, платформа, рівень навичок
+ *   15. Статус партнерства (лише admin)
+ *   16. Хто додав
+ *   17. Оновлено
+ *   18. Кнопка «Редагувати» (завжди остання)
+ *
+ * Довгі тексти скорочені до ~50 символів, повний текст — у title при
+ * наведенні. Багато стовпців → таблиця з горизонтальною прокруткою
+ * (.table-wrap). Форму редагування буде додано окремо (crm-edit-product.php).
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -550,7 +556,8 @@ $total = count($products);
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Назва</th>
+                        <th>Статус</th>
+                        <th>Назва продукту</th>
                         <th>Логотип</th>
                         <th>Офіційний сайт</th>
                         <th>Короткий опис</th>
@@ -563,7 +570,6 @@ $total = count($products);
                         <th>Ціна / тарифні плани</th>
                         <th>Платформа</th>
                         <th>Рівень навичок</th>
-                        <th>Статус</th>
                         <?php if ($isAdmin): ?>
                         <th>Статус партнерства</th>
                         <?php endif; ?>
@@ -592,6 +598,9 @@ $total = count($products);
                             $updated = strtotime((string) $row['updated_at']);
                             ?>
                             <tr>
+                                <td>
+                                    <span class="badge badge--<?= e($status) ?>"<?= $statusHint !== '' ? ' title="' . e($statusHint) . '"' : '' ?>><?= e($statusLabel) ?></span>
+                                </td>
                                 <td class="table__nowrap">
                                     <a class="table__name" href="crm-edit-product.php?id=<?= $pid ?>"><?= e($row['name']) ?></a>
                                     <span class="table__id">#<?= $pid ?></span>
@@ -620,9 +629,6 @@ $total = count($products);
                                 <td class="table__nowrap"><?= e($pricing['plans']) ?></td>
                                 <td class="table__nowrap"><?= e(platform_text($row['platform'], $platformLabels)) ?></td>
                                 <td class="table__nowrap"><?= e($skillLabels[$row['skill_level']] ?? $row['skill_level']) ?></td>
-                                <td>
-                                    <span class="badge badge--<?= e($status) ?>"<?= $statusHint !== '' ? ' title="' . e($statusHint) . '"' : '' ?>><?= e($statusLabel) ?></span>
-                                </td>
                                 <?php if ($isAdmin): ?>
                                 <td class="table__muted table__nowrap">
                                     <?= e($partnershipLabels[$row['partnership_status']] ?? $row['partnership_status']) ?>
