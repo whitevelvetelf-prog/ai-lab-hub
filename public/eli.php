@@ -332,8 +332,9 @@ require_once __DIR__ . '/../app/auth.php';
         </div>
 
         <div class="chat" id="chat">
-            <!-- Привітання Елі: відео програється один раз, після 'ended'
-                 прибирається з DOM, місце під аватарку лишається порожнім. -->
+            <!-- Привітання Елі: відео програється один раз і застигає на
+                 останньому кадрі. Зникає лише коли користувач надсилає
+                 перше повідомлення (див. обробник submit). -->
             <div class="msg msg--eli">
                 <div class="msg__avatar">
                     <video id="greetingVideo" class="msg__video"
@@ -377,10 +378,12 @@ require_once __DIR__ . '/../app/auth.php';
             }
         }
 
-        // Крок 2: привітальне відео — один прогін, потім прибрати з DOM.
+        // Крок 2: привітальне відео — один прогін без loop, застигає на
+        // останньому кадрі. З DOM НЕ прибираємо — це робить обробник submit
+        // при першому надісланому повідомленні.
         if (greetingVideo) {
             greetingVideo.addEventListener('ended', function () {
-                greetingVideo.remove();
+                greetingVideo.pause();
             });
             safePlay(greetingVideo);
         }
@@ -463,6 +466,12 @@ require_once __DIR__ . '/../app/auth.php';
             var text = input.value.trim();
             if (text === '') {
                 return;
+            }
+            // Привітальне відео/картинка зникає саме тут — при першому
+            // надісланому повідомленні, а не одразу після завершення відео.
+            if (greetingVideo) {
+                greetingVideo.remove();
+                greetingVideo = null;
             }
             addUserMessage(text);
             input.value = '';
