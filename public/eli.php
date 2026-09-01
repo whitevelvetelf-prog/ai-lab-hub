@@ -162,6 +162,10 @@ require_once __DIR__ . '/../app/auth.php';
             object-fit: contain;
             flex-shrink: 0;
             display: block;
+            /* «З'їдає» чорний фон відео на темному тлі сторінки.
+               Якщо забарвлення самої Елі змінюється небажано —
+               замінити на mix-blend-mode: lighten */
+            mix-blend-mode: screen;
         }
 
         .msg__bubble {
