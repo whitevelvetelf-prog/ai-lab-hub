@@ -362,7 +362,8 @@ $roleLabels = [
 
             <?php if (auth_has_role('employee', 'admin')): ?>
                 <div class="staff-note">
-                    Доступ до CRM: <a href="crm-add-product.php">додати новий AI-продукт</a>.
+                    Доступ до CRM: <a href="crm-list.php">список продуктів</a>
+                    · <a href="crm-add-product.php">додати новий AI-продукт</a>.
                 </div>
             <?php endif; ?>
 

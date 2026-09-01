@@ -796,6 +796,9 @@ $displayPlans = $plans !== []
     </header>
 
     <div class="page">
+        <p style="margin:0 0 16px;">
+            <a class="btn btn--ghost btn--sm" href="crm-list.php">← До списку продуктів</a>
+        </p>
         <h1 class="page__title">CRM — додати AI-продукт</h1>
         <p class="page__subtitle">
             Статус (<strong>in_progress</strong> / <strong>published</strong>) визначається автоматично —
