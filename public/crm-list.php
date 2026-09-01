@@ -187,6 +187,32 @@ function external_href(?string $url): string
     return preg_match('~^https?://~i', $url) === 1 ? $url : 'https://' . $url;
 }
 
+/**
+ * HTML комірки «Хто додав».
+ *   - є employee_number   → «Працівник №N», у title повне «Прізвище Ім'я»;
+ *   - інакше є імʼя автора → імʼя як є (напр. admin без номера);
+ *   - автора немає         → «—».
+ */
+function created_by_cell(array $row): string
+{
+    if ($row['created_by_name'] === null) {
+        return '<span class="table__muted">—</span>';
+    }
+
+    $number = $row['created_by_employee_number'];
+    if ($number !== null && $number !== '') {
+        $fullName = trim(
+            (string) ($row['created_by_last_name'] ?? '') . ' '
+            . (string) ($row['created_by_first_name'] ?? '')
+        );
+        $title = $fullName !== '' ? $fullName : (string) $row['created_by_name'];
+        return '<span class="table__clip" title="' . e($title) . '">Працівник №'
+            . (int) $number . '</span>';
+    }
+
+    return e($row['created_by_name']);
+}
+
 $products = $pdo->query(
     "SELECT
         p.id,
@@ -204,6 +230,9 @@ $products = $pdo->query(
         p.created_at,
         p.updated_at,
         u.name AS created_by_name,
+        u.employee_number AS created_by_employee_number,
+        u.first_name AS created_by_first_name,
+        u.last_name AS created_by_last_name,
         (SELECT GROUP_CONCAT(c.name ORDER BY c.id SEPARATOR ', ')
            FROM product_categories pc
            JOIN categories c ON c.id = pc.category_id
@@ -634,9 +663,7 @@ $total = count($products);
                                     <?= e($partnershipLabels[$row['partnership_status']] ?? $row['partnership_status']) ?>
                                 </td>
                                 <?php endif; ?>
-                                <td class="<?= $row['created_by_name'] === null ? 'table__muted' : '' ?>">
-                                    <?= $row['created_by_name'] !== null ? e($row['created_by_name']) : '—' ?>
-                                </td>
+                                <td class="table__nowrap"><?= created_by_cell($row) ?></td>
                                 <td class="table__muted table__nowrap">
                                     <?= $updated ? e(date('d.m.Y H:i', $updated)) : '—' ?>
                                 </td>

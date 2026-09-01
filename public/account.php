@@ -39,6 +39,149 @@ $roleLabels = [
     'admin' => 'Адміністратор',
 ];
 
+// ---------------------------------------------------------------------
+// POST: подача заявки «Стати працівником» (роль user) та схвалення
+// заявки адміністратором. PRG — після успіху редірект на account.php,
+// повідомлення переноситься через сесію ($_SESSION['account_flash']).
+// ---------------------------------------------------------------------
+$requestErrors = [];
+$oldRequest = ['last_name' => '', 'first_name' => ''];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
+    $action = (string) ($_POST['action'] ?? '');
+
+    if ($action === 'employee_request' && $user['role'] === 'user') {
+        $oldRequest['last_name'] = trim((string) ($_POST['last_name'] ?? ''));
+        $oldRequest['first_name'] = trim((string) ($_POST['first_name'] ?? ''));
+
+        if ($oldRequest['last_name'] === '') {
+            $requestErrors[] = 'Вкажіть прізвище.';
+        } elseif (mb_strlen($oldRequest['last_name']) > 255) {
+            $requestErrors[] = 'Прізвище задовге (максимум 255 символів).';
+        }
+        if ($oldRequest['first_name'] === '') {
+            $requestErrors[] = 'Вкажіть ім’я.';
+        } elseif (mb_strlen($oldRequest['first_name']) > 255) {
+            $requestErrors[] = 'Ім’я задовге (максимум 255 символів).';
+        }
+
+        if ($requestErrors === []) {
+            $dup = $pdo->prepare(
+                "SELECT id FROM employee_requests
+                  WHERE user_id = :uid AND status = 'pending'"
+            );
+            $dup->execute([':uid' => $user['id']]);
+            if ($dup->fetch() !== false) {
+                $requestErrors[] = 'Ваша заявка вже на розгляді.';
+            }
+        }
+
+        if ($requestErrors === []) {
+            $ins = $pdo->prepare(
+                "INSERT INTO employee_requests (user_id, last_name, first_name)
+                 VALUES (:uid, :last, :first)"
+            );
+            $ins->execute([
+                ':uid' => $user['id'],
+                ':last' => $oldRequest['last_name'],
+                ':first' => $oldRequest['first_name'],
+            ]);
+            $_SESSION['account_flash'] = 'Заявку надіслано. Очікуйте рішення адміністратора.';
+            header('Location: account.php');
+            exit;
+        }
+    }
+
+    if ($action === 'approve_request' && $user['role'] === 'admin') {
+        $reqId = (int) ($_POST['request_id'] ?? 0);
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare(
+                "SELECT id, user_id, last_name, first_name
+                   FROM employee_requests
+                  WHERE id = :id AND status = 'pending'
+                  FOR UPDATE"
+            );
+            $stmt->execute([':id' => $reqId]);
+            $req = $stmt->fetch();
+
+            if ($req === false) {
+                $pdo->rollBack();
+                $_SESSION['account_flash'] = 'Заявку не знайдено або вона вже опрацьована.';
+            } else {
+                // Наступний послідовний номер: MAX + 1, або 1 для першого працівника.
+                $nextNumber = (int) $pdo->query(
+                    'SELECT COALESCE(MAX(employee_number), 0) + 1 FROM users'
+                )->fetchColumn();
+
+                $upd = $pdo->prepare(
+                    "UPDATE users
+                        SET role = 'employee',
+                            employee_number = :num,
+                            last_name = :last,
+                            first_name = :first
+                      WHERE id = :uid"
+                );
+                $upd->execute([
+                    ':num' => $nextNumber,
+                    ':last' => $req['last_name'],
+                    ':first' => $req['first_name'],
+                    ':uid' => $req['user_id'],
+                ]);
+
+                $done = $pdo->prepare(
+                    "UPDATE employee_requests
+                        SET status = 'approved', reviewed_at = NOW(), reviewed_by = :admin
+                      WHERE id = :id"
+                );
+                $done->execute([':admin' => $user['id'], ':id' => $req['id']]);
+
+                $pdo->commit();
+                $_SESSION['account_flash'] = sprintf(
+                    'Заявку схвалено. Працівнику присвоєно номер №%d.',
+                    $nextNumber
+                );
+            }
+        } catch (PDOException $ex) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['account_flash'] = 'Не вдалося схвалити заявку. Спробуйте ще раз.';
+        }
+
+        header('Location: account.php');
+        exit;
+    }
+}
+
+$flash = $_SESSION['account_flash'] ?? null;
+unset($_SESSION['account_flash']);
+
+// Заявка «на розгляді» для поточного user; список заявок для admin.
+$pendingRequest = null;
+$pendingRequests = [];
+if ($user !== null && $user['role'] === 'user') {
+    $stmt = $pdo->prepare(
+        "SELECT last_name, first_name, created_at
+           FROM employee_requests
+          WHERE user_id = :uid AND status = 'pending'
+          ORDER BY id DESC
+          LIMIT 1"
+    );
+    $stmt->execute([':uid' => $user['id']]);
+    $pendingRequest = $stmt->fetch() ?: null;
+} elseif ($user !== null && $user['role'] === 'admin') {
+    $pendingRequests = $pdo->query(
+        "SELECT r.id, r.last_name, r.first_name, r.created_at,
+                u.name AS user_name, u.email AS user_email
+           FROM employee_requests r
+           JOIN users u ON u.id = r.user_id
+          WHERE r.status = 'pending'
+          ORDER BY r.created_at ASC, r.id ASC"
+    )->fetchAll();
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="uk">
@@ -296,6 +439,107 @@ $roleLabels = [
             font-weight: 600;
         }
 
+        .section__hint {
+            margin: 0 0 14px;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+        }
+
+        .field {
+            margin-bottom: 16px;
+        }
+
+        .field__label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .input {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .form-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .form-row .field {
+            flex: 1 1 180px;
+        }
+
+        .notice {
+            margin: 0 0 18px;
+            padding: 13px 16px;
+            border-radius: 12px;
+            font-size: 0.92rem;
+            border: 1px solid rgba(252, 165, 165, 0.6);
+            background: rgba(252, 165, 165, 0.12);
+        }
+
+        .notice ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .notice--ok {
+            border-color: rgba(52, 211, 153, 0.5);
+            background: rgba(52, 211, 153, 0.12);
+        }
+
+        .request-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: 12px;
+        }
+
+        .request-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+            padding: 14px 16px;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .request-card__meta {
+            display: block;
+            margin-top: 2px;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .btn--approve {
+            padding: 9px 18px;
+            font-size: 0.9rem;
+            background: #34d399;
+            color: #00201a;
+        }
+
+        .btn--approve:hover {
+            background: #4ade9f;
+        }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -359,12 +603,84 @@ $roleLabels = [
                 </div>
             </div>
 
+            <?php if ($flash !== null): ?>
+                <div class="notice notice--ok"><?= e($flash) ?></div>
+            <?php endif; ?>
+
             <div class="section">
                 <h2 class="section__title">Збережені продукти</h2>
                 <div class="empty-state">
                     Ще немає збережених продуктів. Перегляньте <a href="index.php">напрямки AI на головній</a>.
                 </div>
             </div>
+
+            <?php if ($user['role'] === 'user'): ?>
+                <div class="section">
+                    <h2 class="section__title">Стати працівником</h2>
+                    <?php if ($pendingRequest !== null): ?>
+                        <div class="empty-state">
+                            Ваша заявка на розгляді (подана
+                            <?= e(date('d.m.Y', (int) strtotime((string) $pendingRequest['created_at']))) ?>).
+                            Ми повідомимо про рішення адміністратора.
+                        </div>
+                    <?php else: ?>
+                        <?php if ($requestErrors !== []): ?>
+                            <div class="notice">
+                                <ul>
+                                    <?php foreach ($requestErrors as $err): ?>
+                                        <li><?= e($err) ?></li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            </div>
+                        <?php endif; ?>
+                        <p class="section__hint">
+                            Заповніть прізвище та ім’я — заявку розгляне адміністратор.
+                        </p>
+                        <form method="post" action="account.php" novalidate>
+                            <input type="hidden" name="action" value="employee_request">
+                            <div class="form-row">
+                                <div class="field">
+                                    <label class="field__label" for="last_name">Прізвище</label>
+                                    <input class="input" type="text" id="last_name" name="last_name" value="<?= e($oldRequest['last_name']) ?>" maxlength="255" required>
+                                </div>
+                                <div class="field">
+                                    <label class="field__label" for="first_name">Ім’я</label>
+                                    <input class="input" type="text" id="first_name" name="first_name" value="<?= e($oldRequest['first_name']) ?>" maxlength="255" required>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn--primary">Подати заявку</button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if ($user['role'] === 'admin'): ?>
+                <div class="section">
+                    <h2 class="section__title">Заявки на працівника</h2>
+                    <?php if ($pendingRequests === []): ?>
+                        <div class="empty-state">Немає заявок на розгляді.</div>
+                    <?php else: ?>
+                        <ul class="request-list">
+                            <?php foreach ($pendingRequests as $req): ?>
+                                <li class="request-card">
+                                    <div>
+                                        <strong><?= e($req['last_name'] . ' ' . $req['first_name']) ?></strong>
+                                        <span class="request-card__meta">
+                                            <?= e($req['user_name']) ?> · <?= e($req['user_email']) ?>
+                                            · подано <?= e(date('d.m.Y', (int) strtotime((string) $req['created_at']))) ?>
+                                        </span>
+                                    </div>
+                                    <form method="post" action="account.php">
+                                        <input type="hidden" name="action" value="approve_request">
+                                        <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                        <button type="submit" class="btn btn--approve">Схвалити</button>
+                                    </form>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
 
             <?php if (auth_has_role('employee', 'admin')): ?>
                 <div class="staff-note">

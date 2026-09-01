@@ -8,8 +8,8 @@
         powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1
         powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -Output deploy5.zip
 
-    INCLUDED: app/, database/ (schema.sql + seed.sql), every public/*.php,
-    images and videos under public/assets/.
+    INCLUDED: app/, database/ (schema.sql + seed.sql + migration-*.sql),
+    every public/*.php, images and videos under public/assets/.
 
     DELIBERATELY EXCLUDED:
       - config/            DB config with values is set up on the server
@@ -45,6 +45,7 @@ $files = @(
     'database/.gitkeep',
     'database/schema.sql',
     'database/seed.sql',
+    'database/migration-2026-09-01-employee-numbers.sql',
 
     'public/about.php',
     'public/account.php',
