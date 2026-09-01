@@ -70,15 +70,6 @@ require_once __DIR__ . '/../app/auth.php';
             border-radius: 10px;
         }
 
-        .site-header__name {
-            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            line-height: 1;
-            white-space: nowrap;
-            color: #ffffff;
-        }
-
         .site-nav {
             margin-left: auto;
             display: flex;
@@ -360,7 +351,6 @@ require_once __DIR__ . '/../app/auth.php';
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
-            <span class="site-header__name">AI LAB HUB</span>
         </a>
         <nav class="site-nav">
             <a class="site-nav__link" href="index.php">Головна</a>

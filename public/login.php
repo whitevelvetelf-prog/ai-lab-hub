@@ -101,15 +101,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-radius: 10px;
         }
 
-        .site-header__name {
-            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            line-height: 1;
-            white-space: nowrap;
-            color: #ffffff;
-        }
-
         .page {
             max-width: 440px;
             margin: 0 auto;
@@ -232,7 +223,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
-            <span class="site-header__name">AI LAB HUB</span>
         </a>
     </header>
 

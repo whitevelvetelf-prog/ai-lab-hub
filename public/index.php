@@ -106,15 +106,6 @@ $categoryIcons = [
             border-radius: 10px;
         }
 
-        .site-header__name {
-            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            line-height: 1;
-            white-space: nowrap;
-            color: #ffffff;
-        }
-
         .site-nav {
             margin-left: auto;
             display: flex;
@@ -182,9 +173,9 @@ $categoryIcons = [
         .hero__image {
             width: 100%;
             max-width: 580px;
+            min-width: 240px;
             height: auto;
             display: block;
-            flex-shrink: 0;
             margin: 0;
         }
 
@@ -193,12 +184,15 @@ $categoryIcons = [
             flex-direction: column;
         }
 
+        /* Заголовок завжди в один рядок; шрифт адаптується під ширину
+           текстової колонки, щоб не наїжджати на картинку. */
         .hero__title {
             margin: 0 0 16px;
-            font-size: clamp(2.5rem, 8vw, 4.5rem);
+            font-size: clamp(1.9rem, 4.4vw, 3rem);
             font-weight: 800;
             letter-spacing: 0.04em;
             line-height: 1.05;
+            white-space: nowrap;
         }
 
         .hero__subtitle {
@@ -222,11 +216,18 @@ $categoryIcons = [
 
             .hero__image {
                 max-width: 420px;
+                min-width: 0;
                 margin: 0 auto;
             }
 
             .hero__text {
                 align-items: center;
+            }
+
+            /* Ще менший шрифт на вузьких екранах — заголовок лишається
+               в один рядок (white-space: nowrap успадковується). */
+            .hero__title {
+                font-size: clamp(1.6rem, 7vw, 2.6rem);
             }
 
             .hero__subtitle {
@@ -329,7 +330,6 @@ $categoryIcons = [
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
-            <span class="site-header__name">AI LAB HUB</span>
         </a>
         <nav class="site-nav">
             <a class="site-nav__link" href="index.php">Головна</a>
