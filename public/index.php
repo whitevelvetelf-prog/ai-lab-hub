@@ -85,6 +85,17 @@ $categoryIcons = [
             padding: 20px 32px;
         }
 
+        /* Логотип зафіксований у лівому верхньому куті екрана —
+           не зміщується вбік чи вниз при адаптації під планшет/мобільний. */
+        .site-header > a {
+            position: fixed;
+            top: 16px;
+            left: 20px;
+            z-index: 100;
+            display: block;
+            line-height: 0;
+        }
+
         .site-header__logo {
             height: 50px;
             width: auto;
@@ -142,20 +153,31 @@ $categoryIcons = [
             padding: 24px 24px 72px;
         }
 
+        /* Hero: картинка зліва (ближче до краю контейнера), заголовок і
+           підзаголовок праворуч, вирівняні по вертикальному центру. */
         .hero {
+            width: 100%;
+            max-width: 1080px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            text-align: center;
-            padding: 32px 0 56px;
+            gap: 48px;
+            text-align: left;
+            padding: 48px 0 64px;
         }
 
         .hero__image {
             width: 100%;
-            max-width: 420px;
+            max-width: 520px;
             height: auto;
             display: block;
-            margin: 0 auto 32px;
+            flex-shrink: 0;
+            margin: 0;
+        }
+
+        .hero__text {
+            display: flex;
+            flex-direction: column;
         }
 
         .hero__title {
@@ -167,11 +189,36 @@ $categoryIcons = [
         }
 
         .hero__subtitle {
-            margin: 0 auto;
+            margin: 0;
             max-width: 32ch;
             font-size: clamp(1rem, 3.2vw, 1.35rem);
             font-weight: 400;
             color: var(--text-muted);
+        }
+
+        /* Вузькі екрани (<768px): hero повертається до вертикального стеку —
+           картинка згори, текст під нею. */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 24px;
+                padding: 24px 0 48px;
+            }
+
+            .hero__image {
+                max-width: 420px;
+                margin: 0 auto;
+            }
+
+            .hero__text {
+                align-items: center;
+            }
+
+            .hero__subtitle {
+                margin: 0 auto;
+            }
         }
 
         .directions {
@@ -252,10 +299,15 @@ $categoryIcons = [
 
         @media (max-width: 600px) {
             .site-header {
-                justify-content: center;
+                justify-content: flex-end;
                 padding: 16px;
                 flex-wrap: wrap;
                 gap: 12px;
+            }
+
+            /* Трохи менший логотип, щоб не перетинався з навігацією */
+            .site-header__logo {
+                height: 40px;
             }
         }
     </style>
@@ -280,8 +332,10 @@ $categoryIcons = [
     <main class="main">
         <section class="hero">
             <img class="hero__image" src="assets/images/hero.png" alt="Колба — AI LAB HUB">
-            <h1 class="hero__title">AI LAB HUB</h1>
-            <p class="hero__subtitle">Знайдіть AI-інструмент для будь-якого завдання</p>
+            <div class="hero__text">
+                <h1 class="hero__title">AI LAB HUB</h1>
+                <p class="hero__subtitle">Знайдіть AI-інструмент для будь-якого завдання</p>
+            </div>
         </section>
 
         <section class="directions">
