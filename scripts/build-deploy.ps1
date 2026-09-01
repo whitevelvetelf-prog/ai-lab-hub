@@ -21,7 +21,7 @@
 #>
 
 param(
-    [string] $Output = 'deploy3.zip'
+    [string] $Output = 'deploy4.zip'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,6 +40,7 @@ $files = @(
     'app/.gitkeep',
     'app/auth.php',
     'app/footer.php',
+    'app/translations.php',
 
     'database/.gitkeep',
     'database/schema.sql',
