@@ -7,6 +7,11 @@ declare(strict_types=1);
  *
  * Макет чат-інтерфейсу. JS-симуляція сценарію з відео Елі
  * (привітання -> друкування -> відповідь). Без реальної AI-логіки.
+ *
+ * Десктоп (>= 768px): маленькі відео-аватарки в чаті (застигають на
+ * останньому кадрі). Мобільний (< 768px): відео Елі повноекранні,
+ * після відтворення зникають повністю; у чаті — самі текстові
+ * повідомлення й картки продуктів.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -324,6 +329,19 @@ require_once __DIR__ . '/../app/auth.php';
             background: rgba(255, 255, 255, 0.88);
         }
 
+        /* Повноекранне відео Елі — вмикається лише в мобільному медіа-запиті
+           нижче; на десктопі завжди display: none (десктоп без змін). */
+        .fs-video {
+            display: none;
+        }
+
+        .fs-video__el {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -345,9 +363,59 @@ require_once __DIR__ . '/../app/auth.php';
                 padding: 14px 18px;
             }
         }
+
+        /* --- Мобільний сценарій Елі (< 768px) -----------------------------
+           Відео Елі показуються ТІЛЬКИ повноекранно; у чаті — самі
+           бульбашки без відео-аватарок. Поле вводу закріплене внизу.
+           Десктоп (>= 768px) сюди не потрапляє і лишається без змін. */
+        @media (max-width: 768px) {
+            html {
+                scroll-padding-bottom: 96px;
+            }
+
+            /* У чаті — жодних відео Елі поряд із повідомленнями. */
+            .msg__avatar {
+                display: none;
+            }
+
+            /* Повноекранне відео на всю видиму область. */
+            .fs-video:not([hidden]) {
+                display: block;
+                position: fixed;
+                inset: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: 1000;
+                background: var(--bg-start);
+            }
+
+            /* Поле вводу завжди доступне знизу екрана; перекривається
+               лише повноекранним відео під час відтворення. */
+            .composer {
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                margin-top: 0;
+                padding: 12px 16px;
+                gap: 8px;
+                background: var(--bg-end);
+                border-top: 1px solid var(--card-border);
+                z-index: 900;
+            }
+
+            .page {
+                padding-bottom: 96px;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- Повноекранне відео Елі (лише мобільний сценарій, керується JS). -->
+    <div id="fsVideo" class="fs-video" hidden>
+        <video id="fsVideoEl" class="fs-video__el" muted playsinline></video>
+    </div>
+
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
@@ -405,6 +473,14 @@ require_once __DIR__ . '/../app/auth.php';
         var form = document.getElementById('composer');
         var input = document.getElementById('composerInput');
         var greetingVideo = document.getElementById('greetingVideo');
+        var fsOverlay = document.getElementById('fsVideo');
+        var fsEl = document.getElementById('fsVideoEl');
+
+        function isMobile() {
+            return window.matchMedia
+                ? window.matchMedia('(max-width: 768px)').matches
+                : window.innerWidth <= 768;
+        }
 
         function safePlay(video) {
             var p = video.play();
@@ -413,20 +489,60 @@ require_once __DIR__ . '/../app/auth.php';
             }
         }
 
+        // Мобільний сценарій: програти відео на весь екран один раз, після
+        // 'ended' (або помилки завантаження) — повністю прибрати оверлей.
+        function playFullscreen(src, onDone) {
+            var finished = false;
+
+            function finish() {
+                if (finished) {
+                    return;
+                }
+                finished = true;
+                fsEl.removeEventListener('ended', finish);
+                fsEl.removeEventListener('error', finish);
+                try { fsEl.pause(); } catch (e) {}
+                fsOverlay.hidden = true;
+                fsEl.removeAttribute('src');
+                fsEl.load();
+                if (typeof onDone === 'function') {
+                    onDone();
+                }
+            }
+
+            fsEl.addEventListener('ended', finish);
+            fsEl.addEventListener('error', finish);
+            fsEl.src = src;
+            fsEl.muted = true;
+            fsOverlay.hidden = false;
+            try { fsEl.currentTime = 0; } catch (e) {}
+            safePlay(fsEl);
+        }
+
         function scrollIntoView(el) {
             if (typeof el.scrollIntoView === 'function') {
                 el.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
         }
 
-        // Крок 2: привітальне відео — один прогін без loop, застигає на
-        // останньому кадрі. З DOM НЕ прибираємо — це робить обробник submit
-        // при першому надісланому повідомленні.
+        // Привітальне відео.
+        //  • Мобільний: повноекранно, один раз на старті діалогу (доки
+        //    немає повідомлень користувача); після завершення оверлей
+        //    зникає — відкривається звичайний вигляд чату.
+        //  • Десктоп: маленька аватарка, застигає на останньому кадрі,
+        //    прибирається при першому повідомленні (обробник submit).
         if (greetingVideo) {
-            greetingVideo.addEventListener('ended', function () {
+            if (isMobile()) {
                 greetingVideo.pause();
-            });
-            safePlay(greetingVideo);
+                greetingVideo.remove();
+                greetingVideo = null;
+                playFullscreen('assets/videos/elya-greeting.mp4');
+            } else {
+                greetingVideo.addEventListener('ended', function () {
+                    greetingVideo.pause();
+                });
+                safePlay(greetingVideo);
+            }
         }
 
         function addUserMessage(text) {
@@ -442,8 +558,24 @@ require_once __DIR__ . '/../app/auth.php';
             scrollIntoView(msg);
         }
 
-        // Крок 3: нове повідомлення Елі з відео "друкує".
+        // Крок 3: відео "друкує" + подальша відповідь Елі.
+        //  • Мобільний: повноекранно один раз на кожне повідомлення
+        //    користувача; після 'ended' оверлей зникає ПОВНІСТЮ (без
+        //    застиглого кадру), далі — текстова відповідь у чаті без
+        //    відео-аватарки.
+        //  • Десктоп: маленька аватарка в новому повідомленні, застигає
+        //    на останньому кадрі, поряд зʼявляється відповідь.
         function addEliTypingMessage() {
+            if (isMobile()) {
+                playFullscreen('assets/videos/elya-typing.mp4', function () {
+                    var m = document.createElement('div');
+                    m.className = 'msg msg--eli';
+                    chat.appendChild(m);
+                    addEliResponse(m);
+                });
+                return;
+            }
+
             var msg = document.createElement('div');
             msg.className = 'msg msg--eli';
 
