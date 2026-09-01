@@ -240,6 +240,36 @@ require_once __DIR__ . '/../app/auth.php';
             background: rgba(255, 255, 255, 0.88);
         }
 
+        /* Багатокрокова відповідь: підзаголовок кроку + рядок міні-карток */
+        .rec-steps {
+            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .rec-step__title {
+            margin-bottom: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .rec-step__cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* Картка всередині кроку: компактна, кілька можуть іти в ряд */
+        .rec-step__cards .rec-card {
+            margin-top: 0;
+            flex: 1 1 200px;
+            min-width: 0;
+        }
+
         /* Поле вводу */
         .composer {
             margin-top: 20px;
@@ -434,7 +464,50 @@ require_once __DIR__ . '/../app/auth.php';
             safePlay(video);
         }
 
-        // Тестова відповідь Елі з міні-карткою продукту.
+        // Міні-картка продукту: лого (ініціали), назва, кнопка "Докладніше".
+        function makeRecCard(initials, name, href) {
+            var card = document.createElement('div');
+            card.className = 'rec-card';
+
+            var logo = document.createElement('div');
+            logo.className = 'rec-card__logo';
+            logo.textContent = initials;
+
+            var nm = document.createElement('span');
+            nm.className = 'rec-card__name';
+            nm.textContent = name;
+
+            var btn = document.createElement('a');
+            btn.className = 'rec-card__btn';
+            btn.href = href;
+            btn.textContent = 'Докладніше';
+
+            card.appendChild(logo);
+            card.appendChild(nm);
+            card.appendChild(btn);
+            return card;
+        }
+
+        // Крок відповіді: підзаголовок + рядок карток під ним.
+        function makeRecStep(title, cards) {
+            var step = document.createElement('div');
+            step.className = 'rec-step';
+
+            var heading = document.createElement('div');
+            heading.className = 'rec-step__title';
+            heading.textContent = title;
+            step.appendChild(heading);
+
+            var row = document.createElement('div');
+            row.className = 'rec-step__cards';
+            cards.forEach(function (c) {
+                row.appendChild(c);
+            });
+            step.appendChild(row);
+            return step;
+        }
+
+        // Тестова багатокрокова відповідь Елі з добіркою продуктів.
         function addEliResponse(msg) {
             if (msg.querySelector('.msg__bubble')) {
                 return;
@@ -443,19 +516,25 @@ require_once __DIR__ . '/../app/auth.php';
             var bubble = document.createElement('div');
             bubble.className = 'msg__bubble';
             bubble.appendChild(document.createTextNode(
-                'Для разової безкоштовної генерації реклами підійде TestAI Pro — ' +
-                'у нього є безкоштовний тариф на кілька хвилин відео на місяць, ' +
-                'цього вистачить для одного ролика.'
+                'Для створення рекламного відео з озвученням знадобиться ' +
+                'кілька інструментів:'
             ));
 
-            var card = document.createElement('div');
-            card.className = 'rec-card';
-            card.innerHTML =
-                '<div class="rec-card__logo">TA</div>' +
-                '<span class="rec-card__name">TestAI Pro</span>' +
-                '<a class="rec-card__btn" href="product.php">Докладніше</a>';
+            var steps = document.createElement('div');
+            steps.className = 'rec-steps';
 
-            bubble.appendChild(card);
+            steps.appendChild(makeRecStep('Крок 1: Генерація зображення', [
+                makeRecCard('PF', 'PixelForge', 'product.php?id=1'),
+                makeRecCard('TA', 'TestAI Pro', 'product.php?id=2')
+            ]));
+            steps.appendChild(makeRecStep('Крок 2: Анімація зображення у відео', [
+                makeRecCard('TA', 'TestAI Pro', 'product.php?id=2')
+            ]));
+            steps.appendChild(makeRecStep('Крок 3: Озвучення', [
+                makeRecCard('VC', 'VoiceCast', 'product.php?id=3')
+            ]));
+
+            bubble.appendChild(steps);
             msg.appendChild(bubble);
             scrollIntoView(msg);
         }
