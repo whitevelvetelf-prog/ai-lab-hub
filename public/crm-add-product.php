@@ -812,7 +812,7 @@ $displayPlans = $plans !== []
                 <p style="margin:0;">
                     ID у базі: <strong>#<?= (int) $savedProductId ?></strong>.
                     <a href="product.php?id=<?= (int) $savedProductId ?>">Відкрити картку продукту</a>
-                    · <a href="catalog.php">до каталогу</a>
+                    · <a href="index.php">до напрямків AI</a>
                 </p>
             </div>
         <?php endif; ?>
@@ -1007,7 +1007,7 @@ $displayPlans = $plans !== []
                 <?php if ($noticeDuplicate): ?>
                     <button type="submit" class="btn btn--ghost" name="action" value="force">Зберегти все одно</button>
                 <?php endif; ?>
-                <a class="btn btn--ghost" href="catalog.php">Скасувати</a>
+                <a class="btn btn--ghost" href="index.php">Скасувати</a>
             </div>
         </form>
     </div>

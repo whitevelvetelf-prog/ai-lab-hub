@@ -498,7 +498,7 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         </div>
         <div class="product-summary">
             <p>Продукт із таким ідентифікатором відсутній або ще не опублікований.</p>
-            <a class="btn btn--ghost" href="catalog.php">До каталогу</a>
+            <a class="btn btn--ghost" href="index.php">До напрямків AI</a>
         </div>
 <?php else: ?>
         <?php

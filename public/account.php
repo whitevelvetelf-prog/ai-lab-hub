@@ -356,7 +356,7 @@ $roleLabels = [
             <div class="section">
                 <h2 class="section__title">Збережені продукти</h2>
                 <div class="empty-state">
-                    Ще немає збережених продуктів. Перегляньте <a href="catalog.php">каталог AI-інструментів</a>.
+                    Ще немає збережених продуктів. Перегляньте <a href="index.php">напрямки AI на головній</a>.
                 </div>
             </div>
 
