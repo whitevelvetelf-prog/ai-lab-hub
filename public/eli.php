@@ -55,10 +55,28 @@ require_once __DIR__ . '/../app/auth.php';
             padding: 20px 32px;
         }
 
+        .site-header__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ffffff;
+        }
+
         .site-header__logo {
             height: 42px;
             width: auto;
             display: block;
+            border-radius: 10px;
+        }
+
+        .site-header__name {
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            line-height: 1;
+            white-space: nowrap;
+            color: #ffffff;
         }
 
         .site-nav {
@@ -340,7 +358,10 @@ require_once __DIR__ . '/../app/auth.php';
 </head>
 <body>
     <header class="site-header">
-        <a href="index.php"><img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB"></a>
+        <a class="site-header__brand" href="index.php">
+            <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
+            <span class="site-header__name">AI LAB HUB</span>
+        </a>
         <nav class="site-nav">
             <a class="site-nav__link" href="index.php">Головна</a>
             <?php if (auth_check()): ?>

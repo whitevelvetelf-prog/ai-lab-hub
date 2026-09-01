@@ -86,10 +86,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             padding: 20px 32px;
         }
 
+        .site-header__brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #ffffff;
+        }
+
         .site-header__logo {
             height: 42px;
             width: auto;
             display: block;
+            border-radius: 10px;
+        }
+
+        .site-header__name {
+            font-size: clamp(0.95rem, 3.5vw, 1.15rem);
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            line-height: 1;
+            white-space: nowrap;
+            color: #ffffff;
         }
 
         .page {
@@ -212,7 +230,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <header class="site-header">
-        <a href="index.php"><img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB"></a>
+        <a class="site-header__brand" href="index.php">
+            <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
+            <span class="site-header__name">AI LAB HUB</span>
+        </a>
     </header>
 
     <div class="page">
