@@ -199,6 +199,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: rgba(255, 255, 255, 0.12);
         }
 
+        /* Поле пароля з кнопкою «Показати» */
+        .pw-field {
+            position: relative;
+        }
+
+        .pw-field .input {
+            padding-right: 92px;
+        }
+
+        .pw-toggle {
+            position: absolute;
+            top: 50%;
+            right: 8px;
+            transform: translateY(-50%);
+            padding: 6px 10px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .pw-toggle:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.14);
+            border-color: var(--accent);
+        }
+
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -300,11 +332,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="field">
                     <label class="field__label" for="password">Пароль</label>
-                    <input class="input" type="password" id="password" name="password" minlength="8" required>
+                    <div class="pw-field">
+                        <input class="input" type="password" id="password" name="password" minlength="8" required>
+                        <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Показати пароль">Показати</button>
+                    </div>
                 </div>
                 <div class="field">
                     <label class="field__label" for="password_confirm">Підтвердження пароля</label>
-                    <input class="input" type="password" id="password_confirm" name="password_confirm" minlength="8" required>
+                    <div class="pw-field">
+                        <input class="input" type="password" id="password_confirm" name="password_confirm" minlength="8" required>
+                        <button type="button" class="pw-toggle" data-pw-toggle="password_confirm" aria-label="Показати пароль">Показати</button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn--primary btn--block">Зареєструватися</button>
             </form>
@@ -312,5 +350,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="auth-card__foot">Уже маєте акаунт? <a href="login.php">Увійти</a></p>
         </section>
     </div>
+
+    <script>
+        document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var input = document.getElementById(btn.getAttribute('data-pw-toggle'));
+                if (!input) {
+                    return;
+                }
+                var reveal = input.type === 'password';
+                input.type = reveal ? 'text' : 'password';
+                btn.textContent = reveal ? 'Сховати' : 'Показати';
+                btn.setAttribute('aria-label', (reveal ? 'Сховати' : 'Показати') + ' пароль');
+            });
+        });
+    </script>
 </body>
 </html>
