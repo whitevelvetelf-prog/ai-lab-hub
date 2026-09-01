@@ -213,21 +213,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             top: 50%;
             right: 8px;
             transform: translateY(-50%);
-            padding: 6px 10px;
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 6px 12px;
+            border: 1px solid rgba(0, 0, 0, 0.25);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-muted);
+            /* Світлий контрастний чип: помітний і на темному полі,
+               і на світлому (автозаповнення) фоні незалежно від стану. */
+            background: #dbe4ff;
+            color: #00032c;
             font-family: inherit;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+            transition: background 0.15s ease, border-color 0.15s ease;
         }
 
         .pw-toggle:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.14);
+            background: #eaf0ff;
             border-color: var(--accent);
         }
 
