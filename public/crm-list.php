@@ -8,9 +8,14 @@ declare(strict_types=1);
  * Доступ лише для ролей employee / admin (гість і звичайний user
  * перенаправляються в кабінет).
  *
- * Стовпці: назва, перша прив'язана категорія, статус (кольоровий бейдж),
- * статус партнерства (лише для admin), хто додав (users.name за
- * products.created_by), дата оновлення, посилання «Редагувати».
+ * Таблиця охоплює всі поля, що заповнюються при доданні продукту:
+ * назва, логотип (мініатюра), офіційний сайт, короткий і повний опис,
+ * категорії, підкатегорії, модель монетизації, основні функції, для
+ * кого призначений, ціна / тарифні плани, платформа, рівень навичок,
+ * статус (з тултипом-поясненням), статус партнерства (лише admin),
+ * хто додав, дата оновлення, кнопка «Редагувати». Довгі тексти
+ * скорочені до ~50 символів, повний текст — у title при наведенні.
+ * Багато стовпців → таблиця з горизонтальною прокруткою (.table-wrap).
  * Форму редагування буде додано окремо (crm-edit-product.php).
  */
 
@@ -40,6 +45,13 @@ $statusLabels = [
     'published'   => 'Опубліковано',
 ];
 
+/** Пояснення статусу — показуємо в title бейджа при наведенні. */
+$statusHints = [
+    'none'        => '«Ніякий» — продукт не опубліковано і не в роботі',
+    'in_progress' => 'Продукт у підготовці, ще не опублікований',
+    'published'   => 'Продукт опубліковано, він видимий користувачам',
+];
+
 $partnershipLabels = [
     'found'                => 'Знайдено',
     'pending_registration' => 'Очікує реєстрації',
@@ -47,24 +59,163 @@ $partnershipLabels = [
     'no_partnership'       => 'Без партнерки',
 ];
 
+$platformLabels = ['web' => 'Веб', 'mobile' => 'Мобільний', 'desktop' => 'Десктоп'];
+
+$skillLabels = [
+    'none'   => 'Без навичок',
+    'basic'  => 'Базові знання',
+    'course' => 'Спеціальне навчання',
+];
+
+/**
+ * Готує довгий текст до показу в комірці: прибирає переноси рядків і
+ * зайві пробіли, ріже до $limit символів.
+ *
+ * @return array{0:string,1:string,2:bool} [превʼю, повний текст, чи скорочено]
+ */
+function short_text(?string $text, int $limit = 50): array
+{
+    $full = trim((string) preg_replace('/\s+/u', ' ', (string) $text));
+    if ($full === '') {
+        return ['—', '', false];
+    }
+    if (mb_strlen($full) <= $limit) {
+        return [$full, $full, false];
+    }
+    return [mb_substr($full, 0, $limit) . '…', $full, true];
+}
+
+/** HTML комірки зі скороченим текстом; повний текст — у title при наведенні. */
+function text_cell(?string $text, int $limit = 50): string
+{
+    [$preview, $full, $cut] = short_text($text, $limit);
+    if ($full === '') {
+        return '<span class="table__muted">—</span>';
+    }
+    if ($cut) {
+        return '<span class="table__clip" title="' . e($full) . '">' . e($preview) . '</span>';
+    }
+    return e($preview);
+}
+
+/** Українська форма множини: 1 план / 2 плани / 5 планів. */
+function plural_uk(int $n, string $one, string $few, string $many): string
+{
+    $mod10 = $n % 10;
+    $mod100 = $n % 100;
+    if ($mod10 === 1 && $mod100 !== 11) {
+        return $one;
+    }
+    if ($mod10 >= 2 && $mod10 <= 4 && ($mod100 < 12 || $mod100 > 14)) {
+        return $few;
+    }
+    return $many;
+}
+
+/**
+ * Модель монетизації та короткий підсумок тарифів за списком планів.
+ *
+ * @param list<array{price:mixed,period:string}> $plans
+ * @return array{model:string,plans:string}
+ */
+function pricing_summary(array $plans): array
+{
+    if ($plans === []) {
+        return ['model' => '—', 'plans' => '—'];
+    }
+
+    $paid = array_values(array_filter(
+        $plans,
+        static fn(array $p): bool => $p['period'] !== 'free' && (float) $p['price'] > 0
+    ));
+    $hasFree = count($paid) < count($plans);
+
+    if ($paid === []) {
+        $model = 'Безкоштовно';
+    } elseif ($hasFree) {
+        $model = 'Freemium';
+    } else {
+        $model = 'Платно';
+    }
+
+    $n = count($plans);
+    $summary = $n . ' ' . plural_uk($n, 'план', 'плани', 'планів');
+
+    if ($paid !== []) {
+        usort($paid, static fn(array $a, array $b): int => (float) $a['price'] <=> (float) $b['price']);
+        $periods = ['week' => '/тиж', 'month' => '/міс', 'year' => '/рік', 'one_time' => ' разово'];
+        $cheap = $paid[0];
+        $price = rtrim(rtrim(number_format((float) $cheap['price'], 2, '.', ''), '0'), '.');
+        $summary .= ' · від $' . $price . ($periods[$cheap['period']] ?? '');
+    } else {
+        $summary .= ' · безкоштовно';
+    }
+
+    return ['model' => $model, 'plans' => $summary];
+}
+
+/** Людський підпис платформ (SET web,mobile,desktop). */
+function platform_text(?string $platform, array $map): string
+{
+    $platform = trim((string) $platform);
+    if ($platform === '') {
+        return '—';
+    }
+    $out = [];
+    foreach (explode(',', $platform) as $p) {
+        $p = trim($p);
+        if ($p !== '') {
+            $out[] = $map[$p] ?? $p;
+        }
+    }
+    return $out === [] ? '—' : implode(' / ', $out);
+}
+
+/** Абсолютне посилання на офіційний сайт (додає https:// за потреби). */
+function external_href(?string $url): string
+{
+    $url = trim((string) $url);
+    if ($url === '') {
+        return '';
+    }
+    return preg_match('~^https?://~i', $url) === 1 ? $url : 'https://' . $url;
+}
+
 $products = $pdo->query(
     "SELECT
         p.id,
         p.name,
+        p.logo_url,
+        p.official_url,
+        p.short_description,
+        p.full_description,
+        p.main_features,
+        p.target_audience,
+        p.platform,
+        p.skill_level,
         p.status,
         p.partnership_status,
+        p.created_at,
         p.updated_at,
         u.name AS created_by_name,
-        (SELECT c.name
+        (SELECT GROUP_CONCAT(c.name ORDER BY c.id SEPARATOR ', ')
            FROM product_categories pc
            JOIN categories c ON c.id = pc.category_id
-          WHERE pc.product_id = p.id
-          ORDER BY c.id
-          LIMIT 1) AS category_name
+          WHERE pc.product_id = p.id) AS categories_list,
+        (SELECT GROUP_CONCAT(s.name ORDER BY s.id SEPARATOR ', ')
+           FROM product_subcategories ps
+           JOIN subcategories s ON s.id = ps.subcategory_id
+          WHERE ps.product_id = p.id) AS subcategories_list
      FROM products p
      LEFT JOIN users u ON u.id = p.created_by
      ORDER BY p.updated_at DESC, p.id DESC"
 )->fetchAll();
+
+// Тарифні плани всіх продуктів — одним запитом, згруповані за product_id.
+$plansByProduct = [];
+foreach ($pdo->query("SELECT product_id, price, period FROM pricing_plans")->fetchAll() as $pl) {
+    $plansByProduct[(int) $pl['product_id']][] = $pl;
+}
 
 // --- Підсумок за статусами -------------------------------------------------
 $counts = ['none' => 0, 'in_progress' => 0, 'published' => 0];
@@ -136,7 +287,7 @@ $total = count($products);
         }
 
         .page {
-            max-width: 1100px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 24px 24px 72px;
         }
@@ -182,9 +333,11 @@ $total = count($products);
             font-weight: 800;
         }
 
-        /* Таблиця */
+        /* Таблиця. Стовпців багато — контейнер прокручується по горизонталі
+           на вужчих екранах; min-width не дає колонкам сплюснутись. */
         .table-wrap {
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             border: 1px solid var(--card-border);
             border-radius: 16px;
             background: var(--card-bg);
@@ -193,6 +346,7 @@ $total = count($products);
 
         .table {
             width: 100%;
+            min-width: 1700px;
             border-collapse: collapse;
             font-size: 0.92rem;
         }
@@ -273,6 +427,43 @@ $total = count($products);
             color: #6ee7b7;
             background: rgba(52, 211, 153, 0.16);
             border: 1px solid rgba(52, 211, 153, 0.5);
+        }
+
+        .badge[title] {
+            cursor: help;
+        }
+
+        /* Мініатюра логотипа продукту */
+        .table__logo {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            display: block;
+        }
+
+        .table__logo--empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .table__link {
+            color: #bcd0ff;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .table__link:hover {
+            text-decoration: underline;
+        }
+
+        /* Скорочений довгий текст: пунктирне підкреслення + повний текст у title */
+        .table__clip {
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.45);
+            cursor: help;
         }
 
         .empty-state {
@@ -359,8 +550,19 @@ $total = count($products);
             <table class="table">
                 <thead>
                     <tr>
-                        <th>Назва продукту</th>
+                        <th>Назва</th>
+                        <th>Логотип</th>
+                        <th>Офіційний сайт</th>
+                        <th>Короткий опис</th>
                         <th>Категорія</th>
+                        <th>Підкатегорія</th>
+                        <th>Модель монетизації</th>
+                        <th>Повний опис</th>
+                        <th>Основні функції</th>
+                        <th>Для кого призначений</th>
+                        <th>Ціна / тарифні плани</th>
+                        <th>Платформа</th>
+                        <th>Рівень навичок</th>
                         <th>Статус</th>
                         <?php if ($isAdmin): ?>
                         <th>Статус партнерства</th>
@@ -373,7 +575,7 @@ $total = count($products);
                 <tbody>
                     <?php if ($products === []): ?>
                         <tr>
-                            <td class="empty-state" colspan="<?= $isAdmin ? 7 : 6 ?>">
+                            <td class="empty-state" colspan="<?= $isAdmin ? 18 : 17 ?>">
                                 Ще немає жодного продукту.
                                 <a href="crm-add-product.php">Додати перший</a>.
                             </td>
@@ -381,25 +583,48 @@ $total = count($products);
                     <?php else: ?>
                         <?php foreach ($products as $row): ?>
                             <?php
+                            $pid = (int) $row['id'];
                             $status = (string) $row['status'];
                             $statusLabel = $statusLabels[$status] ?? $status;
+                            $statusHint = $statusHints[$status] ?? '';
+                            $pricing = pricing_summary($plansByProduct[$pid] ?? []);
+                            $officialHref = external_href($row['official_url']);
                             $updated = strtotime((string) $row['updated_at']);
                             ?>
                             <tr>
-                                <td>
-                                    <a class="table__name" href="crm-edit-product.php?id=<?= (int) $row['id'] ?>">
-                                        <?= e($row['name']) ?>
-                                    </a>
-                                    <span class="table__id">#<?= (int) $row['id'] ?></span>
-                                </td>
-                                <td class="<?= $row['category_name'] === null ? 'table__muted' : '' ?>">
-                                    <?= $row['category_name'] !== null ? e($row['category_name']) : '—' ?>
+                                <td class="table__nowrap">
+                                    <a class="table__name" href="crm-edit-product.php?id=<?= $pid ?>"><?= e($row['name']) ?></a>
+                                    <span class="table__id">#<?= $pid ?></span>
                                 </td>
                                 <td>
-                                    <span class="badge badge--<?= e($status) ?>"><?= e($statusLabel) ?></span>
+                                    <?php if ((string) $row['logo_url'] !== ''): ?>
+                                        <img class="table__logo" src="<?= e($row['logo_url']) ?>" alt="" loading="lazy">
+                                    <?php else: ?>
+                                        <span class="table__logo table__logo--empty">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php if ($officialHref !== ''): ?>
+                                        <a class="table__link" href="<?= e($officialHref) ?>" target="_blank" rel="noopener noreferrer" title="<?= e($row['official_url']) ?>">Відкрити ↗</a>
+                                    <?php else: ?>
+                                        <span class="table__muted">—</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td><?= text_cell($row['short_description']) ?></td>
+                                <td><?= text_cell($row['categories_list'], 40) ?></td>
+                                <td><?= text_cell($row['subcategories_list'], 40) ?></td>
+                                <td class="table__nowrap"><?= e($pricing['model']) ?></td>
+                                <td><?= text_cell($row['full_description']) ?></td>
+                                <td><?= text_cell($row['main_features']) ?></td>
+                                <td><?= text_cell($row['target_audience']) ?></td>
+                                <td class="table__nowrap"><?= e($pricing['plans']) ?></td>
+                                <td class="table__nowrap"><?= e(platform_text($row['platform'], $platformLabels)) ?></td>
+                                <td class="table__nowrap"><?= e($skillLabels[$row['skill_level']] ?? $row['skill_level']) ?></td>
+                                <td>
+                                    <span class="badge badge--<?= e($status) ?>"<?= $statusHint !== '' ? ' title="' . e($statusHint) . '"' : '' ?>><?= e($statusLabel) ?></span>
                                 </td>
                                 <?php if ($isAdmin): ?>
-                                <td class="table__muted">
+                                <td class="table__muted table__nowrap">
                                     <?= e($partnershipLabels[$row['partnership_status']] ?? $row['partnership_status']) ?>
                                 </td>
                                 <?php endif; ?>
@@ -410,7 +635,7 @@ $total = count($products);
                                     <?= $updated ? e(date('d.m.Y H:i', $updated)) : '—' ?>
                                 </td>
                                 <td class="table__nowrap">
-                                    <a class="btn btn--ghost btn--sm" href="crm-edit-product.php?id=<?= (int) $row['id'] ?>">Редагувати</a>
+                                    <a class="btn btn--ghost btn--sm" href="crm-edit-product.php?id=<?= $pid ?>">Редагувати</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
