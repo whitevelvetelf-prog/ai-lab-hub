@@ -153,13 +153,13 @@ $categoryIcons = [
             padding: 24px 24px 72px;
         }
 
-        /* Hero: картинка зліва (ближче до краю контейнера), заголовок і
-           підзаголовок праворуч, вирівняні по вертикальному центру. */
+        /* Hero: заголовок і підзаголовок зліва (по вертикальному центру),
+           картинка справа, ближче до краю контейнера. */
         .hero {
             width: 100%;
             max-width: 1080px;
             display: flex;
-            flex-direction: row;
+            flex-direction: row-reverse;
             align-items: center;
             gap: 48px;
             text-align: left;
@@ -168,7 +168,7 @@ $categoryIcons = [
 
         .hero__image {
             width: 100%;
-            max-width: 520px;
+            max-width: 580px;
             height: auto;
             display: block;
             flex-shrink: 0;
