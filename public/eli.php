@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — чат з AI-асистенткою Елею (Елеонора).
  *
- * Статичний макет чат-інтерфейсу з тестовим діалогом. Без AI-логіки.
+ * Макет чат-інтерфейсу. JS-симуляція сценарію з відео Елі
+ * (привітання -> друкування -> відповідь). Без реальної AI-логіки.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -155,12 +156,19 @@ require_once __DIR__ . '/../app/auth.php';
             flex-direction: row-reverse;
         }
 
+        /* Контейнер аватарки: фіксований розмір ~140x140.
+           Місце лишається навіть коли відео прибрано з DOM. */
         .msg__avatar {
-            width: 160px;
-            height: 170px;
-            /* contain — щоб не обрізати прозорі краї відео */
-            object-fit: contain;
+            width: 140px;
+            height: 140px;
             flex-shrink: 0;
+        }
+
+        /* Відео Елі: персонаж влазить повністю, без обрізки голови. */
+        .msg__video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
             display: block;
         }
 
@@ -291,7 +299,7 @@ require_once __DIR__ . '/../app/auth.php';
 
             .msg__avatar {
                 width: 120px;
-                height: 128px;
+                height: 120px;
             }
 
             .composer__btn {
@@ -323,47 +331,144 @@ require_once __DIR__ . '/../app/auth.php';
             <p class="chat-head__subtitle">Опишіть задачу — Еля підбере найкращий AI-інструмент</p>
         </div>
 
-        <div class="chat">
-            <!-- Повідомлення від Елі — стан очікування завдання -->
+        <div class="chat" id="chat">
+            <!-- Привітання Елі: відео програється один раз, після 'ended'
+                 прибирається з DOM, місце під аватарку лишається порожнім. -->
             <div class="msg msg--eli">
-                <video class="msg__avatar" src="assets/videos/elya-listening.mp4"
-                       autoplay loop muted playsinline
-                       aria-label="Еля слухає"></video>
+                <div class="msg__avatar">
+                    <video id="greetingVideo" class="msg__video"
+                           src="assets/videos/elya-greeting.mp4"
+                           autoplay muted playsinline
+                           aria-label="Еля вітається"></video>
+                </div>
                 <div class="msg__bubble">
                     Доброго дня! Розкажіть, яку задачу потрібно вирішити — і я підберу
                     відповідний AI-інструмент.
                 </div>
             </div>
-
-            <!-- Повідомлення від користувача -->
-            <div class="msg msg--user">
-                <div class="msg__bubble">
-                    Потрібно згенерувати коротке відео для реклами, разово і безкоштовно
-                </div>
-            </div>
-
-            <!-- Відповідь Елі з рекомендацією — стан відповіді -->
-            <div class="msg msg--eli">
-                <video class="msg__avatar" src="assets/videos/elya-responding.mp4"
-                       autoplay loop muted playsinline
-                       aria-label="Еля відповідає"></video>
-                <div class="msg__bubble">
-                    Для разової генерації рекламного відео підійде TestAI Pro — у нього є
-                    безкоштовний тариф на кілька хвилин відео на місяць, цього вистачить
-                    для одного ролика.
-                    <div class="rec-card">
-                        <div class="rec-card__logo">TA</div>
-                        <span class="rec-card__name">TestAI Pro</span>
-                        <a class="rec-card__btn" href="product.php">Докладніше</a>
-                    </div>
-                </div>
-            </div>
         </div>
 
-        <form class="composer" onsubmit="return false;">
-            <input class="composer__input" type="text" placeholder="Опишіть свою задачу…" aria-label="Повідомлення">
+        <form class="composer" id="composer" onsubmit="return false;">
+            <input id="composerInput" class="composer__input" type="text"
+                   placeholder="Опишіть свою задачу…" aria-label="Повідомлення">
             <button class="composer__btn" type="submit">Надіслати</button>
         </form>
     </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        var chat = document.getElementById('chat');
+        var form = document.getElementById('composer');
+        var input = document.getElementById('composerInput');
+        var greetingVideo = document.getElementById('greetingVideo');
+
+        function safePlay(video) {
+            var p = video.play();
+            if (p && typeof p.catch === 'function') {
+                p.catch(function () {});
+            }
+        }
+
+        function scrollIntoView(el) {
+            if (typeof el.scrollIntoView === 'function') {
+                el.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            }
+        }
+
+        // Крок 2: привітальне відео — один прогін, потім прибрати з DOM.
+        if (greetingVideo) {
+            greetingVideo.addEventListener('ended', function () {
+                greetingVideo.remove();
+            });
+            safePlay(greetingVideo);
+        }
+
+        function addUserMessage(text) {
+            var msg = document.createElement('div');
+            msg.className = 'msg msg--user';
+
+            var bubble = document.createElement('div');
+            bubble.className = 'msg__bubble';
+            bubble.textContent = text;
+
+            msg.appendChild(bubble);
+            chat.appendChild(msg);
+            scrollIntoView(msg);
+        }
+
+        // Крок 3: нове повідомлення Елі з відео "друкує".
+        function addEliTypingMessage() {
+            var msg = document.createElement('div');
+            msg.className = 'msg msg--eli';
+
+            var avatar = document.createElement('div');
+            avatar.className = 'msg__avatar';
+
+            var video = document.createElement('video');
+            video.className = 'msg__video';
+            video.src = 'assets/videos/elya-typing.mp4';
+            video.muted = true;
+            video.setAttribute('playsinline', '');
+            video.setAttribute('aria-label', 'Еля друкує');
+
+            avatar.appendChild(video);
+            msg.appendChild(avatar);
+            chat.appendChild(msg);
+            scrollIntoView(msg);
+
+            video.addEventListener('ended', function () {
+                // Застигнути на останньому кадрі (відео не приховуємо).
+                video.pause();
+                addEliResponse(msg);
+            });
+
+            video.addEventListener('loadedmetadata', function () {
+                try { video.currentTime = 0; } catch (e) {}
+            });
+
+            safePlay(video);
+        }
+
+        // Тестова відповідь Елі з міні-карткою продукту.
+        function addEliResponse(msg) {
+            if (msg.querySelector('.msg__bubble')) {
+                return;
+            }
+
+            var bubble = document.createElement('div');
+            bubble.className = 'msg__bubble';
+            bubble.appendChild(document.createTextNode(
+                'Для разової безкоштовної генерації реклами підійде TestAI Pro — ' +
+                'у нього є безкоштовний тариф на кілька хвилин відео на місяць, ' +
+                'цього вистачить для одного ролика.'
+            ));
+
+            var card = document.createElement('div');
+            card.className = 'rec-card';
+            card.innerHTML =
+                '<div class="rec-card__logo">TA</div>' +
+                '<span class="rec-card__name">TestAI Pro</span>' +
+                '<a class="rec-card__btn" href="product.php">Докладніше</a>';
+
+            bubble.appendChild(card);
+            msg.appendChild(bubble);
+            scrollIntoView(msg);
+        }
+
+        // Кроки 3–4: кожне повідомлення користувача запускає новий цикл.
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var text = input.value.trim();
+            if (text === '') {
+                return;
+            }
+            addUserMessage(text);
+            input.value = '';
+            addEliTypingMessage();
+        });
+    })();
+    </script>
 </body>
 </html>
