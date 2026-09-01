@@ -39,6 +39,8 @@ $GLOBALS['TRANSLATIONS'] = [
     'nav_account'   => ['uk' => 'Кабінет',              'en' => 'Account'],
     'nav_login'     => ['uk' => 'Увійти',               'en' => 'Log In'],
     'nav_assistant' => ['uk' => 'Викликати Асистента',  'en' => 'Call Assistant'],
+    // Короткий підпис кнопки асистента для вузьких екранів (додається через CSS ::after).
+    'nav_assistant_short' => ['uk' => 'Спитати Елю',    'en' => 'Ask Eli'],
     'nav_menu'      => ['uk' => 'Меню',                 'en' => 'Menu'],
     'lang_switch'   => ['uk' => 'Мова інтерфейсу',      'en' => 'Interface language'],
 

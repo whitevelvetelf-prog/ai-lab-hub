@@ -46,57 +46,9 @@ require_once __DIR__ . '/translations.php';
         border-radius: 2px;
     }
 
-    @media (max-width: 720px) {
-        .site-header {
-            justify-content: flex-start;
-        }
-
-        .site-nav__toggle {
-            display: flex;
-        }
-
-        /* CTA притискається праворуч, гамбургер — одразу за нею. */
-        .site-header__cta {
-            margin-left: auto;
-        }
-
-        .site-header .site-nav {
-            order: 4;
-            flex-basis: 100%;
-            margin-left: 0;
-            display: none;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 6px;
-        }
-
-        .site-header .site-nav.is-open {
-            display: flex;
-        }
-
-        .site-header .site-nav .site-nav__link {
-            justify-content: center;
-        }
-    }
-
-    /* Дуже вузькі екрани: CTA стає компактною (лише іконка), щоб
-       логотип + CTA + гамбургер вміщались у верхній рядок. */
-    @media (max-width: 480px) {
-        .site-header__logo {
-            height: 38px;
-        }
-
-        .site-header__cta {
-            font-size: 0;
-            gap: 0;
-            padding: 10px;
-        }
-
-        .site-header__cta svg {
-            width: 18px;
-            height: 18px;
-        }
-    }
+    /* Мобільна шапка (< 768px): «Головна / Кабінет / Увійти» — у гамбургер.
+       Повний набір правил нижче, після базових стилів перемикача мови
+       (щоб перебивати їх за рівної специфічності). */
 
     /* ===== Перемикач мови UA/EN у шапці =====
        Розмітку вставляє скрипт унизу цього файлу — у кожній шапці
@@ -134,15 +86,113 @@ require_once __DIR__ . '/translations.php';
         background: linear-gradient(135deg, #5b8cff, #a5c0ff);
     }
 
-    @media (max-width: 720px) {
-        /* Перемикач лишається у верхньому рядку поруч із CTA та гамбургером. */
+    /* ===== Мобільна шапка (< 768px) =====
+       «Головна / Кабінет / Увійти» ховаються в гамбургер. Верхній рядок:
+       логотип → (вільний простір) → перемикач мови → кнопка асистента →
+       гамбургер. Кнопка асистента ЗАВЖДИ показує короткий підпис поруч з
+       іконкою (ніколи не лишається самою іконкою) і має пріоритет: не
+       стискається і завжди видима повністю. */
+    @media (max-width: 768px) {
+        .site-header {
+            justify-content: flex-start;
+        }
+
+        .site-header__logo {
+            height: 40px;
+        }
+
+        .site-nav__toggle {
+            display: flex;
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+
+        /* Перемикач мови забирає вільний простір і притискає праву групу. */
         .site-lang {
             margin-left: auto;
+        }
+
+        /* Довгий підпис із розмітки ховаємо (font-size: 0), а короткий
+           показуємо через ::after — так не треба правити шапку на кожній
+           сторінці. Доступна назва посилання лишається для скрінрідерів. */
+        .site-header__cta {
+            margin-left: 10px;
+            flex-shrink: 0;
+            font-size: 0;
+            gap: 0;
+            padding: 10px 14px;
+        }
+
+        .site-header__cta > svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .site-header__cta::after {
+            content: <?= '"' . addcslashes(t('nav_assistant_short'), '"\\') . '"' ?>;
+            margin-left: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            white-space: nowrap;
+        }
+
+        .site-header .site-nav {
+            order: 4;
+            flex-basis: 100%;
+            margin-left: 0;
+            display: none;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
+        }
+
+        .site-header .site-nav.is-open {
+            display: flex;
+        }
+
+        .site-header .site-nav .site-nav__link {
+            justify-content: center;
+        }
+    }
+
+    /* Вузькі екрани (< 480px): перемикач мови переїжджає на власний рядок під
+       верхньою смугою — так логотип + кнопка асистента (з текстом) + гамбургер
+       гарантовано вміщаються в перший рядок навіть на 320px. */
+    @media (max-width: 480px) {
+        .site-lang {
             order: 3;
+            flex-basis: 100%;
+            justify-content: center;
+            margin: 4px 0 0;
+        }
+
+        /* Кнопка асистента + гамбургер притискаються праворуч у першому рядку. */
+        .site-header__cta {
+            margin-left: auto;
+        }
+    }
+
+    /* Найвужчі екрани (≈320–380px): підтискаємо логотип, гамбургер та відступи.
+       Кнопка асистента з текстом лишається недоторканою. */
+    @media (max-width: 380px) {
+        .site-header {
+            gap: 10px 12px;
+            padding: 14px 12px;
+        }
+
+        .site-header__logo {
+            height: 34px;
         }
 
         .site-header__cta {
-            margin-left: 8px;
+            padding: 9px 12px;
+        }
+
+        .site-nav__toggle {
+            width: 40px;
+            height: 40px;
+            padding: 10px;
         }
     }
 
