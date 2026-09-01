@@ -8,11 +8,14 @@ declare(strict_types=1);
  * Макет чат-інтерфейсу. JS-симуляція сценарію з відео Елі
  * (привітання -> друкування -> відповідь). Без реальної AI-логіки.
  *
- * Десктоп (>= 768px): маленькі відео-аватарки в чаті (застигають на
- * останньому кадрі). Мобільний (< 768px): велике відео Елі вгорі —
- * привітання показується одночасно з текстом і полем вводу, "друкує"
- * грає саме; після відтворення відео зникає, у чаті лишаються текст
- * і картки продуктів.
+ * Однаковий сценарій для всіх розмірів екрана: одне велике відео Елі
+ * (#eliStage) — спершу привітання (грає раз, застигає на кадрі, видиме
+ * разом із текстом привітання й полем вводу), потім «друкує» (грає раз
+ * при кожному повідомленні користувача і зникає ПОВНІСТЮ, щойно
+ * зʼявляється текстова відповідь). Текстові відповіді та картки
+ * продуктів — без відео/аватарок поруч. Десктоп: відео — великий блок
+ * у колонці чату (не на весь екран); мобільний (< 768px): майже на
+ * весь екран.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -172,22 +175,6 @@ require_once __DIR__ . '/../app/translations.php';
             flex-direction: row-reverse;
         }
 
-        /* Контейнер аватарки: фіксований розмір ~140x140.
-           Місце лишається навіть коли відео прибрано з DOM. */
-        .msg__avatar {
-            width: 140px;
-            height: 140px;
-            flex-shrink: 0;
-        }
-
-        /* Відео Елі: персонаж влазить повністю, без обрізки голови. */
-        .msg__video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            display: block;
-        }
-
         .msg__bubble {
             padding: 14px 18px;
             border-radius: 16px;
@@ -331,13 +318,28 @@ require_once __DIR__ . '/../app/translations.php';
             background: rgba(255, 255, 255, 0.88);
         }
 
-        /* Велике відео Елі (мобільний сценарій) — вмикається лише в
-           медіа-запиті < 768px; на десктопі завжди display: none. */
-        .fs-video {
+        /* Велике відео Елі (привітання / «друкує») — один блок для всіх
+           екранів. Десктоп: великий блок у колонці чату (не на весь
+           екран). Мобільний (< 768px): майже на весь екран — див.
+           медіа-запит нижче. Видимістю та зміною ролика керує JS. */
+        .eli-stage {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 360px;
+            margin-bottom: 24px;
+            background: var(--bg-start);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .eli-stage[hidden] {
             display: none;
         }
 
-        .fs-video__el {
+        .eli-stage__video {
             width: 100%;
             height: 100%;
             object-fit: contain;
@@ -356,20 +358,14 @@ require_once __DIR__ . '/../app/translations.php';
                 max-width: 94%;
             }
 
-            .msg__avatar {
-                width: 120px;
-                height: 120px;
-            }
-
             .composer__btn {
                 padding: 14px 18px;
             }
         }
 
-        /* --- Мобільний сценарій Елі (< 768px) -----------------------------
-           Велике відео Елі (привітання / друкування) вгорі; текст і картки —
-           у чаті під ним; поле вводу — знизу. Під час відео "друкує" видно
-           лише саме відео. Десктоп (>= 768px) сюди не потрапляє. */
+        /* --- Мобільний режим Елі (< 768px) --------------------------------
+           Велике відео Елі майже на весь екран; текст і картки — у чаті під
+           ним; поле вводу — знизу. Поки грає «друкує» — видно лише відео. */
         @media (max-width: 768px) {
             body {
                 display: flex;
@@ -406,11 +402,6 @@ require_once __DIR__ . '/../app/translations.php';
                 box-shadow: none;
             }
 
-            /* У чаті — жодних відео-аватарок Елі. */
-            .msg__avatar {
-                display: none;
-            }
-
             .composer {
                 flex: 0 0 auto;
                 margin-top: 0;
@@ -421,21 +412,23 @@ require_once __DIR__ . '/../app/translations.php';
             }
 
             /* Велике відео Елі: займає більшість висоти екрана. */
-            #fsVideo:not([hidden]) {
-                display: flex;
+            .eli-stage {
+                height: auto;
                 flex: 1 1 auto;
                 min-height: 0;
-                background: var(--bg-start);
+                margin-bottom: 0;
+                border: none;
+                border-radius: 0;
             }
 
             /* Поки видно велике відео — чат стискається до смужки під ним
                (там лишається текст привітання). */
-            #fsVideo:not([hidden]) ~ .chat {
+            .eli-stage:not([hidden]) ~ .chat {
                 flex: 0 0 auto;
                 max-height: 30vh;
             }
 
-            /* Поки грає відео "друкує" — на екрані лишається тільки відео. */
+            /* Поки грає відео «друкує» — на екрані лишається тільки відео. */
             .page.is-typing .chat,
             .page.is-typing .composer {
                 display: none;
@@ -473,28 +466,23 @@ require_once __DIR__ . '/../app/translations.php';
     </header>
 
     <div class="page" id="page">
-        <!-- Велике відео Елі — лише мобільний сценарій, керується JS. -->
-        <div id="fsVideo" class="fs-video" hidden>
-            <video id="fsVideoEl" class="fs-video__el" muted playsinline></video>
-        </div>
-
         <div class="chat-head">
             <h1 class="chat-head__title">Еля — ваша AI-асистентка</h1>
             <p class="chat-head__subtitle">Опишіть задачу — Еля підбере найкращий AI-інструмент</p>
         </div>
 
+        <!-- Велике відео Елі (привітання / «друкує»). Один елемент для всіх
+             розмірів екрана; показ і зміну ролика керує JS нижче. -->
+        <div id="eliStage" class="eli-stage" hidden>
+            <video id="eliStageVideo" class="eli-stage__video" muted playsinline
+                   aria-label="Відео Елі"></video>
+        </div>
+
         <div class="chat" id="chat">
-            <!-- Привітання Елі: на мобільному відео стає великим (#fsVideo),
-                 а цей текст лишається видимим у чаті. Десктоп: маленька
-                 аватарка, застигає на останньому кадрі, зникає при першому
-                 повідомленні (обробник submit). -->
+            <!-- Текст привітання Елі. Показується разом із великим відео
+                 привітання (#eliStage) та полем вводу; прибирається повністю
+                 при першому повідомленні користувача. -->
             <div class="msg msg--eli" id="greetingMsg">
-                <div class="msg__avatar">
-                    <video id="greetingVideo" class="msg__video"
-                           src="assets/videos/elya-greeting.mp4"
-                           autoplay muted playsinline
-                           aria-label="Еля вітається"></video>
-                </div>
                 <div class="msg__bubble">
                     Доброго дня! Розкажіть, яку задачу потрібно вирішити — і я підберу
                     відповідний AI-інструмент.
@@ -517,17 +505,15 @@ require_once __DIR__ . '/../app/translations.php';
         var form = document.getElementById('composer');
         var input = document.getElementById('composerInput');
         var page = document.getElementById('page');
-        var greetingVideo = document.getElementById('greetingVideo');
         var greetingMsg = document.getElementById('greetingMsg');
-        var fsOverlay = document.getElementById('fsVideo');
-        var fsEl = document.getElementById('fsVideoEl');
-        var fsDetach = null;
+        var stage = document.getElementById('eliStage');
+        var stageVideo = document.getElementById('eliStageVideo');
 
-        function isMobile() {
-            return window.matchMedia
-                ? window.matchMedia('(max-width: 768px)').matches
-                : window.innerWidth <= 768;
-        }
+        var GREETING_SRC = 'assets/videos/elya-greeting.mp4';
+        var TYPING_SRC = 'assets/videos/elya-typing.mp4';
+
+        var stageDetach = null;   // знімає слухачі поточного ролика
+        var greetingGone = false;
 
         function safePlay(video) {
             var p = video.play();
@@ -536,75 +522,93 @@ require_once __DIR__ . '/../app/translations.php';
             }
         }
 
-        // Прибрати велике відео Елі (#fsVideo): зупинити, очистити src,
-        // сховати, зняти позначку "друкує".
-        function hideEliVideo() {
-            if (fsDetach) {
-                fsDetach();
-                fsDetach = null;
-            }
-            try { fsEl.pause(); } catch (e) {}
-            fsEl.removeAttribute('src');
-            fsEl.load();
-            fsOverlay.hidden = true;
-            page.classList.remove('is-typing');
-        }
-
-        // Програти велике відео Елі один раз. typing=true ховає чат і поле
-        // вводу на час відтворення. onDone спрацьовує на 'ended' або 'error'.
-        function playEliVideo(src, typing, onDone) {
-            hideEliVideo();
-            if (typing) {
-                page.classList.add('is-typing');
-            }
-
-            function onEnd() {
-                hideEliVideo();
-                if (typeof onDone === 'function') {
-                    onDone();
-                }
-            }
-
-            fsEl.addEventListener('ended', onEnd);
-            fsEl.addEventListener('error', onEnd);
-            fsDetach = function () {
-                fsEl.removeEventListener('ended', onEnd);
-                fsEl.removeEventListener('error', onEnd);
-            };
-
-            fsEl.src = src;
-            fsEl.muted = true;
-            fsOverlay.hidden = false;
-            try { fsEl.currentTime = 0; } catch (e) {}
-            safePlay(fsEl);
-        }
-
         function scrollIntoView(el) {
-            if (typeof el.scrollIntoView === 'function') {
+            if (el && typeof el.scrollIntoView === 'function') {
                 el.scrollIntoView({ behavior: 'smooth', block: 'end' });
             }
         }
 
-        // Привітальне відео.
-        //  • Мобільний: велике відео в #fsVideo; текст привітання лишається
-        //    видимим у чаті, поле вводу — знизу (усе одночасно).
-        //  • Десктоп: маленька аватарка, застигає на останньому кадрі,
-        //    прибирається при першому повідомленні (обробник submit).
-        if (greetingVideo) {
-            if (isMobile()) {
-                var gAvatar = greetingVideo.closest('.msg__avatar');
-                greetingVideo.pause();
-                greetingVideo.remove();
-                greetingVideo = null;
-                if (gAvatar && gAvatar.parentNode) {
-                    gAvatar.remove();
+        // Повністю прибрати велике відео Елі: зняти слухачі, зупинити,
+        // очистити src (щоб не лишалося застиглого кадру), сховати блок.
+        function clearStage() {
+            if (stageDetach) {
+                stageDetach();
+                stageDetach = null;
+            }
+            try { stageVideo.pause(); } catch (e) {}
+            stageVideo.removeAttribute('src');
+            stageVideo.load();
+            stage.hidden = true;
+            page.classList.remove('is-typing');
+        }
+
+        // Показати велике відео Елі й програти його рівно один раз.
+        //   opts.typing — на час відтворення ховати чат і поле вводу
+        //                 (мобільний повноекранний режим).
+        //   opts.freeze — після 'ended' застигнути на останньому кадрі
+        //                 (лишити видимим). Інакше — прибрати блок повністю.
+        //   opts.onEnd  — колбек після завершення / помилки.
+        function playStage(src, opts) {
+            opts = opts || {};
+            clearStage();
+
+            if (opts.typing) {
+                page.classList.add('is-typing');
+            }
+
+            var finished = false;
+
+            function detach() {
+                stageVideo.removeEventListener('ended', onEnded);
+                stageVideo.removeEventListener('error', onError);
+            }
+            stageDetach = detach;
+
+            function finish(removeStage) {
+                if (finished) {
+                    return;
                 }
-                playEliVideo('assets/videos/elya-greeting.mp4', false);
-            } else {
-                greetingVideo.addEventListener('ended', function () {
-                    greetingVideo.pause();
-                });
-                safePlay(greetingVideo);
+                finished = true;
+                detach();
+                stageDetach = null;
+                if (removeStage) {
+                    clearStage();
+                } else {
+                    try { stageVideo.pause(); } catch (e) {}
+                    page.classList.remove('is-typing');
+                }
+                if (typeof opts.onEnd === 'function') {
+                    opts.onEnd();
+                }
+            }
+
+            function onEnded() {
+                finish(!opts.freeze);
+            }
+
+            function onError() {
+                // Немає ролика (напр. 404) — не блокуємо сценарій,
+                // одразу показуємо відповідь.
+                finish(true);
+            }
+
+            stageVideo.addEventListener('ended', onEnded);
+            stageVideo.addEventListener('error', onError);
+
+            stageVideo.src = src;
+            stageVideo.muted = true;
+            stage.hidden = false;
+            try { stageVideo.currentTime = 0; } catch (e) {}
+            safePlay(stageVideo);
+        }
+
+        function removeGreeting() {
+            if (greetingGone) {
+                return;
+            }
+            greetingGone = true;
+            if (greetingMsg && greetingMsg.parentNode) {
+                greetingMsg.parentNode.removeChild(greetingMsg);
             }
         }
 
@@ -619,41 +623,6 @@ require_once __DIR__ . '/../app/translations.php';
             msg.appendChild(bubble);
             chat.appendChild(msg);
             scrollIntoView(msg);
-        }
-
-        // Десктоп: нове повідомлення Елі з маленьким відео "друкує", що
-        // застигає на останньому кадрі. Мобільний сценарій обробляється
-        // в обробнику submit нижче (велике відео #fsVideo).
-        function addEliTypingMessage() {
-            var msg = document.createElement('div');
-            msg.className = 'msg msg--eli';
-
-            var avatar = document.createElement('div');
-            avatar.className = 'msg__avatar';
-
-            var video = document.createElement('video');
-            video.className = 'msg__video';
-            video.src = 'assets/videos/elya-typing.mp4';
-            video.muted = true;
-            video.setAttribute('playsinline', '');
-            video.setAttribute('aria-label', 'Еля друкує');
-
-            avatar.appendChild(video);
-            msg.appendChild(avatar);
-            chat.appendChild(msg);
-            scrollIntoView(msg);
-
-            video.addEventListener('ended', function () {
-                // Застигнути на останньому кадрі (відео не приховуємо).
-                video.pause();
-                addEliResponse(msg);
-            });
-
-            video.addEventListener('loadedmetadata', function () {
-                try { video.currentTime = 0; } catch (e) {}
-            });
-
-            safePlay(video);
         }
 
         // Міні-картка продукту: лого (ініціали), назва, кнопка "Докладніше".
@@ -699,11 +668,11 @@ require_once __DIR__ . '/../app/translations.php';
             return step;
         }
 
-        // Тестова багатокрокова відповідь Елі з добіркою продуктів.
-        function addEliResponse(msg) {
-            if (msg.querySelector('.msg__bubble')) {
-                return;
-            }
+        // Тестова багатокрокова відповідь Елі з добіркою продуктів —
+        // тільки текст і картки, без відео/аватарки поруч.
+        function addEliResponse() {
+            var msg = document.createElement('div');
+            msg.className = 'msg msg--eli';
 
             var bubble = document.createElement('div');
             bubble.className = 'msg__bubble';
@@ -728,10 +697,16 @@ require_once __DIR__ . '/../app/translations.php';
 
             bubble.appendChild(steps);
             msg.appendChild(bubble);
+            chat.appendChild(msg);
             scrollIntoView(msg);
         }
 
-        // Кожне повідомлення користувача запускає цикл "друкує -> відповідь".
+        // Старт: велике відео-привітання грає раз і застигає на кадрі;
+        // текст привітання й поле вводу лишаються видимими.
+        playStage(GREETING_SRC, { freeze: true });
+
+        // Кожне повідомлення користувача: велике відео «друкує» з початку,
+        // грає раз, зникає повністю — і одразу зʼявляється відповідь.
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var text = input.value.trim();
@@ -739,37 +714,15 @@ require_once __DIR__ . '/../app/translations.php';
                 return;
             }
 
-            if (isMobile()) {
-                // Привітання (велике відео + його текст) зникає повністю.
-                hideEliVideo();
-                if (greetingMsg && greetingMsg.parentNode) {
-                    greetingMsg.remove();
-                }
-                greetingVideo = null;
-
-                addUserMessage(text);
-                input.value = '';
-
-                // Велике відео "друкує": чат і поле вводу сховані, поки грає;
-                // після 'ended' — звичайний вид із текстовою відповіддю.
-                playEliVideo('assets/videos/elya-typing.mp4', true, function () {
-                    var m = document.createElement('div');
-                    m.className = 'msg msg--eli';
-                    chat.appendChild(m);
-                    addEliResponse(m);
-                });
-                return;
-            }
-
-            // Десктоп — без змін: привітальна аватарка зникає тут, далі
-            // маленьке відео "друкує" в новому повідомленні.
-            if (greetingVideo) {
-                greetingVideo.remove();
-                greetingVideo = null;
-            }
+            removeGreeting();
             addUserMessage(text);
             input.value = '';
-            addEliTypingMessage();
+
+            playStage(TYPING_SRC, {
+                typing: true,
+                freeze: false,
+                onEnd: addEliResponse
+            });
         });
     })();
     </script>
