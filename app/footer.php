@@ -7,9 +7,12 @@
  *   include __DIR__ . '/../app/footer.php';
  *
  * Тут в одному місці: стилі підвалу, адаптив шапки (гнучка розкладка +
- * гамбургер на вузьких екранах), розмітка підвалу та скрипт-перемикач
- * мобільного меню. Оновлювати підвал — лише в цьому файлі.
+ * гамбургер на вузьких екранах), перемикач мови UA/EN у шапці, розмітка
+ * підвалу та скрипт-перемикач мобільного меню. Оновлювати підвал — лише
+ * в цьому файлі.
  */
+
+require_once __DIR__ . '/translations.php';
 
 ?>
 <style>
@@ -92,6 +95,54 @@
         .site-header__cta svg {
             width: 18px;
             height: 18px;
+        }
+    }
+
+    /* ===== Перемикач мови UA/EN у шапці =====
+       Розмітку вставляє скрипт унизу цього файлу — у кожній шапці
+       (.site-header) сайту, перед кнопкою «Викликати Асистента». */
+    .site-lang {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        padding: 3px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+    }
+
+    .site-lang__btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 38px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.75);
+        transition: color 0.15s ease, background 0.15s ease;
+    }
+
+    .site-lang__btn:hover {
+        color: #ffffff;
+    }
+
+    .site-lang__btn.is-active {
+        color: #00032c;
+        background: linear-gradient(135deg, #5b8cff, #a5c0ff);
+    }
+
+    @media (max-width: 720px) {
+        /* Перемикач лишається у верхньому рядку поруч із CTA та гамбургером. */
+        .site-lang {
+            margin-left: auto;
+            order: 3;
+        }
+
+        .site-header__cta {
+            margin-left: 8px;
         }
     }
 
@@ -209,19 +260,19 @@
 <footer class="site-footer">
     <div class="site-footer__inner">
         <ul class="site-footer__links">
-            <li><a href="blog.php">Блог</a></li>
-            <li><a href="about.php">Про проєкт</a></li>
-            <li><a href="contacts.php">Контакти</a></li>
-            <li><a href="terms.php">Умови використання</a></li>
-            <li><a href="privacy.php">Політика конфіденційності</a></li>
+            <li><a href="blog.php"><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a></li>
+            <li><a href="about.php"><?= htmlspecialchars(t('footer_about'), ENT_QUOTES) ?></a></li>
+            <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
+            <li><a href="terms.php"><?= htmlspecialchars(t('footer_terms'), ENT_QUOTES) ?></a></li>
+            <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
         </ul>
 
         <a class="site-footer__support" href="#">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-            Підтримати проєкт
+            <?= htmlspecialchars(t('footer_support'), ENT_QUOTES) ?>
         </a>
 
-        <nav class="site-footer__social" aria-label="Соцмережі">
+        <nav class="site-footer__social" aria-label="<?= htmlspecialchars(t('footer_social'), ENT_QUOTES) ?>">
             <a href="#" aria-label="Facebook">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
             </a>
@@ -249,5 +300,50 @@
             var open = nav.classList.toggle('is-open');
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
+    })();
+</script>
+
+<script>
+    /* Перемикач мови UA/EN. Вставляємо в кожну шапку сайту, щоб не дублювати
+       розмітку в десятках сторінок. Посилання ведуть на поточний URL із
+       ?lang=uk|en — сервер (app/translations.php) зберігає вибір у сесію
+       і повертає на цю ж сторінку без параметра. */
+    (function () {
+        var current = <?= json_encode(current_lang()) ?>;
+        var label = <?= json_encode(t('lang_switch')) ?>;
+        var header = document.querySelector('.site-header');
+        if (!header || header.querySelector('.site-lang')) {
+            return;
+        }
+
+        function langUrl(lang) {
+            var url = new URL(window.location.href);
+            url.searchParams.set('lang', lang);
+            return url.pathname + url.search + url.hash;
+        }
+
+        var box = document.createElement('div');
+        box.className = 'site-lang';
+        box.setAttribute('role', 'group');
+        box.setAttribute('aria-label', label);
+
+        [['uk', 'UA'], ['en', 'EN']].forEach(function (pair) {
+            var a = document.createElement('a');
+            a.className = 'site-lang__btn' + (pair[0] === current ? ' is-active' : '');
+            a.href = langUrl(pair[0]);
+            a.textContent = pair[1];
+            a.setAttribute('lang', pair[0]);
+            if (pair[0] === current) {
+                a.setAttribute('aria-current', 'true');
+            }
+            box.appendChild(a);
+        });
+
+        var cta = header.querySelector('.site-header__cta');
+        if (cta) {
+            header.insertBefore(box, cta);
+        } else {
+            header.appendChild(box);
+        }
     })();
 </script>

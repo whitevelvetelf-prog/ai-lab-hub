@@ -6,6 +6,8 @@ declare(strict_types=1);
  * AI LAB HUB — Про проєкт (заглушка).
  */
 
+require_once __DIR__ . '/../app/translations.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="uk">
