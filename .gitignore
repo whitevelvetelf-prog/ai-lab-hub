@@ -2,6 +2,7 @@
 /vendor
 /node_modules
 /config/database.php
+/config/translation.php
 
 # Завантажені через CRM логотипи продуктів — користувацький контент,
 # змінюється незалежно від коду.
