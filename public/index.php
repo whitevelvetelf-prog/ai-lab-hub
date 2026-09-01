@@ -85,13 +85,7 @@ $categoryIcons = [
             padding: 20px 32px;
         }
 
-        /* Бренд (логотип + назва) зафіксований у лівому верхньому куті
-           екрана — не зміщується вбік чи вниз при адаптації. */
         .site-header__brand {
-            position: fixed;
-            top: 16px;
-            left: 20px;
-            z-index: 100;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -331,7 +325,12 @@ $categoryIcons = [
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
-        <nav class="site-nav">
+        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="site-nav" id="siteNav">
             <a class="site-nav__link" href="index.php">Головна</a>
             <?php if (auth_check()): ?>
             <a class="site-nav__link" href="account.php">Кабінет</a>
@@ -375,5 +374,7 @@ $categoryIcons = [
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
+
+    <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
 </html>

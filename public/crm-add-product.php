@@ -1068,5 +1068,6 @@ $displayPlans = $plans !== []
             }
         });
     </script>
+    <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
 </html>

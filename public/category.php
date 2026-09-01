@@ -349,7 +349,12 @@ $pageTitle = $category !== false ? (string) $category['name'] : 'Категор�
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
-        <nav class="site-nav">
+        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="site-nav" id="siteNav">
             <a class="site-nav__link" href="index.php">Головна</a>
             <?php if (auth_check()): ?>
             <a class="site-nav__link" href="account.php">Кабінет</a>
@@ -397,5 +402,7 @@ $pageTitle = $category !== false ? (string) $category['name'] : 'Категор�
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>lucide.createIcons();</script>
+
+    <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
 </html>

@@ -477,7 +477,12 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         <a class="site-header__brand" href="index.php">
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
-        <nav class="site-nav">
+        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="site-nav" id="siteNav">
             <a class="site-nav__link" href="index.php">Головна</a>
             <?php if (auth_check()): ?>
             <a class="site-nav__link" href="account.php">Кабінет</a>
@@ -586,5 +591,6 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         </div>
 <?php endif; ?>
     </div>
+    <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
 </html>

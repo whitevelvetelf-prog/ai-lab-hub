@@ -418,5 +418,6 @@ $total = count($products);
             </table>
         </div>
     </div>
+    <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
 </html>
