@@ -13,7 +13,10 @@
 
 ?>
 <style>
-    /* ===== Шапка: гнучка розкладка + гамбургер на вузьких екранах ===== */
+    /* ===== Шапка: гнучка розкладка + гамбургер на вузьких екранах =====
+       Кнопка «Викликати Асистента» (.site-header__cta) винесена з <nav>,
+       тож на мобільному лишається видимою поруч із гамбургером; гамбургер
+       згортає лише Головна + Кабінет/Увійти. */
     .site-header {
         gap: 16px 24px;
         flex-wrap: wrap;
@@ -21,7 +24,6 @@
 
     .site-nav__toggle {
         display: none;
-        margin-left: auto;
         width: 44px;
         height: 44px;
         padding: 11px;
@@ -50,8 +52,13 @@
             display: flex;
         }
 
+        /* CTA притискається праворуч, гамбургер — одразу за нею. */
+        .site-header__cta {
+            margin-left: auto;
+        }
+
         .site-header .site-nav {
-            order: 3;
+            order: 4;
             flex-basis: 100%;
             margin-left: 0;
             display: none;
@@ -66,6 +73,25 @@
 
         .site-header .site-nav .site-nav__link {
             justify-content: center;
+        }
+    }
+
+    /* Дуже вузькі екрани: CTA стає компактною (лише іконка), щоб
+       логотип + CTA + гамбургер вміщались у верхній рядок. */
+    @media (max-width: 480px) {
+        .site-header__logo {
+            height: 38px;
+        }
+
+        .site-header__cta {
+            font-size: 0;
+            gap: 0;
+            padding: 10px;
+        }
+
+        .site-header__cta svg {
+            width: 18px;
+            height: 18px;
         }
     }
 
