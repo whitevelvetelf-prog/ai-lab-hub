@@ -6,7 +6,7 @@
 
     RUN (from anywhere):
         powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1
-        powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -Output deploy4.zip
+        powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -Output deploy5.zip
 
     INCLUDED: app/, database/ (schema.sql + seed.sql), every public/*.php,
     images and videos under public/assets/.
@@ -21,7 +21,7 @@
 #>
 
 param(
-    [string] $Output = 'deploy4.zip'
+    [string] $Output = 'deploy5.zip'
 )
 
 $ErrorActionPreference = 'Stop'
