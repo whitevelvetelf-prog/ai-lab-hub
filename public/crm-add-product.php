@@ -73,6 +73,270 @@ function product_slug(string $name): string
     return $s !== '' ? mb_substr($s, 0, 60) : 'logo';
 }
 
+/**
+ * Завантажує вміст сторінки за URL: curl, а якщо його немає —
+ * file_get_contents. Повертає HTML або null, якщо не вдалося.
+ */
+function crm_fetch_url(string $url): ?string
+{
+    $ua = 'Mozilla/5.0 (compatible; AILabHubBot/1.0)';
+    $maxBytes = 2000000; // 2 МБ — достатньо для <head> та основного тексту
+
+    if (function_exists('curl_init')) {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_MAXREDIRS => 3,
+            CURLOPT_CONNECTTIMEOUT => 6,
+            CURLOPT_TIMEOUT => 12,
+            CURLOPT_USERAGENT => $ua,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_ACCEPT_ENCODING => '',
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+        ]);
+        $body = curl_exec($ch);
+        $code = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+
+        if (is_string($body) && $body !== '' && $code < 400) {
+            return strlen($body) > $maxBytes ? substr($body, 0, $maxBytes) : $body;
+        }
+
+        return null;
+    }
+
+    if (!ini_get('allow_url_fopen')) {
+        return null;
+    }
+
+    $ctx = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'timeout' => 12,
+            'follow_location' => 1,
+            'max_redirects' => 3,
+            'header' => "User-Agent: {$ua}\r\nAccept: text/html,application/xhtml+xml\r\n",
+        ],
+        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+    ]);
+    $body = @file_get_contents($url, false, $ctx, 0, $maxBytes);
+
+    return is_string($body) && $body !== '' ? $body : null;
+}
+
+/** Декодує HTML-сутності та стискає пробіли — повертає однорядковий текст. */
+function crm_clean_text(string $text): string
+{
+    $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+
+    return trim($text);
+}
+
+/** content першого <meta name="..."> (або property="...") зі сторінки. */
+function crm_meta(string $html, string $key, string $attr = 'name'): string
+{
+    $pattern = '#<meta[^>]+' . $attr . '=["\']' . preg_quote($key, '#') . '["\'][^>]*>#i';
+    if (preg_match($pattern, $html, $tag)
+        && preg_match('#content=["\'](.*?)["\']#is', $tag[0], $content)) {
+        return crm_clean_text($content[1]);
+    }
+
+    return '';
+}
+
+/** Відрізає «хвіст» заголовка після типового роздільника: «Назва — Гасло». */
+function crm_trim_title(string $title): string
+{
+    $title = crm_clean_text($title);
+    $parts = preg_split('/\s+[|\x{2013}\x{2014}\x{00B7}:\-]\s+/u', $title, 2);
+    if (is_array($parts) && isset($parts[0]) && mb_strlen($parts[0]) >= 2) {
+        $title = $parts[0];
+    }
+
+    return mb_substr($title, 0, 255);
+}
+
+/**
+ * Базове автозаповнення картки продукту зі сторінки офіційного сайту.
+ * БЕЗ AI: сторінка завантажується, HTML чиститься (script/style/теги),
+ * назва й опис дістаються простими евристиками — title сторінки як назва,
+ * meta description як короткий опис. Повноцінну AI-обробку підключимо
+ * окремим кроком, коли визначимося з конкретним AI API.
+ *
+ * @return array{ok: bool, error?: string, fields?: array<string, string>, meta?: array<string, mixed>}
+ */
+function crm_autofill_from_url(string $rawUrl): array
+{
+    $url = trim($rawUrl);
+    if ($url === '') {
+        return ['ok' => false, 'error' => 'Вкажіть URL офіційного сайту продукту.'];
+    }
+    if (!preg_match('#^https?://#i', $url)) {
+        $url = 'https://' . $url;
+    }
+    if (filter_var($url, FILTER_VALIDATE_URL) === false) {
+        return ['ok' => false, 'error' => 'Некоректний URL.'];
+    }
+
+    $host = (string) parse_url($url, PHP_URL_HOST);
+    if ($host === '') {
+        return ['ok' => false, 'error' => 'Не вдалося визначити домен у URL.'];
+    }
+
+    // Мінімальний захист від SSRF: без localhost та приватних діапазонів.
+    if (preg_match('/^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.)/i', $host)
+        || preg_match('/^172\.(1[6-9]|2\d|3[01])\./', $host)
+        || $host === '::1') {
+        return ['ok' => false, 'error' => 'URL веде на локальну / приватну адресу — завантаження заборонено.'];
+    }
+    $ip = gethostbyname($host);
+    if (filter_var($ip, FILTER_VALIDATE_IP) !== false
+        && filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false) {
+        return ['ok' => false, 'error' => 'URL веде на локальну / приватну адресу — завантаження заборонено.'];
+    }
+
+    $html = crm_fetch_url($url);
+    if ($html === null) {
+        return ['ok' => false, 'error' => 'Не вдалося завантажити сторінку за цим URL.'];
+    }
+
+    // Приводимо до UTF-8, якщо сторінка оголошує інше кодування.
+    if (preg_match('#<meta[^>]+charset=["\']?\s*([a-z0-9\-]+)#i', $html, $cs)) {
+        $charset = strtoupper(trim($cs[1]));
+        if ($charset !== '' && $charset !== 'UTF-8' && function_exists('mb_convert_encoding')) {
+            $converted = @mb_convert_encoding($html, 'UTF-8', $charset);
+            if (is_string($converted) && $converted !== '') {
+                $html = $converted;
+            }
+        }
+    }
+
+    $pageTitle = '';
+    if (preg_match('#<title[^>]*>(.*?)</title>#is', $html, $t)) {
+        $pageTitle = crm_clean_text($t[1]);
+    }
+
+    $metaDescription = crm_meta($html, 'description');
+    $ogTitle = crm_meta($html, 'og:title', 'property');
+    $ogDescription = crm_meta($html, 'og:description', 'property');
+    $ogSiteName = crm_meta($html, 'og:site_name', 'property');
+
+    // Основний текст сторінки — для запасного короткого опису, якщо немає
+    // meta description. Спершу викидаємо службові блоки, потім усі теги.
+    $body = preg_replace(
+        '#<(script|style|noscript|svg|template|head|nav|footer)\b[^>]*>.*?</\1>#is',
+        ' ',
+        $html
+    ) ?? $html;
+    $body = preg_replace('#<[^>]+>#', ' ', $body) ?? $body;
+    $bodyText = crm_clean_text($body);
+
+    // Запасний короткий опис — перше змістовне речення зі сторінки.
+    $firstSentence = '';
+    if ($bodyText !== '') {
+        $firstSentence = preg_match('#(.{40,300}?[.!?])(\s|$)#u', $bodyText, $sentence)
+            ? trim($sentence[1])
+            : mb_substr($bodyText, 0, 200);
+    }
+
+    // Евристика назви: og:site_name → og:title → <title> (до роздільника).
+    $name = $ogSiteName !== '' ? $ogSiteName : ($ogTitle !== '' ? $ogTitle : $pageTitle);
+    $name = crm_trim_title($name);
+
+    // Евристика короткого опису: meta description → og:description → 1-ше речення.
+    $shortDescription = $metaDescription !== ''
+        ? $metaDescription
+        : ($ogDescription !== '' ? $ogDescription : $firstSentence);
+    $shortDescription = mb_substr(crm_clean_text($shortDescription), 0, 500);
+
+    return [
+        'ok' => true,
+        'fields' => [
+            'name' => $name,
+            'official_url' => $url,
+            'short_description' => $shortDescription,
+        ],
+        'meta' => [
+            'page_title' => $pageTitle,
+            'source_url' => $url,
+            'used_ai' => false,
+        ],
+    ];
+}
+
+/**
+ * Миттєва перевірка на можливий дублікат за назвою та/або офіційним URL —
+ * той самий принцип, що й серверна антидубль-перевірка при збереженні.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function crm_find_similar(PDO $pdo, string $name, string $officialUrl): array
+{
+    $name = trim($name);
+    $normUrl = $officialUrl !== '' ? normalize_url($officialUrl) : '';
+
+    $conditions = [];
+    $params = [];
+    if (mb_strlen($name) >= 2) {
+        $conditions[] = "(name LIKE CONCAT('%', :name1, '%') OR :name2 LIKE CONCAT('%', name, '%'))";
+        $params[':name1'] = $name;
+        $params[':name2'] = $name;
+    }
+    if ($normUrl !== '') {
+        $conditions[] = "(official_url IS NOT NULL AND official_url <> '' AND "
+            . "TRIM(TRAILING '/' FROM "
+            . "REPLACE(REPLACE(REPLACE(LOWER(TRIM(official_url)), 'https://', ''), 'http://', ''), 'www.', '')"
+            . ") = :norm_url)";
+        $params[':norm_url'] = $normUrl;
+    }
+    if ($conditions === []) {
+        return [];
+    }
+
+    $stmt = $pdo->prepare(
+        'SELECT id, name, official_url, status FROM products WHERE '
+        . implode(' OR ', $conditions)
+        . ' ORDER BY name LIMIT 20'
+    );
+    $stmt->execute($params);
+
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+// --- AJAX-ендпоінти: автозаповнення з URL + миттєва перевірка дубліката ---
+if (($_GET['ajax'] ?? '') !== '') {
+    header('Content-Type: application/json; charset=utf-8');
+    $ajax = (string) $_GET['ajax'];
+
+    if ($ajax === 'autofill') {
+        echo json_encode(
+            crm_autofill_from_url((string) ($_GET['url'] ?? '')),
+            JSON_UNESCAPED_UNICODE
+        );
+        exit;
+    }
+
+    if ($ajax === 'dupcheck') {
+        echo json_encode(
+            ['similar' => crm_find_similar(
+                $pdo,
+                (string) ($_GET['name'] ?? ''),
+                trim((string) ($_GET['url'] ?? ''))
+            )],
+            JSON_UNESCAPED_UNICODE
+        );
+        exit;
+    }
+
+    http_response_code(400);
+    echo json_encode(['ok' => false, 'error' => 'Невідома дія.'], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // --- Логотип: куди зберігати і що приймати ------------------------------
 $logoUploadDir  = __DIR__ . '/assets/images/logos';
 $logoUploadRel  = 'assets/images/logos';
@@ -712,6 +976,56 @@ $displayPlans = $plans !== []
             margin-top: 28px;
         }
 
+        /* Автозаповнення з URL */
+        .autofill {
+            padding: 16px 18px;
+            border: 1px dashed rgba(91, 140, 255, 0.55);
+            border-radius: 12px;
+            background: rgba(91, 140, 255, 0.08);
+        }
+
+        .autofill__row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .autofill__row .input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        @media (max-width: 560px) {
+            .autofill__row {
+                flex-wrap: wrap;
+            }
+
+            .autofill__row .btn {
+                width: 100%;
+            }
+        }
+
+        .autofill__status,
+        .dup-check {
+            margin: 10px 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .dup-check {
+            margin: 8px 0 0;
+        }
+
+        .autofill__status.is-warn,
+        .dup-check.is-warn {
+            color: #fcd34d;
+        }
+
+        .autofill__status.is-ok,
+        .dup-check.is-ok {
+            color: #6ee7b7;
+        }
+
         /* Повідомлення */
         .notice {
             margin-bottom: 24px;
@@ -847,10 +1161,27 @@ $displayPlans = $plans !== []
         <?php endif; ?>
 
         <form class="form" method="post" action="crm-add-product.php" enctype="multipart/form-data" novalidate>
+            <div class="field autofill" id="autofill-box">
+                <label class="field__label" for="autofill_url">Автозаповнити з посилання</label>
+                <div class="autofill__row">
+                    <input class="input" type="url" id="autofill_url"
+                           placeholder="https://офіційний-сайт-продукту.com">
+                    <button type="button" class="btn btn--ghost btn--sm" id="autofill-btn">Автозаповнити</button>
+                </div>
+                <p class="field__hint">
+                    Завантажимо сторінку за цим URL, приберемо HTML і витягнемо назву та опис
+                    (поки що без AI — прості евристики: заголовок сторінки → назва,
+                    meta description → короткий опис). Поля лише заповнюються чернетково —
+                    перевірте й відкоригуйте їх перед збереженням.
+                </p>
+                <p class="autofill__status" id="autofill-status" role="status" aria-live="polite" hidden></p>
+            </div>
+
             <div class="field">
                 <label class="field__label" for="name">Назва продукту <span class="req">*</span></label>
                 <input class="input" type="text" id="name" name="name" required
                        value="<?= e($old['name']) ?>" placeholder="Напр. TestAI Pro">
+                <p class="dup-check" id="dup-check" role="status" aria-live="polite" hidden></p>
             </div>
 
             <div class="field">
@@ -1068,6 +1399,147 @@ $displayPlans = $plans !== []
                     .querySelectorAll('input').forEach(function (i) { i.value = ''; });
             }
         });
+
+        // --- Автозаповнення форми з URL + миттєва перевірка дубліката ---
+        (function () {
+            var endpoint = 'crm-add-product.php';
+            var urlInput = document.getElementById('autofill_url');
+            var autofillBtn = document.getElementById('autofill-btn');
+            var autofillStatus = document.getElementById('autofill-status');
+            var nameInput = document.getElementById('name');
+            var officialUrlInput = document.getElementById('official_url');
+            var dupCheck = document.getElementById('dup-check');
+
+            function setStatus(el, message, kind) {
+                el.className = el.className.replace(/\s*is-\w+/g, '');
+                if (!message) {
+                    el.hidden = true;
+                    el.textContent = '';
+                    return;
+                }
+                el.hidden = false;
+                el.textContent = message;
+                if (kind) {
+                    el.className += ' is-' + kind;
+                }
+            }
+
+            function fillField(id, value) {
+                if (!value) {
+                    return;
+                }
+                var el = document.getElementById(id);
+                if (!el) {
+                    return;
+                }
+                el.value = value;
+                el.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+
+            // --- Миттєва перевірка дубліката за назвою / URL ---
+            var dupTimer = null;
+            var dupController = null;
+
+            function runDuplicateCheck() {
+                var name = (nameInput.value || '').trim();
+                var url = (officialUrlInput.value || '').trim();
+                if (name.length < 2 && !url) {
+                    setStatus(dupCheck, '', '');
+                    return;
+                }
+                if (dupController) {
+                    dupController.abort();
+                }
+                dupController = ('AbortController' in window) ? new AbortController() : null;
+                setStatus(dupCheck, 'Перевіряємо, чи такий продукт уже є в базі…', 'pending');
+
+                var query = endpoint + '?ajax=dupcheck'
+                    + '&name=' + encodeURIComponent(name)
+                    + '&url=' + encodeURIComponent(url);
+
+                fetch(query, {
+                    headers: { 'X-Requested-With': 'fetch' },
+                    signal: dupController ? dupController.signal : undefined
+                })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        var similar = (data && data.similar) || [];
+                        if (!similar.length) {
+                            setStatus(dupCheck, 'Схожих продуктів у базі не знайдено.', 'ok');
+                            return;
+                        }
+                        var names = similar.slice(0, 5).map(function (p) { return p.name; }).join(', ');
+                        var tail = similar.length > 5 ? ' та інші' : '';
+                        setStatus(
+                            dupCheck,
+                            'Можливий дублікат — знайдено ' + similar.length + ': ' + names + tail
+                                + '. Перевірте список при збереженні.',
+                            'warn'
+                        );
+                    })
+                    .catch(function (error) {
+                        if (error && error.name === 'AbortError') {
+                            return;
+                        }
+                        setStatus(dupCheck, '', '');
+                    });
+            }
+
+            function scheduleDuplicateCheck() {
+                clearTimeout(dupTimer);
+                dupTimer = setTimeout(runDuplicateCheck, 400);
+            }
+
+            nameInput.addEventListener('input', scheduleDuplicateCheck);
+            nameInput.addEventListener('blur', runDuplicateCheck);
+            officialUrlInput.addEventListener('blur', runDuplicateCheck);
+
+            // --- Автозаповнення з офіційного сайту ---
+            autofillBtn.addEventListener('click', function () {
+                var url = (urlInput.value || '').trim();
+                if (!url) {
+                    setStatus(autofillStatus, 'Вставте URL офіційного сайту продукту.', 'warn');
+                    urlInput.focus();
+                    return;
+                }
+
+                autofillBtn.disabled = true;
+                setStatus(autofillStatus, 'Завантажуємо сторінку та розбираємо вміст…', 'pending');
+
+                fetch(endpoint + '?ajax=autofill&url=' + encodeURIComponent(url), {
+                    headers: { 'X-Requested-With': 'fetch' }
+                })
+                    .then(function (response) { return response.json(); })
+                    .then(function (data) {
+                        if (!data || !data.ok) {
+                            setStatus(
+                                autofillStatus,
+                                (data && data.error) || 'Не вдалося обробити сторінку.',
+                                'warn'
+                            );
+                            return;
+                        }
+                        var fields = data.fields || {};
+                        fillField('name', fields.name);
+                        fillField('official_url', fields.official_url);
+                        fillField('short_description', fields.short_description);
+                        setStatus(
+                            autofillStatus,
+                            'Поля заповнено чернетково (без AI, за евристиками). '
+                                + 'Перевірте й відкоригуйте їх перед збереженням.',
+                            'ok'
+                        );
+                        // Одразу після заповнення назви — миттєва перевірка дубліката.
+                        runDuplicateCheck();
+                    })
+                    .catch(function () {
+                        setStatus(autofillStatus, 'Помилка запиту. Спробуйте ще раз.', 'warn');
+                    })
+                    .then(function () {
+                        autofillBtn.disabled = false;
+                    });
+            });
+        })();
     </script>
     <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>
