@@ -491,7 +491,7 @@ require_once __DIR__ . '/../app/translations.php';
         </div>
 
         <form class="composer" id="composer" onsubmit="return false;">
-            <input id="composerInput" class="composer__input" type="text"
+            <input id="composerInput" class="composer__input" type="text" autocomplete="off"
                    placeholder="Опишіть свою задачу…" aria-label="Повідомлення">
             <button class="composer__btn" type="submit">Надіслати</button>
         </form>
