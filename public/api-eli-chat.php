@@ -10,7 +10,8 @@ declare(strict_types=1);
  *   1. Завантажує опубліковані продукти (status='published') з категоріями,
  *      підкатегоріями, коротким описом і тарифними планами.
  *   2. Формує системний промпт із характером Елі + список продуктів як контекст.
- *   3. Викликає Claude API (модель/ключ із config/ai-assistant.php).
+ *   3. Викликає активний AI-провайдер — Gemini або Claude
+ *      (provider/модель/ключ із config/ai-assistant.php).
  *   4. Просить структурований JSON {reply_text, steps:[{step_title, product_ids}]}.
  *   5. Повертає JSON із текстом відповіді, кроками та картками продуктів
  *      (реальні id / назва / логотип / посилання з бази).
@@ -51,6 +52,179 @@ function eli_hint(string $text): void
     exit;
 }
 
+/**
+ * Виклик Google Gemini API (raw HTTP; проєкт без Composer/SDK).
+ *
+ * @return array{ok: bool, text?: string, error?: string}
+ */
+function eli_call_gemini(
+    string $apiKey,
+    string $model,
+    int $maxTokens,
+    int $timeout,
+    string $systemPrompt,
+    string $userMessage
+): array {
+    // Gemini API: ключ передається параметром URL ?key=..., без заголовків авторизації.
+    $endpoint = 'https://generativelanguage.googleapis.com/v1beta/models/'
+        . rawurlencode($model) . ':generateContent?key=' . urlencode($apiKey);
+
+    $payload = json_encode([
+        'system_instruction' => ['parts' => [['text' => $systemPrompt]]],
+        'contents' => [
+            ['role' => 'user', 'parts' => [['text' => $userMessage]]],
+        ],
+        'generationConfig' => [
+            'maxOutputTokens' => $maxTokens,
+            'temperature' => 0.4,
+            'responseMimeType' => 'application/json',
+        ],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($payload === false) {
+        return ['ok' => false, 'error' => 'gemini payload encode failed: ' . json_last_error_msg()];
+    }
+
+    $headers = ['Content-Type: application/json'];
+
+    $ch = curl_init($endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => $headers,
+    ]);
+    $raw = curl_exec($ch);
+    $errno = curl_errno($ch);
+    $error = curl_error($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+
+    if ($raw === false || $errno !== 0) {
+        return ['ok' => false, 'error' => 'gemini curl ' . $errno . ': ' . $error];
+    }
+
+    $data = json_decode((string) $raw, true);
+    if ($status < 200 || $status >= 300 || !is_array($data)) {
+        $msg = is_array($data) ? (string) ($data['error']['message'] ?? '') : '';
+        return [
+            'ok' => false,
+            'error' => 'gemini http ' . $status . ': '
+                . ($msg !== '' ? $msg : mb_substr((string) $raw, 0, 500)),
+        ];
+    }
+
+    $cand = $data['candidates'][0] ?? null;
+    if (!is_array($cand)) {
+        $block = (string) ($data['promptFeedback']['blockReason'] ?? '');
+        return ['ok' => false, 'error' => 'gemini no candidates'
+            . ($block !== '' ? ' (block: ' . $block . ')' : '')];
+    }
+    $finish = (string) ($cand['finishReason'] ?? '');
+    if ($finish !== '' && $finish !== 'STOP' && $finish !== 'MAX_TOKENS') {
+        return ['ok' => false, 'error' => 'gemini finishReason=' . $finish];
+    }
+
+    $text = '';
+    foreach ((array) ($cand['content']['parts'] ?? []) as $part) {
+        if (is_array($part) && isset($part['text'])) {
+            $text .= (string) $part['text'];
+        }
+    }
+    $text = trim($text);
+    if ($text === '') {
+        return ['ok' => false, 'error' => 'gemini empty text'];
+    }
+
+    return ['ok' => true, 'text' => $text];
+}
+
+/**
+ * Виклик Anthropic Claude API (raw HTTP; проєкт без Composer/SDK).
+ *
+ * @return array{ok: bool, text?: string, error?: string}
+ */
+function eli_call_claude(
+    string $apiKey,
+    string $workspaceId,
+    string $model,
+    int $maxTokens,
+    int $timeout,
+    string $systemPrompt,
+    string $userMessage
+): array {
+    $payload = json_encode([
+        'model' => $model,
+        'max_tokens' => $maxTokens,
+        'system' => $systemPrompt,
+        'messages' => [
+            ['role' => 'user', 'content' => $userMessage],
+        ],
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($payload === false) {
+        return ['ok' => false, 'error' => 'claude payload encode failed'];
+    }
+
+    $headers = [
+        'Content-Type: application/json',
+        'x-api-key: ' . $apiKey,
+        'anthropic-version: 2023-06-01',
+    ];
+    // Ключі, прив'язані до воркспейсу (identity-linked), вимагають цей заголовок.
+    if ($workspaceId !== '') {
+        $headers[] = 'anthropic-workspace-id: ' . $workspaceId;
+    }
+
+    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $payload,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_CONNECTTIMEOUT => 10,
+        CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_SSL_VERIFYPEER => true,
+        CURLOPT_SSL_VERIFYHOST => 2,
+        CURLOPT_HTTPHEADER => $headers,
+    ]);
+    $raw = curl_exec($ch);
+    $errno = curl_errno($ch);
+    $error = curl_error($ch);
+    $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+
+    if ($raw === false || $errno !== 0) {
+        return ['ok' => false, 'error' => 'claude curl ' . $errno . ': ' . $error];
+    }
+    if ($status < 200 || $status >= 300) {
+        return ['ok' => false, 'error' => 'claude http ' . $status . ': '
+            . mb_substr((string) $raw, 0, 500)];
+    }
+
+    $data = json_decode((string) $raw, true);
+    if (!is_array($data)) {
+        return ['ok' => false, 'error' => 'claude response not json'];
+    }
+    if (($data['stop_reason'] ?? null) === 'refusal') {
+        return ['ok' => false, 'error' => 'claude stop_reason=refusal'];
+    }
+
+    $text = '';
+    foreach ((array) ($data['content'] ?? []) as $block) {
+        if (is_array($block) && ($block['type'] ?? '') === 'text') {
+            $text .= (string) ($block['text'] ?? '');
+        }
+    }
+    $text = trim($text);
+    if ($text === '') {
+        return ['ok' => false, 'error' => 'claude empty text content'];
+    }
+
+    return ['ok' => true, 'text' => $text];
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     eli_fail('method ' . ($_SERVER['REQUEST_METHOD'] ?? '?'), 405);
 }
@@ -78,6 +252,10 @@ if (isset($_POST['message'])) {
         $message = (string) $body['message'];
     }
 }
+// Відкидаємо биті UTF-8 байти, щоб json_encode запиту до API не падав.
+if (!mb_check_encoding($message, 'UTF-8')) {
+    $message = (string) mb_convert_encoding($message, 'UTF-8', 'UTF-8');
+}
 $message = trim($message);
 if ($message === '') {
     eli_hint('Опишіть, будь ласка, свою задачу — і я підберу відповідний AI-інструмент.');
@@ -86,23 +264,34 @@ if (mb_strlen($message) > 2000) {
     $message = mb_substr($message, 0, 2000);
 }
 
-// --- Конфігурація Claude API ---------------------------------------------
+// --- Конфігурація AI-провайдера ----------------------------------------
 $aiConfigPath = __DIR__ . '/../config/ai-assistant.php';
 if (!is_file($aiConfigPath)) {
     eli_fail('config/ai-assistant.php missing');
 }
 $ai = require $aiConfigPath;
-$apiKey = trim((string) ($ai['api_key'] ?? ''));
-$model = trim((string) ($ai['model'] ?? 'claude-sonnet-4-6')) ?: 'claude-sonnet-4-6';
+$provider = strtolower(trim((string) ($ai['provider'] ?? 'gemini'))) ?: 'gemini';
 $maxTokens = max(256, (int) ($ai['max_tokens'] ?? 1200));
 $timeout = max(10, (int) ($ai['timeout'] ?? 45));
 
-$keyLooksReal = $apiKey !== ''
-    && str_starts_with($apiKey, 'sk-ant-')
-    && stripos($apiKey, 'REPLACE') === false
-    && stripos($apiKey, 'YOUR_') === false;
-if (!$keyLooksReal) {
-    eli_fail('claude api key not configured');
+$workspaceId = trim((string) ($ai['workspace_id'] ?? ''));
+
+if ($provider === 'gemini') {
+    $apiKey = trim((string) ($ai['gemini_api_key'] ?? ''));
+    $model = trim((string) ($ai['gemini_model'] ?? 'gemini-3.6-flash')) ?: 'gemini-3.6-flash';
+    if ($apiKey === '' || stripos($apiKey, 'YOUR_') !== false) {
+        eli_fail('gemini api key not configured');
+    }
+} else {
+    $apiKey = trim((string) ($ai['api_key'] ?? ''));
+    $model = trim((string) ($ai['model'] ?? 'claude-sonnet-4-6')) ?: 'claude-sonnet-4-6';
+    $keyLooksReal = $apiKey !== ''
+        && str_starts_with($apiKey, 'sk-ant-')
+        && stripos($apiKey, 'REPLACE') === false
+        && stripos($apiKey, 'YOUR_') === false;
+    if (!$keyLooksReal) {
+        eli_fail('claude api key not configured');
+    }
 }
 
 // --- Опубліковані продукти з бази ---------------------------------------
@@ -222,65 +411,20 @@ $systemPrompt = <<<PROMPT
 {$productContext}
 PROMPT;
 
-// --- Виклик Claude API (raw HTTP; проєкт без Composer/SDK) --------------
-$payload = json_encode([
-    'model' => $model,
-    'max_tokens' => $maxTokens,
-    'system' => $systemPrompt,
-    'messages' => [
-        ['role' => 'user', 'content' => $message],
-    ],
-], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-
-if ($payload === false) {
-    eli_fail('payload encode failed');
+// --- Виклик активного AI-провайдера -----------------------------------
+if ($provider === 'gemini') {
+    $llm = eli_call_gemini($apiKey, $model, $maxTokens, $timeout, $systemPrompt, $message);
+} else {
+    $llm = eli_call_claude($apiKey, $workspaceId, $model, $maxTokens, $timeout, $systemPrompt, $message);
 }
 
-$ch = curl_init('https://api.anthropic.com/v1/messages');
-curl_setopt_array($ch, [
-    CURLOPT_POST => true,
-    CURLOPT_POSTFIELDS => $payload,
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_CONNECTTIMEOUT => 10,
-    CURLOPT_TIMEOUT => $timeout,
-    CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_SSL_VERIFYHOST => 2,
-    CURLOPT_HTTPHEADER => [
-        'Content-Type: application/json',
-        'x-api-key: ' . $apiKey,
-        'anthropic-version: 2023-06-01',
-    ],
-]);
-$raw = curl_exec($ch);
-$curlErrno = curl_errno($ch);
-$curlError = curl_error($ch);
-$httpStatus = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-curl_close($ch);
-
-if ($raw === false || $curlErrno !== 0) {
-    eli_fail('curl error ' . $curlErrno . ': ' . $curlError);
-}
-if ($httpStatus < 200 || $httpStatus >= 300) {
-    eli_fail('claude http ' . $httpStatus . ': ' . mb_substr((string) $raw, 0, 500));
+if (($llm['ok'] ?? false) !== true) {
+    eli_fail((string) ($llm['error'] ?? 'llm call failed'));
 }
 
-$apiData = json_decode((string) $raw, true);
-if (!is_array($apiData)) {
-    eli_fail('claude response not json');
-}
-if (($apiData['stop_reason'] ?? null) === 'refusal') {
-    eli_fail('claude stop_reason=refusal');
-}
-
-$answerText = '';
-foreach ((array) ($apiData['content'] ?? []) as $block) {
-    if (is_array($block) && ($block['type'] ?? '') === 'text') {
-        $answerText .= (string) ($block['text'] ?? '');
-    }
-}
-$answerText = trim($answerText);
+$answerText = trim((string) ($llm['text'] ?? ''));
 if ($answerText === '') {
-    eli_fail('claude empty text content');
+    eli_fail($provider . ' empty answer');
 }
 
 // --- Розбір структурованої відповіді (терпимо до огорожі / зайвого тексту) ---
@@ -320,7 +464,12 @@ $replyText = '';
 $steps = [];
 
 if ($parsed === null) {
-    // Не JSON — але текст є: показуємо його як відповідь Елі без карток.
+    // Текст схожий на обірваний / зіпсований JSON — не показуємо його
+    // користувачу як відповідь, а віддаємо ввічливе повідомлення.
+    if (str_starts_with(ltrim($answerText), '{') || str_starts_with(ltrim($answerText), '```')) {
+        eli_fail($provider . ' returned unparseable json (' . mb_strlen($answerText) . ' chars)');
+    }
+    // Звичайний текст без структури — показуємо як відповідь Елі без карток.
     $replyText = $answerText;
 } else {
     $replyText = trim((string) ($parsed['reply_text'] ?? ''));

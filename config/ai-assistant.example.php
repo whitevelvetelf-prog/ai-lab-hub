@@ -3,31 +3,49 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — приклад налаштувань AI-асистентки Елі (Claude API).
+ * AI LAB HUB — приклад налаштувань AI-асистентки Елі.
  *
- * Скопіюйте цей файл у config/ai-assistant.php та підставте свій ключ:
+ * Скопіюйте цей файл у config/ai-assistant.php та підставте свої ключі:
  *   cp config/ai-assistant.example.php config/ai-assistant.php
  *
  * Використання:
  *   $ai = require __DIR__ . '/../config/ai-assistant.php';
- *   $ai['api_key'];  $ai['model'];  $ai['max_tokens'];  $ai['timeout'];
+ *   $ai['provider'];        // 'gemini' | 'claude' — активний провайдер
+ *   $ai['gemini_api_key'];  $ai['gemini_model'];
+ *   $ai['api_key'];  $ai['workspace_id'];  $ai['model'];   // Claude
+ *   $ai['max_tokens'];  $ai['timeout'];
  */
 
-// Ключ Claude API (console.anthropic.com → Settings → API Keys). Формат: sk-ant-...
-$claude_api_key = 'YOUR_CLAUDE_API_KEY_HERE';
+// Активний провайдер AI для Елі: 'gemini' або 'claude'.
+$ai_provider = 'gemini';
 
-// Модель Claude для підбору продуктів (актуальний ідентифікатор без суфікса дати).
-$claude_model = 'claude-sonnet-4-6';
+// --- Google Gemini API (aistudio.google.com/apikey) -----------------------
+// Ключ AI Studio (зазвичай формат AIzaSy...). Передається параметром
+// URL ?key=..., без заголовків авторизації.
+$gemini_api_key = 'YOUR_GEMINI_API_KEY_HERE';
+$gemini_model   = 'gemini-3.6-flash';
 
-// Верхня межа токенів відповіді Claude.
-$claude_max_tokens = 1200;
+// --- Anthropic Claude API (console.anthropic.com → Settings → API Keys) ---
+// Формат ключа: sk-ant-... workspace_id обов'язковий для identity-linked
+// ключів (формат wrkspc_...), інакше порожній рядок.
+$claude_api_key      = 'YOUR_CLAUDE_API_KEY_HERE';
+$claude_workspace_id = '';
+$claude_model        = 'claude-sonnet-4-6';
 
-// Таймаут запиту до Claude API, секунд.
-$claude_timeout = 45;
+// --- Спільні параметри запиту -------------------------------------------
+$ai_max_tokens = 4096;   // верхня межа токенів відповіді
+$ai_timeout    = 45;     // таймаут запиту, секунд
 
 return [
-    'api_key'    => $claude_api_key,
-    'model'      => $claude_model,
-    'max_tokens' => $claude_max_tokens,
-    'timeout'    => $claude_timeout,
+    'provider'       => $ai_provider,
+
+    'gemini_api_key' => $gemini_api_key,
+    'gemini_model'   => $gemini_model,
+
+    'api_key'        => $claude_api_key,
+    'workspace_id'   => $claude_workspace_id,
+    'model'          => $claude_model,
+
+    'max_tokens'     => $ai_max_tokens,
+    'timeout'        => $ai_timeout,
 ];
