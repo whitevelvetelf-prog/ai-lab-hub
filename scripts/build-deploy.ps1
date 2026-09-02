@@ -12,8 +12,9 @@
     every public/*.php, images and videos under public/assets/.
 
     DELIBERATELY EXCLUDED:
-      - config/            DB config with values is set up on the server
-                           (template: config/database.example.php in the repo)
+      - config/            Real config with secrets is set up on the server
+                           (templates in the repo: config/database.example.php,
+                           config/translation.example.php, config/ai-assistant.example.php)
       - database/export_live.sql   live data dump, not needed to deploy code
       - public/assets/images/task-category-page.txt   working note
       - public/assets/images/logos/   user uploads from the CRM
@@ -49,6 +50,7 @@ $files = @(
 
     'public/about.php',
     'public/account.php',
+    'public/api-eli-chat.php',
     'public/blog.php',
     'public/catalog.php',
     'public/category.php',

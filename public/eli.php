@@ -5,8 +5,10 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — чат з AI-асистенткою Елею (Елеонора).
  *
- * Макет чат-інтерфейсу. JS-симуляція сценарію з відео Елі
- * (привітання -> друкування -> відповідь). Без реальної AI-логіки.
+ * Чат-інтерфейс + відео-сценарій Елі (привітання -> друкування ->
+ * відповідь). Повідомлення користувача йде на public/api-eli-chat.php,
+ * який викликає Claude API і повертає текст відповіді та підібрані
+ * продукти каталогу; фронтенд малює їх картками (за кроками, якщо їх кілька).
  *
  * Однаковий сценарій для всіх розмірів екрана: одне велике відео Елі
  * (#eliStage) — спершу привітання (грає раз, застигає на кадрі, видиме
@@ -218,6 +220,20 @@ require_once __DIR__ . '/../app/translations.php';
             background: linear-gradient(135deg, #2116ad, #5b8cff);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        /* Коли в лого справжнє зображення продукту — світла підкладка
+           замість градієнта, щоб темні логотипи читалися. */
+        .rec-card__logo--img {
+            background: rgba(255, 255, 255, 0.92);
+        }
+
+        .rec-card__logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
 
         .rec-card__name {
@@ -625,22 +641,50 @@ require_once __DIR__ . '/../app/translations.php';
             scrollIntoView(msg);
         }
 
-        // Міні-картка продукту: лого (ініціали), назва, кнопка "Докладніше".
-        function makeRecCard(initials, name, href) {
+        var TECH_ERROR = 'Перепрошую, зараз виникли технічні труднощі. ' +
+            'Спробуйте, будь ласка, ще раз за хвилину.';
+
+        // Ініціали з назви продукту — запасний варіант, коли немає логотипа.
+        function initialsOf(name) {
+            var parts = String(name || '').trim().split(/\s+/).slice(0, 2);
+            var s = parts.map(function (w) { return w.charAt(0); }).join('');
+            return s ? s.toUpperCase() : '•';
+        }
+
+        // Міні-картка продукту: логотип із бази (або ініціали), назва,
+        // кнопка "Докладніше" на сторінку продукту.
+        function makeRecCard(product) {
             var card = document.createElement('div');
             card.className = 'rec-card';
 
             var logo = document.createElement('div');
             logo.className = 'rec-card__logo';
-            logo.textContent = initials;
+            if (product.logo_url) {
+                var img = document.createElement('img');
+                img.className = 'rec-card__logo-img';
+                img.src = product.logo_url;
+                img.alt = '';
+                img.loading = 'lazy';
+                img.addEventListener('error', function () {
+                    if (img.parentNode === logo) {
+                        logo.removeChild(img);
+                    }
+                    logo.classList.remove('rec-card__logo--img');
+                    logo.textContent = initialsOf(product.name);
+                });
+                logo.classList.add('rec-card__logo--img');
+                logo.appendChild(img);
+            } else {
+                logo.textContent = initialsOf(product.name);
+            }
 
             var nm = document.createElement('span');
             nm.className = 'rec-card__name';
-            nm.textContent = name;
+            nm.textContent = product.name;
 
             var btn = document.createElement('a');
             btn.className = 'rec-card__btn';
-            btn.href = href;
+            btn.href = product.href || ('product.php?id=' + product.id);
             btn.textContent = 'Докладніше';
 
             card.appendChild(logo);
@@ -668,34 +712,67 @@ require_once __DIR__ . '/../app/translations.php';
             return step;
         }
 
-        // Тестова багатокрокова відповідь Елі з добіркою продуктів —
-        // тільки текст і картки, без відео/аватарки поруч.
-        function addEliResponse() {
+        // Тимчасове повідомлення Елі, поки очікуємо відповідь від API
+        // (відео «друкує» вже завершилося). Повертає елемент для заміни.
+        function addEliPlaceholder() {
+            var msg = document.createElement('div');
+            msg.className = 'msg msg--eli';
+            var bubble = document.createElement('div');
+            bubble.className = 'msg__bubble';
+            bubble.textContent = 'Еля добирає інструменти…';
+            msg.appendChild(bubble);
+            chat.appendChild(msg);
+            scrollIntoView(msg);
+            return msg;
+        }
+
+        // Відповідь Елі за даними API: текст + (за наявності) кроки з
+        // картками реальних продуктів каталогу.
+        function renderEliResponse(data) {
             var msg = document.createElement('div');
             msg.className = 'msg msg--eli';
 
             var bubble = document.createElement('div');
             bubble.className = 'msg__bubble';
-            bubble.appendChild(document.createTextNode(
-                'Для створення рекламного відео з озвученням знадобиться ' +
-                'кілька інструментів:'
-            ));
 
-            var steps = document.createElement('div');
-            steps.className = 'rec-steps';
+            var replyText = (data && data.reply_text) ? String(data.reply_text) : '';
+            if (replyText === '') {
+                replyText = 'Ось що я підібрала для вас.';
+            }
+            bubble.appendChild(document.createTextNode(replyText));
 
-            steps.appendChild(makeRecStep('Крок 1: Генерація зображення', [
-                makeRecCard('PF', 'PixelForge', 'product.php?id=1'),
-                makeRecCard('TA', 'TestAI Pro', 'product.php?id=2')
-            ]));
-            steps.appendChild(makeRecStep('Крок 2: Анімація зображення у відео', [
-                makeRecCard('TA', 'TestAI Pro', 'product.php?id=2')
-            ]));
-            steps.appendChild(makeRecStep('Крок 3: Озвучення', [
-                makeRecCard('VC', 'VoiceCast', 'product.php?id=3')
-            ]));
+            var rawSteps = (data && Array.isArray(data.steps)) ? data.steps : [];
+            var products = (data && Array.isArray(data.products)) ? data.products : [];
+            var byId = {};
+            products.forEach(function (p) { byId[String(p.id)] = p; });
 
-            bubble.appendChild(steps);
+            var steps = rawSteps.filter(function (s) {
+                return s && Array.isArray(s.product_ids) && s.product_ids.length;
+            });
+
+            if (steps.length) {
+                var wrap = document.createElement('div');
+                wrap.className = 'rec-steps';
+                var multi = steps.length > 1;
+                steps.forEach(function (s) {
+                    var cards = [];
+                    s.product_ids.forEach(function (pid) {
+                        var p = byId[String(pid)];
+                        if (p) {
+                            cards.push(makeRecCard(p));
+                        }
+                    });
+                    if (!cards.length) {
+                        return;
+                    }
+                    var title = s.step_title || (multi ? 'Крок' : 'Рекомендую');
+                    wrap.appendChild(makeRecStep(title, cards));
+                });
+                if (wrap.childNodes.length) {
+                    bubble.appendChild(wrap);
+                }
+            }
+
             msg.appendChild(bubble);
             chat.appendChild(msg);
             scrollIntoView(msg);
@@ -705,24 +782,88 @@ require_once __DIR__ . '/../app/translations.php';
         // текст привітання й поле вводу лишаються видимими.
         playStage(GREETING_SRC, { freeze: true });
 
-        // Кожне повідомлення користувача: велике відео «друкує» з початку,
-        // грає раз, зникає повністю — і одразу зʼявляється відповідь.
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            var text = input.value.trim();
-            if (text === '') {
-                return;
-            }
+        var submitBtn = form.querySelector('.composer__btn');
+        var busy = false;
 
+        function setBusy(state) {
+            busy = state;
+            input.disabled = state;
+            if (submitBtn) {
+                submitBtn.disabled = state;
+            }
+        }
+
+        // Одне повідомлення користувача:
+        //   1. прибираємо привітання, додаємо репліку користувача;
+        //   2. паралельно запускаємо відео «друкує» і запит до API;
+        //   3. відповідь показуємо, коли готові ОБИДВА (відео завершилось
+        //      і прийшла відповідь). Якщо відео скінчилось раніше —
+        //      показуємо тимчасовий плейсхолдер і замінюємо його відповіддю.
+        function submitMessage(text) {
             removeGreeting();
             addUserMessage(text);
             input.value = '';
+            setBusy(true);
+
+            var result = null;      // {reply_text, steps, products} — успіх або ввічлива відмова
+            var videoDone = false;
+            var rendered = false;
+            var placeholder = null;
+
+            function tryRender() {
+                if (rendered || !videoDone) {
+                    return;
+                }
+                if (result === null) {
+                    if (!placeholder) {
+                        placeholder = addEliPlaceholder();
+                    }
+                    return;
+                }
+                rendered = true;
+                if (placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.removeChild(placeholder);
+                }
+                renderEliResponse(result);
+                setBusy(false);
+            }
+
+            fetch('api-eli-chat.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+                    'X-Requested-With': 'fetch'
+                },
+                body: 'message=' + encodeURIComponent(text)
+            })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    result = (data && typeof data === 'object')
+                        ? data
+                        : { reply_text: TECH_ERROR, steps: [], products: [] };
+                })
+                .catch(function () {
+                    result = { reply_text: TECH_ERROR, steps: [], products: [] };
+                })
+                .then(function () { tryRender(); });
 
             playStage(TYPING_SRC, {
                 typing: true,
                 freeze: false,
-                onEnd: addEliResponse
+                onEnd: function () { videoDone = true; tryRender(); }
             });
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            if (busy) {
+                return;
+            }
+            var text = input.value.trim();
+            if (text === '') {
+                return;
+            }
+            submitMessage(text);
         });
     })();
     </script>

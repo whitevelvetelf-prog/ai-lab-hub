@@ -3,6 +3,7 @@
 /node_modules
 /config/database.php
 /config/translation.php
+/config/ai-assistant.php
 
 # Завантажені через CRM логотипи продуктів — користувацький контент,
 # змінюється незалежно від коду.
