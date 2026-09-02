@@ -411,6 +411,19 @@ $total = count($products);
             background: rgba(255, 255, 255, 0.04);
         }
 
+        /*
+         * Продукт опубліковано, але партнерку ще можна зареєструвати
+         * (partnership_status = pending_registration). Тепла помаранчева
+         * підсвітка — сигнал команді замінити посилання на affiliate.
+         */
+        .table tbody tr.row--pending-partnership {
+            background: rgba(251, 146, 60, 0.13);
+        }
+
+        .table tbody tr.row--pending-partnership:hover {
+            background: rgba(251, 146, 60, 0.2);
+        }
+
         .table__name {
             font-weight: 700;
             color: #ffffff;
@@ -625,8 +638,9 @@ $total = count($products);
                             $pricing = pricing_summary($plansByProduct[$pid] ?? []);
                             $officialHref = external_href($row['official_url']);
                             $updated = strtotime((string) $row['updated_at']);
+                            $pendingPartnership = (string) $row['partnership_status'] === 'pending_registration';
                             ?>
-                            <tr>
+                            <tr<?= $pendingPartnership ? ' class="row--pending-partnership"' : '' ?>>
                                 <td>
                                     <span class="badge badge--<?= e($status) ?>"<?= $statusHint !== '' ? ' title="' . e($statusHint) . '"' : '' ?>><?= e($statusLabel) ?></span>
                                 </td>

@@ -373,9 +373,6 @@ $partnershipOptions = [
     'partner_connected' => 'Партнерку підключено',
     'no_partnership' => 'Без партнерки',
 ];
-// Статуси, за яких продукт може автоматично публікуватися.
-$partnershipReady = ['partner_connected', 'no_partnership'];
-
 // --- Стан сторінки -----------------------------------------------------------
 $errors = [];
 $similar = [];
@@ -567,16 +564,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // --- AUTOSTATUS -------------------------------------------------
-            // published — лише коли всі обов'язкові поля заповнені І партнерка
-            // доведена до кінця (partner_connected / no_partnership).
-            // На етапах found / pending_registration — завжди in_progress.
+            // published — щойно заповнені всі обов'язкові поля: назва,
+            // офіційний сайт, короткий опис і хоча б одна категорія.
+            // Статус партнерства на публікацію більше не впливає — усі
+            // чотири значення її дозволяють. pending_registration лишається
+            // сигналом для команди (див. підсвітку в crm-list.php), що
+            // партнерку ще можна підключити й замінити посилання на affiliate.
             $requiredComplete = $old['name'] !== ''
                 && $publicOfficialUrl !== ''
-                && $old['short_description'] !== '';
+                && $old['short_description'] !== ''
+                && $old['categories'] !== [];
 
-            $status = ($requiredComplete && in_array($old['partnership_status'], $partnershipReady, true))
-                ? 'published'
-                : 'in_progress';
+            $status = $requiredComplete ? 'published' : 'in_progress';
 
             $pdo->beginTransaction();
 
@@ -1117,7 +1116,8 @@ $displayPlans = $plans !== []
         <h1 class="page__title">CRM — додати AI-продукт</h1>
         <p class="page__subtitle">
             Статус (<strong>in_progress</strong> / <strong>published</strong>) визначається автоматично —
-            за статусом партнерства та заповненістю обов'язкових полів.
+            за заповненістю обов'язкових полів (назва, офіційний сайт, короткий опис, хоча б одна категорія).
+            Статус партнерства на публікацію не впливає.
             <?php if ($isAdmin): ?>Ви увійшли як <strong>admin</strong>: службові поля партнерки доступні.<?php else: ?>Службові поля партнерки бачить лише admin.<?php endif; ?>
         </p>
 
@@ -1227,8 +1227,9 @@ $displayPlans = $plans !== []
                     <?php endforeach; ?>
                 </select>
                 <p class="field__hint">
-                    «Партнерку підключено» або «Без партнерки» + усі обов'язкові поля → продукт публікується (published).
-                    «Знайдено» / «Очікує реєстрації» → лишається чернеткою (in_progress) незалежно від решти полів.
+                    Не впливає на публікацію — продукт стає published, щойно заповнені обов'язкові поля.
+                    «Очікує реєстрації» додатково підсвічує рядок у списку продуктів: партнерку ще можна
+                    підключити й замінити посилання на affiliate.
                 </p>
             </div>
 
