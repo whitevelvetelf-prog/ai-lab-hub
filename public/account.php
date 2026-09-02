@@ -161,6 +161,10 @@ unset($_SESSION['account_flash']);
 // Заявка «на розгляді» для поточного user; список заявок для admin.
 $pendingRequest = null;
 $pendingRequests = [];
+// Статистика користувачів за ролями — лише для admin.
+$userStats = ['total' => 0, 'users' => 0, 'employees' => 0, 'admins' => 0];
+$staffEmployees = [];
+$staffAdmins = [];
 if ($user !== null && $user['role'] === 'user') {
     $stmt = $pdo->prepare(
         "SELECT last_name, first_name, created_at
@@ -179,6 +183,38 @@ if ($user !== null && $user['role'] === 'user') {
            JOIN users u ON u.id = r.user_id
           WHERE r.status = 'pending'
           ORDER BY r.created_at ASC, r.id ASC"
+    )->fetchAll();
+
+    $statsRow = $pdo->query(
+        "SELECT COUNT(*)                       AS total,
+                SUM(role = 'user')             AS users,
+                SUM(role = 'employee')         AS employees,
+                SUM(role = 'admin')            AS admins
+           FROM users"
+    )->fetch() ?: [];
+    $userStats = [
+        'total'     => (int) ($statsRow['total'] ?? 0),
+        'users'     => (int) ($statsRow['users'] ?? 0),
+        'employees' => (int) ($statsRow['employees'] ?? 0),
+        'admins'    => (int) ($statsRow['admins'] ?? 0),
+    ];
+
+    // Працівники: номер, ПІБ, email, дата отримання ролі (reviewed_at
+    // останньої схваленої заявки).
+    $staffEmployees = $pdo->query(
+        "SELECT u.employee_number, u.name, u.first_name, u.last_name, u.email,
+                (SELECT r.reviewed_at
+                   FROM employee_requests r
+                  WHERE r.user_id = u.id AND r.status = 'approved'
+                  ORDER BY r.reviewed_at DESC, r.id DESC
+                  LIMIT 1) AS role_since
+           FROM users u
+          WHERE u.role = 'employee'
+          ORDER BY u.employee_number IS NULL, u.employee_number ASC, u.id ASC"
+    )->fetchAll();
+
+    $staffAdmins = $pdo->query(
+        "SELECT name, email FROM users WHERE role = 'admin' ORDER BY name, id"
     )->fetchAll();
 }
 
@@ -445,6 +481,34 @@ if ($user !== null && $user['role'] === 'user') {
             color: var(--text-muted);
         }
 
+        .section__subtitle {
+            margin: 18px 0 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-muted);
+        }
+
+        /* Картки-лічильники (консистентно з .summary у crm-list.php) */
+        .summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px 22px;
+            margin: 0 0 16px;
+            padding: 14px 18px;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            background: var(--card-bg);
+            font-size: 0.95rem;
+        }
+
+        .summary strong {
+            font-weight: 800;
+        }
+
+        .summary a {
+            color: #bcd0ff;
+        }
+
         .field {
             margin-bottom: 16px;
         }
@@ -656,6 +720,60 @@ if ($user !== null && $user['role'] === 'user') {
 
             <?php if ($user['role'] === 'admin'): ?>
                 <div class="section">
+                    <h2 class="section__title">Статистика користувачів</h2>
+                    <div class="summary">
+                        <span>Усього: <strong><?= (int) $userStats['total'] ?></strong></span>
+                        <span>Користувачі (user): <strong><?= (int) $userStats['users'] ?></strong></span>
+                        <span>Працівники (employee): <strong><?= (int) $userStats['employees'] ?></strong></span>
+                        <span>Адміни (admin): <strong><?= (int) $userStats['admins'] ?></strong></span>
+                        <span>Заявки на розгляді:
+                            <strong><a href="#employee-requests"><?= count($pendingRequests) ?></a></strong>
+                        </span>
+                    </div>
+
+                    <?php if ($staffEmployees !== []): ?>
+                        <h3 class="section__subtitle">Працівники</h3>
+                        <ul class="request-list">
+                            <?php foreach ($staffEmployees as $emp): ?>
+                                <?php
+                                $empName = trim((string) ($emp['last_name'] ?? '') . ' ' . (string) ($emp['first_name'] ?? ''));
+                                if ($empName === '') {
+                                    $empName = (string) $emp['name'];
+                                }
+                                ?>
+                                <li class="request-card">
+                                    <div>
+                                        <strong>
+                                            <?php if ($emp['employee_number'] !== null): ?>№<?= (int) $emp['employee_number'] ?> · <?php endif; ?><?= e($empName) ?>
+                                        </strong>
+                                        <span class="request-card__meta">
+                                            <?= e($emp['email']) ?>
+                                            <?php if (!empty($emp['role_since'])): ?>
+                                                · роль з <?= e(date('d.m.Y', (int) strtotime((string) $emp['role_since']))) ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+
+                    <?php if ($staffAdmins !== []): ?>
+                        <h3 class="section__subtitle">Адміністратори</h3>
+                        <ul class="request-list">
+                            <?php foreach ($staffAdmins as $adm): ?>
+                                <li class="request-card">
+                                    <div>
+                                        <strong><?= e($adm['name']) ?></strong>
+                                        <span class="request-card__meta"><?= e($adm['email']) ?></span>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <div class="section" id="employee-requests">
                     <h2 class="section__title">Заявки на працівника</h2>
                     <?php if ($pendingRequests === []): ?>
                         <div class="empty-state">Немає заявок на розгляді.</div>
