@@ -777,6 +777,9 @@ if ($user !== null && $user['role'] === 'user') {
                     <?php endif; ?>
                 </div>
 
+                <?php // ТЕРМІНОВО приховано: секція перегляду/схвалення заявок на працівника.
+                // Не видалено — лише умова false, щоб легко повернути.
+                if (false): ?>
                 <div class="section" id="employee-requests">
                     <h2 class="section__title">Заявки на працівника</h2>
                     <?php if ($pendingRequests === []): ?>
@@ -802,6 +805,7 @@ if ($user !== null && $user['role'] === 'user') {
                         </ul>
                     <?php endif; ?>
                 </div>
+                <?php endif; ?>
             <?php endif; ?>
 
             <?php if (auth_has_role('employee', 'admin')): ?>
