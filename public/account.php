@@ -50,7 +50,9 @@ $oldRequest = ['last_name' => '', 'first_name' => ''];
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
     $action = (string) ($_POST['action'] ?? '');
 
-    if ($action === 'employee_request' && $user['role'] === 'user') {
+    // ТЕРМІНОВО вимкнено: подача заявки "Стати працівником" (і UI, і бекенд).
+    // Не видалено — лише умова false, щоб легко повернути.
+    if (false && $action === 'employee_request' && $user['role'] === 'user') {
         $oldRequest['last_name'] = trim((string) ($_POST['last_name'] ?? ''));
         $oldRequest['first_name'] = trim((string) ($_POST['first_name'] ?? ''));
 
@@ -678,7 +680,9 @@ if ($user !== null && $user['role'] === 'user') {
                 </div>
             </div>
 
-            <?php if ($user['role'] === 'user'): ?>
+            <?php // ТЕРМІНОВО приховано: подача заявки "Стати працівником" для user.
+            // Секцію не видалено — лише вимкнено умовою, щоб легко повернути.
+            if (false && $user['role'] === 'user'): ?>
                 <div class="section">
                     <h2 class="section__title">Стати працівником</h2>
                     <?php if ($pendingRequest !== null): ?>
