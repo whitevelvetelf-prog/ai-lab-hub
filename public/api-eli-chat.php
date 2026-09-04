@@ -278,7 +278,7 @@ $workspaceId = trim((string) ($ai['workspace_id'] ?? ''));
 
 if ($provider === 'gemini') {
     $apiKey = trim((string) ($ai['gemini_api_key'] ?? ''));
-    $model = trim((string) ($ai['gemini_model'] ?? 'gemini-3.6-flash')) ?: 'gemini-3.6-flash';
+    $model = trim((string) ($ai['gemini_model'] ?? 'gemini-3.5-flash-lite')) ?: 'gemini-3.5-flash-lite';
     if ($apiKey === '' || stripos($apiKey, 'YOUR_') !== false) {
         eli_fail('gemini api key not configured');
     }
@@ -294,14 +294,47 @@ if ($provider === 'gemini') {
     }
 }
 
-// --- Опубліковані продукти з бази ---------------------------------------
+/** Перше речення тексту (для компактного опису в промпті). */
+function eli_first_sentence(string $text): string
+{
+    $text = trim($text);
+    if ($text === '') {
+        return '';
+    }
+    if (preg_match('/^(.{10,200}?[.!?])(\s|$)/u', $text, $m)) {
+        return trim($m[1]);
+    }
+
+    return mb_substr($text, 0, 160);
+}
+
+// --- Опубліковані продукти з бази -----------------------------------------
+// Мінімальний контекст для промпта: id, назва, категорія/підкатегорія,
+// 1 речення опису, модель монетизації. Повні дані картки (лого, посилання,
+// повний опис) — окремим запитом нижче, лише для product_ids з відповіді AI.
 try {
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../config/database.php';
 
-    $products = $pdo->query(
+    // Простий LIKE-пошук: чи згадана в повідомленні користувача назва
+    // категорії або підкатегорії каталогу. Якщо є збіги — у промпт підуть
+    // лише продукти цих категорій замість повного каталогу.
+    $catFilterStmt = $pdo->prepare(
+        "SELECT DISTINCT c.id
+           FROM categories c
+          WHERE LOWER(:msg1) LIKE CONCAT('%', LOWER(c.name), '%')
+             OR EXISTS (
+                  SELECT 1 FROM subcategories s
+                   WHERE s.category_id = c.id
+                     AND LOWER(:msg2) LIKE CONCAT('%', LOWER(s.name), '%')
+                )"
+    );
+    $catFilterStmt->execute([':msg1' => $message, ':msg2' => $message]);
+    $matchedCategoryIds = array_map('intval', array_column($catFilterStmt->fetchAll(), 'id'));
+
+    $productsSqlBase =
         "SELECT
-            p.id, p.name, p.logo_url, p.official_url, p.short_description,
+            p.id, p.name, p.short_description,
             (SELECT GROUP_CONCAT(c.name ORDER BY c.id SEPARATOR ', ')
                FROM product_categories pc JOIN categories c ON c.id = pc.category_id
               WHERE pc.product_id = p.id) AS categories_list,
@@ -309,16 +342,52 @@ try {
                FROM product_subcategories ps JOIN subcategories s ON s.id = ps.subcategory_id
               WHERE ps.product_id = p.id) AS subcategories_list
          FROM products p
-         WHERE p.status = 'published'
-         ORDER BY p.name"
-    )->fetchAll();
+         WHERE p.status = 'published'";
 
-    $plansByProduct = [];
-    foreach ($pdo->query(
-        "SELECT product_id, plan_name, price, period, description
-           FROM pricing_plans ORDER BY product_id, id"
-    )->fetchAll() as $plan) {
-        $plansByProduct[(int) $plan['product_id']][] = $plan;
+    $products = [];
+    if ($matchedCategoryIds !== []) {
+        $products = $pdo->query(
+            $productsSqlBase
+                . ' AND EXISTS (SELECT 1 FROM product_categories pc2
+                                  WHERE pc2.product_id = p.id
+                                    AND pc2.category_id IN (' . implode(',', $matchedCategoryIds) . '))'
+                . ' ORDER BY p.name'
+        )->fetchAll();
+    }
+
+    // Немає збігу за категорією (або збіг дав порожній результат) — беремо
+    // весь каталог, щоб AI однаково мав з чого підбирати.
+    if ($products === []) {
+        $products = $pdo->query($productsSqlBase . ' ORDER BY p.name')->fetchAll();
+    }
+
+    // Модель монетизації кожного продукту — з агрегату по тарифних планах,
+    // без завантаження текстів самих планів у промпт.
+    $monetization = [];
+    $productIds = array_map(static fn ($p): int => (int) $p['id'], $products);
+    if ($productIds !== []) {
+        $placeholders = implode(',', array_fill(0, count($productIds), '?'));
+        $monStmt = $pdo->prepare(
+            "SELECT product_id,
+                    SUM(CASE WHEN price IS NULL OR price = 0 THEN 1 ELSE 0 END) AS free_cnt,
+                    SUM(CASE WHEN price > 0 THEN 1 ELSE 0 END) AS paid_cnt
+               FROM pricing_plans
+              WHERE product_id IN ($placeholders)
+              GROUP BY product_id"
+        );
+        $monStmt->execute($productIds);
+        foreach ($monStmt->fetchAll() as $row) {
+            $pid = (int) $row['product_id'];
+            $free = (int) $row['free_cnt'];
+            $paid = (int) $row['paid_cnt'];
+            if ($free > 0 && $paid > 0) {
+                $monetization[$pid] = 'freemium';
+            } elseif ($free > 0) {
+                $monetization[$pid] = 'free';
+            } elseif ($paid > 0) {
+                $monetization[$pid] = 'paid';
+            }
+        }
     }
 } catch (Throwable $ex) {
     eli_fail('db error: ' . $ex->getMessage());
@@ -329,43 +398,11 @@ if ($products === []) {
 }
 
 // --- Контекст для промпта: компактний список продуктів ------------------
-$periodWord = [
-    'free' => 'безкоштовно',
-    'week' => 'на тиждень',
-    'month' => 'на місяць',
-    'year' => 'на рік',
-    'one_time' => 'разово',
-];
-
-/** Ціна плану у зрозумілому вигляді. */
-function eli_price(array $plan, array $periodWord): string
-{
-    $period = (string) ($plan['period'] ?? 'free');
-    $priceRaw = $plan['price'];
-
-    if ($priceRaw === null || $priceRaw === '') {
-        $amount = ($period === 'free') ? 'безкоштовно' : 'ціна не вказана';
-    } else {
-        $num = (float) $priceRaw;
-        if ($num <= 0.0) {
-            $amount = 'безкоштовно';
-        } else {
-            $amount = '$' . rtrim(rtrim(number_format($num, 2, '.', ''), '0'), '.');
-        }
-    }
-
-    $suffix = ($period !== 'free' && $amount !== 'безкоштовно' && $amount !== 'ціна не вказана')
-        ? ' ' . ($periodWord[$period] ?? $period)
-        : '';
-
-    return $amount . $suffix;
-}
-
-$productsById = [];
+$validProductIds = [];
 $contextLines = [];
 foreach ($products as $p) {
     $pid = (int) $p['id'];
-    $productsById[$pid] = $p;
+    $validProductIds[$pid] = true;
 
     $cat = trim((string) ($p['categories_list'] ?? ''));
     $sub = trim((string) ($p['subcategories_list'] ?? ''));
@@ -374,24 +411,12 @@ foreach ($products as $p) {
         $taxonomy .= ' / ' . $sub;
     }
 
-    $planParts = [];
-    foreach ($plansByProduct[$pid] ?? [] as $plan) {
-        $name = trim((string) ($plan['plan_name'] ?? ''));
-        if ($name === '') {
-            continue;
-        }
-        $planParts[] = $name . ' — ' . eli_price($plan, $periodWord);
-    }
-    $planText = $planParts !== [] ? implode('; ', $planParts) : 'тарифи не вказані';
+    $moneyModel = $monetization[$pid] ?? 'н/д';
+    $desc = eli_first_sentence((string) ($p['short_description'] ?? ''));
 
-    $desc = trim((string) ($p['short_description'] ?? ''));
-
-    $contextLines[] = "[{$pid}] {$p['name']}\n"
-        . "Категорія: {$taxonomy}\n"
-        . "Опис: {$desc}\n"
-        . "Тарифи: {$planText}";
+    $contextLines[] = "[{$pid}] {$p['name']} | {$taxonomy} | {$moneyModel} | {$desc}";
 }
-$productContext = implode("\n\n", $contextLines);
+$productContext = implode("\n", $contextLines);
 
 // --- Системний промпт (характер Елі + формат відповіді + контекст) ------
 $systemPrompt = <<<PROMPT
@@ -406,7 +431,7 @@ $systemPrompt = <<<PROMPT
 - Якщо жоден продукт не підходить або питання не про підбір інструментів — steps: [] і поясни це ввічливо в reply_text.
 - У product_ids лише числові id із наведеного списку. Нічого не вигадуй і не додавай продуктів поза списком.
 
-СПИСОК ПРОДУКТІВ AI LAB HUB (id у квадратних дужках):
+СПИСОК ПРОДУКТІВ AI LAB HUB. Формат рядка: [id] Назва | Категорія/Підкатегорія | модель монетизації (free — повністю безкоштовний, freemium — є безкоштовний і платні тарифи, paid — лише платно, н/д — тарифи не вказані) | короткий опис:
 
 {$productContext}
 PROMPT;
@@ -481,7 +506,7 @@ if ($parsed === null) {
         $ids = [];
         foreach ((array) ($rawStep['product_ids'] ?? []) as $rawId) {
             $sid = (int) $rawId;
-            if ($sid > 0 && isset($productsById[$sid]) && !in_array($sid, $ids, true)) {
+            if ($sid > 0 && isset($validProductIds[$sid]) && !in_array($sid, $ids, true)) {
                 $ids[] = $sid;
             }
         }
@@ -499,7 +524,8 @@ if ($replyText === '') {
         : 'На жаль, серед наявних інструментів не знайшлося відповідного під цю задачу.';
 }
 
-// --- Картки продуктів для фронтенду (реальні дані з бази) --------------
+// --- Картки продуктів для фронтенду: повні дані окремим запитом ----------
+// (лише для продуктів, які AI справді вибрав, а не для всього каталогу).
 $referencedOrder = [];
 foreach ($steps as $st) {
     foreach ($st['product_ids'] as $sid) {
@@ -508,17 +534,43 @@ foreach ($steps as $st) {
 }
 
 $cards = [];
-foreach (array_keys($referencedOrder) as $sid) {
-    $p = $productsById[$sid];
-    $cards[] = [
-        'id' => $sid,
-        'name' => (string) $p['name'],
-        'logo_url' => (string) ($p['logo_url'] ?? ''),
-        'official_url' => (string) ($p['official_url'] ?? ''),
-        'short_description' => (string) ($p['short_description'] ?? ''),
-        'categories' => (string) ($p['categories_list'] ?? ''),
-        'href' => 'product.php?id=' . $sid,
-    ];
+$referencedIds = array_keys($referencedOrder);
+if ($referencedIds !== []) {
+    try {
+        $placeholders = implode(',', array_fill(0, count($referencedIds), '?'));
+        $cardStmt = $pdo->prepare(
+            "SELECT
+                p.id, p.name, p.logo_url, p.official_url, p.short_description,
+                (SELECT GROUP_CONCAT(c.name ORDER BY c.id SEPARATOR ', ')
+                   FROM product_categories pc JOIN categories c ON c.id = pc.category_id
+                  WHERE pc.product_id = p.id) AS categories_list
+             FROM products p
+             WHERE p.id IN ($placeholders)"
+        );
+        $cardStmt->execute($referencedIds);
+        $cardRows = [];
+        foreach ($cardStmt->fetchAll() as $row) {
+            $cardRows[(int) $row['id']] = $row;
+        }
+    } catch (Throwable $ex) {
+        eli_fail('db error (cards): ' . $ex->getMessage());
+    }
+
+    foreach ($referencedIds as $sid) {
+        $p = $cardRows[$sid] ?? null;
+        if ($p === null) {
+            continue;
+        }
+        $cards[] = [
+            'id' => $sid,
+            'name' => (string) $p['name'],
+            'logo_url' => (string) ($p['logo_url'] ?? ''),
+            'official_url' => (string) ($p['official_url'] ?? ''),
+            'short_description' => (string) ($p['short_description'] ?? ''),
+            'categories' => (string) ($p['categories_list'] ?? ''),
+            'href' => 'product.php?id=' . $sid,
+        ];
+    }
 }
 
 echo json_encode([

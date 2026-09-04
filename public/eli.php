@@ -289,6 +289,50 @@ require_once __DIR__ . '/../app/translations.php';
             min-width: 0;
         }
 
+        /* Індикатор очікування відповіді Елі («обмірковує…» + анімовані крапки) */
+        .eli-thinking {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .eli-thinking__dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .eli-thinking__dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.3;
+            animation: eli-thinking-bounce 1.2s infinite ease-in-out;
+        }
+
+        .eli-thinking__dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .eli-thinking__dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes eli-thinking-bounce {
+
+            0%,
+            80%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(0);
+            }
+
+            40% {
+                opacity: 1;
+                transform: translateY(-3px);
+            }
+        }
+
         /* Поле вводу */
         .composer {
             margin-top: 20px;
@@ -713,13 +757,28 @@ require_once __DIR__ . '/../app/translations.php';
         }
 
         // Тимчасове повідомлення Елі, поки очікуємо відповідь від API
-        // (відео «друкує» вже завершилося). Повертає елемент для заміни.
+        // (відео «друкує» вже завершилося). Текст + анімовані крапки, щоб
+        // було видно, що система працює, а не зависла. Повертає елемент
+        // для заміни готовою відповіддю.
         function addEliPlaceholder() {
             var msg = document.createElement('div');
             msg.className = 'msg msg--eli';
             var bubble = document.createElement('div');
             bubble.className = 'msg__bubble';
-            bubble.textContent = 'Еля добирає інструменти…';
+
+            var wrap = document.createElement('span');
+            wrap.className = 'eli-thinking';
+
+            var text = document.createElement('span');
+            text.textContent = 'Еля обмірковує відповідь…';
+            wrap.appendChild(text);
+
+            var dots = document.createElement('span');
+            dots.className = 'eli-thinking__dots';
+            dots.innerHTML = '<span></span><span></span><span></span>';
+            wrap.appendChild(dots);
+
+            bubble.appendChild(wrap);
             msg.appendChild(bubble);
             chat.appendChild(msg);
             scrollIntoView(msg);

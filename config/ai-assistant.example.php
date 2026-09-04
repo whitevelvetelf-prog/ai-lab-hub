@@ -23,7 +23,7 @@ $ai_provider = 'gemini';
 // Ключ AI Studio (зазвичай формат AIzaSy...). Передається параметром
 // URL ?key=..., без заголовків авторизації.
 $gemini_api_key = 'YOUR_GEMINI_API_KEY_HERE';
-$gemini_model   = 'gemini-3.6-flash';
+$gemini_model   = 'gemini-3.5-flash-lite';
 
 // --- Anthropic Claude API (console.anthropic.com → Settings → API Keys) ---
 // Формат ключа: sk-ant-... workspace_id обов'язковий для identity-linked
