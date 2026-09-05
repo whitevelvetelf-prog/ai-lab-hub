@@ -155,6 +155,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
         header('Location: account.php');
         exit;
     }
+
+    // Приватна система заявок на роль Адміністратора (окремо від
+    // employee_requests). Схвалює/відхиляє чинний admin одноосібно —
+    // поки адмін один, узгоджене правило дозволяє рішення без кворуму.
+    if (($action === 'approve_admin_request' || $action === 'reject_admin_request') && $user['role'] === 'admin') {
+        $reqId = (int) ($_POST['request_id'] ?? 0);
+        $newStatus = $action === 'approve_admin_request' ? 'approved' : 'rejected';
+
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare(
+                "SELECT id, user_id
+                   FROM admin_requests
+                  WHERE id = :id AND status = 'pending'
+                  FOR UPDATE"
+            );
+            $stmt->execute([':id' => $reqId]);
+            $req = $stmt->fetch();
+
+            if ($req === false) {
+                $pdo->rollBack();
+                $_SESSION['account_flash'] = t('flash_request_not_found');
+            } else {
+                if ($newStatus === 'approved') {
+                    $upd = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = :uid");
+                    $upd->execute([':uid' => $req['user_id']]);
+                }
+
+                $done = $pdo->prepare(
+                    "UPDATE admin_requests
+                        SET status = :status, reviewed_at = NOW(), reviewed_by = :admin
+                      WHERE id = :id"
+                );
+                $done->execute([':status' => $newStatus, ':admin' => $user['id'], ':id' => $req['id']]);
+
+                $pdo->commit();
+                $_SESSION['account_flash'] = $newStatus === 'approved'
+                    ? t('flash_admin_request_approved')
+                    : t('flash_admin_request_rejected');
+            }
+        } catch (PDOException $ex) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['account_flash'] = t('flash_admin_request_failed');
+        }
+
+        header('Location: account.php');
+        exit;
+    }
 }
 
 $flash = $_SESSION['account_flash'] ?? null;
@@ -167,6 +218,8 @@ $pendingRequests = [];
 $userStats = ['total' => 0, 'users' => 0, 'employees' => 0, 'admins' => 0];
 $staffEmployees = [];
 $staffAdmins = [];
+// Заявки на роль Адміністратора (приватна система, окремо від employee_requests).
+$adminRequests = [];
 if ($user !== null && $user['role'] === 'user') {
     $stmt = $pdo->prepare(
         "SELECT last_name, first_name, created_at
@@ -217,6 +270,14 @@ if ($user !== null && $user['role'] === 'user') {
 
     $staffAdmins = $pdo->query(
         "SELECT name, email FROM users WHERE role = 'admin' ORDER BY name, id"
+    )->fetchAll();
+
+    $adminRequests = $pdo->query(
+        "SELECT r.id, r.requested_at, u.name AS user_name, u.email AS user_email
+           FROM admin_requests r
+           JOIN users u ON u.id = r.user_id
+          WHERE r.status = 'pending'
+          ORDER BY r.requested_at ASC, r.id ASC"
     )->fetchAll();
 }
 
@@ -769,6 +830,39 @@ if ($user !== null && $user['role'] === 'user') {
                                     <div>
                                         <strong><?= e($adm['name']) ?></strong>
                                         <span class="request-card__meta"><?= e($adm['email']) ?></span>
+                                    </div>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <div class="section" id="admin-requests">
+                    <h2 class="section__title"><?= htmlspecialchars(t('account_admin_requests_title'), ENT_QUOTES) ?></h2>
+                    <?php if ($adminRequests === []): ?>
+                        <div class="empty-state"><?= htmlspecialchars(t('account_admin_requests_empty'), ENT_QUOTES) ?></div>
+                    <?php else: ?>
+                        <ul class="request-list">
+                            <?php foreach ($adminRequests as $req): ?>
+                                <li class="request-card">
+                                    <div>
+                                        <strong><?= e($req['user_name']) ?></strong>
+                                        <span class="request-card__meta">
+                                            <?= e($req['user_email']) ?>
+                                            <?= htmlspecialchars(t('account_requested_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $req['requested_at']))) ?>
+                                        </span>
+                                    </div>
+                                    <div class="btn-row">
+                                        <form method="post" action="account.php">
+                                            <input type="hidden" name="action" value="approve_admin_request">
+                                            <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                            <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
+                                        </form>
+                                        <form method="post" action="account.php">
+                                            <input type="hidden" name="action" value="reject_admin_request">
+                                            <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                            <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
+                                        </form>
                                     </div>
                                 </li>
                             <?php endforeach; ?>

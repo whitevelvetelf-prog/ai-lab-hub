@@ -185,6 +185,28 @@ $GLOBALS['TRANSLATIONS'] = [
     'flash_request_not_found'  => ['uk' => 'Заявку не знайдено або вона вже опрацьована.', 'en' => 'Request not found or already processed.'],
     'flash_request_approved'   => ['uk' => 'Заявку схвалено. Працівнику присвоєно номер №%d.', 'en' => 'Request approved. The employee was assigned number #%d.'],
     'flash_request_approve_failed' => ['uk' => 'Не вдалося схвалити заявку. Спробуйте ще раз.', 'en' => 'Could not approve the request. Please try again.'],
+
+    // --- Приватна система заявок на роль Адміністратора (apply-admin.php + account.php) ---
+    'title_apply_admin'          => ['uk' => 'AI LAB HUB — Заявка на адміністратора', 'en' => 'AI LAB HUB — Admin Request'],
+    'apply_admin_heading'        => ['uk' => 'Заявка на роль Адміністратора', 'en' => 'Administrator Role Request'],
+    'apply_admin_confirm_text'   => ['uk' => 'Подати заявку на роль Адміністратора', 'en' => 'Submit a request for the Administrator role'],
+    'apply_admin_submit'         => ['uk' => 'Надіслати заявку', 'en' => 'Submit request'],
+    'apply_admin_already_admin'  => ['uk' => 'Ви вже маєте роль адміністратора.', 'en' => 'You already have the Administrator role.'],
+    'apply_admin_pending_prefix' => ['uk' => 'Ваша заявка на розгляді (подана', 'en' => 'Your request is under review (submitted'],
+    'apply_admin_pending_suffix' => ['uk' => '). Очікуйте рішення.', 'en' => '). Please wait for a decision.'],
+    'apply_admin_approved_text'  => ['uk' => 'Вашу заявку вже схвалено.', 'en' => 'Your request has already been approved.'],
+    'apply_admin_back_account'   => ['uk' => 'До кабінету', 'en' => 'Back to account'],
+    'account_admin_requests_title' => ['uk' => 'Заявки на роль Адміністратора', 'en' => 'Administrator role requests'],
+    'account_admin_requests_empty' => ['uk' => 'Немає заявок на розгляді.', 'en' => 'No pending requests.'],
+    'account_requested_prefix'     => ['uk' => '· подано', 'en' => '· submitted'],
+    'action_approve'               => ['uk' => 'Схвалити', 'en' => 'Approve'],
+    'action_reject'                => ['uk' => 'Відхилити', 'en' => 'Reject'],
+    'flash_admin_request_approved' => [
+        'uk' => 'Заявку на адміністратора схвалено. Користувачу присвоєно роль Адміністратора.',
+        'en' => 'Administrator request approved. The user was granted the Administrator role.',
+    ],
+    'flash_admin_request_rejected' => ['uk' => 'Заявку на адміністратора відхилено.', 'en' => 'Administrator request rejected.'],
+    'flash_admin_request_failed'   => ['uk' => 'Не вдалося обробити заявку. Спробуйте ще раз.', 'en' => 'Could not process the request. Please try again.'],
 ];
 
 /**

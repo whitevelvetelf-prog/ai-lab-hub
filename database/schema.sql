@@ -17,6 +17,7 @@ DROP TABLE IF EXISTS product_categories;
 DROP TABLE IF EXISTS products;
 DROP TABLE IF EXISTS subcategories;
 DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS admin_requests;
 DROP TABLE IF EXISTS employee_requests;
 DROP TABLE IF EXISTS users;
 
@@ -65,6 +66,30 @@ CREATE TABLE employee_requests (
         FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_employee_requests_reviewed_by
+        FOREIGN KEY (reviewed_by) REFERENCES users (id)
+        ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- admin_requests — приватні заявки на роль Адміністратора.
+-- Окремо від employee_requests: доступ лише за прямим посиланням
+-- (public/apply-admin.php), ніде на сайті не рекламується. Схвалює
+-- чинний admin одноосібно (поки адмін один — узгоджене правило).
+-- ---------------------------------------------------------------------
+CREATE TABLE admin_requests (
+    id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id      INT UNSIGNED NOT NULL,
+    status       ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reviewed_by  INT UNSIGNED NULL,
+    reviewed_at  TIMESTAMP NULL,
+    PRIMARY KEY (id),
+    KEY idx_admin_requests_user (user_id),
+    KEY idx_admin_requests_status (status),
+    CONSTRAINT fk_admin_requests_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_admin_requests_reviewed_by
         FOREIGN KEY (reviewed_by) REFERENCES users (id)
         ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
