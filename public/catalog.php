@@ -25,7 +25,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 $subcategoryId = (int) ($_GET['subcategory'] ?? 0);
 $categoryId    = (int) ($_GET['category'] ?? 0);
 
-$pageHeading = 'Каталог AI-інструментів';
+$pageHeading = t('catalog_default_title');
 $backLink    = null;
 
 if ($subcategoryId > 0) {
@@ -34,11 +34,11 @@ if ($subcategoryId > 0) {
     $subcategory = $subStmt->fetch();
 
     if ($subcategory === false) {
-        $pageHeading = 'Підкатегорію не знайдено';
+        $pageHeading = t('catalog_subcategory_not_found');
         $products = [];
     } else {
         $pageHeading = (string) $subcategory['name'];
-        $backLink = ['href' => 'category.php?id=' . (int) $subcategory['category_id'], 'label' => '← До напряму'];
+        $backLink = ['href' => 'category.php?id=' . (int) $subcategory['category_id'], 'label' => t('back_to_direction')];
 
         $stmt = $pdo->prepare(
             "SELECT p.id, p.name, p.short_description
@@ -56,11 +56,11 @@ if ($subcategoryId > 0) {
     $category = $catStmt->fetch();
 
     if ($category === false) {
-        $pageHeading = 'Категорію не знайдено';
+        $pageHeading = t('category_not_found');
         $products = [];
     } else {
         $pageHeading = (string) $category['name'];
-        $backLink = ['href' => 'category.php?id=' . (int) $category['id'], 'label' => '← До напряму'];
+        $backLink = ['href' => 'category.php?id=' . (int) $category['id'], 'label' => t('back_to_direction')];
 
         $stmt = $pdo->prepare(
             "SELECT p.id, p.name, p.short_description
@@ -92,13 +92,18 @@ function price_badge(array $plans): array
 {
     $paid = array_filter($plans, static fn($p) => $p['period'] !== 'free' && (float) $p['price'] > 0);
     if ($paid === []) {
-        return ['Безкоштовно', true];
+        return [t('price_free'), true];
     }
     usort($paid, static fn($a, $b) => (float) $a['price'] <=> (float) $b['price']);
     $cheapest = $paid[0];
-    $periods = ['week' => '/тиж', 'month' => '/міс', 'year' => '/рік', 'one_time' => ' разово'];
+    $periods = [
+        'week' => '/' . t('unit_week'),
+        'month' => '/' . t('unit_month'),
+        'year' => '/' . t('unit_year'),
+        'one_time' => ' ' . t('unit_one_time'),
+    ];
     $price = rtrim(rtrim(number_format((float) $cheapest['price'], 2, '.', ''), '0'), '.');
-    return ['Від $' . $price . ($periods[$cheapest['period']] ?? ''), false];
+    return [t('price_from') . ' $' . $price . ($periods[$cheapest['period']] ?? ''), false];
 }
 
 // Палітра квадратів-заглушок замість логотипів (за порядком продуктів).
@@ -115,7 +120,7 @@ $cardColors = [
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -366,18 +371,18 @@ $cardColors = [
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
-            <a class="site-nav__link" href="index.php">Головна</a>
+            <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
             <?php if (auth_check()): ?>
-            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
             <?php else: ?>
-            <a class="site-nav__link" href="login.php">Увійти</a>
+            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
             <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
-            Викликати Асистента
+            <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
         </a>
-        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+        <button class="site-nav__toggle" type="button" aria-label="<?= htmlspecialchars(t('nav_menu'), ENT_QUOTES) ?>" aria-expanded="false" aria-controls="siteNav">
             <span></span>
             <span></span>
             <span></span>
@@ -392,7 +397,7 @@ $cardColors = [
         <h1 class="catalog__title"><?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></h1>
 
         <?php if ($products === []): ?>
-        <p class="catalog__empty">У цьому розділі поки немає опублікованих продуктів.</p>
+        <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <div class="catalog-grid">
             <?php foreach ($products as $i => $product): ?>
@@ -409,7 +414,7 @@ $cardColors = [
                         <span class="price-badge<?= $isFree ? ' price-badge--free' : '' ?>">
                             <?= htmlspecialchars($priceText, ENT_QUOTES) ?>
                         </span>
-                        <a class="btn" href="product.php?id=<?= $pid ?>">Докладніше</a>
+                        <a class="btn" href="product.php?id=<?= $pid ?>"><?= htmlspecialchars(t('btn_details'), ENT_QUOTES) ?></a>
                     </div>
                 </article>
             <?php endforeach; ?>

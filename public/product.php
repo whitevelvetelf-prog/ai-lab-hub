@@ -77,7 +77,7 @@ function platform_label(?string $platform): string
     if ($platform === null || $platform === '') {
         return '—';
     }
-    $map = ['web' => 'Веб', 'mobile' => 'Мобільний', 'desktop' => 'Десктоп'];
+    $map = ['web' => t('platform_web'), 'mobile' => t('platform_mobile'), 'desktop' => t('platform_desktop')];
     $out = [];
     foreach (explode(',', $platform) as $p) {
         $out[] = $map[$p] ?? $p;
@@ -89,9 +89,9 @@ function platform_label(?string $platform): string
 function skill_label(string $level): string
 {
     return match ($level) {
-        'basic' => 'Потрібні базові знання',
-        'course' => 'Потрібне окреме навчання (курс)',
-        default => 'Не потребує спеціальних знань',
+        'basic' => t('skill_basic'),
+        'course' => t('skill_course'),
+        default => t('skill_none'),
     };
 }
 
@@ -103,16 +103,21 @@ function plan_price(array $plan): string
     if ($plan['period'] === 'free' || $amount <= 0) {
         return $price;
     }
-    $periods = ['week' => '/ тиж', 'month' => '/ міс', 'year' => '/ рік', 'one_time' => 'разово'];
+    $periods = [
+        'week' => '/ ' . t('unit_week'),
+        'month' => '/ ' . t('unit_month'),
+        'year' => '/ ' . t('unit_year'),
+        'one_time' => t('unit_one_time'),
+    ];
     $suffix = $periods[$plan['period']] ?? '';
     return $suffix !== '' ? $price . ' <span>' . $suffix . '</span>' : $price;
 }
 
-$pageTitle = $product !== false ? $product['name'] : 'Продукт не знайдено';
+$pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -479,18 +484,18 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
-            <a class="site-nav__link" href="index.php">Головна</a>
+            <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
             <?php if (auth_check()): ?>
-            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
             <?php else: ?>
-            <a class="site-nav__link" href="login.php">Увійти</a>
+            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
             <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
-            Викликати Асистента
+            <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
         </a>
-        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+        <button class="site-nav__toggle" type="button" aria-label="<?= htmlspecialchars(t('nav_menu'), ENT_QUOTES) ?>" aria-expanded="false" aria-controls="siteNav">
             <span></span>
             <span></span>
             <span></span>
@@ -500,11 +505,11 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
     <div class="page">
 <?php if ($product === false): ?>
         <div class="product-head">
-            <h1 class="product-head__name">Продукт не знайдено</h1>
+            <h1 class="product-head__name"><?= htmlspecialchars(t('product_not_found'), ENT_QUOTES) ?></h1>
         </div>
         <div class="product-summary">
-            <p>Продукт із таким ідентифікатором відсутній або ще не опублікований.</p>
-            <a class="btn btn--ghost" href="index.php">До напрямків AI</a>
+            <p><?= htmlspecialchars(t('product_not_found_text'), ENT_QUOTES) ?></p>
+            <a class="btn btn--ghost" href="index.php"><?= htmlspecialchars(t('back_to_directions'), ENT_QUOTES) ?></a>
         </div>
 <?php else: ?>
         <?php
@@ -522,13 +527,13 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
 
         <!-- 2. Кнопка переходу на сайт -->
         <div class="product-cta">
-            <a class="btn btn--primary" href="<?= htmlspecialchars($product['official_url'] ?: '#', ENT_QUOTES) ?>"<?= $product['official_url'] ? ' target="_blank" rel="noopener"' : '' ?>>Перейти на сайт</a>
+            <a class="btn btn--primary" href="<?= htmlspecialchars($product['official_url'] ?: '#', ENT_QUOTES) ?>"<?= $product['official_url'] ? ' target="_blank" rel="noopener"' : '' ?>><?= htmlspecialchars(t('product_visit_site'), ENT_QUOTES) ?></a>
         </div>
 
         <!-- 3. Короткий опис -->
         <div class="product-summary">
             <p><?= htmlspecialchars((string) ($product['full_description'] ?: $product['short_description']), ENT_QUOTES) ?></p>
-            <a class="btn btn--ghost" href="#">Докладніше</a>
+            <a class="btn btn--ghost" href="#"><?= htmlspecialchars(t('btn_details'), ENT_QUOTES) ?></a>
         </div>
 
         <!-- 4. Бейджі категорії та підкатегорії -->
@@ -544,7 +549,7 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         <!-- 5. Основні функції -->
         <?php if ($features !== []): ?>
         <section class="section">
-            <h2 class="section__title">Основні функції</h2>
+            <h2 class="section__title"><?= htmlspecialchars(t('product_features_title'), ENT_QUOTES) ?></h2>
             <ul class="feature-list">
                 <?php foreach ($features as $feature): ?>
                     <li><?= htmlspecialchars($feature, ENT_QUOTES) ?></li>
@@ -556,7 +561,7 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         <!-- 6. Для кого призначений -->
         <?php if (!empty($product['target_audience'])): ?>
         <section class="section">
-            <h2 class="section__title">Для кого призначений</h2>
+            <h2 class="section__title"><?= htmlspecialchars(t('product_audience_title'), ENT_QUOTES) ?></h2>
             <p class="section__text"><?= htmlspecialchars((string) $product['target_audience'], ENT_QUOTES) ?></p>
         </section>
         <?php endif; ?>
@@ -564,7 +569,7 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         <!-- 7. Тарифні плани -->
         <?php if ($planCount > 0): ?>
         <section class="section">
-            <h2 class="section__title">Тарифні плани</h2>
+            <h2 class="section__title"><?= htmlspecialchars(t('product_plans_title'), ENT_QUOTES) ?></h2>
             <div class="plans">
                 <?php foreach ($plans as $idx => $plan): ?>
                     <?php $featured = $planCount === 3 && $idx === 1; ?>
@@ -572,7 +577,7 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
                         <h3 class="plan__name"><?= htmlspecialchars($plan['plan_name'], ENT_QUOTES) ?></h3>
                         <p class="plan__price"><?= plan_price($plan) ?></p>
                         <p class="plan__desc"><?= htmlspecialchars((string) $plan['description'], ENT_QUOTES) ?></p>
-                        <a class="btn <?= $featured ? 'btn--primary' : 'btn--ghost' ?> btn--block" href="#">Обрати</a>
+                        <a class="btn <?= $featured ? 'btn--primary' : 'btn--ghost' ?> btn--block" href="#"><?= htmlspecialchars(t('product_plan_select'), ENT_QUOTES) ?></a>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -582,11 +587,11 @@ $pageTitle = $product !== false ? $product['name'] : 'Продукт не зна
         <!-- 8. Нижні бейджі: платформа і рівень навичок -->
         <div class="footer-badges">
             <div class="footer-badge">
-                <span class="footer-badge__label">Платформа</span>
+                <span class="footer-badge__label"><?= htmlspecialchars(t('product_platform_label'), ENT_QUOTES) ?></span>
                 <span class="footer-badge__value"><?= htmlspecialchars(platform_label($product['platform']), ENT_QUOTES) ?></span>
             </div>
             <div class="footer-badge">
-                <span class="footer-badge__label">Рівень навичок</span>
+                <span class="footer-badge__label"><?= htmlspecialchars(t('product_skill_label'), ENT_QUOTES) ?></span>
                 <span class="footer-badge__value"><?= htmlspecialchars(skill_label((string) $product['skill_level']), ENT_QUOTES) ?></span>
             </div>
         </div>

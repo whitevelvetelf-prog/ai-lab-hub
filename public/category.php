@@ -138,11 +138,11 @@ $subcategoryIcons = [
     'navigation'         => 'compass',
 ];
 
-$pageTitle = $category !== false ? (string) $category['name'] : 'Категорію не знайдено';
+$pageTitle = $category !== false ? (string) $category['name'] : t('category_not_found');
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -351,18 +351,18 @@ $pageTitle = $category !== false ? (string) $category['name'] : 'Категор�
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
-            <a class="site-nav__link" href="index.php">Головна</a>
+            <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
             <?php if (auth_check()): ?>
-            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
             <?php else: ?>
-            <a class="site-nav__link" href="login.php">Увійти</a>
+            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
             <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
-            Викликати Асистента
+            <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
         </a>
-        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+        <button class="site-nav__toggle" type="button" aria-label="<?= htmlspecialchars(t('nav_menu'), ENT_QUOTES) ?>" aria-expanded="false" aria-controls="siteNav">
             <span></span>
             <span></span>
             <span></span>
@@ -370,16 +370,16 @@ $pageTitle = $category !== false ? (string) $category['name'] : 'Категор�
     </header>
 
     <div class="page">
-        <a class="back-link" href="index.php">← Усі напрямки</a>
+        <a class="back-link" href="index.php"><?= htmlspecialchars(t('back_to_all_directions'), ENT_QUOTES) ?></a>
 
 <?php if ($category === false): ?>
-        <h1 class="category__title">Категорію не знайдено</h1>
-        <p class="category__empty">Напрямок із таким ідентифікатором відсутній.</p>
+        <h1 class="category__title"><?= htmlspecialchars(t('category_not_found'), ENT_QUOTES) ?></h1>
+        <p class="category__empty"><?= htmlspecialchars(t('category_not_found_text'), ENT_QUOTES) ?></p>
 <?php else: ?>
         <h1 class="category__title"><?= htmlspecialchars((string) $category['name'], ENT_QUOTES) ?></h1>
 
         <?php if ($subcategories === []): ?>
-        <p class="category__empty">У цьому напрямку поки немає підкатегорій.</p>
+        <p class="category__empty"><?= htmlspecialchars(t('category_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <div class="subcategory-grid">
             <?php foreach ($subcategories as $subcategory): ?>

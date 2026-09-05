@@ -35,29 +35,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
 
     if ($old['name'] === '') {
-        $errors[] = 'Вкажіть ім’я.';
+        $errors[] = t('err_name_required');
     } elseif (mb_strlen($old['name']) > 255) {
-        $errors[] = 'Ім’я задовге (максимум 255 символів).';
+        $errors[] = t('err_name_too_long');
     }
 
     if ($old['email'] === '') {
-        $errors[] = 'Вкажіть email.';
+        $errors[] = t('err_email_required');
     } elseif (!filter_var($old['email'], FILTER_VALIDATE_EMAIL) || mb_strlen($old['email']) > 255) {
-        $errors[] = 'Некоректний email.';
+        $errors[] = t('err_email_invalid');
     }
 
     if (mb_strlen($password) < 8) {
-        $errors[] = 'Пароль має містити щонайменше 8 символів.';
+        $errors[] = t('err_password_short');
     }
     if ($password !== $passwordConfirm) {
-        $errors[] = 'Паролі не збігаються.';
+        $errors[] = t('err_password_mismatch');
     }
 
     if ($errors === []) {
         $check = $pdo->prepare('SELECT id FROM users WHERE email = :email');
         $check->execute([':email' => $old['email']]);
         if ($check->fetch() !== false) {
-            $errors[] = 'Користувач із таким email уже зареєстрований.';
+            $errors[] = t('err_email_taken');
         }
     }
 
@@ -80,19 +80,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } catch (PDOException $ex) {
             $errors[] = $ex->getCode() === '23000'
-                ? 'Користувач із таким email уже зареєстрований.'
-                : 'Не вдалося створити акаунт. Спробуйте ще раз.';
+                ? t('err_email_taken')
+                : t('err_register_failed');
         }
     }
 }
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Реєстрація</title>
+    <title><?= htmlspecialchars(t('title_register'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -311,8 +311,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="page">
         <section class="auth-card">
-            <h1 class="auth-card__title">Реєстрація</h1>
-            <p class="auth-card__sub">Створіть акаунт, щоб зберігати продукти та отримувати рекомендації від Елі.</p>
+            <h1 class="auth-card__title"><?= htmlspecialchars(t('register_heading'), ENT_QUOTES) ?></h1>
+            <p class="auth-card__sub"><?= htmlspecialchars(t('register_subtitle'), ENT_QUOTES) ?></p>
 
             <?php if ($errors !== []): ?>
                 <div class="notice">
@@ -326,7 +326,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <form method="post" action="register.php" novalidate>
                 <div class="field">
-                    <label class="field__label" for="name">Ім’я</label>
+                    <label class="field__label" for="name"><?= htmlspecialchars(t('field_name'), ENT_QUOTES) ?></label>
                     <input class="input" type="text" id="name" name="name" value="<?= e($old['name']) ?>" required autofocus>
                 </div>
                 <div class="field">
@@ -334,27 +334,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input class="input" type="email" id="email" name="email" value="<?= e($old['email']) ?>" required>
                 </div>
                 <div class="field">
-                    <label class="field__label" for="password">Пароль</label>
+                    <label class="field__label" for="password"><?= htmlspecialchars(t('field_password'), ENT_QUOTES) ?></label>
                     <div class="pw-field">
                         <input class="input" type="password" id="password" name="password" minlength="8" required>
-                        <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Показати пароль">Показати</button>
+                        <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="<?= htmlspecialchars(t('pw_show_aria'), ENT_QUOTES) ?>"><?= htmlspecialchars(t('pw_show'), ENT_QUOTES) ?></button>
                     </div>
                 </div>
                 <div class="field">
-                    <label class="field__label" for="password_confirm">Підтвердження пароля</label>
+                    <label class="field__label" for="password_confirm"><?= htmlspecialchars(t('field_password_confirm'), ENT_QUOTES) ?></label>
                     <div class="pw-field">
                         <input class="input" type="password" id="password_confirm" name="password_confirm" minlength="8" required>
-                        <button type="button" class="pw-toggle" data-pw-toggle="password_confirm" aria-label="Показати пароль">Показати</button>
+                        <button type="button" class="pw-toggle" data-pw-toggle="password_confirm" aria-label="<?= htmlspecialchars(t('pw_show_aria'), ENT_QUOTES) ?>"><?= htmlspecialchars(t('pw_show'), ENT_QUOTES) ?></button>
                     </div>
                 </div>
-                <button type="submit" class="btn btn--primary btn--block">Зареєструватися</button>
+                <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('action_register'), ENT_QUOTES) ?></button>
             </form>
 
-            <p class="auth-card__foot">Уже маєте акаунт? <a href="login.php">Увійти</a></p>
+            <p class="auth-card__foot"><?= htmlspecialchars(t('register_have_account'), ENT_QUOTES) ?> <a href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a></p>
         </section>
     </div>
 
     <script>
+        var PW_SHOW = <?= json_encode(t('pw_show'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_HIDE = <?= json_encode(t('pw_hide'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_SHOW_ARIA = <?= json_encode(t('pw_show_aria'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_HIDE_ARIA = <?= json_encode(t('pw_hide_aria'), JSON_UNESCAPED_UNICODE) ?>;
         document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var input = document.getElementById(btn.getAttribute('data-pw-toggle'));
@@ -363,8 +367,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 var reveal = input.type === 'password';
                 input.type = reveal ? 'text' : 'password';
-                btn.textContent = reveal ? 'Сховати' : 'Показати';
-                btn.setAttribute('aria-label', (reveal ? 'Сховати' : 'Показати') + ' пароль');
+                btn.textContent = reveal ? PW_HIDE : PW_SHOW;
+                btn.setAttribute('aria-label', reveal ? PW_HIDE_ARIA : PW_SHOW_ARIA);
             });
         });
     </script>

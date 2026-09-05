@@ -25,11 +25,11 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Еля, AI-асистентка</title>
+    <title><?= htmlspecialchars(t('title_eli'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -507,18 +507,18 @@ require_once __DIR__ . '/../app/translations.php';
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
-            <a class="site-nav__link" href="index.php">Головна</a>
+            <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
             <?php if (auth_check()): ?>
-            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
             <?php else: ?>
-            <a class="site-nav__link" href="login.php">Увійти</a>
+            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
             <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
-            Викликати Асистента
+            <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
         </a>
-        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+        <button class="site-nav__toggle" type="button" aria-label="<?= htmlspecialchars(t('nav_menu'), ENT_QUOTES) ?>" aria-expanded="false" aria-controls="siteNav">
             <span></span>
             <span></span>
             <span></span>
@@ -527,15 +527,15 @@ require_once __DIR__ . '/../app/translations.php';
 
     <div class="page" id="page">
         <div class="chat-head">
-            <h1 class="chat-head__title">Еля — ваша AI-асистентка</h1>
-            <p class="chat-head__subtitle">Опишіть задачу — Еля підбере найкращий AI-інструмент</p>
+            <h1 class="chat-head__title"><?= htmlspecialchars(t('eli_title'), ENT_QUOTES) ?></h1>
+            <p class="chat-head__subtitle"><?= htmlspecialchars(t('eli_subtitle'), ENT_QUOTES) ?></p>
         </div>
 
         <!-- Велике відео Елі (привітання / «друкує»). Один елемент для всіх
              розмірів екрана; показ і зміну ролика керує JS нижче. -->
         <div id="eliStage" class="eli-stage" hidden>
             <video id="eliStageVideo" class="eli-stage__video" muted playsinline
-                   aria-label="Відео Елі"></video>
+                   aria-label="<?= htmlspecialchars(t('eli_video_alt'), ENT_QUOTES) ?>"></video>
         </div>
 
         <div class="chat" id="chat">
@@ -544,22 +544,30 @@ require_once __DIR__ . '/../app/translations.php';
                  при першому повідомленні користувача. -->
             <div class="msg msg--eli" id="greetingMsg">
                 <div class="msg__bubble">
-                    Доброго дня! Розкажіть, яку задачу потрібно вирішити — і я підберу
-                    відповідний AI-інструмент.
+                    <?= htmlspecialchars(t('eli_greeting'), ENT_QUOTES) ?>
                 </div>
             </div>
         </div>
 
         <form class="composer" id="composer" onsubmit="return false;">
             <input id="composerInput" class="composer__input" type="text" autocomplete="off"
-                   placeholder="Опишіть свою задачу…" aria-label="Повідомлення">
-            <button class="composer__btn" type="submit">Надіслати</button>
+                   placeholder="<?= htmlspecialchars(t('eli_input_placeholder'), ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars(t('eli_input_aria'), ENT_QUOTES) ?>">
+            <button class="composer__btn" type="submit"><?= htmlspecialchars(t('eli_send'), ENT_QUOTES) ?></button>
         </form>
     </div>
 
     <script>
     (function () {
         'use strict';
+
+        var I18N = {
+            techError: <?= json_encode(t('eli_tech_error'), JSON_UNESCAPED_UNICODE) ?>,
+            thinking: <?= json_encode(t('eli_thinking'), JSON_UNESCAPED_UNICODE) ?>,
+            details: <?= json_encode(t('btn_details'), JSON_UNESCAPED_UNICODE) ?>,
+            stepLabel: <?= json_encode(t('eli_step_label'), JSON_UNESCAPED_UNICODE) ?>,
+            recommend: <?= json_encode(t('eli_recommend'), JSON_UNESCAPED_UNICODE) ?>,
+            defaultReply: <?= json_encode(t('eli_default_reply'), JSON_UNESCAPED_UNICODE) ?>
+        };
 
         var chat = document.getElementById('chat');
         var form = document.getElementById('composer');
@@ -685,8 +693,7 @@ require_once __DIR__ . '/../app/translations.php';
             scrollIntoView(msg);
         }
 
-        var TECH_ERROR = 'Перепрошую, зараз виникли технічні труднощі. ' +
-            'Спробуйте, будь ласка, ще раз за хвилину.';
+        var TECH_ERROR = I18N.techError;
 
         // Ініціали з назви продукту — запасний варіант, коли немає логотипа.
         function initialsOf(name) {
@@ -729,7 +736,7 @@ require_once __DIR__ . '/../app/translations.php';
             var btn = document.createElement('a');
             btn.className = 'rec-card__btn';
             btn.href = product.href || ('product.php?id=' + product.id);
-            btn.textContent = 'Докладніше';
+            btn.textContent = I18N.details;
 
             card.appendChild(logo);
             card.appendChild(nm);
@@ -770,7 +777,7 @@ require_once __DIR__ . '/../app/translations.php';
             wrap.className = 'eli-thinking';
 
             var text = document.createElement('span');
-            text.textContent = 'Еля обмірковує відповідь…';
+            text.textContent = I18N.thinking;
             wrap.appendChild(text);
 
             var dots = document.createElement('span');
@@ -796,7 +803,7 @@ require_once __DIR__ . '/../app/translations.php';
 
             var replyText = (data && data.reply_text) ? String(data.reply_text) : '';
             if (replyText === '') {
-                replyText = 'Ось що я підібрала для вас.';
+                replyText = I18N.defaultReply;
             }
             bubble.appendChild(document.createTextNode(replyText));
 
@@ -824,7 +831,7 @@ require_once __DIR__ . '/../app/translations.php';
                     if (!cards.length) {
                         return;
                     }
-                    var title = s.step_title || (multi ? 'Крок' : 'Рекомендую');
+                    var title = s.step_title || (multi ? I18N.stepLabel : I18N.recommend);
                     wrap.appendChild(makeRecStep(title, cards));
                 });
                 if (wrap.childNodes.length) {

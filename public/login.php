@@ -40,16 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $error = 'Невірний email або пароль';
+    $error = t('login_error_invalid');
 }
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Вхід</title>
+    <title><?= htmlspecialchars(t('title_login'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -263,8 +263,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <div class="page">
         <section class="auth-card">
-            <h1 class="auth-card__title">Вхід</h1>
-            <p class="auth-card__sub">Увійдіть, щоб перейти до свого кабінету.</p>
+            <h1 class="auth-card__title"><?= htmlspecialchars(t('login_heading'), ENT_QUOTES) ?></h1>
+            <p class="auth-card__sub"><?= htmlspecialchars(t('login_subtitle'), ENT_QUOTES) ?></p>
 
             <?php if ($error !== null): ?>
                 <div class="notice"><?= e($error) ?></div>
@@ -276,20 +276,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input class="input" type="email" id="email" name="email" value="<?= e($old['email']) ?>" required autofocus>
                 </div>
                 <div class="field">
-                    <label class="field__label" for="password">Пароль</label>
+                    <label class="field__label" for="password"><?= htmlspecialchars(t('field_password'), ENT_QUOTES) ?></label>
                     <div class="pw-field">
                         <input class="input" type="password" id="password" name="password" required>
-                        <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="Показати пароль">Показати</button>
+                        <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="<?= htmlspecialchars(t('pw_show_aria'), ENT_QUOTES) ?>"><?= htmlspecialchars(t('pw_show'), ENT_QUOTES) ?></button>
                     </div>
                 </div>
-                <button type="submit" class="btn btn--primary btn--block">Увійти</button>
+                <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></button>
             </form>
 
-            <p class="auth-card__foot">Немає акаунта? <a href="register.php">Зареєструватися</a></p>
+            <p class="auth-card__foot"><?= htmlspecialchars(t('login_no_account'), ENT_QUOTES) ?> <a href="register.php"><?= htmlspecialchars(t('action_register'), ENT_QUOTES) ?></a></p>
         </section>
     </div>
 
     <script>
+        var PW_SHOW = <?= json_encode(t('pw_show'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_HIDE = <?= json_encode(t('pw_hide'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_SHOW_ARIA = <?= json_encode(t('pw_show_aria'), JSON_UNESCAPED_UNICODE) ?>;
+        var PW_HIDE_ARIA = <?= json_encode(t('pw_hide_aria'), JSON_UNESCAPED_UNICODE) ?>;
         document.querySelectorAll('[data-pw-toggle]').forEach(function (btn) {
             btn.addEventListener('click', function () {
                 var input = document.getElementById(btn.getAttribute('data-pw-toggle'));
@@ -298,8 +302,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
                 var reveal = input.type === 'password';
                 input.type = reveal ? 'text' : 'password';
-                btn.textContent = reveal ? 'Сховати' : 'Показати';
-                btn.setAttribute('aria-label', (reveal ? 'Сховати' : 'Показати') + ' пароль');
+                btn.textContent = reveal ? PW_HIDE : PW_SHOW;
+                btn.setAttribute('aria-label', reveal ? PW_HIDE_ARIA : PW_SHOW_ARIA);
             });
         });
     </script>

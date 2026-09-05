@@ -34,9 +34,9 @@ function user_initials(string $name): string
 }
 
 $roleLabels = [
-    'user' => 'Користувач',
-    'employee' => 'Співробітник',
-    'admin' => 'Адміністратор',
+    'user' => t('role_user'),
+    'employee' => t('role_employee'),
+    'admin' => t('role_admin'),
 ];
 
 // ---------------------------------------------------------------------
@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
 
             if ($req === false) {
                 $pdo->rollBack();
-                $_SESSION['account_flash'] = 'Заявку не знайдено або вона вже опрацьована.';
+                $_SESSION['account_flash'] = t('flash_request_not_found');
             } else {
                 // Наступний послідовний номер: MAX + 1, або 1 для першого працівника.
                 $nextNumber = (int) $pdo->query(
@@ -141,7 +141,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
 
                 $pdo->commit();
                 $_SESSION['account_flash'] = sprintf(
-                    'Заявку схвалено. Працівнику присвоєно номер №%d.',
+                    t('flash_request_approved'),
                     $nextNumber
                 );
             }
@@ -149,7 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            $_SESSION['account_flash'] = 'Не вдалося схвалити заявку. Спробуйте ще раз.';
+            $_SESSION['account_flash'] = t('flash_request_approve_failed');
         }
 
         header('Location: account.php');
@@ -222,11 +222,11 @@ if ($user !== null && $user['role'] === 'user') {
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Кабінет</title>
+    <title>AI LAB HUB — <?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -626,18 +626,18 @@ if ($user !== null && $user['role'] === 'user') {
             <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
-            <a class="site-nav__link" href="index.php">Головна</a>
+            <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
             <?php if (auth_check()): ?>
-            <a class="site-nav__link" href="account.php">Кабінет</a>
+            <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
             <?php else: ?>
-            <a class="site-nav__link" href="login.php">Увійти</a>
+            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
             <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
-            Викликати Асистента
+            <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
         </a>
-        <button class="site-nav__toggle" type="button" aria-label="Меню" aria-expanded="false" aria-controls="siteNav">
+        <button class="site-nav__toggle" type="button" aria-label="<?= htmlspecialchars(t('nav_menu'), ENT_QUOTES) ?>" aria-expanded="false" aria-controls="siteNav">
             <span></span>
             <span></span>
             <span></span>
@@ -647,14 +647,13 @@ if ($user !== null && $user['role'] === 'user') {
     <div class="page">
 <?php if ($user === null): ?>
         <section class="account-panel">
-            <h1 class="account-panel__title">Ваш кабінет</h1>
+            <h1 class="account-panel__title"><?= htmlspecialchars(t('account_title_guest'), ENT_QUOTES) ?></h1>
             <p class="account-panel__text">
-                Увійдіть, щоб зберігати обрані продукти та отримати персональні
-                рекомендації від Елі.
+                <?= htmlspecialchars(t('account_text_guest'), ENT_QUOTES) ?>
             </p>
             <div class="btn-row">
-                <a class="btn btn--primary" href="login.php">Увійти</a>
-                <a class="btn btn--ghost" href="register.php">Створити акаунт</a>
+                <a class="btn btn--primary" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
+                <a class="btn btn--ghost" href="register.php"><?= htmlspecialchars(t('account_create'), ENT_QUOTES) ?></a>
             </div>
         </section>
 <?php else: ?>
@@ -663,7 +662,7 @@ if ($user !== null && $user['role'] === 'user') {
                 <div class="account-user__avatar"><?= e(user_initials((string) $user['name'])) ?></div>
                 <div>
                     <h1 class="account-user__title">
-                        Вітаємо, <?= e($user['name']) ?><span class="role-badge"><?= e($roleLabels[$user['role']] ?? $user['role']) ?></span>
+                        <?= htmlspecialchars(t('account_welcome_prefix'), ENT_QUOTES) ?> <?= e($user['name']) ?><span class="role-badge"><?= e($roleLabels[$user['role']] ?? $user['role']) ?></span>
                     </h1>
                     <p class="account-user__meta"><?= e($user['email']) ?></p>
                 </div>
@@ -674,9 +673,9 @@ if ($user !== null && $user['role'] === 'user') {
             <?php endif; ?>
 
             <div class="section">
-                <h2 class="section__title">Збережені продукти</h2>
+                <h2 class="section__title"><?= htmlspecialchars(t('account_saved_title'), ENT_QUOTES) ?></h2>
                 <div class="empty-state">
-                    Ще немає збережених продуктів. Перегляньте <a href="index.php">напрямки AI на головній</a>.
+                    <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a href="index.php"><?= htmlspecialchars(t('account_directions_link'), ENT_QUOTES) ?></a>.
                 </div>
             </div>
 
@@ -724,19 +723,19 @@ if ($user !== null && $user['role'] === 'user') {
 
             <?php if ($user['role'] === 'admin'): ?>
                 <div class="section">
-                    <h2 class="section__title">Статистика користувачів</h2>
+                    <h2 class="section__title"><?= htmlspecialchars(t('account_stats_title'), ENT_QUOTES) ?></h2>
                     <div class="summary">
-                        <span>Усього: <strong><?= (int) $userStats['total'] ?></strong></span>
-                        <span>Користувачі (user): <strong><?= (int) $userStats['users'] ?></strong></span>
-                        <span>Працівники (employee): <strong><?= (int) $userStats['employees'] ?></strong></span>
-                        <span>Адміни (admin): <strong><?= (int) $userStats['admins'] ?></strong></span>
-                        <span>Заявки на розгляді:
+                        <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>
+                        <span><?= htmlspecialchars(t('stats_users_label'), ENT_QUOTES) ?> (user): <strong><?= (int) $userStats['users'] ?></strong></span>
+                        <span><?= htmlspecialchars(t('stats_employees_label'), ENT_QUOTES) ?> (employee): <strong><?= (int) $userStats['employees'] ?></strong></span>
+                        <span><?= htmlspecialchars(t('stats_admins_label'), ENT_QUOTES) ?> (admin): <strong><?= (int) $userStats['admins'] ?></strong></span>
+                        <span><?= htmlspecialchars(t('stats_pending_label'), ENT_QUOTES) ?>
                             <strong><a href="#employee-requests"><?= count($pendingRequests) ?></a></strong>
                         </span>
                     </div>
 
                     <?php if ($staffEmployees !== []): ?>
-                        <h3 class="section__subtitle">Працівники</h3>
+                        <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_employees_title'), ENT_QUOTES) ?></h3>
                         <ul class="request-list">
                             <?php foreach ($staffEmployees as $emp): ?>
                                 <?php
@@ -753,7 +752,7 @@ if ($user !== null && $user['role'] === 'user') {
                                         <span class="request-card__meta">
                                             <?= e($emp['email']) ?>
                                             <?php if (!empty($emp['role_since'])): ?>
-                                                · роль з <?= e(date('d.m.Y', (int) strtotime((string) $emp['role_since']))) ?>
+                                                <?= htmlspecialchars(t('account_role_since_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $emp['role_since']))) ?>
                                             <?php endif; ?>
                                         </span>
                                     </div>
@@ -763,7 +762,7 @@ if ($user !== null && $user['role'] === 'user') {
                     <?php endif; ?>
 
                     <?php if ($staffAdmins !== []): ?>
-                        <h3 class="section__subtitle">Адміністратори</h3>
+                        <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_admins_title'), ENT_QUOTES) ?></h3>
                         <ul class="request-list">
                             <?php foreach ($staffAdmins as $adm): ?>
                                 <li class="request-card">
@@ -810,13 +809,13 @@ if ($user !== null && $user['role'] === 'user') {
 
             <?php if (auth_has_role('employee', 'admin')): ?>
                 <div class="staff-note">
-                    Доступ до CRM: <a href="crm-list.php">список продуктів</a>
-                    · <a href="crm-add-product.php">додати новий AI-продукт</a>.
+                    <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
+                    · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>.
                 </div>
             <?php endif; ?>
 
             <div class="btn-row">
-                <a class="btn btn--ghost" href="logout.php">Вийти з акаунту</a>
+                <a class="btn btn--ghost" href="logout.php"><?= htmlspecialchars(t('account_logout'), ENT_QUOTES) ?></a>
             </div>
         </section>
 <?php endif; ?>
