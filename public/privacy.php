@@ -89,6 +89,18 @@ require_once __DIR__ . '/../app/translations.php';
             font-size: 1.05rem;
             color: var(--text-muted);
         }
+
+        .legal-heading {
+            margin: 32px 0 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .legal-updated {
+            margin-top: 32px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -101,6 +113,11 @@ require_once __DIR__ . '/../app/translations.php';
     <main class="page">
         <h1 class="stub__title">Політика конфіденційності</h1>
         <p class="stub__text">Документ буде додано найближчим часом</p>
+
+        <h2 class="legal-heading">3.1. Дані в розділах Marketplace, курсів і вакансій</h2>
+        <p class="stub__text">Якщо ви публікуєте товар у Marketplace, курс, чи вакансію як роботодавець, ми можемо збирати додаткові дані: назву компанії, контактні дані для зв'язку з кандидатами чи покупцями, платіжні реквізити для отримання виплат (де застосовно). Ці дані використовуються виключно для функціонування відповідного розділу платформи й не передаються третім особам, окрім випадків, прямо необхідних для виконання транзакції (наприклад платіжному провайдеру).</p>
+
+        <p class="stub__text legal-updated">Останнє оновлення: 6 вересня 2026 р.</p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>
