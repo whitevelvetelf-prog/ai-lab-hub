@@ -210,8 +210,13 @@ CREATE TABLE pricing_plans (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- =====================================================================
--- Довідкові дані: повний список напрямків (categories) та їхніх
--- підкатегорій (subcategories). Продукти додаються окремо через CRM.
+-- Довідкові дані: затверджений список напрямків (categories, 12) та
+-- їхніх підкатегорій (subcategories, 54). Продукти додаються окремо
+-- через CRM.
+-- 2026-09-06: прибрано порожні підкатегорії; категорію «Дані та
+-- аналітика» (id 5) згорнуто у «Дизайн та креатив» — див.
+-- database/migration-2026-09-06-taxonomy-reconcile.sql. id 5 та id
+-- прибраних підкатегорій більше не використовуються.
 -- =====================================================================
 
 INSERT INTO categories (id, name, slug) VALUES
@@ -219,7 +224,6 @@ INSERT INTO categories (id, name, slug) VALUES
 (2,  'Текст та Чат-боти',            'text-chatbots'),
 (3,  'Розробка та IT',               'development-it'),
 (4,  'Бізнес та маркетинг',          'business-marketing'),
-(5,  'Дані та аналітика',            'data-analytics'),
 (6,  'Продуктивність',               'productivity'),
 (7,  'SEO та контент',               'seo-content'),
 (8,  'Дизайн та креатив',            'design-creative'),
@@ -255,34 +259,21 @@ INSERT INTO subcategories (id, category_id, name, slug) VALUES
 (37, 3, 'Тестування',             'testing'),
 (38, 3, 'API',                    'api'),
 -- Бізнес та маркетинг (4)
-(10, 4, 'Реклама',                'advertising'),
-(11, 4, 'Резюме зустрічей',       'meeting-summaries'),
 (12, 4, 'SMM',                    'smm'),
 (28, 4, 'Аналітика',              'analytics'),
 (29, 4, 'Лідогенерація',          'lead-generation'),
 (30, 4, 'Email-маркетинг',        'email-marketing'),
-(31, 4, 'E-commerce',             'e-commerce'),
 (32, 4, 'CRM',                    'crm'),
--- Дані та аналітика (5)
-(13, 5, 'SQL-запити',             'sql-queries'),
-(14, 5, 'Візуалізація даних',     'data-visualization'),
-(15, 5, 'Звіти',                  'reports'),
 -- Продуктивність (6)
 (22, 6, 'Планування',             'planning'),
-(23, 6, 'Управління цілями',      'goal-management'),
-(24, 6, 'Зберігання',             'storage'),
-(25, 6, 'Календар',               'calendar'),
 (26, 6, 'Нотатки',                'notes'),
 (27, 6, 'Тайм-менеджмент',        'time-management'),
 -- SEO та контент (7)
 (39, 7, 'SEO',                    'seo'),
-(40, 7, 'Хештеги',                'hashtags'),
-(41, 7, 'Лінкбілдинг',            'link-building'),
 (42, 7, 'Тренди',                 'trends'),
--- Дизайн та креатив (8)
+-- Дизайн та креатив (8) — вбирає напрямки колишньої «Дані та аналітика»
 (43, 8, 'Графічний дизайн',       'graphic-design'),
 (44, 8, 'UI/UX',                  'ui-ux'),
-(45, 8, 'Типографіка',            'typography'),
 (46, 8, 'Кольори',                'colors'),
 (47, 8, 'Візуалізація даних',     'data-visualization'),
 (48, 8, 'Аналіз даних',           'data-analysis'),
@@ -295,16 +286,12 @@ INSERT INTO subcategories (id, category_id, name, slug) VALUES
 (54, 9, 'Тести',                  'tests'),
 -- Переклад та мови (10)
 (55, 10, 'Переклад',              'translation'),
-(56, 10, 'Словник',               'dictionary'),
 (57, 10, 'Розпізнавання мови',    'speech-recognition'),
-(58, 10, 'Субтитри',              'subtitles'),
 -- Фінанси та юридичні (11)
 (59, 11, 'Фінанси',              'finance'),
 (60, 11, 'Інвестиції',           'investments'),
-(61, 11, 'Платежі',              'payments'),
 (62, 11, 'Юридичні послуги',     'legal-services'),
 (63, 11, 'Документи',            'documents'),
-(64, 11, 'Безпека даних',        'data-security'),
 -- Здоров''я та краса (12)
 (65, 12, 'Медицина',            'medicine'),
 (66, 12, 'Краса та стиль',      'beauty-style'),
@@ -312,5 +299,4 @@ INSERT INTO subcategories (id, category_id, name, slug) VALUES
 -- Інструменти та автоматизація (13)
 (68, 13, 'Плагіни',             'plugins'),
 (69, 13, 'Автоматизація',       'automation'),
-(70, 13, 'Інтеграції',          'integrations'),
-(71, 13, 'Навігація',           'navigation');
+(70, 13, 'Інтеграції',          'integrations');
