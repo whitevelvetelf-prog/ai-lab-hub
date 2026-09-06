@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — Про проєкт (заглушка).
+ * AI LAB HUB — Про проєкт.
  */
 
 require_once __DIR__ . '/../app/translations.php';
@@ -85,9 +85,37 @@ require_once __DIR__ . '/../app/translations.php';
         }
 
         .stub__text {
-            margin: 0;
+            margin: 0 0 18px;
             font-size: 1.05rem;
             color: var(--text-muted);
+        }
+
+        .about-heading {
+            margin: 36px 0 14px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .about-list {
+            margin: 0 0 18px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .about-list li {
+            position: relative;
+            margin: 0 0 14px;
+            padding-left: 20px;
+            font-size: 1.05rem;
+            color: var(--text-muted);
+        }
+
+        .about-list li::before {
+            content: "—";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
         }
     </style>
 </head>
@@ -100,7 +128,22 @@ require_once __DIR__ . '/../app/translations.php';
 
     <main class="page">
         <h1 class="stub__title">Про проєкт</h1>
-        <p class="stub__text">Розділ у розробці</p>
+
+        <p class="stub__text">AI LAB HUB — це каталог AI-інструментів, створений, щоб допомогти кожному швидко знайти правильне рішення для своєї задачі, не гублячись у сотнях схожих сервісів.</p>
+
+        <p class="stub__text">Наша місія проста: зібрати AI-інструменти з усього світу в одному місці, розподілити їх за зрозумілими напрямками, і дати змогу знайти потрібне рішення за лічені хвилини — незалежно від того, чи це разова безкоштовна задача, чи професійний інструмент для щоденної роботи.</p>
+
+        <h2 class="about-heading">Що робить AI LAB HUB особливим:</h2>
+
+        <ul class="about-list">
+            <li>Еля, наша AI-асистентка, допомагає підібрати саме те, що потрібно, розуміючи вашу задачу і бюджет — а не просто показує список фільтрів.</li>
+            <li>Ми не показуємо рейтинги чи «накручені» оцінки — тільки чесний опис того, що робить кожен інструмент.</li>
+            <li>Каталог поповнюється й перевіряється регулярно, щоб інформація залишалась актуальною.</li>
+        </ul>
+
+        <p class="stub__text">Платформа безкоштовна для користувачів і завжди такою залишиться. Ми можемо отримувати партнерську комісію від деяких сервісів, представлених у каталозі — це не впливає на те, які інструменти потрапляють до каталогу чи як їх описано.</p>
+
+        <p class="stub__text">Якщо у вас є пропозиція, зауваження чи ви хочете розповісти про свій AI-продукт — напишіть нам, контакти на сторінці «Контакти».</p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>
