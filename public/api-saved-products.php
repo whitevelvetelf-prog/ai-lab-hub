@@ -14,11 +14,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 
-/** @var PDO $pdo */
-$pdo = require __DIR__ . '/../config/database.php';
-
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
+
+/** @var PDO $pdo */
+$pdo = require __DIR__ . '/../config/database.php';
 
 /** JSON-відповідь + вихід. */
 function saved_respond(array $payload, int $status = 200): void
@@ -32,14 +32,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     saved_respond(['ok' => false, 'error' => 'method_not_allowed'], 405);
 }
 
+// auth_current_user() (а не лише auth_user_id()) — звіряє, що акаунт із
+// сесії ще існує в БД, і скидає «протухлу» сесію (напр. після видалення
+// користувача чи синхронізації бази). Інакше INSERT з мертвим user_id
+// падав би на FK-обмеженні (SQLSTATE 23000 / 1452) → 500 замість 401.
 if (!auth_check()) {
     saved_respond(['ok' => false, 'error' => 'auth_required'], 401);
 }
 
-$userId = auth_user_id();
-if ($userId === null) {
+$currentUser = auth_current_user($pdo);
+if ($currentUser === null) {
     saved_respond(['ok' => false, 'error' => 'auth_required'], 401);
 }
+$userId = (int) $currentUser['id'];
 
 // product_id: з form-urlencoded або з JSON-тіла.
 $productId = (int) ($_POST['product_id'] ?? 0);
@@ -76,13 +81,25 @@ try {
         $ins = $pdo->prepare('INSERT INTO saved_products (user_id, product_id) VALUES (:uid, :pid)');
         $ins->execute([':uid' => $userId, ':pid' => $productId]);
     } catch (PDOException $dup) {
-        if (($dup->errorInfo[1] ?? 0) !== 1062) {
+        $code = (int) ($dup->errorInfo[1] ?? 0);
+        if ($code === 1062) {
+            // дубль (гонка) — уже збережено, це не помилка
+        } elseif ($code === 1452) {
+            // FK: user_id більше не існує (сесія протухла між перевіркою і INSERT)
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            saved_respond(['ok' => false, 'error' => 'auth_required'], 401);
+        } else {
             throw $dup;
         }
     }
 
     saved_respond(['ok' => true, 'saved' => true]);
 } catch (PDOException $ex) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     error_log('[saved-products] ' . $ex->getMessage());
     saved_respond(['ok' => false, 'error' => 'server_error'], 500);
 }

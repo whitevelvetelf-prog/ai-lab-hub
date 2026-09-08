@@ -6,8 +6,9 @@
     align-items: center;
     justify-content: center;
     padding: 0;
-    width: 34px;
-    height: 34px;
+    /* Комфортна touch-зона — не менша за 40px навіть коли сама іконка 22px. */
+    width: 40px;
+    height: 40px;
     border: 0;
     border-radius: 999px;
     background: transparent;
@@ -35,10 +36,18 @@
     pointer-events: none;
 }
 
+/* Явний розмір іконки — і через .paw-icon, і через svg (на випадок, якщо
+   клас не проставився). Клік по svg/use «провалюється» на кнопку. */
+.save-btn svg,
 .save-btn .paw-icon {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     display: block;
+    pointer-events: none;
+}
+
+.save-btn svg *,
+.save-btn .paw-icon * {
     pointer-events: none;
 }
 
@@ -49,8 +58,8 @@
 
 .product-card .save-btn {
     position: absolute;
-    top: 14px;
-    right: 14px;
+    top: 10px;
+    right: 10px;
 }
 
 /* Міні-картка у видачі Елі: лапка поряд із назвою. */
@@ -60,15 +69,16 @@
 
 .rec-card .save-btn {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 30px;
-    height: 30px;
+    top: 6px;
+    right: 6px;
+    width: 34px;
+    height: 34px;
 }
 
+.rec-card .save-btn svg,
 .rec-card .save-btn .paw-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
 }
 
 /* Підказка «Увійдіть, щоб зберегти» біля кнопки для гостя. */

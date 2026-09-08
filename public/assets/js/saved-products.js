@@ -168,7 +168,7 @@
         btn.className = 'save-btn' + (saved ? ' is-saved' : '');
         btn.dataset.productId = String(productId);
         applyState(btn, !!saved);
-        btn.innerHTML = '<svg class="paw-icon" viewBox="0 0 1024 1024" aria-hidden="true" focusable="false"><use href="#paw-icon"></use></svg>';
+        btn.innerHTML = '<svg class="paw-icon" width="22" height="22" viewBox="251 202 524 540" aria-hidden="true" focusable="false"><use href="#paw-icon" xlink:href="#paw-icon"></use></svg>';
         return btn;
     };
 })();
