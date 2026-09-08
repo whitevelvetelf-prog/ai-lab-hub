@@ -344,6 +344,7 @@ $pageTitle = $category !== false ? (string) $category['name'] : t('category_not_
             }
         }
     </style>
+    <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
     <header class="site-header">

@@ -1,0 +1,92 @@
+/* AI LAB HUB — банер «Встановити застосунок».
+   Фіксований знизу екрана, бренд-акцент #2116ad, білий текст,
+   заокруглені кути, іконка зліва від тексту. */
+
+.pwa-install-banner {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    z-index: 9999;
+    width: calc(100% - 24px);
+    max-width: 460px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: #2116ad;
+    color: #fff;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(0, 3, 44, 0.45);
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.35;
+    transform: translate(-50%, calc(100% + 32px));
+    transition: transform 0.35s ease;
+}
+
+.pwa-install-banner.is-visible {
+    transform: translate(-50%, 0);
+}
+
+.pwa-install-banner__icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: block;
+}
+
+.pwa-install-banner__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.pwa-install-banner__action {
+    flex: 0 0 auto;
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: #fff;
+    color: #2116ad;
+    font: inherit;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pwa-install-banner__action:hover {
+    background: rgba(255, 255, 255, 0.88);
+}
+
+.pwa-install-banner__close {
+    flex: 0 0 auto;
+    appearance: none;
+    border: 0;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pwa-install-banner__close:hover {
+    background: rgba(255, 255, 255, 0.28);
+}
+
+@media (max-width: 420px) {
+    .pwa-install-banner {
+        flex-wrap: wrap;
+    }
+
+    .pwa-install-banner__text {
+        flex: 1 1 100%;
+        order: 3;
+    }
+}

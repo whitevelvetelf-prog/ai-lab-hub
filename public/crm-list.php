@@ -569,6 +569,7 @@ $total = count($products);
             margin-bottom: 24px;
         }
     </style>
+    <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
     <header class="site-header">

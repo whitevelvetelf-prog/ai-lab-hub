@@ -397,3 +397,13 @@ require_once __DIR__ . '/translations.php';
         }
     })();
 </script>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register('/sw.js').catch(function () {});
+        });
+    }
+</script>
+
+<script src="/assets/js/pwa-install.js" defer></script>

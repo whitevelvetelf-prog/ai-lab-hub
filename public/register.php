@@ -301,6 +301,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     </style>
+    <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
     <header class="site-header">

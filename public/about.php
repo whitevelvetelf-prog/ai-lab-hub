@@ -118,6 +118,7 @@ require_once __DIR__ . '/../app/translations.php';
             color: var(--accent);
         }
     </style>
+    <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
     <header class="site-header">
