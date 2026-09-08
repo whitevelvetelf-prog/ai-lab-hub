@@ -2,6 +2,36 @@
    Фіксований знизу екрана, бренд-акцент #2116ad, білий текст,
    заокруглені кути, іконка зліва від тексту. */
 
+/* ===== Кнопка «Додаток» у шапці =====
+   Вставляється JS-ін'єкцією (assets/js/pwa-install.js) у .site-header перед
+   кнопкою «Викликати Асистента». Базова «пігулка» — від .site-nav__link, який
+   уже є в стилях кожної сторінки; тут лише бренд-акцент і поведінка кнопки.
+   Видимістю керує JS через атрибут [hidden]. */
+.site-header__app-cta {
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(33, 22, 173, 0.35);
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.site-header__app-cta:hover {
+    background: #2116ad;
+    color: #ffffff;
+}
+
+.site-header__app-cta svg {
+    width: 16px;
+    height: 16px;
+}
+
+.site-header__app-cta[hidden] {
+    display: none;
+}
+
 .pwa-install-banner {
     position: fixed;
     left: 50%;
