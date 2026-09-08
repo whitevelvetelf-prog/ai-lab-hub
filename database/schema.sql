@@ -11,6 +11,7 @@ USE ailabhub_db;
 
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS saved_products;
 DROP TABLE IF EXISTS pricing_plans;
 DROP TABLE IF EXISTS product_subcategories;
 DROP TABLE IF EXISTS product_categories;
@@ -223,6 +224,28 @@ CREATE TABLE pricing_plans (
     PRIMARY KEY (id),
     KEY idx_pricing_plans_product (product_id),
     CONSTRAINT fk_pricing_plans_product
+        FOREIGN KEY (product_id) REFERENCES products (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- saved_products — «Моя добірка»: продукти, які користувач зберіг у
+-- кабінеті. UNIQUE (user_id, product_id) — один продукт лише раз;
+-- toggle-ендпоінт public/api-saved-products.php додає/прибирає рядок.
+-- ---------------------------------------------------------------------
+CREATE TABLE saved_products (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id    INT UNSIGNED NOT NULL,
+    product_id INT UNSIGNED NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_saved_user_product (user_id, product_id),
+    KEY idx_saved_user (user_id),
+    KEY idx_saved_product (product_id),
+    CONSTRAINT fk_saved_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT fk_saved_product
         FOREIGN KEY (product_id) REFERENCES products (id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

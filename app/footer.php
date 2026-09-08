@@ -12,7 +12,9 @@
  * в цьому файлі.
  */
 
+require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/translations.php';
+require_once __DIR__ . '/paw-icon.php';
 
 ?>
 <style>
@@ -407,3 +409,39 @@ require_once __DIR__ . '/translations.php';
 </script>
 
 <script src="/assets/js/pwa-install.js" defer></script>
+
+<?php /* ===== «Моя добірка»: іконка-лапка, кнопка «зберегти», пункт меню ===== */ ?>
+<?= paw_icon_sprite() ?>
+<script>
+    window.AI_LAB_AUTH = <?= auth_check() ? 'true' : 'false' ?>;
+    window.SAVED_I18N = {
+        save: <?= json_encode(t('saved_btn_save'), JSON_UNESCAPED_UNICODE) ?>,
+        unsave: <?= json_encode(t('saved_btn_unsave'), JSON_UNESCAPED_UNICODE) ?>,
+        hintGuest: <?= json_encode(t('saved_hint_guest'), JSON_UNESCAPED_UNICODE) ?>,
+        loginUrl: 'login.php',
+        error: <?= json_encode(t('saved_error'), JSON_UNESCAPED_UNICODE) ?>
+    };
+</script>
+<script src="/assets/js/saved-products.js" defer></script>
+
+<?php if (auth_check()): ?>
+<script>
+    /* Пункт меню «Моя добірка» — лише для залогінених; вставляємо в кожну
+       шапку сайту, щоб не дублювати розмітку в десятках сторінок. */
+    (function () {
+        var nav = document.getElementById('siteNav');
+        if (!nav || nav.querySelector('[data-nav-saved]')) {
+            return;
+        }
+        var a = document.createElement('a');
+        a.className = 'site-nav__link';
+        a.href = 'saved.php';
+        a.setAttribute('data-nav-saved', '');
+        a.textContent = <?= json_encode(t('nav_saved'), JSON_UNESCAPED_UNICODE) ?>;
+        if (/(^|\/)saved\.php(\?|$)/.test(window.location.pathname + window.location.search)) {
+            a.setAttribute('aria-current', 'page');
+        }
+        nav.appendChild(a);
+    })();
+</script>
+<?php endif; ?>

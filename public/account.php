@@ -84,6 +84,18 @@ if ($user !== null) {
     $userPosition = ($posStmt->fetchColumn() ?: null);
 }
 
+// Скільки продуктів у добірці — для секції «Моя добірка» в кабінеті.
+$savedCount = 0;
+if ($user !== null) {
+    $scStmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM saved_products sp
+           JOIN products p ON p.id = sp.product_id
+          WHERE sp.user_id = :uid AND p.status = 'published'"
+    );
+    $scStmt->execute([':uid' => $user['id']]);
+    $savedCount = (int) $scStmt->fetchColumn();
+}
+
 // ---------------------------------------------------------------------
 // POST: подача заявки «Стати працівником» (роль user) та схвалення
 // заявки адміністратором. PRG — після успіху редірект на account.php,
@@ -833,9 +845,16 @@ if ($user !== null && $user['role'] === 'user') {
 
             <div class="section">
                 <h2 class="section__title"><?= htmlspecialchars(t('account_saved_title'), ENT_QUOTES) ?></h2>
+                <?php if ($savedCount > 0): ?>
                 <div class="empty-state">
-                    <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a href="index.php"><?= htmlspecialchars(t('account_directions_link'), ENT_QUOTES) ?></a>.
+                    <?= htmlspecialchars(sprintf(t('account_saved_count'), $savedCount), ENT_QUOTES) ?>
+                    <a href="saved.php"><?= htmlspecialchars(t('account_saved_open_link'), ENT_QUOTES) ?></a>
                 </div>
+                <?php else: ?>
+                <div class="empty-state">
+                    <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a href="catalog.php"><?= htmlspecialchars(t('saved_empty_link'), ENT_QUOTES) ?></a>.
+                </div>
+                <?php endif; ?>
             </div>
 
             <?php // ТЕРМІНОВО приховано: подача заявки "Стати працівником" для user.

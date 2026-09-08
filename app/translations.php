@@ -37,6 +37,7 @@ $GLOBALS['TRANSLATIONS'] = [
     // --- Шапка / навігація ---
     'nav_home'      => ['uk' => 'Головна',              'en' => 'Home'],
     'nav_account'   => ['uk' => 'Кабінет',              'en' => 'Account'],
+    'nav_saved'     => ['uk' => 'Моя добірка',          'en' => 'My collection'],
     'nav_login'     => ['uk' => 'Увійти',               'en' => 'Log In'],
     'nav_assistant' => ['uk' => 'Викликати Асистента',  'en' => 'Call Assistant'],
     // Короткий підпис кнопки асистента для вузьких екранів (додається через CSS ::after).
@@ -133,9 +134,21 @@ $GLOBALS['TRANSLATIONS'] = [
     'role_user'                  => ['uk' => 'Користувач',        'en' => 'User'],
     'role_employee'              => ['uk' => 'Співробітник',      'en' => 'Employee'],
     'role_admin'                 => ['uk' => 'Адміністратор',     'en' => 'Administrator'],
-    'account_saved_title'        => ['uk' => 'Збережені продукти', 'en' => 'Saved products'],
+    'account_saved_title'        => ['uk' => 'Моя добірка', 'en' => 'My collection'],
     'account_saved_empty_prefix' => ['uk' => 'Ще немає збережених продуктів. Перегляньте', 'en' => 'No saved products yet. Check out'],
     'account_directions_link'    => ['uk' => 'напрямки AI на головній', 'en' => 'AI directions on the homepage'],
+    'account_saved_count'        => ['uk' => 'У добірці продуктів: %d.', 'en' => 'Products in your collection: %d.'],
+    'account_saved_open_link'    => ['uk' => 'Відкрити «Мою добірку»', 'en' => 'Open “My collection”'],
+
+    // --- «Моя добірка»: сторінка saved.php + кнопка «зберегти» на картках ---
+    'title_saved'                => ['uk' => 'AI LAB HUB — Моя добірка', 'en' => 'AI LAB HUB — My collection'],
+    'saved_page_title'           => ['uk' => 'Моя добірка', 'en' => 'My collection'],
+    'saved_empty_text'           => ['uk' => 'У вашій добірці поки порожньо. Збережіть цікаві інструменти лапкою на картці —', 'en' => 'Your collection is empty. Save tools you like with the paw on a card —'],
+    'saved_empty_link'           => ['uk' => 'перейти до каталогу', 'en' => 'go to the catalog'],
+    'saved_btn_save'             => ['uk' => 'Зберегти в добірку', 'en' => 'Save to collection'],
+    'saved_btn_unsave'           => ['uk' => 'Прибрати з добірки', 'en' => 'Remove from collection'],
+    'saved_hint_guest'           => ['uk' => 'Увійдіть, щоб зберегти', 'en' => 'Log in to save'],
+    'saved_error'                => ['uk' => 'Не вдалося. Спробуйте ще раз.', 'en' => 'Something went wrong. Try again.'],
     'account_stats_title'        => ['uk' => 'Статистика користувачів', 'en' => 'User statistics'],
     'stats_total_label'          => ['uk' => 'Усього',            'en' => 'Total'],
     'stats_users_label'          => ['uk' => 'Користувачі',       'en' => 'Users'],

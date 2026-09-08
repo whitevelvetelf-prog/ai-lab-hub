@@ -3,97 +3,38 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — каталог AI-інструментів.
+ * AI LAB HUB — «Моя добірка»: збережені користувачем продукти.
  *
- * Список продуктів завантажується з БД (лише status = 'published').
- *
- * Параметри:
- *   ?category={id}    — продукти цієї категорії (через product_categories);
- *   ?subcategory={id} — продукти цієї підкатегорії (через product_subcategories).
- *
- * Це не пошук і не фільтрація за запитом користувача — це звичайний
- * перегляд списку продуктів конкретного розділу, тож заголовок сторінки
- * дорівнює назві категорії / підкатегорії.
+ * Лише для залогінених (гість → login.php). Той самий формат карток, що
+ * й у каталозі; кнопка-лапка знімає продукт із добірки прямо звідси
+ * (той самий toggle-ендпоінт, картка зникає без перезавантаження).
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 
+if (!auth_check()) {
+    header('Location: login.php');
+    exit;
+}
+
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
-$subcategoryId = (int) ($_GET['subcategory'] ?? 0);
-$categoryId    = (int) ($_GET['category'] ?? 0);
+$stmt = $pdo->prepare(
+    "SELECT p.id, p.name, p.short_description
+       FROM saved_products sp
+       JOIN products p ON p.id = sp.product_id
+      WHERE sp.user_id = :uid AND p.status = 'published'
+      ORDER BY sp.created_at DESC, sp.id DESC"
+);
+$stmt->execute([':uid' => auth_user_id()]);
+$products = $stmt->fetchAll();
 
-$pageHeading = t('catalog_default_title');
-$backLink    = null;
-
-if ($subcategoryId > 0) {
-    $subStmt = $pdo->prepare("SELECT id, name, category_id FROM subcategories WHERE id = :id");
-    $subStmt->execute([':id' => $subcategoryId]);
-    $subcategory = $subStmt->fetch();
-
-    if ($subcategory === false) {
-        $pageHeading = t('catalog_subcategory_not_found');
-        $products = [];
-    } else {
-        $pageHeading = (string) $subcategory['name'];
-        $backLink = ['href' => 'category.php?id=' . (int) $subcategory['category_id'], 'label' => t('back_to_direction')];
-
-        $stmt = $pdo->prepare(
-            "SELECT p.id, p.name, p.short_description
-             FROM products p
-             JOIN product_subcategories ps ON ps.product_id = p.id
-             WHERE ps.subcategory_id = :id AND p.status = 'published'
-             ORDER BY p.id"
-        );
-        $stmt->execute([':id' => $subcategoryId]);
-        $products = $stmt->fetchAll();
-    }
-} elseif ($categoryId > 0) {
-    $catStmt = $pdo->prepare("SELECT id, name FROM categories WHERE id = :id");
-    $catStmt->execute([':id' => $categoryId]);
-    $category = $catStmt->fetch();
-
-    if ($category === false) {
-        $pageHeading = t('category_not_found');
-        $products = [];
-    } else {
-        $pageHeading = (string) $category['name'];
-        $backLink = ['href' => 'category.php?id=' . (int) $category['id'], 'label' => t('back_to_direction')];
-
-        $stmt = $pdo->prepare(
-            "SELECT p.id, p.name, p.short_description
-             FROM products p
-             JOIN product_categories pc ON pc.product_id = p.id
-             WHERE pc.category_id = :id AND p.status = 'published'
-             ORDER BY p.id"
-        );
-        $stmt->execute([':id' => $categoryId]);
-        $products = $stmt->fetchAll();
-    }
-} else {
-    $products = $pdo->query(
-        "SELECT id, name, short_description
-         FROM products
-         WHERE status = 'published'
-         ORDER BY id"
-    )->fetchAll();
-}
-
-// Тарифні плани — для бейджа ціни на картці.
 $plansByProduct = [];
 foreach ($pdo->query("SELECT product_id, price, period FROM pricing_plans ORDER BY price ASC") as $plan) {
     $plansByProduct[(int) $plan['product_id']][] = $plan;
-}
-
-// Які продукти вже в добірці поточного користувача — для стану кнопки-лапки.
-$savedIds = [];
-if (auth_check()) {
-    $savedStmt = $pdo->prepare('SELECT product_id FROM saved_products WHERE user_id = :uid');
-    $savedStmt->execute([':uid' => auth_user_id()]);
-    $savedIds = array_map('intval', $savedStmt->fetchAll(PDO::FETCH_COLUMN));
 }
 
 /** Бейдж ціни: [текст, чи безкоштовний]. */
@@ -115,9 +56,6 @@ function price_badge(array $plans): array
     return [t('price_from') . ' $' . $price . ($periods[$cheapest['period']] ?? ''), false];
 }
 
-// Палітра квадратів-заглушок замість логотипів (за порядком продуктів).
-// Тимчасово: просто колір, без тексту — поки продукт не отримає реальний
-// логотип при доданні через CRM.
 $cardColors = [
     'linear-gradient(135deg, #2116ad, #5b8cff)',
     'linear-gradient(135deg, #0f9d58, #34d399)',
@@ -133,7 +71,7 @@ $cardColors = [
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — <?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></title>
+    <title><?= htmlspecialchars(t('title_saved'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -212,7 +150,6 @@ $cardColors = [
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Заклик до дії — виділений пункт меню «Викликати Асистента» */
         .site-nav__link--cta {
             color: #00032c;
             background: linear-gradient(135deg, #5b8cff, #a5c0ff);
@@ -235,19 +172,6 @@ $cardColors = [
             padding: 24px 24px 72px;
         }
 
-        .back-link {
-            display: inline-block;
-            margin: 0 0 20px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-decoration: none;
-        }
-
-        .back-link:hover {
-            color: #ffffff;
-        }
-
         .catalog__title {
             margin: 0 0 32px;
             font-size: clamp(1.8rem, 5vw, 2.6rem);
@@ -255,11 +179,19 @@ $cardColors = [
             letter-spacing: 0.02em;
         }
 
-        .catalog__empty {
+        .empty-state {
+            padding: 20px;
+            border: 1px dashed var(--card-border);
+            border-radius: 12px;
             color: var(--text-muted);
+            font-size: 0.98rem;
         }
 
-        /* Сітка: 3 / 2 / 1 колонки */
+        .empty-state a {
+            color: #ffffff;
+            font-weight: 600;
+        }
+
         .catalog-grid {
             display: grid;
             gap: 20px;
@@ -278,7 +210,6 @@ $cardColors = [
             }
         }
 
-        /* Картка продукту */
         .product-card {
             display: flex;
             flex-direction: column;
@@ -295,7 +226,6 @@ $cardColors = [
             border-color: rgba(91, 140, 255, 0.5);
         }
 
-        /* Тимчасовий квадрат-заглушка замість логотипа продукту */
         .product-card__logo {
             width: 52px;
             height: 52px;
@@ -382,11 +312,7 @@ $cardColors = [
         </a>
         <nav class="site-nav" id="siteNav">
             <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
-            <?php if (auth_check()): ?>
             <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
-            <?php else: ?>
-            <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
-            <?php endif; ?>
         </nav>
         <a class="site-nav__link site-nav__link--cta site-header__cta" href="eli.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M6 18H2"/></svg>
@@ -400,32 +326,30 @@ $cardColors = [
     </header>
 
     <div class="page">
-        <?php if ($backLink !== null): ?>
-        <a class="back-link" href="<?= htmlspecialchars($backLink['href'], ENT_QUOTES) ?>"><?= htmlspecialchars($backLink['label'], ENT_QUOTES) ?></a>
-        <?php endif; ?>
-
-        <h1 class="catalog__title"><?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></h1>
+        <h1 class="catalog__title"><?= htmlspecialchars(t('saved_page_title'), ENT_QUOTES) ?></h1>
 
         <?php if ($products === []): ?>
-        <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
+        <p class="empty-state">
+            <?= htmlspecialchars(t('saved_empty_text'), ENT_QUOTES) ?>
+            <a href="catalog.php"><?= htmlspecialchars(t('saved_empty_link'), ENT_QUOTES) ?></a>.
+        </p>
         <?php else: ?>
-        <div class="catalog-grid">
+        <div class="catalog-grid" data-saved-list>
             <?php foreach ($products as $i => $product): ?>
                 <?php
                 $pid = (int) $product['id'];
                 [$priceText, $isFree] = price_badge($plansByProduct[$pid] ?? []);
                 $color = $cardColors[$i % count($cardColors)];
-                $isSaved = in_array($pid, $savedIds, true);
-                $saveLabel = $isSaved ? t('saved_btn_unsave') : t('saved_btn_save');
+                $unsaveLabel = t('saved_btn_unsave');
                 ?>
                 <article class="product-card">
                     <button type="button"
-                            class="save-btn<?= $isSaved ? ' is-saved' : '' ?>"
+                            class="save-btn is-saved"
                             data-product-id="<?= $pid ?>"
-                            data-saved="<?= $isSaved ? '1' : '0' ?>"
-                            aria-pressed="<?= $isSaved ? 'true' : 'false' ?>"
-                            aria-label="<?= htmlspecialchars($saveLabel, ENT_QUOTES) ?>"
-                            title="<?= htmlspecialchars($saveLabel, ENT_QUOTES) ?>"><?= paw_icon_use() ?></button>
+                            data-saved="1"
+                            aria-pressed="true"
+                            aria-label="<?= htmlspecialchars($unsaveLabel, ENT_QUOTES) ?>"
+                            title="<?= htmlspecialchars($unsaveLabel, ENT_QUOTES) ?>"><?= paw_icon_use() ?></button>
                     <div class="product-card__logo" style="background: <?= htmlspecialchars($color, ENT_QUOTES) ?>;"></div>
                     <h2 class="product-card__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h2>
                     <p class="product-card__desc"><?= htmlspecialchars((string) $product['short_description'], ENT_QUOTES) ?></p>

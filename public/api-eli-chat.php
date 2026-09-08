@@ -565,6 +565,24 @@ if ($referencedIds !== []) {
         eli_fail('db error (cards): ' . $ex->getMessage());
     }
 
+    // Які з цих продуктів уже в добірці залогіненого користувача — для
+    // стану кнопки-лапки на картках Елі.
+    $savedSet = [];
+    if (auth_check() && auth_user_id() !== null) {
+        try {
+            $savedStmt = $pdo->prepare(
+                "SELECT product_id FROM saved_products
+                  WHERE user_id = ? AND product_id IN ($placeholders)"
+            );
+            $savedStmt->execute(array_merge([auth_user_id()], $referencedIds));
+            foreach ($savedStmt->fetchAll(PDO::FETCH_COLUMN) as $spid) {
+                $savedSet[(int) $spid] = true;
+            }
+        } catch (Throwable $ex) {
+            // добірка не критична для відповіді Елі — тихо ігноруємо
+        }
+    }
+
     foreach ($referencedIds as $sid) {
         $p = $cardRows[$sid] ?? null;
         if ($p === null) {
@@ -578,6 +596,7 @@ if ($referencedIds !== []) {
             'short_description' => (string) ($p['short_description'] ?? ''),
             'categories' => (string) ($p['categories_list'] ?? ''),
             'href' => 'product.php?id=' . $sid,
+            'saved' => isset($savedSet[$sid]),
         ];
     }
 }

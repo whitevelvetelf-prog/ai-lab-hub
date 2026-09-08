@@ -742,6 +742,12 @@ require_once __DIR__ . '/../app/translations.php';
             card.appendChild(logo);
             card.appendChild(nm);
             card.appendChild(btn);
+
+            // Кнопка «зберегти в добірку» (іконка-лапка). Розмітку створює
+            // assets/js/saved-products.js; клік обробляється делеговано там само.
+            if (product.id && window.savedProductsButton) {
+                card.appendChild(window.savedProductsButton(product.id, !!product.saved));
+            }
             return card;
         }
 

@@ -1,0 +1,102 @@
+/* AI LAB HUB — кнопка «зберегти в добірку» (іконка-лапка).
+   currentColor: #999 — не збережено, #2116ad — збережено, плавний перехід. */
+
+.save-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: #999;
+    cursor: pointer;
+    transition: color 0.2s ease, background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.save-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.save-btn:focus-visible {
+    outline: 2px solid #5b8cff;
+    outline-offset: 2px;
+}
+
+.save-btn.is-saved {
+    color: #2116ad;
+}
+
+.save-btn[aria-disabled="true"] {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.save-btn .paw-icon {
+    width: 20px;
+    height: 20px;
+    display: block;
+    pointer-events: none;
+}
+
+/* Розкладка картки каталогу: лапка у правому верхньому куті. */
+.product-card {
+    position: relative;
+}
+
+.product-card .save-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+}
+
+/* Міні-картка у видачі Елі: лапка поряд із назвою. */
+.rec-card {
+    position: relative;
+}
+
+.rec-card .save-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+}
+
+.rec-card .save-btn .paw-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* Підказка «Увійдіть, щоб зберегти» біля кнопки для гостя. */
+.save-hint {
+    position: fixed;
+    z-index: 10000;
+    max-width: 240px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #2116ad;
+    color: #fff;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    box-shadow: 0 10px 28px rgba(0, 3, 44, 0.5);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+}
+
+.save-hint.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.save-hint a {
+    color: #fff;
+    font-weight: 700;
+    text-decoration: underline;
+}

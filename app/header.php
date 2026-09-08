@@ -7,8 +7,9 @@
  *   include __DIR__ . '/../app/header.php';
  *
  * Тут: маніфест, іконки, theme-color, мета для iOS «на початковий екран»,
- * а також стилі банера встановлення (pwa-install.css). Файли фізично
- * лежать у public/ (веб-корінь), тому шляхи абсолютні від /.
+ * стилі банера встановлення (pwa-install.css) та кнопки «зберегти в
+ * добірку» (saved-products.css). Файли фізично лежать у public/
+ * (веб-корінь), тому шляхи абсолютні від /.
  */
 
 ?>
@@ -19,3 +20,4 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AI LAB HUB">
 <link rel="stylesheet" href="/assets/css/pwa-install.css">
+<link rel="stylesheet" href="/assets/css/saved-products.css">
