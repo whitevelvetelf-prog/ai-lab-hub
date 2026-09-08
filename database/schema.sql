@@ -36,9 +36,11 @@ CREATE TABLE users (
     role            ENUM('user', 'employee', 'admin') NOT NULL DEFAULT 'user',
     first_name      VARCHAR(255) NULL,
     last_name       VARCHAR(255) NULL,
+    phone           VARCHAR(32) NULL,
     employee_number INT UNSIGNED NULL,
-    -- Керівна посада (людський підпис: «Генеральний директор» тощо).
-    -- Роль лишається 'admin' — це технічний рівень доступу до CRM.
+    -- Посада директора (людський підпис: «Генеральний директор» /
+    -- «Виконавчий директор»). Роль лишається 'admin' — це технічний
+    -- рівень доступу до CRM; посада — окрема мітка для кабінету/CRM.
     `position`      VARCHAR(255) NULL,
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
@@ -74,19 +76,26 @@ CREATE TABLE employee_requests (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
--- admin_requests — приватні заявки на керівну посаду.
--- Окремо від employee_requests: доступ лише за прямим посиланням
--- (public/apply-admin.php), ніде на сайті не рекламується.
---   position — технічний ключ обраної посади (ceo / exec_director_1 /
---   exec_director_2); NULL — стара заявка на роль admin без посади.
--- Посади одномісні. Заявки з посадою підтверджує ВИКЛЮЧНО власниця
--- проєкту (перевірка на email у public/account.php); заявки без посади —
--- будь-який чинний admin (сумісність зі старою поведінкою).
+-- admin_requests — приватні заявки на призначення.
+-- Окремо від employee_requests: доступ лише за прямим посиланням, ніде
+-- на сайті не рекламується. Три незалежні форми пишуть сюди:
+--   * public/apply-admin.php          -> position = NULL  (роль Адміністратора)
+--   * public/apply-ceo.php            -> position = 'ceo'
+--   * public/apply-exec-director.php  -> position = 'exec_director'
+-- first_name / last_name / phone / email — контакт кандидата на момент
+-- подачі (лише форми директорів; для apply-admin.php лишаються NULL).
+-- Заявки з посадою підтверджує ВИКЛЮЧНО власниця проєкту (перевірка на
+-- email у public/account.php). Ліміт: Генеральний — 1, Виконавчий — 2
+-- (контролюється кодом, не БД). Заявки без посади — будь-який чинний admin.
 -- ---------------------------------------------------------------------
 CREATE TABLE admin_requests (
     id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id      INT UNSIGNED NOT NULL,
     `position`   VARCHAR(32) NULL,
+    first_name   VARCHAR(255) NULL,
+    last_name    VARCHAR(255) NULL,
+    phone        VARCHAR(32) NULL,
+    email        VARCHAR(255) NULL,
     status       ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_by  INT UNSIGNED NULL,

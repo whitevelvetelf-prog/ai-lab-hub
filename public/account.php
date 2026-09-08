@@ -23,7 +23,7 @@ function e(mixed $value): string
 }
 
 /**
- * Власниця проєкту — єдина, хто підтверджує заявки на керівні посади
+ * Власниця проєкту — єдина, хто підтверджує заявки на посади директорів
  * (окремо від загальної перевірки «чинний admin»). Звіряємо за email.
  */
 const OWNER_EMAIL = 'whitevelvetelf@gmail.com';
@@ -35,17 +35,26 @@ function account_is_owner(?array $user): bool
 }
 
 /**
- * Чи обіймає цю посаду вже хтось інший (окрім кандидата $exceptUserId).
- * Джерело істини — users.position (звільнена посада = position знову NULL).
+ * Чи всі позиції на цю посаду вже зайняті (з урахуванням ліміту capacity:
+ * Генеральний — 1, Виконавчий — 2). Джерело істини — users.position
+ * (звільнена позиція = position знову NULL). Кандидата $exceptUserId
+ * не рахуємо (щоб повторне підтвердження тієї самої заявки не «блокувало
+ * саме себе»).
  */
-function account_position_taken(PDO $pdo, string $positionLabel, int $exceptUserId): bool
+function account_director_slots_full(PDO $pdo, string $positionKey, int $exceptUserId): bool
 {
-    $stmt = $pdo->prepare(
-        "SELECT id FROM users WHERE `position` = :pos AND id <> :uid LIMIT 1"
-    );
-    $stmt->execute([':pos' => $positionLabel, ':uid' => $exceptUserId]);
+    $label = director_position_label($positionKey);
+    $capacity = director_position_capacity($positionKey);
+    if ($label === null || $capacity <= 0) {
+        return true; // невідома посада — підтверджувати не можна
+    }
 
-    return $stmt->fetch() !== false;
+    $stmt = $pdo->prepare(
+        "SELECT COUNT(*) FROM users WHERE `position` = :pos AND id <> :uid"
+    );
+    $stmt->execute([':pos' => $label, ':uid' => $exceptUserId]);
+
+    return (int) $stmt->fetchColumn() >= $capacity;
 }
 
 /** Ініціали з імені для аватарки. */
@@ -192,10 +201,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
         exit;
     }
 
-    // Приватна система заявок на керівну посаду (окремо від employee_requests).
-    //   * заявка З посадою (position != NULL) — підтверджує ВИКЛЮЧНО власниця;
-    //     посада одномісна — на зайняту підтвердження блокується, pending лишається;
-    //   * заявка БЕЗ посади (стара) — будь-який чинний admin, як і раніше.
+    // Приватні заявки з admin_requests (три незалежні форми):
+    //   * position = NULL          — заявка на роль Адміністратора (apply-admin.php);
+    //                                підтверджує будь-який чинний admin (стара поведінка);
+    //   * position = 'ceo'/'exec_director' — заявка на посаду директора;
+    //                                підтверджує ВИКЛЮЧНО власниця; при approve
+    //                                перевіряється ліміт позицій (1 / 2); контакт
+    //                                із заявки копіюється в users.
     if (($action === 'approve_admin_request' || $action === 'reject_admin_request') && $user['role'] === 'admin') {
         $reqId = (int) ($_POST['request_id'] ?? 0);
         $newStatus = $action === 'approve_admin_request' ? 'approved' : 'rejected';
@@ -204,7 +216,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                "SELECT id, user_id, `position`
+                "SELECT id, user_id, `position`, first_name, last_name, phone
                    FROM admin_requests
                   WHERE id = :id AND status = 'pending'
                   FOR UPDATE"
@@ -212,31 +224,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
             $stmt->execute([':id' => $reqId]);
             $req = $stmt->fetch();
 
-            $positionKey = $req['position'] ?? null;
-            $positionLabel = admin_position_label($positionKey);
+            $positionKey = ($req !== false) ? ($req['position'] ?? null) : null;
+            $positionLabel = director_position_label($positionKey);
 
             if ($req === false) {
                 $pdo->rollBack();
                 $_SESSION['account_flash'] = t('flash_request_not_found');
             } elseif ($positionKey !== null && !account_is_owner($user)) {
-                // Заявку на керівну посаду вирішує лише власниця.
+                // Заявку на посаду директора вирішує лише власниця.
                 $pdo->rollBack();
                 $_SESSION['account_flash'] = t('flash_admin_request_owner_only');
             } elseif (
                 $newStatus === 'approved'
-                && $positionLabel !== null
-                && account_position_taken($pdo, $positionLabel, (int) $req['user_id'])
+                && $positionKey !== null
+                && account_director_slots_full($pdo, $positionKey, (int) $req['user_id'])
             ) {
-                // Посада вже зайнята — не підтверджуємо, лишаємо на розгляді.
+                // Немає вільних позицій — не підтверджуємо, лишаємо на розгляді.
                 $pdo->rollBack();
-                $_SESSION['account_flash'] = sprintf(t('flash_admin_position_taken'), $positionLabel);
+                $_SESSION['account_flash'] = sprintf(
+                    t('flash_admin_position_taken'),
+                    $positionLabel ?? $positionKey
+                );
             } else {
                 if ($newStatus === 'approved') {
                     if ($positionLabel !== null) {
+                        // Директор: роль admin (доступ до CRM) + посада + контакт у профіль.
                         $upd = $pdo->prepare(
-                            "UPDATE users SET role = 'admin', `position` = :pos WHERE id = :uid"
+                            "UPDATE users
+                                SET role = 'admin',
+                                    `position` = :pos,
+                                    first_name = :first,
+                                    last_name = :last,
+                                    phone = :phone
+                              WHERE id = :uid"
                         );
-                        $upd->execute([':pos' => $positionLabel, ':uid' => (int) $req['user_id']]);
+                        $upd->execute([
+                            ':pos'   => $positionLabel,
+                            ':first' => $req['first_name'],
+                            ':last'  => $req['last_name'],
+                            ':phone' => $req['phone'],
+                            ':uid'   => (int) $req['user_id'],
+                        ]);
                     } else {
                         $upd = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = :uid");
                         $upd->execute([':uid' => (int) $req['user_id']]);
@@ -251,9 +279,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
                 $done->execute([':status' => $newStatus, ':admin' => $user['id'], ':id' => $req['id']]);
 
                 $pdo->commit();
-                $_SESSION['account_flash'] = $newStatus === 'approved'
-                    ? t('flash_admin_request_approved')
-                    : t('flash_admin_request_rejected');
+
+                if ($newStatus === 'rejected') {
+                    $_SESSION['account_flash'] = t('flash_admin_request_rejected');
+                } elseif ($positionLabel !== null) {
+                    $_SESSION['account_flash'] = sprintf(t('flash_admin_director_approved'), $positionLabel);
+                } else {
+                    $_SESSION['account_flash'] = t('flash_admin_request_approved');
+                }
             }
         } catch (PDOException $ex) {
             if ($pdo->inTransaction()) {
@@ -332,7 +365,9 @@ if ($user !== null && $user['role'] === 'user') {
     )->fetchAll();
 
     $adminRequests = $pdo->query(
-        "SELECT r.id, r.requested_at, r.`position`, u.name AS user_name, u.email AS user_email
+        "SELECT r.id, r.requested_at, r.`position`,
+                r.first_name, r.last_name, r.phone, r.email,
+                u.name AS user_name, u.email AS user_email
            FROM admin_requests r
            JOIN users u ON u.id = r.user_id
           WHERE r.status = 'pending'
@@ -908,28 +943,47 @@ if ($user !== null && $user['role'] === 'user') {
                         <ul class="request-list">
                             <?php foreach ($adminRequests as $req): ?>
                                 <?php
-                                $reqPositionLabel = admin_position_label($req['position'] ?? null);
-                                // Заявку з посадою підтверджує лише власниця; стару (без посади) — будь-який admin.
-                                $canDecide = ($req['position'] ?? null) === null || account_is_owner($user);
+                                $reqPositionKey = $req['position'] ?? null;
+                                $reqPositionLabel = director_position_label($reqPositionKey);
+                                $isDirectorReq = $reqPositionKey !== null;
+                                // Заявку на посаду директора підтверджує лише власниця;
+                                // заявку на роль Адміністратора (position = NULL) — будь-який admin.
+                                $canDecide = !$isDirectorReq || account_is_owner($user);
+                                // Ліміт позицій (1 / 2) — approve вимикаємо, коли всі зайняті.
+                                $slotsFull = $isDirectorReq
+                                    && account_director_slots_full($pdo, (string) $reqPositionKey, (int) $req['user_id']);
+                                $reqApplicantName = trim((string) ($req['last_name'] ?? '') . ' ' . (string) ($req['first_name'] ?? ''));
                                 ?>
                                 <li class="request-card">
                                     <div>
-                                        <strong><?= e($req['user_name']) ?></strong>
+                                        <strong>
+                                            <?= e($req['user_name']) ?>
+                                            — <?= $isDirectorReq
+                                                ? e($reqPositionLabel ?? $reqPositionKey)
+                                                : htmlspecialchars(t('account_admin_request_role_label'), ENT_QUOTES) ?>
+                                        </strong>
                                         <span class="request-card__meta">
+                                            <?php if ($isDirectorReq && $reqApplicantName !== ''): ?>
+                                                <?= e($reqApplicantName) ?> ·
+                                            <?php endif; ?>
                                             <?= e($req['user_email']) ?>
-                                            <?php if ($reqPositionLabel !== null): ?>
-                                                · <?= htmlspecialchars(t('account_admin_request_position_prefix'), ENT_QUOTES) ?> <?= e($reqPositionLabel) ?>
+                                            <?php if ($isDirectorReq && !empty($req['phone'])): ?>
+                                                · <?= e($req['phone']) ?>
                                             <?php endif; ?>
                                             <?= htmlspecialchars(t('account_requested_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $req['requested_at']))) ?>
                                         </span>
                                     </div>
                                     <?php if ($canDecide): ?>
                                         <div class="btn-row">
-                                            <form method="post" action="account.php">
-                                                <input type="hidden" name="action" value="approve_admin_request">
-                                                <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
-                                                <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
-                                            </form>
+                                            <?php if (!$slotsFull): ?>
+                                                <form method="post" action="account.php">
+                                                    <input type="hidden" name="action" value="approve_admin_request">
+                                                    <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                                    <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
+                                                </form>
+                                            <?php else: ?>
+                                                <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_position_full_note'), ENT_QUOTES) ?></span>
+                                            <?php endif; ?>
                                             <form method="post" action="account.php">
                                                 <input type="hidden" name="action" value="reject_admin_request">
                                                 <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
