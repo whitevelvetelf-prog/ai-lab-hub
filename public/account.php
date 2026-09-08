@@ -22,6 +22,32 @@ function e(mixed $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES);
 }
 
+/**
+ * Власниця проєкту — єдина, хто підтверджує заявки на керівні посади
+ * (окремо від загальної перевірки «чинний admin»). Звіряємо за email.
+ */
+const OWNER_EMAIL = 'whitevelvetelf@gmail.com';
+
+function account_is_owner(?array $user): bool
+{
+    return $user !== null
+        && strcasecmp(trim((string) ($user['email'] ?? '')), OWNER_EMAIL) === 0;
+}
+
+/**
+ * Чи обіймає цю посаду вже хтось інший (окрім кандидата $exceptUserId).
+ * Джерело істини — users.position (звільнена посада = position знову NULL).
+ */
+function account_position_taken(PDO $pdo, string $positionLabel, int $exceptUserId): bool
+{
+    $stmt = $pdo->prepare(
+        "SELECT id FROM users WHERE `position` = :pos AND id <> :uid LIMIT 1"
+    );
+    $stmt->execute([':pos' => $positionLabel, ':uid' => $exceptUserId]);
+
+    return $stmt->fetch() !== false;
+}
+
 /** Ініціали з імені для аватарки. */
 function user_initials(string $name): string
 {
@@ -38,6 +64,16 @@ $roleLabels = [
     'employee' => t('role_employee'),
     'admin' => t('role_admin'),
 ];
+
+// Керівна посада поточного користувача (людський підпис у users.position).
+// Окремий запит, а не поле auth_current_user() — щоб міграція posadа
+// зачіпала лише кабінет, а не авторизацію на всьому сайті.
+$userPosition = null;
+if ($user !== null) {
+    $posStmt = $pdo->prepare('SELECT `position` FROM users WHERE id = :id');
+    $posStmt->execute([':id' => $user['id']]);
+    $userPosition = ($posStmt->fetchColumn() ?: null);
+}
 
 // ---------------------------------------------------------------------
 // POST: подача заявки «Стати працівником» (роль user) та схвалення
@@ -156,9 +192,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
         exit;
     }
 
-    // Приватна система заявок на роль Адміністратора (окремо від
-    // employee_requests). Схвалює/відхиляє чинний admin одноосібно —
-    // поки адмін один, узгоджене правило дозволяє рішення без кворуму.
+    // Приватна система заявок на керівну посаду (окремо від employee_requests).
+    //   * заявка З посадою (position != NULL) — підтверджує ВИКЛЮЧНО власниця;
+    //     посада одномісна — на зайняту підтвердження блокується, pending лишається;
+    //   * заявка БЕЗ посади (стара) — будь-який чинний admin, як і раніше.
     if (($action === 'approve_admin_request' || $action === 'reject_admin_request') && $user['role'] === 'admin') {
         $reqId = (int) ($_POST['request_id'] ?? 0);
         $newStatus = $action === 'approve_admin_request' ? 'approved' : 'rejected';
@@ -167,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
             $pdo->beginTransaction();
 
             $stmt = $pdo->prepare(
-                "SELECT id, user_id
+                "SELECT id, user_id, `position`
                    FROM admin_requests
                   WHERE id = :id AND status = 'pending'
                   FOR UPDATE"
@@ -175,13 +212,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
             $stmt->execute([':id' => $reqId]);
             $req = $stmt->fetch();
 
+            $positionKey = $req['position'] ?? null;
+            $positionLabel = admin_position_label($positionKey);
+
             if ($req === false) {
                 $pdo->rollBack();
                 $_SESSION['account_flash'] = t('flash_request_not_found');
+            } elseif ($positionKey !== null && !account_is_owner($user)) {
+                // Заявку на керівну посаду вирішує лише власниця.
+                $pdo->rollBack();
+                $_SESSION['account_flash'] = t('flash_admin_request_owner_only');
+            } elseif (
+                $newStatus === 'approved'
+                && $positionLabel !== null
+                && account_position_taken($pdo, $positionLabel, (int) $req['user_id'])
+            ) {
+                // Посада вже зайнята — не підтверджуємо, лишаємо на розгляді.
+                $pdo->rollBack();
+                $_SESSION['account_flash'] = sprintf(t('flash_admin_position_taken'), $positionLabel);
             } else {
                 if ($newStatus === 'approved') {
-                    $upd = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = :uid");
-                    $upd->execute([':uid' => $req['user_id']]);
+                    if ($positionLabel !== null) {
+                        $upd = $pdo->prepare(
+                            "UPDATE users SET role = 'admin', `position` = :pos WHERE id = :uid"
+                        );
+                        $upd->execute([':pos' => $positionLabel, ':uid' => (int) $req['user_id']]);
+                    } else {
+                        $upd = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = :uid");
+                        $upd->execute([':uid' => (int) $req['user_id']]);
+                    }
                 }
 
                 $done = $pdo->prepare(
@@ -273,7 +332,7 @@ if ($user !== null && $user['role'] === 'user') {
     )->fetchAll();
 
     $adminRequests = $pdo->query(
-        "SELECT r.id, r.requested_at, u.name AS user_name, u.email AS user_email
+        "SELECT r.id, r.requested_at, r.`position`, u.name AS user_name, u.email AS user_email
            FROM admin_requests r
            JOIN users u ON u.id = r.user_id
           WHERE r.status = 'pending'
@@ -724,7 +783,10 @@ if ($user !== null && $user['role'] === 'user') {
                 <div class="account-user__avatar"><?= e(user_initials((string) $user['name'])) ?></div>
                 <div>
                     <h1 class="account-user__title">
-                        <?= htmlspecialchars(t('account_welcome_prefix'), ENT_QUOTES) ?> <?= e($user['name']) ?><span class="role-badge"><?= e($roleLabels[$user['role']] ?? $user['role']) ?></span>
+                        <?php $accountBadge = ($userPosition !== null && $userPosition !== '')
+                            ? $userPosition
+                            : ($roleLabels[$user['role']] ?? $user['role']); ?>
+                        <?= htmlspecialchars(t('account_welcome_prefix'), ENT_QUOTES) ?> <?= e($user['name']) ?><span class="role-badge"><?= e($accountBadge) ?></span>
                     </h1>
                     <p class="account-user__meta"><?= e($user['email']) ?></p>
                 </div>
@@ -845,26 +907,38 @@ if ($user !== null && $user['role'] === 'user') {
                     <?php else: ?>
                         <ul class="request-list">
                             <?php foreach ($adminRequests as $req): ?>
+                                <?php
+                                $reqPositionLabel = admin_position_label($req['position'] ?? null);
+                                // Заявку з посадою підтверджує лише власниця; стару (без посади) — будь-який admin.
+                                $canDecide = ($req['position'] ?? null) === null || account_is_owner($user);
+                                ?>
                                 <li class="request-card">
                                     <div>
                                         <strong><?= e($req['user_name']) ?></strong>
                                         <span class="request-card__meta">
                                             <?= e($req['user_email']) ?>
+                                            <?php if ($reqPositionLabel !== null): ?>
+                                                · <?= htmlspecialchars(t('account_admin_request_position_prefix'), ENT_QUOTES) ?> <?= e($reqPositionLabel) ?>
+                                            <?php endif; ?>
                                             <?= htmlspecialchars(t('account_requested_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $req['requested_at']))) ?>
                                         </span>
                                     </div>
-                                    <div class="btn-row">
-                                        <form method="post" action="account.php">
-                                            <input type="hidden" name="action" value="approve_admin_request">
-                                            <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
-                                            <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
-                                        </form>
-                                        <form method="post" action="account.php">
-                                            <input type="hidden" name="action" value="reject_admin_request">
-                                            <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
-                                            <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
-                                        </form>
-                                    </div>
+                                    <?php if ($canDecide): ?>
+                                        <div class="btn-row">
+                                            <form method="post" action="account.php">
+                                                <input type="hidden" name="action" value="approve_admin_request">
+                                                <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                                <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
+                                            </form>
+                                            <form method="post" action="account.php">
+                                                <input type="hidden" name="action" value="reject_admin_request">
+                                                <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                                <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
+                                            </form>
+                                        </div>
+                                    <?php else: ?>
+                                        <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_request_owner_only_note'), ENT_QUOTES) ?></span>
+                                    <?php endif; ?>
                                 </li>
                             <?php endforeach; ?>
                         </ul>

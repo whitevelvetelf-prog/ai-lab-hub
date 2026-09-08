@@ -36,14 +36,23 @@ function e(mixed $value): string
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_admin_request' && $user['role'] !== 'admin') {
+    $position = (string) ($_POST['position'] ?? '');
+
+    if (!isset(ADMIN_POSITIONS[$position])) {
+        // Посада не обрана або підроблена — повертаємо форму з помилкою.
+        $_SESSION['apply_admin_error'] = t('apply_admin_position_required');
+        header('Location: apply-admin.php');
+        exit;
+    }
+
     $existing = $pdo->prepare(
         "SELECT id FROM admin_requests WHERE user_id = :uid AND status IN ('pending', 'approved') LIMIT 1"
     );
     $existing->execute([':uid' => $user['id']]);
 
     if ($existing->fetch() === false) {
-        $ins = $pdo->prepare('INSERT INTO admin_requests (user_id) VALUES (:uid)');
-        $ins->execute([':uid' => $user['id']]);
+        $ins = $pdo->prepare('INSERT INTO admin_requests (user_id, `position`) VALUES (:uid, :position)');
+        $ins->execute([':uid' => $user['id'], ':position' => $position]);
     }
 
     // PRG — уникаємо повторної подачі при оновленні сторінки.
@@ -51,12 +60,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submi
     exit;
 }
 
+$applyError = $_SESSION['apply_admin_error'] ?? null;
+unset($_SESSION['apply_admin_error']);
+
 // Стан заявки поточного користувача: pending / approved блокують повторну
 // подачу форми (rejected — не блокує, можна подати ще раз).
 $blockingRequest = null;
 if ($user['role'] !== 'admin') {
     $stmt = $pdo->prepare(
-        "SELECT status, requested_at
+        "SELECT status, requested_at, `position`
            FROM admin_requests
           WHERE user_id = :uid AND status IN ('pending', 'approved')
           ORDER BY id DESC
@@ -65,6 +77,7 @@ if ($user['role'] !== 'admin') {
     $stmt->execute([':uid' => $user['id']]);
     $blockingRequest = $stmt->fetch() ?: null;
 }
+$blockingPositionLabel = admin_position_label($blockingRequest['position'] ?? null);
 
 ?>
 <!DOCTYPE html>
@@ -247,6 +260,47 @@ if ($user['role'] !== 'admin') {
             margin-bottom: 24px;
         }
 
+        .field__label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .input {
+            width: 100%;
+            padding: 12px 14px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: #ffffff;
+            font: inherit;
+            font-size: 1rem;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        select.input {
+            appearance: none;
+            cursor: pointer;
+        }
+
+        select.input option {
+            color: #00032c;
+        }
+
+        .notice {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: rgba(255, 90, 90, 0.12);
+            border: 1px solid rgba(255, 120, 120, 0.4);
+            font-size: 0.95rem;
+        }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -293,6 +347,9 @@ if ($user['role'] !== 'admin') {
                 </div>
             <?php elseif ($blockingRequest !== null && $blockingRequest['status'] === 'pending'): ?>
                 <div class="empty-state">
+                    <?php if ($blockingPositionLabel !== null): ?>
+                        <?= htmlspecialchars(t('apply_admin_your_position_prefix'), ENT_QUOTES) ?> «<?= e($blockingPositionLabel) ?>».<br>
+                    <?php endif; ?>
                     <?= htmlspecialchars(t('apply_admin_pending_prefix'), ENT_QUOTES) ?>
                     <?= e(date('d.m.Y', (int) strtotime((string) $blockingRequest['requested_at']))) ?><?= htmlspecialchars(t('apply_admin_pending_suffix'), ENT_QUOTES) ?>
                 </div>
@@ -300,14 +357,29 @@ if ($user['role'] !== 'admin') {
                     <a class="btn btn--ghost" href="account.php"><?= htmlspecialchars(t('apply_admin_back_account'), ENT_QUOTES) ?></a>
                 </div>
             <?php elseif ($blockingRequest !== null && $blockingRequest['status'] === 'approved'): ?>
-                <div class="empty-state"><?= htmlspecialchars(t('apply_admin_approved_text'), ENT_QUOTES) ?></div>
+                <div class="empty-state">
+                    <?php if ($blockingPositionLabel !== null): ?>
+                        <?= htmlspecialchars(t('apply_admin_your_position_prefix'), ENT_QUOTES) ?> «<?= e($blockingPositionLabel) ?>».<br>
+                    <?php endif; ?>
+                    <?= htmlspecialchars(t('apply_admin_approved_text'), ENT_QUOTES) ?>
+                </div>
                 <div class="btn-row">
                     <a class="btn btn--ghost" href="account.php"><?= htmlspecialchars(t('apply_admin_back_account'), ENT_QUOTES) ?></a>
                 </div>
             <?php else: ?>
                 <p class="account-panel__text"><?= htmlspecialchars(t('apply_admin_confirm_text'), ENT_QUOTES) ?></p>
+                <?php if ($applyError !== null): ?>
+                    <div class="notice"><?= e($applyError) ?></div>
+                <?php endif; ?>
                 <form method="post" action="apply-admin.php">
                     <input type="hidden" name="action" value="submit_admin_request">
+                    <label class="field__label" for="position"><?= htmlspecialchars(t('apply_admin_position_label'), ENT_QUOTES) ?></label>
+                    <select class="input" id="position" name="position" required>
+                        <option value="" disabled selected><?= htmlspecialchars(t('apply_admin_position_placeholder'), ENT_QUOTES) ?></option>
+                        <?php foreach (ADMIN_POSITIONS as $posKey => $posLabel): ?>
+                            <option value="<?= e($posKey) ?>"><?= e($posLabel) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                     <div class="btn-row">
                         <button type="submit" class="btn btn--primary"><?= htmlspecialchars(t('apply_admin_submit'), ENT_QUOTES) ?></button>
                         <a class="btn btn--ghost" href="account.php"><?= htmlspecialchars(t('apply_admin_back_account'), ENT_QUOTES) ?></a>

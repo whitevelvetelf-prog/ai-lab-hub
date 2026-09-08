@@ -186,28 +186,60 @@ $GLOBALS['TRANSLATIONS'] = [
     'flash_request_approved'   => ['uk' => 'Заявку схвалено. Працівнику присвоєно номер №%d.', 'en' => 'Request approved. The employee was assigned number #%d.'],
     'flash_request_approve_failed' => ['uk' => 'Не вдалося схвалити заявку. Спробуйте ще раз.', 'en' => 'Could not approve the request. Please try again.'],
 
-    // --- Приватна система заявок на роль Адміністратора (apply-admin.php + account.php) ---
-    'title_apply_admin'          => ['uk' => 'AI LAB HUB — Заявка на адміністратора', 'en' => 'AI LAB HUB — Admin Request'],
-    'apply_admin_heading'        => ['uk' => 'Заявка на роль Адміністратора', 'en' => 'Administrator Role Request'],
-    'apply_admin_confirm_text'   => ['uk' => 'Подати заявку на роль Адміністратора', 'en' => 'Submit a request for the Administrator role'],
+    // --- Приватна система заявок на керівну посаду (apply-admin.php + account.php) ---
+    'title_apply_admin'          => ['uk' => 'AI LAB HUB — Заявка на посаду', 'en' => 'AI LAB HUB — Position Request'],
+    'apply_admin_heading'        => ['uk' => 'Заявка на керівну посаду', 'en' => 'Leadership Position Request'],
+    'apply_admin_confirm_text'   => ['uk' => 'Оберіть посаду, на яку подаєте заявку. Рішення ухвалює власниця проєкту особисто.', 'en' => 'Choose the position you are applying for. The project owner decides personally.'],
+    'apply_admin_position_label'       => ['uk' => 'Посада', 'en' => 'Position'],
+    'apply_admin_position_placeholder' => ['uk' => '— оберіть посаду —', 'en' => '— choose a position —'],
+    'apply_admin_position_required'    => ['uk' => 'Оберіть посаду зі списку.', 'en' => 'Choose a position from the list.'],
+    'apply_admin_your_position_prefix' => ['uk' => 'Обрана посада:', 'en' => 'Chosen position:'],
     'apply_admin_submit'         => ['uk' => 'Надіслати заявку', 'en' => 'Submit request'],
     'apply_admin_already_admin'  => ['uk' => 'Ви вже маєте роль адміністратора.', 'en' => 'You already have the Administrator role.'],
     'apply_admin_pending_prefix' => ['uk' => 'Ваша заявка на розгляді (подана', 'en' => 'Your request is under review (submitted'],
     'apply_admin_pending_suffix' => ['uk' => '). Очікуйте рішення.', 'en' => '). Please wait for a decision.'],
     'apply_admin_approved_text'  => ['uk' => 'Вашу заявку вже схвалено.', 'en' => 'Your request has already been approved.'],
     'apply_admin_back_account'   => ['uk' => 'До кабінету', 'en' => 'Back to account'],
-    'account_admin_requests_title' => ['uk' => 'Заявки на роль Адміністратора', 'en' => 'Administrator role requests'],
+    'account_admin_requests_title' => ['uk' => 'Заявки на керівну посаду', 'en' => 'Leadership position requests'],
     'account_admin_requests_empty' => ['uk' => 'Немає заявок на розгляді.', 'en' => 'No pending requests.'],
+    'account_admin_request_position_prefix'  => ['uk' => 'посада:', 'en' => 'position:'],
+    'account_admin_request_owner_only_note'  => ['uk' => 'Підтверджує власниця проєкту', 'en' => 'Approved by the project owner'],
     'account_requested_prefix'     => ['uk' => '· подано', 'en' => '· submitted'],
     'action_approve'               => ['uk' => 'Схвалити', 'en' => 'Approve'],
     'action_reject'                => ['uk' => 'Відхилити', 'en' => 'Reject'],
     'flash_admin_request_approved' => [
-        'uk' => 'Заявку на адміністратора схвалено. Користувачу присвоєно роль Адміністратора.',
-        'en' => 'Administrator request approved. The user was granted the Administrator role.',
+        'uk' => 'Заявку схвалено. Кандидату надано роль Адміністратора та посаду.',
+        'en' => 'Request approved. The candidate was granted the Administrator role and the position.',
     ],
-    'flash_admin_request_rejected' => ['uk' => 'Заявку на адміністратора відхилено.', 'en' => 'Administrator request rejected.'],
+    'flash_admin_request_rejected' => ['uk' => 'Заявку відхилено.', 'en' => 'Request rejected.'],
     'flash_admin_request_failed'   => ['uk' => 'Не вдалося обробити заявку. Спробуйте ще раз.', 'en' => 'Could not process the request. Please try again.'],
+    'flash_admin_request_owner_only' => ['uk' => 'Заявку на керівну посаду підтверджує лише власниця проєкту.', 'en' => 'Only the project owner can approve a leadership position request.'],
+    'flash_admin_position_taken'   => ['uk' => 'Посаду «%s» вже обіймає інша людина. Заявку залишено на розгляді.', 'en' => 'The position "%s" is already held by another person. The request was left pending.'],
 ];
+
+/**
+ * Керівні посади приватної форми заявки (public/apply-admin.php) та
+ * кабінету (public/account.php).
+ *   ключ (у admin_requests.position) => людський підпис (у users.position).
+ * Роль кандидата лишається 'admin' — це технічний рівень доступу до CRM;
+ * посада — окрема мітка для відображення. Список навмисно НЕ в ENUM, щоб
+ * розширювати без міграції. Підписи лише українською — це внутрішні звання.
+ */
+const ADMIN_POSITIONS = [
+    'ceo'             => 'Генеральний директор',
+    'exec_director_1' => 'Виконавчий директор (1)',
+    'exec_director_2' => 'Виконавчий директор (2)',
+];
+
+/** Людський підпис посади за технічним ключем, або null для невідомого/порожнього. */
+function admin_position_label(?string $key): ?string
+{
+    if ($key === null || $key === '') {
+        return null;
+    }
+
+    return ADMIN_POSITIONS[$key] ?? null;
+}
 
 /**
  * Поточна мова інтерфейсу: значення з сесії, якщо воно валідне,

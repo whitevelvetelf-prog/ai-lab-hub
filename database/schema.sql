@@ -37,6 +37,9 @@ CREATE TABLE users (
     first_name      VARCHAR(255) NULL,
     last_name       VARCHAR(255) NULL,
     employee_number INT UNSIGNED NULL,
+    -- Керівна посада (людський підпис: «Генеральний директор» тощо).
+    -- Роль лишається 'admin' — це технічний рівень доступу до CRM.
+    `position`      VARCHAR(255) NULL,
     created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uq_users_email (email),
@@ -71,14 +74,19 @@ CREATE TABLE employee_requests (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
--- admin_requests — приватні заявки на роль Адміністратора.
+-- admin_requests — приватні заявки на керівну посаду.
 -- Окремо від employee_requests: доступ лише за прямим посиланням
--- (public/apply-admin.php), ніде на сайті не рекламується. Схвалює
--- чинний admin одноосібно (поки адмін один — узгоджене правило).
+-- (public/apply-admin.php), ніде на сайті не рекламується.
+--   position — технічний ключ обраної посади (ceo / exec_director_1 /
+--   exec_director_2); NULL — стара заявка на роль admin без посади.
+-- Посади одномісні. Заявки з посадою підтверджує ВИКЛЮЧНО власниця
+-- проєкту (перевірка на email у public/account.php); заявки без посади —
+-- будь-який чинний admin (сумісність зі старою поведінкою).
 -- ---------------------------------------------------------------------
 CREATE TABLE admin_requests (
     id           INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id      INT UNSIGNED NOT NULL,
+    `position`   VARCHAR(32) NULL,
     status       ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
     requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     reviewed_by  INT UNSIGNED NULL,
@@ -86,6 +94,7 @@ CREATE TABLE admin_requests (
     PRIMARY KEY (id),
     KEY idx_admin_requests_user (user_id),
     KEY idx_admin_requests_status (status),
+    KEY idx_admin_requests_position (`position`),
     CONSTRAINT fk_admin_requests_user
         FOREIGN KEY (user_id) REFERENCES users (id)
         ON DELETE CASCADE ON UPDATE CASCADE,
