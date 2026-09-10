@@ -14,6 +14,17 @@ SET NAMES utf8mb4;
 -- created_by = 3 (whitevelvetelf@gmail.com), status = 'published',
 -- усі обовʼязкові поля заповнені.
 -- partnership_status — за списком задачі (found / no_partnership).
+--
+-- Перевірено на дублікати:
+--   * назви 269-280 у products не збігаються з наявними (Photomath = id 83,
+--     реюз; окремий продукт "Khan Academy" id 30 — це не "Khanmigo" id 272);
+--   * підкатегорія "Репетиторство" / slug tutoring в базі одна;
+--   * у product_subcategories(71) 13 унікальних product_id, повторів пар немає;
+--   * pricing_plans 517-535 — усі для products 269-280, дублів (product,plan) немає;
+--   * повторний прогін файлу = 0 змінених рядків.
+--   Очікувано на чистій БД хостингу: ~58 нових рядків
+--   (1 subcat + 12 products + 12-13 product_categories + 13 product_subcategories
+--    + 19 pricing_plans). Помітно менше -> якийсь id уже зайнятий, треба перенумерувати.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
