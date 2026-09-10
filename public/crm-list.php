@@ -213,6 +213,11 @@ function created_by_cell(array $row): string
     return e($row['created_by_name']);
 }
 
+// TODO (масштаб): зараз усі продукти тягнуться й рендеряться за один раз
+// (fetchAll + foreach нижче), без пагінації чи lazy-load. Для тисяч рядків
+// це навантажує і БД, і DOM — коли обсяг виросте, додати LIMIT/OFFSET-
+// пагінацію (або серверний пошук/фільтр), чи віртуалізацію рядків.
+// Горизонтальну прокрутку вже локалізовано в .table-wrap (max-height).
 $products = $pdo->query(
     "SELECT
         p.id,
@@ -369,9 +374,15 @@ $total = count($products);
         }
 
         /* Таблиця. Стовпців багато — контейнер прокручується по горизонталі
-           на вужчих екранах; min-width не дає колонкам сплюснутись. */
+           на вужчих екранах; min-width не дає колонкам сплюснутись.
+
+           max-height + overflow-y роблять .table-wrap власною областю
+           прокрутки: горизонтальний скролбар опиняється одразу під видимими
+           рядками, а не в кінці тисяч рядків під усією сторінкою. */
         .table-wrap {
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: 70vh;
             -webkit-overflow-scrolling: touch;
             border: 1px solid var(--card-border);
             border-radius: 16px;
@@ -401,6 +412,18 @@ $total = count($products);
             letter-spacing: 0.05em;
             color: var(--text-muted);
             white-space: nowrap;
+        }
+
+        /* Липка шапка: назви колонок лишаються видимими при вертикальній
+           прокрутці .table-wrap. Фон непрозорий — інакше рядки просвічують
+           крізь шапку. border-bottom при border-collapse не «липне» разом із
+           th, тож розділювач лишаємо внутрішньою тінню. */
+        .table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #0c1147;
+            box-shadow: inset 0 -1px 0 var(--card-border);
         }
 
         .table tbody tr:last-child td {
