@@ -168,7 +168,9 @@
         btn.className = 'save-btn' + (saved ? ' is-saved' : '');
         btn.dataset.productId = String(productId);
         applyState(btn, !!saved);
-        btn.innerHTML = '<svg class="paw-icon" width="22" height="22" viewBox="251 202 524 540" aria-hidden="true" focusable="false"><use href="#paw-icon" xlink:href="#paw-icon"></use></svg>';
+        // Без viewBox на зовнішньому <svg> — його вже має <symbol>; дубль зсував
+        // контур за межі полотна (лапка обрізалася). Див. app/paw-icon.php.
+        btn.innerHTML = '<svg class="paw-icon" width="22" height="22" aria-hidden="true" focusable="false"><use href="#paw-icon" xlink:href="#paw-icon"></use></svg>';
         return btn;
     };
 })();

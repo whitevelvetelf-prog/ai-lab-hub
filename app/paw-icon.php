@@ -44,12 +44,18 @@ function paw_icon_sprite(): string
 }
 
 /**
- * Inline-SVG посилання на <symbol> для кнопки картки. Явні width/height
+ * Inline-SVG посилання на <symbol> для кнопки картки. Тільки width/height
  * (22px) + xlink:href для сумісності зі старими браузерами.
+ *
+ * ВАЖЛИВО: на зовнішньому <svg> НЕ дублюємо viewBox. <symbol> уже має свій
+ * (PAW_ICON_VIEWBOX); другий viewBox тут наклав би систему координат удруге
+ * й зсунув контур за межі 22px-полотна — лапка виходила обрізаною
+ * («пів-іконки» у куті картки). Аспект тримає viewBox символа, розмір —
+ * width/height та CSS.
  */
 function paw_icon_use(): string
 {
-    return '<svg class="paw-icon" width="22" height="22" viewBox="' . PAW_ICON_VIEWBOX . '" '
+    return '<svg class="paw-icon" width="22" height="22" '
         . 'aria-hidden="true" focusable="false">'
         . '<use href="#paw-icon" xlink:href="#paw-icon"></use></svg>';
 }
