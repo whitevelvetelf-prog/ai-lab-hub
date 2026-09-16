@@ -259,6 +259,10 @@ $cardColors = [
             color: var(--text-muted);
         }
 
+        .catalog__empty a {
+            color: #bcd0ff;
+        }
+
         /* Сітка: 3 / 2 / 1 колонки */
         .catalog-grid {
             display: grid;

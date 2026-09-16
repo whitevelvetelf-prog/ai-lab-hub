@@ -1060,6 +1060,10 @@ $displayPlans = $plans !== []
             padding-left: 20px;
         }
 
+        .notice a {
+            color: #bcd0ff;
+        }
+
         .similar-list {
             list-style: none;
             margin: 12px 0 0;

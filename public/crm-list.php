@@ -543,6 +543,10 @@ $total = count($products);
             color: var(--text-muted);
         }
 
+        .empty-state a {
+            color: #bcd0ff;
+        }
+
         /* Кнопки */
         .btn {
             display: inline-block;
