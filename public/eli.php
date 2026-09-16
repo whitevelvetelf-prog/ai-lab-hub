@@ -134,6 +134,11 @@ require_once __DIR__ . '/../app/translations.php';
         /* Заголовок */
         .chat-head {
             margin-bottom: 28px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
         }
 
         .chat-head__title {
@@ -147,6 +152,25 @@ require_once __DIR__ . '/../app/translations.php';
             margin: 0;
             font-size: 1rem;
             color: var(--text-muted);
+        }
+
+        .chat-head__reset {
+            flex-shrink: 0;
+            padding: 9px 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: transparent;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+        .chat-head__reset:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         /* Область чату */
@@ -528,8 +552,11 @@ require_once __DIR__ . '/../app/translations.php';
 
     <div class="page" id="page">
         <div class="chat-head">
-            <h1 class="chat-head__title"><?= htmlspecialchars(t('eli_title'), ENT_QUOTES) ?></h1>
-            <p class="chat-head__subtitle"><?= htmlspecialchars(t('eli_subtitle'), ENT_QUOTES) ?></p>
+            <div>
+                <h1 class="chat-head__title"><?= htmlspecialchars(t('eli_title'), ENT_QUOTES) ?></h1>
+                <p class="chat-head__subtitle"><?= htmlspecialchars(t('eli_subtitle'), ENT_QUOTES) ?></p>
+            </div>
+            <button type="button" id="eliNewChatBtn" class="chat-head__reset"><?= htmlspecialchars(t('eli_new_chat'), ENT_QUOTES) ?></button>
         </div>
 
         <!-- Велике відео Елі (привітання / «друкує»). Один елемент для всіх
@@ -577,9 +604,45 @@ require_once __DIR__ . '/../app/translations.php';
         var greetingMsg = document.getElementById('greetingMsg');
         var stage = document.getElementById('eliStage');
         var stageVideo = document.getElementById('eliStageVideo');
+        var newChatBtn = document.getElementById('eliNewChatBtn');
 
         var GREETING_SRC = 'assets/videos/elya-greeting.mp4';
         var TYPING_SRC = 'assets/videos/elya-typing.mp4';
+
+        // Стан розмови (текст користувача + повні відповіді Елі з добірками)
+        // у sessionStorage — переживає перехід на product.php і повернення
+        // назад кнопкою браузера, але зникає із закриттям вкладки.
+        var STORAGE_KEY = 'eliChatState';
+        var chatState = [];
+
+        function loadState() {
+            try {
+                var raw = sessionStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    return null;
+                }
+                var parsed = JSON.parse(raw);
+                return Array.isArray(parsed) && parsed.length ? parsed : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function saveState() {
+            try {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(chatState));
+            } catch (e) {
+                // приватний режим / переповнене сховище — не критично, чат
+                // просто не відновиться після повернення на сторінку.
+            }
+        }
+
+        function clearSavedState() {
+            chatState = [];
+            try {
+                sessionStorage.removeItem(STORAGE_KEY);
+            } catch (e) {}
+        }
 
         var stageDetach = null;   // знімає слухачі поточного ролика
         var greetingGone = false;
@@ -851,9 +914,39 @@ require_once __DIR__ . '/../app/translations.php';
             scrollIntoView(msg);
         }
 
-        // Старт: велике відео-привітання грає раз і застигає на кадрі;
-        // текст привітання й поле вводу лишаються видимими.
-        playStage(GREETING_SRC, { freeze: true });
+        // Відновити всю історію розмови з sessionStorage: кожне повідомлення
+        // користувача й кожну повну відповідь Елі (текст + добірки) —
+        // без відео привітання, бо це вже не новий діалог.
+        function renderHistory(savedState) {
+            removeGreeting();
+            clearStage();
+            savedState.forEach(function (entry) {
+                if (entry.role === 'user') {
+                    addUserMessage(entry.text);
+                } else if (entry.role === 'assistant') {
+                    renderEliResponse(entry.data);
+                }
+            });
+        }
+
+        // Старт: якщо в sessionStorage є збережена розмова (користувач
+        // повернувся зі сторінки продукту чи іншої сторінки в межах цієї ж
+        // вкладки) — відновлюємо її. Інакше — звичайний початок: велике
+        // відео-привітання грає раз і застигає на кадрі.
+        var restored = loadState();
+        if (restored) {
+            chatState = restored;
+            renderHistory(chatState);
+        } else {
+            playStage(GREETING_SRC, { freeze: true });
+        }
+
+        if (newChatBtn) {
+            newChatBtn.addEventListener('click', function () {
+                clearSavedState();
+                window.location.reload();
+            });
+        }
 
         var submitBtn = form.querySelector('.composer__btn');
         var busy = false;
@@ -875,6 +968,8 @@ require_once __DIR__ . '/../app/translations.php';
         function submitMessage(text) {
             removeGreeting();
             addUserMessage(text);
+            chatState.push({ role: 'user', text: text });
+            saveState();
             input.value = '';
             setBusy(true);
 
@@ -898,6 +993,8 @@ require_once __DIR__ . '/../app/translations.php';
                     placeholder.parentNode.removeChild(placeholder);
                 }
                 renderEliResponse(result);
+                chatState.push({ role: 'assistant', data: result });
+                saveState();
                 setBusy(false);
             }
 

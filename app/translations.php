@@ -102,6 +102,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'eli_step_label'          => ['uk' => 'Крок',                         'en' => 'Step'],
     'eli_recommend'           => ['uk' => 'Рекомендую',                   'en' => 'Recommended'],
     'eli_default_reply'       => ['uk' => 'Ось що я підібрала для вас.',   'en' => 'Here is what I found for you.'],
+    'eli_new_chat'            => ['uk' => 'Новий діалог',                  'en' => 'New chat'],
 
     // --- catalog.php / category.php: спільні написи каталогу ---
     'catalog_default_title'        => ['uk' => 'Каталог AI-інструментів',                         'en' => 'AI Tools Catalog'],
