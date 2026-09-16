@@ -64,6 +64,21 @@ $GLOBALS['TRANSLATIONS'] = [
     'footer_support'  => ['uk' => 'Підтримати проєкт',           'en' => 'Support the Project'],
     'footer_social'   => ['uk' => 'Соцмережі',                   'en' => 'Social media'],
 
+    // --- blog.php / blog-post.php: блог ---
+    'title_blog'         => ['uk' => 'AI LAB HUB — Блог', 'en' => 'AI LAB HUB — Blog'],
+    'blog_heading'        => ['uk' => 'Блог', 'en' => 'Blog'],
+    'blog_subtitle'       => [
+        'uk' => 'Порівняння AI-інструментів і поради, як обрати те, що підходить саме вам.',
+        'en' => 'AI tool comparisons and tips on choosing what fits you best.',
+    ],
+    'blog_empty'          => ['uk' => 'Статей поки немає.', 'en' => 'No articles yet.'],
+    'blog_back'           => ['uk' => '← До блогу', 'en' => '← Back to blog'],
+    'blog_not_found'      => ['uk' => 'Статтю не знайдено', 'en' => 'Article not found'],
+    'blog_not_found_text' => [
+        'uk' => 'Статті з такою адресою не існує або вона ще не опублікована.',
+        'en' => 'No article exists at this address, or it is not published yet.',
+    ],
+
     // --- eli.php: чат з AI-асистенткою Елею ---
     'title_eli'              => ['uk' => 'AI LAB HUB — Еля, AI-асистентка', 'en' => 'AI LAB HUB — Eli, AI Assistant'],
     'eli_title'               => ['uk' => 'Еля — ваша AI-асистентка',       'en' => 'Eli — your AI assistant'],
