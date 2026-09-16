@@ -597,7 +597,7 @@ $total = count($products);
 <body>
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
-            <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
+            <img class="site-header__logo" src="/logo.png" alt="AI LAB HUB">
         </a>
     </header>
 

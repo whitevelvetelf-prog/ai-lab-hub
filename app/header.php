@@ -13,6 +13,7 @@
  */
 
 ?>
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#2116ad">
 <link rel="apple-touch-icon" href="/icons/icon-180.png">

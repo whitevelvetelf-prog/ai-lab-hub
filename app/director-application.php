@@ -372,7 +372,7 @@ $heading   = $positionKey === 'ceo' ? t('apply_ceo_heading') : t('apply_exec_hea
 <body>
     <header class="site-header">
         <a class="site-header__brand" href="index.php">
-            <img class="site-header__logo" src="assets/images/logo.png" alt="AI LAB HUB">
+            <img class="site-header__logo" src="/logo.png" alt="AI LAB HUB">
         </a>
         <nav class="site-nav" id="siteNav">
             <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
