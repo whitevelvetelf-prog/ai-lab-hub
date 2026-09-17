@@ -18,8 +18,9 @@ $pdo = require __DIR__ . '/../config/database.php';
 $productId = (int) ($_GET['id'] ?? 0);
 
 $stmt = $pdo->prepare(
-    "SELECT id, name, logo_url, official_url, short_description, full_description,
-            main_features, target_audience, platform, skill_level, status
+    "SELECT id, name, logo_url, official_url,
+            short_description, full_description, main_features, target_audience,
+            platform, skill_level, status
      FROM products
      WHERE id = :id"
 );
@@ -32,33 +33,45 @@ $plans = [];
 
 if ($product !== false) {
     $catStmt = $pdo->prepare(
-        "SELECT c.name
+        "SELECT c.name, c.name_en
          FROM product_categories pc
          JOIN categories c ON c.id = pc.category_id
          WHERE pc.product_id = :id
          ORDER BY c.name"
     );
     $catStmt->execute([':id' => $productId]);
-    $categories = $catStmt->fetchAll(PDO::FETCH_COLUMN);
+    $categories = $catStmt->fetchAll();
 
     $subStmt = $pdo->prepare(
-        "SELECT s.name
+        "SELECT s.name, s.name_en
          FROM product_subcategories ps
          JOIN subcategories s ON s.id = ps.subcategory_id
          WHERE ps.product_id = :id
          ORDER BY s.name"
     );
     $subStmt->execute([':id' => $productId]);
-    $subcategories = $subStmt->fetchAll(PDO::FETCH_COLUMN);
+    $subcategories = $subStmt->fetchAll();
 
     $planStmt = $pdo->prepare(
-        "SELECT plan_name, price, period, description
+        "SELECT id, plan_name, price, period, description
          FROM pricing_plans
          WHERE product_id = :id
          ORDER BY price ASC, id ASC"
     );
     $planStmt->execute([':id' => $productId]);
     $plans = $planStmt->fetchAll();
+}
+
+/** Переклад поля картки продукту поточною мовою (кеш у product_translations). */
+function localized_product_field(PDO $pdo, array $product, string $field): string
+{
+    return localized_field($pdo, 'product_translations', 'product_id', $product, $field);
+}
+
+/** Переклад поля тарифного плану поточною мовою (кеш у pricing_plan_translations). */
+function localized_plan_field(PDO $pdo, array $plan, string $field): string
+{
+    return localized_field($pdo, 'pricing_plan_translations', 'plan_id', $plan, $field);
 }
 
 /** Ініціали для логотипа-заглушки (по словах / CamelCase). */
@@ -221,6 +234,31 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             max-width: 960px;
             margin: 0 auto;
             padding: 24px 24px 72px;
+        }
+
+        /* Стрілка повернення до чату з Елею (видима, лише якщо є активна
+           розмова — розкривається скриптом, щоб не зʼявлятись у тих, хто
+           потрапив на сторінку іншим шляхом). */
+        .back-to-eli {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: color 0.15s ease;
+        }
+
+        .back-to-eli:hover {
+            color: #ffffff;
+        }
+
+        .back-to-eli svg {
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
         }
 
         /* 1. Логотип + назва продукту */
@@ -504,6 +542,10 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
     </header>
 
     <div class="page">
+        <a href="eli.php" class="back-to-eli" id="backToEli">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+            <?= htmlspecialchars(t('back_to_eli'), ENT_QUOTES) ?>
+        </a>
 <?php if ($product === false): ?>
         <div class="product-head">
             <h1 class="product-head__name"><?= htmlspecialchars(t('product_not_found'), ENT_QUOTES) ?></h1>
@@ -514,9 +556,13 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         </div>
 <?php else: ?>
         <?php
+        $shortDescription = localized_product_field($pdo, $product, 'short_description');
+        $fullDescription = localized_product_field($pdo, $product, 'full_description');
+        $summaryText = $fullDescription !== '' ? $fullDescription : $shortDescription;
+        $targetAudience = localized_product_field($pdo, $product, 'target_audience');
         $features = array_values(array_filter(array_map(
             'trim',
-            preg_split('/\r\n|\r|\n/', (string) $product['main_features']) ?: []
+            preg_split('/\r\n|\r|\n/', localized_product_field($pdo, $product, 'main_features')) ?: []
         ), static fn($f) => $f !== ''));
         $planCount = count($plans);
         ?>
@@ -533,17 +579,17 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 
         <!-- 3. Короткий опис -->
         <div class="product-summary">
-            <p><?= htmlspecialchars((string) ($product['full_description'] ?: $product['short_description']), ENT_QUOTES) ?></p>
+            <p><?= htmlspecialchars($summaryText, ENT_QUOTES) ?></p>
             <a class="btn btn--ghost" href="#"><?= htmlspecialchars(t('btn_details'), ENT_QUOTES) ?></a>
         </div>
 
         <!-- 4. Бейджі категорії та підкатегорії -->
         <div class="badges">
-            <?php foreach ($categories as $categoryName): ?>
-                <span class="badge"><?= htmlspecialchars((string) $categoryName, ENT_QUOTES) ?></span>
+            <?php foreach ($categories as $categoryRow): ?>
+                <span class="badge"><?= htmlspecialchars(localized_name($categoryRow), ENT_QUOTES) ?></span>
             <?php endforeach; ?>
-            <?php foreach ($subcategories as $subcategoryName): ?>
-                <span class="badge badge--accent"><?= htmlspecialchars((string) $subcategoryName, ENT_QUOTES) ?></span>
+            <?php foreach ($subcategories as $subcategoryRow): ?>
+                <span class="badge badge--accent"><?= htmlspecialchars(localized_name($subcategoryRow), ENT_QUOTES) ?></span>
             <?php endforeach; ?>
         </div>
 
@@ -560,10 +606,10 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         <?php endif; ?>
 
         <!-- 6. Для кого призначений -->
-        <?php if (!empty($product['target_audience'])): ?>
+        <?php if ($targetAudience !== ''): ?>
         <section class="section">
             <h2 class="section__title"><?= htmlspecialchars(t('product_audience_title'), ENT_QUOTES) ?></h2>
-            <p class="section__text"><?= htmlspecialchars((string) $product['target_audience'], ENT_QUOTES) ?></p>
+            <p class="section__text"><?= htmlspecialchars($targetAudience, ENT_QUOTES) ?></p>
         </section>
         <?php endif; ?>
 
@@ -575,9 +621,9 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
                 <?php foreach ($plans as $idx => $plan): ?>
                     <?php $featured = $planCount === 3 && $idx === 1; ?>
                     <div class="plan<?= $featured ? ' plan--featured' : '' ?>">
-                        <h3 class="plan__name"><?= htmlspecialchars($plan['plan_name'], ENT_QUOTES) ?></h3>
+                        <h3 class="plan__name"><?= htmlspecialchars(localized_plan_field($pdo, $plan, 'plan_name'), ENT_QUOTES) ?></h3>
                         <p class="plan__price"><?= plan_price($plan) ?></p>
-                        <p class="plan__desc"><?= htmlspecialchars((string) $plan['description'], ENT_QUOTES) ?></p>
+                        <p class="plan__desc"><?= htmlspecialchars(localized_plan_field($pdo, $plan, 'description'), ENT_QUOTES) ?></p>
                         <a class="btn <?= $featured ? 'btn--primary' : 'btn--ghost' ?> btn--block" href="#"><?= htmlspecialchars(t('product_plan_select'), ENT_QUOTES) ?></a>
                     </div>
                 <?php endforeach; ?>
@@ -599,5 +645,17 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 <?php endif; ?>
     </div>
     <?php include __DIR__ . '/../app/footer.php'; ?>
+    <script>
+        (function () {
+            try {
+                if (sessionStorage.getItem('eliChatState')) {
+                    var backLink = document.getElementById('backToEli');
+                    if (backLink) {
+                        backLink.style.display = 'inline-flex';
+                    }
+                }
+            } catch (e) {}
+        })();
+    </script>
 </body>
 </html>

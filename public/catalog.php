@@ -9,28 +9,36 @@ declare(strict_types=1);
  *
  * Параметри:
  *   ?category={id}    — продукти цієї категорії (через product_categories);
- *   ?subcategory={id} — продукти цієї підкатегорії (через product_subcategories).
+ *   ?subcategory={id} — продукти цієї підкатегорії (через product_subcategories);
+ *   ?search={текст}   — повнотекстова видача пошуку з шапки (Enter без
+ *                       вибору підказки веде саме сюди, api-search.php
+ *                       живить сам випадаючий список під час вводу).
  *
- * Це не пошук і не фільтрація за запитом користувача — це звичайний
- * перегляд списку продуктів конкретного розділу, тож заголовок сторінки
- * дорівнює назві категорії / підкатегорії.
+ * Категорія/підкатегорія — звичайний перегляд розділу, заголовок дорівнює
+ * його назві. Пошук — окрема гілка нижче, заголовок містить сам запит.
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
+require_once __DIR__ . '/../app/search.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
 $subcategoryId = (int) ($_GET['subcategory'] ?? 0);
 $categoryId    = (int) ($_GET['category'] ?? 0);
+$searchQuery   = trim((string) ($_GET['search'] ?? ''));
+$isSearch      = mb_strlen($searchQuery) >= 2;
 
 $pageHeading = t('catalog_default_title');
 $backLink    = null;
 
-if ($subcategoryId > 0) {
-    $subStmt = $pdo->prepare("SELECT id, name, category_id FROM subcategories WHERE id = :id");
+if ($isSearch) {
+    $pageHeading = sprintf(t('search_results_heading'), $searchQuery);
+    $products = search_products_by_name($pdo, $searchQuery, 'id, name, short_description');
+} elseif ($subcategoryId > 0) {
+    $subStmt = $pdo->prepare("SELECT id, name, name_en, category_id FROM subcategories WHERE id = :id");
     $subStmt->execute([':id' => $subcategoryId]);
     $subcategory = $subStmt->fetch();
 
@@ -38,7 +46,7 @@ if ($subcategoryId > 0) {
         $pageHeading = t('catalog_subcategory_not_found');
         $products = [];
     } else {
-        $pageHeading = (string) $subcategory['name'];
+        $pageHeading = localized_name($subcategory);
         $backLink = ['href' => 'category.php?id=' . (int) $subcategory['category_id'], 'label' => t('back_to_direction')];
 
         $stmt = $pdo->prepare(
@@ -52,7 +60,7 @@ if ($subcategoryId > 0) {
         $products = $stmt->fetchAll();
     }
 } elseif ($categoryId > 0) {
-    $catStmt = $pdo->prepare("SELECT id, name FROM categories WHERE id = :id");
+    $catStmt = $pdo->prepare("SELECT id, name, name_en FROM categories WHERE id = :id");
     $catStmt->execute([':id' => $categoryId]);
     $category = $catStmt->fetch();
 
@@ -60,7 +68,7 @@ if ($subcategoryId > 0) {
         $pageHeading = t('category_not_found');
         $products = [];
     } else {
-        $pageHeading = (string) $category['name'];
+        $pageHeading = localized_name($category);
         $backLink = ['href' => 'category.php?id=' . (int) $category['id'], 'label' => t('back_to_direction')];
 
         $stmt = $pdo->prepare(
@@ -410,7 +418,13 @@ $cardColors = [
 
         <h1 class="catalog__title"><?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></h1>
 
-        <?php if ($products === []): ?>
+        <?php if ($products === [] && $isSearch): ?>
+        <p class="catalog__empty">
+            <?= htmlspecialchars(t('search_no_results'), ENT_QUOTES) ?><br>
+            <?= htmlspecialchars(t('search_no_results_hint'), ENT_QUOTES) ?>
+            <a href="eli.php"><?= htmlspecialchars(t('search_ask_eli_link'), ENT_QUOTES) ?></a>.
+        </p>
+        <?php elseif ($products === []): ?>
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <div class="catalog-grid">

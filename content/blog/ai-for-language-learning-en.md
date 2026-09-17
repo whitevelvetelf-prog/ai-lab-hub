@@ -51,6 +51,14 @@ A cloud-based, GPT-powered AI tutor for learning more than 57 languages, built a
 
 **Best for:** learners looking for the most budget-friendly entry point into AI conversational practice, across multiple languages at once.
 
+### [Learna](https://ailabhub-directory.com/product.php?id=339)
+
+An AI tutor for conversational practice in English and Spanish: a virtual chat character gives instant feedback on grammar and pronunciation, with lessons that adapt to the learner's level and goals from the very first session.
+
+**Pricing:** 7-day free trial, followed by a paid subscription (exact pricing varies by region — see the product page for current rates).
+
+**Best for:** learners who want to start speaking English or Spanish at their own pace, without the fear of making mistakes.
+
 ### [Preply](https://ailabhub-directory.com/product.php?id=335)
 
 An online platform for finding tutors in more than 90 languages for one-on-one private lessons. You pay per lesson, with pricing set by each individual tutor.
@@ -68,6 +76,7 @@ An online platform for finding tutors in more than 90 languages for one-on-one p
 | [Babbel](https://ailabhub-directory.com/product.php?id=77) | Structured short lessons | Speech recognition for pronunciation | From $7.99/mo |
 | [Speak](https://ailabhub-directory.com/product.php?id=317) | AI conversational practice | "Learn → Practice → Apply" method | From $17.99/mo |
 | [TalkPal AI](https://ailabhub-directory.com/product.php?id=320) | AI tutor, 57+ languages | Affordable, flexible practice | From $9.99/mo |
+| [Learna](https://ailabhub-directory.com/product.php?id=339) | AI tutor, English and Spanish | Lessons personalized to level and goals | See product page |
 | [Preply](https://ailabhub-directory.com/product.php?id=335) | 1-on-1 live tutoring | Personalized lessons with a human tutor | From $3–50+/hour |
 
 ## Which Tool Should You Choose?
@@ -75,7 +84,7 @@ An online platform for finding tutors in more than 90 languages for one-on-one p
 - **Just starting out and want to try it for free** — start with [Duolingo](https://ailabhub-directory.com/product.php?id=29).
 - **Want course structure and native-speaker feedback** — go with [Busuu](https://ailabhub-directory.com/product.php?id=326).
 - **Ready to invest in a full course with pronunciation control** — [Babbel](https://ailabhub-directory.com/product.php?id=77).
-- **Main goal is speaking with confidence** — [Speak](https://ailabhub-directory.com/product.php?id=317) or [TalkPal AI](https://ailabhub-directory.com/product.php?id=320), depending on your budget.
+- **Main goal is speaking with confidence** — [Speak](https://ailabhub-directory.com/product.php?id=317), [TalkPal AI](https://ailabhub-directory.com/product.php?id=320), or [Learna](https://ailabhub-directory.com/product.php?id=339), depending on your budget and target language.
 - **Want a live tutor and a personalized plan** — [Preply](https://ailabhub-directory.com/product.php?id=335).
 
 The best results often come from combining approaches: a gamified app for daily practice, plus an AI tutor or live tutor for conversational confidence. Browse the product pages on AI LAB HUB and pick the combination that fits your language-learning goal.

@@ -310,6 +310,92 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
         header('Location: account.php');
         exit;
     }
+
+    // ------------------------------------------------------------------
+    // Універсальна система заявок на посаду (position_applications) —
+    // заміна окремих apply-ceo.php/apply-exec-director.php для нових
+    // заявок. Створення посилання — лише власниця; підтвердження —
+    // будь-який admin (як і решта заявок у цьому кабінеті).
+    // ------------------------------------------------------------------
+    if ($action === 'create_position_application' && account_is_owner($user)) {
+        $positionTitle = trim((string) ($_POST['position_title'] ?? ''));
+
+        if ($positionTitle === '' || mb_strlen($positionTitle) > 255) {
+            $_SESSION['account_flash'] = t('err_position_title_required');
+        } else {
+            try {
+                $token = bin2hex(random_bytes(32));
+                $insert = $pdo->prepare(
+                    "INSERT INTO position_applications (position_title, token, status, created_by)
+                     VALUES (:title, :token, 'pending', :uid)"
+                );
+                $insert->execute([':title' => $positionTitle, ':token' => $token, ':uid' => $user['id']]);
+
+                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+                $host = (string) ($_SERVER['HTTP_HOST'] ?? 'ailabhub-directory.com');
+                $link = $scheme . '://' . $host . '/apply-position.php?token=' . $token;
+
+                $_SESSION['account_flash'] = sprintf(t('flash_position_link_created'), $link);
+            } catch (PDOException $ex) {
+                $_SESSION['account_flash'] = t('flash_admin_request_failed');
+            }
+        }
+
+        header('Location: account.php');
+        exit;
+    }
+
+    if ($action === 'confirm_position_application' && $user['role'] === 'admin') {
+        $appId = (int) ($_POST['application_id'] ?? 0);
+
+        try {
+            $pdo->beginTransaction();
+
+            $stmt = $pdo->prepare(
+                "SELECT id, position_title, email
+                   FROM position_applications
+                  WHERE id = :id AND status = 'submitted'
+                  FOR UPDATE"
+            );
+            $stmt->execute([':id' => $appId]);
+            $app = $stmt->fetch();
+
+            if ($app === false) {
+                $pdo->rollBack();
+                $_SESSION['account_flash'] = t('flash_request_not_found');
+            } else {
+                $candidateStmt = $pdo->prepare('SELECT id FROM users WHERE email = :email');
+                $candidateStmt->execute([':email' => $app['email']]);
+                $candidate = $candidateStmt->fetch();
+
+                if ($candidate === false) {
+                    $pdo->rollBack();
+                    $_SESSION['account_flash'] = sprintf(t('flash_position_app_no_user'), (string) $app['email']);
+                } else {
+                    $updUser = $pdo->prepare(
+                        "UPDATE users SET role = 'admin', `position` = :pos WHERE id = :uid"
+                    );
+                    $updUser->execute([':pos' => $app['position_title'], ':uid' => (int) $candidate['id']]);
+
+                    $updApp = $pdo->prepare(
+                        "UPDATE position_applications SET status = 'confirmed', confirmed_at = NOW() WHERE id = :id"
+                    );
+                    $updApp->execute([':id' => (int) $app['id']]);
+
+                    $pdo->commit();
+                    $_SESSION['account_flash'] = sprintf(t('flash_position_app_confirmed'), (string) $app['position_title']);
+                }
+            }
+        } catch (PDOException $ex) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $_SESSION['account_flash'] = t('flash_admin_request_failed');
+        }
+
+        header('Location: account.php');
+        exit;
+    }
 }
 
 $flash = $_SESSION['account_flash'] ?? null;
@@ -324,6 +410,8 @@ $staffEmployees = [];
 $staffAdmins = [];
 // Заявки на роль Адміністратора (приватна система, окремо від employee_requests).
 $adminRequests = [];
+// Заявки на посаду (універсальна система, окремо від admin_requests).
+$positionApplications = [];
 if ($user !== null && $user['role'] === 'user') {
     $stmt = $pdo->prepare(
         "SELECT last_name, first_name, created_at
@@ -384,6 +472,13 @@ if ($user !== null && $user['role'] === 'user') {
            JOIN users u ON u.id = r.user_id
           WHERE r.status = 'pending'
           ORDER BY r.requested_at ASC, r.id ASC"
+    )->fetchAll();
+
+    $positionApplications = $pdo->query(
+        "SELECT id, position_title, last_name, first_name, email, phone, status, created_at, submitted_at
+           FROM position_applications
+          ORDER BY created_at DESC
+          LIMIT 100"
     )->fetchAll();
 }
 
@@ -1011,6 +1106,69 @@ if ($user !== null && $user['role'] === 'user') {
                                         </div>
                                     <?php else: ?>
                                         <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_request_owner_only_note'), ENT_QUOTES) ?></span>
+                                    <?php endif; ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+
+                <?php if (account_is_owner($user)): ?>
+                <div class="section">
+                    <h2 class="section__title"><?= htmlspecialchars(t('account_create_position_link_title'), ENT_QUOTES) ?></h2>
+                    <form method="post" action="account.php" novalidate>
+                        <input type="hidden" name="action" value="create_position_application">
+                        <div class="field">
+                            <label class="field__label" for="position_title"><?= htmlspecialchars(t('position_title_field'), ENT_QUOTES) ?></label>
+                            <input class="input" type="text" id="position_title" name="position_title" maxlength="255" required>
+                        </div>
+                        <button type="submit" class="btn btn--primary"><?= htmlspecialchars(t('create_position_link_submit'), ENT_QUOTES) ?></button>
+                    </form>
+                </div>
+                <?php endif; ?>
+
+                <div class="section" id="position-applications">
+                    <h2 class="section__title"><?= htmlspecialchars(t('account_position_apps_title'), ENT_QUOTES) ?></h2>
+                    <?php if ($positionApplications === []): ?>
+                        <div class="empty-state"><?= htmlspecialchars(t('account_position_apps_empty'), ENT_QUOTES) ?></div>
+                    <?php else: ?>
+                        <?php
+                        $positionStatusLabels = [
+                            'pending' => t('position_apps_status_pending'),
+                            'submitted' => t('position_apps_status_submitted'),
+                            'confirmed' => t('position_apps_status_confirmed'),
+                        ];
+                        ?>
+                        <ul class="request-list">
+                            <?php foreach ($positionApplications as $app): ?>
+                                <?php
+                                $appCandidate = trim((string) ($app['last_name'] ?? '') . ' ' . (string) ($app['first_name'] ?? ''));
+                                $appStatusLabel = $positionStatusLabels[$app['status']] ?? $app['status'];
+                                ?>
+                                <li class="request-card">
+                                    <div>
+                                        <strong><?= e($app['position_title']) ?> — <?= e($appStatusLabel) ?></strong>
+                                        <span class="request-card__meta">
+                                            <?php if ($appCandidate !== ''): ?>
+                                                <?= e($appCandidate) ?> ·
+                                            <?php endif; ?>
+                                            <?php if (!empty($app['email'])): ?>
+                                                <?= e($app['email']) ?>
+                                                <?php if (!empty($app['phone'])): ?> · <?= e($app['phone']) ?><?php endif; ?> ·
+                                            <?php endif; ?>
+                                            <?php if (!empty($app['submitted_at'])): ?>
+                                                <?= htmlspecialchars(t('position_apps_col_submitted'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $app['submitted_at']))) ?>
+                                            <?php else: ?>
+                                                <?= e(date('d.m.Y', (int) strtotime((string) $app['created_at']))) ?>
+                                            <?php endif; ?>
+                                        </span>
+                                    </div>
+                                    <?php if ($app['status'] === 'submitted'): ?>
+                                        <form method="post" action="account.php">
+                                            <input type="hidden" name="action" value="confirm_position_application">
+                                            <input type="hidden" name="application_id" value="<?= (int) $app['id'] ?>">
+                                            <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_confirm_application'), ENT_QUOTES) ?></button>
+                                        </form>
                                     <?php endif; ?>
                                 </li>
                             <?php endforeach; ?>

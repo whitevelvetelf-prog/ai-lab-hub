@@ -188,29 +188,47 @@ function external_href(?string $url): string
 }
 
 /**
- * HTML комірки «Хто додав».
+ * HTML-підпис користувача для комірок «Хто додав» / «Хто редагував».
  *   - є employee_number   → «Працівник №N», у title повне «Прізвище Ім'я»;
- *   - інакше є імʼя автора → імʼя як є (напр. admin без номера);
- *   - автора немає         → «—».
+ *   - інакше є імʼя        → імʼя як є (напр. admin без номера);
+ *   - користувача немає    → «—».
  */
-function created_by_cell(array $row): string
+function user_ref_cell(?string $name, ?string $number, ?string $lastName, ?string $firstName): string
 {
-    if ($row['created_by_name'] === null) {
+    if ($name === null || $name === '') {
         return '<span class="table__muted">—</span>';
     }
 
-    $number = $row['created_by_employee_number'];
     if ($number !== null && $number !== '') {
-        $fullName = trim(
-            (string) ($row['created_by_last_name'] ?? '') . ' '
-            . (string) ($row['created_by_first_name'] ?? '')
-        );
-        $title = $fullName !== '' ? $fullName : (string) $row['created_by_name'];
+        $fullName = trim((string) $lastName . ' ' . (string) $firstName);
+        $title = $fullName !== '' ? $fullName : $name;
         return '<span class="table__clip" title="' . e($title) . '">Працівник №'
             . (int) $number . '</span>';
     }
 
-    return e($row['created_by_name']);
+    return e($name);
+}
+
+/** Комірка «Хто додав». */
+function created_by_cell(array $row): string
+{
+    return user_ref_cell(
+        $row['created_by_name'],
+        $row['created_by_employee_number'],
+        $row['created_by_last_name'],
+        $row['created_by_first_name']
+    );
+}
+
+/** Комірка «Хто редагував» (products.updated_by_user_id). */
+function updated_by_cell(array $row): string
+{
+    return user_ref_cell(
+        $row['updated_by_name'] ?? null,
+        $row['updated_by_employee_number'] ?? null,
+        $row['updated_by_last_name'] ?? null,
+        $row['updated_by_first_name'] ?? null
+    );
 }
 
 // TODO (масштаб): зараз усі продукти тягнуться й рендеряться за один раз
@@ -231,6 +249,7 @@ $products = $pdo->query(
         p.platform,
         p.skill_level,
         p.status,
+        p.is_archived,
         p.partnership_status,
         p.created_at,
         p.updated_at,
@@ -238,6 +257,10 @@ $products = $pdo->query(
         u.employee_number AS created_by_employee_number,
         u.first_name AS created_by_first_name,
         u.last_name AS created_by_last_name,
+        eu.name AS updated_by_name,
+        eu.employee_number AS updated_by_employee_number,
+        eu.first_name AS updated_by_first_name,
+        eu.last_name AS updated_by_last_name,
         (SELECT GROUP_CONCAT(c.name ORDER BY c.id SEPARATOR ', ')
            FROM product_categories pc
            JOIN categories c ON c.id = pc.category_id
@@ -248,6 +271,7 @@ $products = $pdo->query(
           WHERE ps.product_id = p.id) AS subcategories_list
      FROM products p
      LEFT JOIN users u ON u.id = p.created_by
+     LEFT JOIN users eu ON eu.id = p.updated_by_user_id
      ORDER BY p.updated_at DESC, p.id DESC"
 )->fetchAll();
 
@@ -644,7 +668,7 @@ $total = count($products);
                         <th>Статус партнерства</th>
                         <?php endif; ?>
                         <th>Хто додав</th>
-                        <th>Оновлено</th>
+                        <th>Оновлено · ким</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -706,8 +730,10 @@ $total = count($products);
                                 </td>
                                 <?php endif; ?>
                                 <td class="table__nowrap"><?= created_by_cell($row) ?></td>
-                                <td class="table__muted table__nowrap">
-                                    <?= $updated ? e(date('d.m.Y H:i', $updated)) : '—' ?>
+                                <td class="table__nowrap">
+                                    <span class="table__muted"><?= $updated ? e(date('d.m.Y H:i', $updated)) : '—' ?></span>
+                                    <br>
+                                    <?= updated_by_cell($row) ?>
                                 </td>
                                 <td class="table__nowrap">
                                     <a class="btn btn--ghost btn--sm" href="crm-edit-product.php?id=<?= $pid ?>">Редагувати</a>

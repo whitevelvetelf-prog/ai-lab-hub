@@ -16,7 +16,7 @@ require_once __DIR__ . '/../app/translations.php';
 $pdo = require __DIR__ . '/../config/database.php';
 
 $categories = $pdo->query(
-    "SELECT id, name, slug
+    "SELECT id, name, name_en, slug
      FROM categories
      ORDER BY id"
 )->fetchAll();
@@ -367,7 +367,7 @@ $categoryIcons = [
                         <span class="direction-card__icon">
                             <i data-lucide="<?= htmlspecialchars($icon, ENT_QUOTES) ?>"></i>
                         </span>
-                        <h3 class="direction-card__name"><?= htmlspecialchars((string) $category['name'], ENT_QUOTES) ?></h3>
+                        <h3 class="direction-card__name"><?= htmlspecialchars(localized_name($category), ENT_QUOTES) ?></h3>
                     </a>
                 <?php endforeach; ?>
             </div>

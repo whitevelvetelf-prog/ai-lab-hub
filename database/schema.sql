@@ -117,9 +117,10 @@ CREATE TABLE admin_requests (
 -- categories
 -- ---------------------------------------------------------------------
 CREATE TABLE categories (
-    id   INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    name VARCHAR(255) NOT NULL,
-    slug VARCHAR(255) NOT NULL,
+    id      INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name    VARCHAR(255) NOT NULL,
+    name_en VARCHAR(255) NULL,
+    slug    VARCHAR(255) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_categories_slug (slug)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
@@ -131,6 +132,7 @@ CREATE TABLE subcategories (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
     category_id INT UNSIGNED NOT NULL,
     name        VARCHAR(255) NOT NULL,
+    name_en     VARCHAR(255) NULL,
     slug        VARCHAR(255) NOT NULL,
     PRIMARY KEY (id),
     UNIQUE KEY uq_subcategories_cat_slug (category_id, slug),
@@ -160,9 +162,13 @@ CREATE TABLE products (
     internal_registration_url TEXT NULL,
     affiliate_url             TEXT NULL,
     short_description         VARCHAR(500) NULL,
+    short_description_en      VARCHAR(500) NULL,
     full_description          TEXT NULL,
+    full_description_en       TEXT NULL,
     main_features             TEXT NULL,
+    main_features_en          TEXT NULL,
     target_audience           TEXT NULL,
+    target_audience_en        TEXT NULL,
     platform                  SET('web', 'mobile', 'desktop') NULL,
     skill_level               ENUM('none', 'basic', 'course') NOT NULL DEFAULT 'none',
     status                    ENUM('none', 'in_progress', 'published') NOT NULL DEFAULT 'none',
@@ -173,6 +179,7 @@ CREATE TABLE products (
     PRIMARY KEY (id),
     KEY idx_products_created_by (created_by),
     KEY idx_products_status (status),
+    KEY idx_products_name (name),
     CONSTRAINT fk_products_created_by
         FOREIGN KEY (created_by) REFERENCES users (id)
         ON DELETE SET NULL ON UPDATE CASCADE
@@ -218,9 +225,11 @@ CREATE TABLE pricing_plans (
     id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
     product_id  INT UNSIGNED NOT NULL,
     plan_name   VARCHAR(255) NOT NULL,
+    plan_name_en VARCHAR(255) NULL,
     price       DECIMAL(10, 2) NULL,
     period      ENUM('free', 'week', 'month', 'year', 'one_time') NOT NULL DEFAULT 'free',
     description TEXT NULL,
+    description_en TEXT NULL,
     PRIMARY KEY (id),
     KEY idx_pricing_plans_product (product_id),
     CONSTRAINT fk_pricing_plans_product
@@ -247,6 +256,56 @@ CREATE TABLE saved_products (
         ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_saved_product
         FOREIGN KEY (product_id) REFERENCES products (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- login_tokens — одноразові токени входу без пароля (magic link),
+-- public/forgot-password.php видає, public/login-via-token.php приймає.
+-- token = bin2hex(random_bytes(32)), 15 хв на використання, одноразовий.
+-- ---------------------------------------------------------------------
+CREATE TABLE login_tokens (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id    INT UNSIGNED NOT NULL,
+    token      CHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    used_at    DATETIME NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_login_tokens_token (token),
+    KEY idx_login_tokens_user (user_id),
+    CONSTRAINT fk_login_tokens_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- position_applications — універсальна система заявок на посаду (заміна
+-- окремих форм apply-ceo.php/apply-exec-director.php). Власниця вписує
+-- position_title і створює посилання (public/account.php); кандидат
+-- заповнює контакти за токеном (public/apply-position.php); підтвердження
+-- (будь-який admin) виставляє users.role='admin' і users.position.
+-- Кандидат має вже мати акаунт з тим email — новий акаунт не створюється.
+-- ---------------------------------------------------------------------
+CREATE TABLE position_applications (
+    id             INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    position_title VARCHAR(255) NOT NULL,
+    token          CHAR(64) NOT NULL,
+    last_name      VARCHAR(255) NULL,
+    first_name     VARCHAR(255) NULL,
+    email          VARCHAR(255) NULL,
+    phone          VARCHAR(32) NULL,
+    status         ENUM('pending', 'submitted', 'confirmed') NOT NULL DEFAULT 'pending',
+    created_by     INT UNSIGNED NOT NULL,
+    created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    submitted_at   DATETIME NULL,
+    confirmed_at   DATETIME NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_position_applications_token (token),
+    KEY idx_position_applications_status (status),
+    KEY idx_position_applications_created_by (created_by),
+    CONSTRAINT fk_position_applications_created_by
+        FOREIGN KEY (created_by) REFERENCES users (id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 

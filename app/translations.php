@@ -3,10 +3,21 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — базова багатомовність інтерфейсу (UA / EN).
+ * AI LAB HUB — багатомовність інтерфейсу (мовонезалежна архітектура).
  *
- * Перекладаємо лише статичні написи сторінок. Контент із бази даних
- * (назви категорій, продуктів тощо) тут НЕ перекладається — це окремий крок.
+ * $GLOBALS['TRANSLATIONS'] нижче — це ЛИШЕ мова оригіналу (uk), написана
+ * людиною. Переклад на будь-яку іншу активну мову (наразі лише en) шукається
+ * в таблиці ui_translations (app/translation-cache.php); якщо перекладу
+ * нема — автопереклад через Google Translation API й кешування. Список
+ * активних мов інтерфейсу — config/languages.php; тут і в
+ * app/translation-cache.php немає жодного хардкоду коду мови.
+ *
+ * Контент із бази даних (short_description, full_description тощо) сюди
+ * не належить — його переклад/кешування живе в product.php через
+ * product_translations / pricing_plan_translations (те саме
+ * app/translation-cache.php). Назви категорій/підкатегорій — окремий,
+ * простіший випадок (готовий переклад у колонці name_en, без автоперекладу
+ * й без цієї таблиці) — localized_name() нижче лишається як є.
  *
  * Підключати до будь-якого виводу, одразу після app/auth.php (або першим,
  * якщо auth на сторінці не потрібен):
@@ -15,255 +26,295 @@ declare(strict_types=1);
  * Використання у шаблонах:
  *   <?= t('nav_home') ?>
  *
- * Поточна мова береться з $_SESSION['lang']; типова — 'uk'.
- * Перемикання: посилання на ту саму сторінку з ?lang=uk | ?lang=en.
+ * Поточна мова береться з $_SESSION['lang']; типова — мова оригіналу
+ * (config/languages.php: 'source'). Перемикання: посилання на ту саму
+ * сторінку з ?lang=uk | ?lang=en (чи будь-яку іншу активну мову).
  */
+
+require_once __DIR__ . '/translation-cache.php';
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/** Підтримувані мови інтерфейсу. */
-const LANGS = ['uk', 'en'];
-
-/** Мова за замовчуванням. */
-const LANG_DEFAULT = 'uk';
-
 /**
- * Словник перекладів: ключ => ['uk' => '…', 'en' => '…'].
- * Список фраз зібрано з наявних шаблонів (шапка, підвал, index.php).
+ * Словник фраз мовою оригіналу: ключ => 'текст українською'.
+ * Список фраз зібрано з наявних шаблонів (шапка, підвал, index.php тощо).
  */
 $GLOBALS['TRANSLATIONS'] = [
     // --- Шапка / навігація ---
-    'nav_home'      => ['uk' => 'Головна',              'en' => 'Home'],
-    'nav_account'   => ['uk' => 'Кабінет',              'en' => 'Account'],
-    'nav_saved'     => ['uk' => 'Моя добірка',          'en' => 'My collection'],
-    'nav_login'     => ['uk' => 'Увійти',               'en' => 'Log In'],
-    'nav_assistant' => ['uk' => 'Викликати Асистента',  'en' => 'Call Assistant'],
+    'nav_home'      => 'Головна',
+    'nav_account'   => 'Кабінет',
+    'nav_saved'     => 'Моя добірка',
+    'nav_login'     => 'Увійти',
+    'nav_assistant' => 'Викликати Асистента',
     // Короткий підпис кнопки асистента для вузьких екранів (додається через CSS ::after).
-    'nav_assistant_short' => ['uk' => 'Спитати Елю',    'en' => 'Ask Eli'],
-    'nav_menu'      => ['uk' => 'Меню',                 'en' => 'Menu'],
-    'lang_switch'   => ['uk' => 'Мова інтерфейсу',      'en' => 'Interface language'],
+    'nav_assistant_short' => 'Спитати Елю',
+    'nav_menu'      => 'Меню',
+    'lang_switch'   => 'Мова інтерфейсу',
 
     // --- index.php: hero + напрямки ---
-    'title_home'        => ['uk' => 'AI LAB HUB — Головна', 'en' => 'AI LAB HUB — Home'],
-    'hero_title'        => ['uk' => 'AI LAB HUB',           'en' => 'AI LAB HUB'],
-    'hero_subtitle'     => [
-        'uk' => 'Знайдіть AI-інструмент для будь-якого завдання',
-        'en' => 'Find an AI tool for any task',
-    ],
-    'hero_image_alt'    => ['uk' => 'Колба — AI LAB HUB', 'en' => 'Flask — AI LAB HUB'],
-    'directions_title'  => ['uk' => 'Напрямки AI',        'en' => 'AI Directions'],
+    'title_home'        => 'AI LAB HUB — Головна',
+    'hero_title'        => 'AI LAB HUB',
+    'hero_subtitle'     => 'Знайдіть AI-інструмент для будь-якого завдання',
+    'hero_image_alt'    => 'Колба — AI LAB HUB',
+    'directions_title'  => 'Напрямки AI',
 
     // --- Підвал ---
-    'footer_blog'     => ['uk' => 'Блог',                        'en' => 'Blog'],
-    'footer_about'    => ['uk' => 'Про проєкт',                  'en' => 'About'],
-    'footer_contacts' => ['uk' => 'Контакти',                    'en' => 'Contacts'],
-    'footer_terms'    => ['uk' => 'Умови використання',          'en' => 'Terms of Use'],
-    'footer_privacy'  => ['uk' => 'Політика конфіденційності',   'en' => 'Privacy Policy'],
-    'footer_support'  => ['uk' => 'Підтримати проєкт',           'en' => 'Support the Project'],
-    'footer_social'   => ['uk' => 'Соцмережі',                   'en' => 'Social media'],
+    'footer_blog'     => 'Блог',
+    'footer_about'    => 'Про проєкт',
+    'footer_contacts' => 'Контакти',
+    'footer_terms'    => 'Умови використання',
+    'footer_privacy'  => 'Політика конфіденційності',
+    'footer_support'  => 'Підтримати проєкт',
+    'footer_social'   => 'Соцмережі',
 
     // --- blog.php / blog-post.php: блог ---
-    'title_blog'         => ['uk' => 'AI LAB HUB — Блог', 'en' => 'AI LAB HUB — Blog'],
-    'blog_heading'        => ['uk' => 'Блог', 'en' => 'Blog'],
-    'blog_subtitle'       => [
-        'uk' => 'Порівняння AI-інструментів і поради, як обрати те, що підходить саме вам.',
-        'en' => 'AI tool comparisons and tips on choosing what fits you best.',
-    ],
-    'blog_empty'          => ['uk' => 'Статей поки немає.', 'en' => 'No articles yet.'],
-    'blog_back'           => ['uk' => '← До блогу', 'en' => '← Back to blog'],
-    'blog_not_found'      => ['uk' => 'Статтю не знайдено', 'en' => 'Article not found'],
-    'blog_not_found_text' => [
-        'uk' => 'Статті з такою адресою не існує або вона ще не опублікована.',
-        'en' => 'No article exists at this address, or it is not published yet.',
-    ],
+    'title_blog'         => 'AI LAB HUB — Блог',
+    'blog_heading'        => 'Блог',
+    'blog_subtitle'       => 'Порівняння AI-інструментів і поради, як обрати те, що підходить саме вам.',
+    'blog_empty'          => 'Статей поки немає.',
+    'blog_back'           => '← До блогу',
+    'blog_not_found'      => 'Статтю не знайдено',
+    'blog_not_found_text' => 'Статті з такою адресою не існує або вона ще не опублікована.',
 
     // --- eli.php: чат з AI-асистенткою Елею ---
-    'title_eli'              => ['uk' => 'AI LAB HUB — Еля, AI-асистентка', 'en' => 'AI LAB HUB — Eli, AI Assistant'],
-    'eli_title'               => ['uk' => 'Еля — ваша AI-асистентка',       'en' => 'Eli — your AI assistant'],
-    'eli_subtitle'            => [
-        'uk' => 'Опишіть задачу — Еля підбере найкращий AI-інструмент',
-        'en' => 'Describe your task — Eli will find the best AI tool',
-    ],
-    'eli_video_alt'           => ['uk' => 'Відео Елі',                     'en' => 'Eli video'],
-    'eli_greeting'            => [
-        'uk' => 'Доброго дня! Розкажіть, яку задачу потрібно вирішити — і я підберу відповідний AI-інструмент.',
-        'en' => 'Hello! Tell me what task you need to solve, and I will find the right AI tool for you.',
-    ],
-    'eli_input_placeholder'   => ['uk' => 'Опишіть свою задачу…',          'en' => 'Describe your task…'],
-    'eli_input_aria'          => ['uk' => 'Повідомлення',                  'en' => 'Message'],
-    'eli_send'                => ['uk' => 'Надіслати',                    'en' => 'Send'],
-    'eli_tech_error'          => [
-        'uk' => 'Перепрошую, зараз виникли технічні труднощі. Спробуйте, будь ласка, ще раз за хвилину.',
-        'en' => 'Sorry, I am experiencing technical difficulties right now. Please try again in a minute.',
-    ],
-    'eli_thinking'            => ['uk' => 'Еля обмірковує відповідь…',      'en' => 'Eli is thinking…'],
-    'eli_step_label'          => ['uk' => 'Крок',                         'en' => 'Step'],
-    'eli_recommend'           => ['uk' => 'Рекомендую',                   'en' => 'Recommended'],
-    'eli_default_reply'       => ['uk' => 'Ось що я підібрала для вас.',   'en' => 'Here is what I found for you.'],
-    'eli_new_chat'            => ['uk' => 'Новий діалог',                  'en' => 'New chat'],
+    'title_eli'              => 'AI LAB HUB — Еля, AI-асистентка',
+    'eli_title'               => 'Еля — ваша AI-асистентка',
+    'eli_subtitle'            => 'Опишіть задачу — Еля підбере найкращий AI-інструмент',
+    'eli_video_alt'           => 'Відео Елі',
+    'eli_greeting'            => 'Доброго дня! Розкажіть, яку задачу потрібно вирішити — і я підберу відповідний AI-інструмент.',
+    'eli_input_placeholder'   => 'Опишіть свою задачу…',
+    'eli_input_aria'          => 'Повідомлення',
+    'eli_send'                => 'Надіслати',
+    'eli_tech_error'          => 'Перепрошую, зараз виникли технічні труднощі. Спробуйте, будь ласка, ще раз за хвилину.',
+    'eli_thinking'            => 'Еля обмірковує відповідь…',
+    'eli_step_label'          => 'Крок',
+    'eli_recommend'           => 'Рекомендую',
+    'eli_default_reply'       => 'Ось що я підібрала для вас.',
+    'eli_new_chat'            => 'Новий діалог',
+
+    // --- Пошук у шапці (app/footer.php + public/assets/js/site-search.js) ---
+    'search_placeholder'   => 'Пошук AI-інструментів…',
+    'search_clear_aria'    => 'Очистити пошук',
+    'search_no_results'    => 'Нічого не знайдено',
+    'search_no_results_hint' => 'Спробуйте інший запит або',
+    'search_ask_eli_link'  => 'запитайте Елю',
+    'search_view_all'      => 'Показати всі результати',
+    'search_results_heading' => 'Результати пошуку: «%s»',
 
     // --- catalog.php / category.php: спільні написи каталогу ---
-    'catalog_default_title'        => ['uk' => 'Каталог AI-інструментів',                         'en' => 'AI Tools Catalog'],
-    'catalog_subcategory_not_found' => ['uk' => 'Підкатегорію не знайдено',                        'en' => 'Subcategory not found'],
-    'category_not_found'           => ['uk' => 'Категорію не знайдено',                           'en' => 'Category not found'],
-    'category_not_found_text'      => ['uk' => 'Напрямок із таким ідентифікатором відсутній.',    'en' => 'No direction exists with this identifier.'],
-    'category_empty'               => ['uk' => 'У цьому напрямку поки немає підкатегорій.',        'en' => 'This direction has no subcategories yet.'],
-    'back_to_direction'            => ['uk' => '← До напряму',                                     'en' => '← Back to direction'],
-    'back_to_all_directions'       => ['uk' => '← Усі напрямки',                                   'en' => '← All directions'],
-    'catalog_empty'                => ['uk' => 'У цьому розділі поки немає опублікованих продуктів.', 'en' => 'There are no published products in this section yet.'],
-    'btn_details'                   => ['uk' => 'Докладніше',                                       'en' => 'Details'],
-    'price_free'                    => ['uk' => 'Безкоштовно',                                      'en' => 'Free'],
-    'price_from'                    => ['uk' => 'Від',                                              'en' => 'From'],
-    'unit_week'                     => ['uk' => 'тиж',                                              'en' => 'wk'],
-    'unit_month'                    => ['uk' => 'міс',                                              'en' => 'mo'],
-    'unit_year'                     => ['uk' => 'рік',                                              'en' => 'yr'],
-    'unit_one_time'                 => ['uk' => 'разово',                                           'en' => 'one-time'],
+    'catalog_default_title'        => 'Каталог AI-інструментів',
+    'catalog_subcategory_not_found' => 'Підкатегорію не знайдено',
+    'category_not_found'           => 'Категорію не знайдено',
+    'category_not_found_text'      => 'Напрямок із таким ідентифікатором відсутній.',
+    'category_empty'               => 'У цьому напрямку поки немає підкатегорій.',
+    'back_to_direction'            => '← До напряму',
+    'back_to_all_directions'       => '← Усі напрямки',
+    'catalog_empty'                => 'У цьому розділі поки немає опублікованих продуктів.',
+    'btn_details'                   => 'Докладніше',
+    'price_free'                    => 'Безкоштовно',
+    'price_from'                    => 'Від',
+    'unit_week'                     => 'тиж',
+    'unit_month'                    => 'міс',
+    'unit_year'                     => 'рік',
+    'unit_one_time'                 => 'разово',
 
     // --- product.php ---
-    'product_not_found'      => ['uk' => 'Продукт не знайдено',                                                  'en' => 'Product not found'],
-    'product_not_found_text' => ['uk' => 'Продукт із таким ідентифікатором відсутній або ще не опублікований.',   'en' => 'No product exists with this identifier, or it is not published yet.'],
-    'back_to_directions'     => ['uk' => 'До напрямків AI',                                                       'en' => 'Back to AI directions'],
-    'product_visit_site'     => ['uk' => 'Перейти на сайт',                                                       'en' => 'Visit website'],
-    'product_features_title' => ['uk' => 'Основні функції',                                                      'en' => 'Key features'],
-    'product_audience_title' => ['uk' => 'Для кого призначений',                                                 'en' => 'Who it is for'],
-    'product_plans_title'    => ['uk' => 'Тарифні плани',                                                        'en' => 'Pricing plans'],
-    'product_plan_select'    => ['uk' => 'Обрати',                                                               'en' => 'Choose'],
-    'product_platform_label' => ['uk' => 'Платформа',                                                            'en' => 'Platform'],
-    'product_skill_label'    => ['uk' => 'Рівень навичок',                                                       'en' => 'Skill level'],
-    'platform_web'           => ['uk' => 'Веб',                                                                  'en' => 'Web'],
-    'platform_mobile'        => ['uk' => 'Мобільний',                                                            'en' => 'Mobile'],
-    'platform_desktop'       => ['uk' => 'Десктоп',                                                              'en' => 'Desktop'],
-    'skill_basic'            => ['uk' => 'Потрібні базові знання',                                               'en' => 'Basic knowledge required'],
-    'skill_course'           => ['uk' => 'Потрібне окреме навчання (курс)',                                      'en' => 'Dedicated training required (course)'],
-    'skill_none'             => ['uk' => 'Не потребує спеціальних знань',                                        'en' => 'No special knowledge required'],
+    'product_not_found'      => 'Продукт не знайдено',
+    'product_not_found_text' => 'Продукт із таким ідентифікатором відсутній або ще не опублікований.',
+    'back_to_directions'     => 'До напрямків AI',
+    'back_to_eli'             => 'Назад до добірки Елі',
+    'product_visit_site'     => 'Перейти на сайт',
+    'product_features_title' => 'Основні функції',
+    'product_audience_title' => 'Для кого призначений',
+    'product_plans_title'    => 'Тарифні плани',
+    'product_plan_select'    => 'Обрати',
+    'product_platform_label' => 'Платформа',
+    'product_skill_label'    => 'Рівень навичок',
+    'platform_web'           => 'Веб',
+    'platform_mobile'        => 'Мобільний',
+    'platform_desktop'       => 'Десктоп',
+    'skill_basic'            => 'Потрібні базові знання',
+    'skill_course'           => 'Потрібне окреме навчання (курс)',
+    'skill_none'             => 'Не потребує спеціальних знань',
 
     // --- account.php ---
-    'account_title_guest'        => ['uk' => 'Ваш кабінет',       'en' => 'Your account'],
-    'account_text_guest'         => [
-        'uk' => 'Увійдіть, щоб зберігати обрані продукти та отримати персональні рекомендації від Елі.',
-        'en' => 'Log in to save favorite products and get personal recommendations from Eli.',
-    ],
-    'account_create'             => ['uk' => 'Створити акаунт',   'en' => 'Create account'],
-    'account_welcome_prefix'     => ['uk' => 'Вітаємо,',          'en' => 'Welcome,'],
-    'role_user'                  => ['uk' => 'Користувач',        'en' => 'User'],
-    'role_employee'              => ['uk' => 'Співробітник',      'en' => 'Employee'],
-    'role_admin'                 => ['uk' => 'Адміністратор',     'en' => 'Administrator'],
-    'account_saved_title'        => ['uk' => 'Моя добірка', 'en' => 'My collection'],
-    'account_saved_empty_prefix' => ['uk' => 'Ще немає збережених продуктів. Перегляньте', 'en' => 'No saved products yet. Check out'],
-    'account_directions_link'    => ['uk' => 'напрямки AI на головній', 'en' => 'AI directions on the homepage'],
-    'account_saved_count'        => ['uk' => 'У добірці продуктів: %d.', 'en' => 'Products in your collection: %d.'],
-    'account_saved_open_link'    => ['uk' => 'Відкрити «Мою добірку»', 'en' => 'Open “My collection”'],
+    'account_title_guest'        => 'Ваш кабінет',
+    'account_text_guest'         => 'Увійдіть, щоб зберігати обрані продукти та отримати персональні рекомендації від Елі.',
+    'account_create'             => 'Створити акаунт',
+    'account_welcome_prefix'     => 'Вітаємо,',
+    'role_user'                  => 'Користувач',
+    'role_employee'              => 'Співробітник',
+    'role_admin'                 => 'Адміністратор',
+    'account_saved_title'        => 'Моя добірка',
+    'account_saved_empty_prefix' => 'Ще немає збережених продуктів. Перегляньте',
+    'account_directions_link'    => 'напрямки AI на головній',
+    'account_saved_count'        => 'У добірці продуктів: %d.',
+    'account_saved_open_link'    => 'Відкрити «Мою добірку»',
 
     // --- «Моя добірка»: сторінка saved.php + кнопка «зберегти» на картках ---
-    'title_saved'                => ['uk' => 'AI LAB HUB — Моя добірка', 'en' => 'AI LAB HUB — My collection'],
-    'saved_page_title'           => ['uk' => 'Моя добірка', 'en' => 'My collection'],
-    'saved_empty_text'           => ['uk' => 'У вашій добірці поки порожньо. Збережіть цікаві інструменти лапкою на картці —', 'en' => 'Your collection is empty. Save tools you like with the paw on a card —'],
-    'saved_empty_link'           => ['uk' => 'перейти до каталогу', 'en' => 'go to the catalog'],
-    'saved_btn_save'             => ['uk' => 'Зберегти в добірку', 'en' => 'Save to collection'],
-    'saved_btn_unsave'           => ['uk' => 'Прибрати з добірки', 'en' => 'Remove from collection'],
-    'saved_hint_guest'           => ['uk' => 'Увійдіть, щоб зберегти', 'en' => 'Log in to save'],
-    'saved_error'                => ['uk' => 'Не вдалося. Спробуйте ще раз.', 'en' => 'Something went wrong. Try again.'],
-    'account_stats_title'        => ['uk' => 'Статистика користувачів', 'en' => 'User statistics'],
-    'stats_total_label'          => ['uk' => 'Усього',            'en' => 'Total'],
-    'stats_users_label'          => ['uk' => 'Користувачі',       'en' => 'Users'],
-    'stats_employees_label'      => ['uk' => 'Працівники',        'en' => 'Employees'],
-    'stats_admins_label'         => ['uk' => 'Адміни',            'en' => 'Admins'],
-    'stats_pending_label'        => ['uk' => 'Заявки на розгляді:', 'en' => 'Pending requests:'],
-    'account_staff_employees_title' => ['uk' => 'Працівники',     'en' => 'Employees'],
-    'account_staff_admins_title'    => ['uk' => 'Адміністратори', 'en' => 'Administrators'],
-    'account_role_since_prefix'  => ['uk' => '· роль з',          'en' => '· role since'],
-    'account_crm_access_prefix'  => ['uk' => 'Доступ до CRM:',    'en' => 'CRM access:'],
-    'account_crm_list_link'      => ['uk' => 'список продуктів',  'en' => 'product list'],
-    'account_crm_add_link'       => ['uk' => 'додати новий AI-продукт', 'en' => 'add a new AI product'],
-    'account_logout'             => ['uk' => 'Вийти з акаунту',   'en' => 'Log out'],
+    'title_saved'                => 'AI LAB HUB — Моя добірка',
+    'saved_page_title'           => 'Моя добірка',
+    'saved_empty_text'           => 'У вашій добірці поки порожньо. Збережіть цікаві інструменти лапкою на картці —',
+    'saved_empty_link'           => 'перейти до каталогу',
+    'saved_btn_save'             => 'Зберегти в добірку',
+    'saved_btn_unsave'           => 'Прибрати з добірки',
+    'saved_hint_guest'           => 'Увійдіть, щоб зберегти',
+    'saved_error'                => 'Не вдалося. Спробуйте ще раз.',
+    'account_stats_title'        => 'Статистика користувачів',
+    'stats_total_label'          => 'Усього',
+    'stats_users_label'          => 'Користувачі',
+    'stats_employees_label'      => 'Працівники',
+    'stats_admins_label'         => 'Адміни',
+    'stats_pending_label'        => 'Заявки на розгляді:',
+    'account_staff_employees_title' => 'Працівники',
+    'account_staff_admins_title'    => 'Адміністратори',
+    'account_role_since_prefix'  => '· роль з',
+    'account_crm_access_prefix'  => 'Доступ до CRM:',
+    'account_crm_list_link'      => 'список продуктів',
+    'account_crm_add_link'       => 'додати новий AI-продукт',
+    'account_logout'             => 'Вийти з акаунту',
 
     // --- login.php / register.php ---
-    'title_login'            => ['uk' => 'AI LAB HUB — Вхід',        'en' => 'AI LAB HUB — Log In'],
-    'login_heading'          => ['uk' => 'Вхід',                     'en' => 'Log In'],
-    'login_subtitle'         => ['uk' => 'Увійдіть, щоб перейти до свого кабінету.', 'en' => 'Log in to access your account.'],
-    'login_error_invalid'    => ['uk' => 'Невірний email або пароль', 'en' => 'Invalid email or password'],
-    'login_no_account'       => ['uk' => 'Немає акаунта?',           'en' => "Don't have an account?"],
-    'title_register'         => ['uk' => 'AI LAB HUB — Реєстрація',  'en' => 'AI LAB HUB — Sign Up'],
-    'register_heading'       => ['uk' => 'Реєстрація',               'en' => 'Sign Up'],
-    'register_subtitle'      => [
-        'uk' => 'Створіть акаунт, щоб зберігати продукти та отримувати рекомендації від Елі.',
-        'en' => 'Create an account to save products and get recommendations from Eli.',
-    ],
-    'register_have_account'  => ['uk' => 'Уже маєте акаунт?',        'en' => 'Already have an account?'],
-    'action_register'        => ['uk' => 'Зареєструватися',         'en' => 'Sign up'],
-    'field_name'             => ['uk' => 'Ім\'я',                    'en' => 'Name'],
-    'field_password'         => ['uk' => 'Пароль',                   'en' => 'Password'],
-    'field_password_confirm' => ['uk' => 'Підтвердження пароля',    'en' => 'Confirm password'],
-    'pw_show'                => ['uk' => 'Показати',                 'en' => 'Show'],
-    'pw_hide'                => ['uk' => 'Сховати',                  'en' => 'Hide'],
-    'pw_show_aria'           => ['uk' => 'Показати пароль',          'en' => 'Show password'],
-    'pw_hide_aria'           => ['uk' => 'Сховати пароль',           'en' => 'Hide password'],
-    'err_name_required'      => ['uk' => 'Вкажіть ім\'я.',           'en' => 'Please enter your name.'],
-    'err_name_too_long'      => ['uk' => 'Ім\'я задовге (максимум 255 символів).', 'en' => 'Name is too long (255 characters max).'],
-    'err_email_required'     => ['uk' => 'Вкажіть email.',           'en' => 'Please enter your email.'],
-    'err_email_invalid'      => ['uk' => 'Некоректний email.',       'en' => 'Invalid email.'],
-    'err_password_short'     => ['uk' => 'Пароль має містити щонайменше 8 символів.', 'en' => 'Password must be at least 8 characters long.'],
-    'err_password_mismatch'  => ['uk' => 'Паролі не збігаються.',    'en' => 'Passwords do not match.'],
-    'err_email_taken'        => ['uk' => 'Користувач із таким email уже зареєстрований.', 'en' => 'A user with this email is already registered.'],
-    'err_register_failed'    => ['uk' => 'Не вдалося створити акаунт. Спробуйте ще раз.', 'en' => 'Could not create account. Please try again.'],
+    'title_login'            => 'AI LAB HUB — Вхід',
+    'login_heading'          => 'Вхід',
+    'login_subtitle'         => 'Увійдіть, щоб перейти до свого кабінету.',
+    'login_error_invalid'    => 'Невірний email або пароль',
+    'login_no_account'       => 'Немає акаунта?',
+    'title_register'         => 'AI LAB HUB — Реєстрація',
+    'register_heading'       => 'Реєстрація',
+    'register_subtitle'      => 'Створіть акаунт, щоб зберігати продукти та отримувати рекомендації від Елі.',
+    'register_have_account'  => 'Уже маєте акаунт?',
+    'action_register'        => 'Зареєструватися',
+    'field_name'             => 'Ім\'я',
+    'field_password'         => 'Пароль',
+    'field_password_confirm' => 'Підтвердження пароля',
+    'pw_show'                => 'Показати',
+    'pw_hide'                => 'Сховати',
+    'pw_show_aria'           => 'Показати пароль',
+    'pw_hide_aria'           => 'Сховати пароль',
+    'err_name_required'      => 'Вкажіть ім\'я.',
+    'err_name_too_long'      => 'Ім\'я задовге (максимум 255 символів).',
+    'err_email_required'     => 'Вкажіть email.',
+    'err_email_invalid'      => 'Некоректний email.',
+    'err_password_short'     => 'Пароль має містити щонайменше 8 символів.',
+    'err_password_mismatch'  => 'Паролі не збігаються.',
+    'err_email_taken'        => 'Користувач із таким email уже зареєстрований.',
+    'err_register_failed'    => 'Не вдалося створити акаунт. Спробуйте ще раз.',
+
+    // --- login.php: посилання «Забули пароль?» ---
+    'forgot_password_link'   => 'Забули пароль?',
+
+    // --- forgot-password.php / login-via-token.php: вхід без пароля (magic link) ---
+    'title_forgot_password'  => 'AI LAB HUB — Забули пароль?',
+    'forgot_heading'         => 'Забули пароль?',
+    'forgot_subtitle'        => 'Введіть email — і ми надішлемо посилання для входу без пароля.',
+    'forgot_submit'          => 'Надіслати посилання для входу',
+    'forgot_success'         => 'Якщо цей email зареєстрований, на нього надіслано посилання для входу.',
+    'forgot_success_hint'    => 'Не бачите листа кілька хвилин — перевірте папку «Спам».',
+    'forgot_back_login'      => '← До входу',
+
+    'mail_login_subject'     => 'Вхід в AI LAB HUB',
+    'mail_login_greeting'    => 'Вітаємо, %s!',
+    'mail_login_intro'       => 'Ви (або хтось від вашого імені) запросили вхід у кабінет AI LAB HUB без пароля. Натисніть кнопку нижче, щоб увійти:',
+    'mail_login_button'      => 'Увійти в кабінет',
+    'mail_login_fallback'    => 'Якщо кнопка не працює, скопіюйте це посилання у браузер:',
+    'mail_login_expiry'      => 'Посилання діє %d хвилин і працює лише один раз. Якщо ви не запитували вхід — просто ігноруйте цей лист.',
+
+    'token_invalid_title'    => 'Посилання недійсне',
+    'token_invalid_text'     => 'Це посилання для входу прострочене, вже використане або невірне.',
+    'token_invalid_retry'    => 'Запросити нове посилання',
 
     // --- account.php: flash-повідомлення схвалення заявки (обробник живий,
     // навіть коли кнопка в UI тимчасово прихована) ---
-    'flash_request_not_found'  => ['uk' => 'Заявку не знайдено або вона вже опрацьована.', 'en' => 'Request not found or already processed.'],
-    'flash_request_approved'   => ['uk' => 'Заявку схвалено. Працівнику присвоєно номер №%d.', 'en' => 'Request approved. The employee was assigned number #%d.'],
-    'flash_request_approve_failed' => ['uk' => 'Не вдалося схвалити заявку. Спробуйте ще раз.', 'en' => 'Could not approve the request. Please try again.'],
+    'flash_request_not_found'  => 'Заявку не знайдено або вона вже опрацьована.',
+    'flash_request_approved'   => 'Заявку схвалено. Працівнику присвоєно номер №%d.',
+    'flash_request_approve_failed' => 'Не вдалося схвалити заявку. Спробуйте ще раз.',
 
     // --- Приватна система заявок на роль Адміністратора (apply-admin.php + account.php).
     // Самостійна функція: форма-підтвердження без вибору посади. ---
-    'title_apply_admin'          => ['uk' => 'AI LAB HUB — Заявка на адміністратора', 'en' => 'AI LAB HUB — Admin Request'],
-    'apply_admin_heading'        => ['uk' => 'Заявка на роль Адміністратора', 'en' => 'Administrator Role Request'],
-    'apply_admin_confirm_text'   => ['uk' => 'Подати заявку на роль Адміністратора', 'en' => 'Submit a request for the Administrator role'],
-    'apply_admin_submit'         => ['uk' => 'Надіслати заявку', 'en' => 'Submit request'],
-    'apply_admin_already_admin'  => ['uk' => 'Ви вже маєте роль адміністратора.', 'en' => 'You already have the Administrator role.'],
-    'apply_admin_pending_prefix' => ['uk' => 'Ваша заявка на розгляді (подана', 'en' => 'Your request is under review (submitted'],
-    'apply_admin_pending_suffix' => ['uk' => '). Очікуйте рішення.', 'en' => '). Please wait for a decision.'],
-    'apply_admin_approved_text'  => ['uk' => 'Вашу заявку вже схвалено.', 'en' => 'Your request has already been approved.'],
-    'apply_admin_back_account'   => ['uk' => 'До кабінету', 'en' => 'Back to account'],
-    'account_admin_requests_title' => ['uk' => 'Заявки на роль Адміністратора', 'en' => 'Administrator role requests'],
-    'account_admin_requests_empty' => ['uk' => 'Немає заявок на розгляді.', 'en' => 'No pending requests.'],
-    'account_requested_prefix'     => ['uk' => '· подано', 'en' => '· submitted'],
-    'action_approve'               => ['uk' => 'Схвалити', 'en' => 'Approve'],
-    'action_reject'                => ['uk' => 'Відхилити', 'en' => 'Reject'],
-    'flash_admin_request_approved' => [
-        'uk' => 'Заявку на адміністратора схвалено. Користувачу присвоєно роль Адміністратора.',
-        'en' => 'Administrator request approved. The user was granted the Administrator role.',
-    ],
-    'flash_admin_request_rejected' => ['uk' => 'Заявку відхилено.', 'en' => 'Request rejected.'],
-    'flash_admin_request_failed'   => ['uk' => 'Не вдалося обробити заявку. Спробуйте ще раз.', 'en' => 'Could not process the request. Please try again.'],
+    'title_apply_admin'          => 'AI LAB HUB — Заявка на адміністратора',
+    'apply_admin_heading'        => 'Заявка на роль Адміністратора',
+    'apply_admin_confirm_text'   => 'Подати заявку на роль Адміністратора',
+    'apply_admin_submit'         => 'Надіслати заявку',
+    'apply_admin_already_admin'  => 'Ви вже маєте роль адміністратора.',
+    'apply_admin_pending_prefix' => 'Ваша заявка на розгляді (подана',
+    'apply_admin_pending_suffix' => '). Очікуйте рішення.',
+    'apply_admin_approved_text'  => 'Вашу заявку вже схвалено.',
+    'apply_admin_back_account'   => 'До кабінету',
+    'account_admin_requests_title' => 'Заявки на роль Адміністратора',
+    'account_admin_requests_empty' => 'Немає заявок на розгляді.',
+    'account_requested_prefix'     => '· подано',
+    'action_approve'               => 'Схвалити',
+    'action_reject'                => 'Відхилити',
+    'flash_admin_request_approved' => 'Заявку на адміністратора схвалено. Користувачу присвоєно роль Адміністратора.',
+    'flash_admin_request_rejected' => 'Заявку відхилено.',
+    'flash_admin_request_failed'   => 'Не вдалося обробити заявку. Спробуйте ще раз.',
 
     // --- Приватні заявки на посади директорів (apply-ceo.php / apply-exec-director.php + account.php).
     // Дві окремі форми, посада «зашита» у формі; поля: Ім'я / Прізвище / Телефон / Email. ---
-    'title_apply_ceo'            => ['uk' => 'AI LAB HUB — Заявка на посаду Генерального директора', 'en' => 'AI LAB HUB — CEO Position Request'],
-    'title_apply_exec'           => ['uk' => 'AI LAB HUB — Заявка на посаду Виконавчого директора', 'en' => 'AI LAB HUB — Executive Director Position Request'],
-    'apply_ceo_heading'          => ['uk' => 'Заявка на посаду Генерального директора', 'en' => 'CEO Position Request'],
-    'apply_exec_heading'         => ['uk' => 'Заявка на посаду Виконавчого директора', 'en' => 'Executive Director Position Request'],
-    'apply_director_intro'       => ['uk' => 'Заповніть контактні дані. Рішення ухвалює власниця проєкту особисто.', 'en' => 'Fill in your contact details. The project owner decides personally.'],
-    'apply_director_first_name'  => ['uk' => 'Ім’я', 'en' => 'First name'],
-    'apply_director_last_name'   => ['uk' => 'Прізвище', 'en' => 'Last name'],
-    'apply_director_phone'       => ['uk' => 'Телефон', 'en' => 'Phone'],
-    'apply_director_email'       => ['uk' => 'Email', 'en' => 'Email'],
-    'apply_director_email_hint'  => ['uk' => 'Має збігатися з email вашого акаунта.', 'en' => 'Must match your account email.'],
-    'apply_director_submit'      => ['uk' => 'Надіслати заявку', 'en' => 'Submit request'],
-    'apply_director_back_account' => ['uk' => 'До кабінету', 'en' => 'Back to account'],
-    'apply_director_err_required'      => ['uk' => 'Заповніть усі поля.', 'en' => 'Fill in all fields.'],
-    'apply_director_err_email_invalid' => ['uk' => 'Некоректний email.', 'en' => 'Invalid email.'],
-    'apply_director_err_email_match'   => ['uk' => 'Email має збігатися з email вашого акаунта.', 'en' => 'The email must match your account email.'],
-    'apply_director_err_too_long'      => ['uk' => 'Одне з полів задовге.', 'en' => 'One of the fields is too long.'],
-    'apply_director_pending'     => ['uk' => 'Вашу заявку на цю посаду вже надіслано. Очікуйте рішення.', 'en' => 'Your request for this position has already been submitted. Please wait for a decision.'],
-    'apply_director_approved'    => ['uk' => 'Вашу заявку на цю посаду вже схвалено.', 'en' => 'Your request for this position has already been approved.'],
-    'account_admin_request_role_label'      => ['uk' => 'роль Адміністратора', 'en' => 'Administrator role'],
-    'account_admin_request_owner_only_note' => ['uk' => 'Підтверджує власниця проєкту', 'en' => 'Approved by the project owner'],
-    'account_admin_position_full_note'      => ['uk' => 'Усі позиції на цю посаду зайняті', 'en' => 'All slots for this position are filled'],
-    'flash_admin_request_owner_only' => ['uk' => 'Цю заявку підтверджує лише власниця проєкту.', 'en' => 'Only the project owner can approve this request.'],
-    'flash_admin_position_taken'   => ['uk' => 'Немає вільних позицій на посаду «%s». Заявку залишено на розгляді.', 'en' => 'No open slots for the position "%s". The request was left pending.'],
-    'flash_admin_director_approved' => ['uk' => 'Заявку схвалено. Кандидату надано доступ до CRM і посаду «%s».', 'en' => 'Request approved. The candidate was granted CRM access and the position "%s".'],
+    'title_apply_ceo'            => 'AI LAB HUB — Заявка на посаду Генерального директора',
+    'title_apply_exec'           => 'AI LAB HUB — Заявка на посаду Виконавчого директора',
+    'apply_ceo_heading'          => 'Заявка на посаду Генерального директора',
+    'apply_exec_heading'         => 'Заявка на посаду Виконавчого директора',
+    'apply_director_intro'       => 'Заповніть контактні дані. Рішення ухвалює власниця проєкту особисто.',
+    'apply_director_first_name'  => 'Ім’я',
+    'apply_director_last_name'   => 'Прізвище',
+    'apply_director_phone'       => 'Телефон',
+    'apply_director_email'       => 'Email',
+    'apply_director_email_hint'  => 'Має збігатися з email вашого акаунта.',
+    'apply_director_submit'      => 'Надіслати заявку',
+    'apply_director_back_account' => 'До кабінету',
+    'apply_director_err_required'      => 'Заповніть усі поля.',
+    'apply_director_err_email_invalid' => 'Некоректний email.',
+    'apply_director_err_email_match'   => 'Email має збігатися з email вашого акаунта.',
+    'apply_director_err_too_long'      => 'Одне з полів задовге.',
+    'apply_director_pending'     => 'Вашу заявку на цю посаду вже надіслано. Очікуйте рішення.',
+    'apply_director_approved'    => 'Вашу заявку на цю посаду вже схвалено.',
+    'account_admin_request_role_label'      => 'роль Адміністратора',
+    'account_admin_request_owner_only_note' => 'Підтверджує власниця проєкту',
+    'account_admin_position_full_note'      => 'Усі позиції на цю посаду зайняті',
+    'flash_admin_request_owner_only' => 'Цю заявку підтверджує лише власниця проєкту.',
+    'flash_admin_position_taken'   => 'Немає вільних позицій на посаду «%s». Заявку залишено на розгляді.',
+    'flash_admin_director_approved' => 'Заявку схвалено. Кандидату надано доступ до CRM і посаду «%s».',
+
+    // --- Універсальна система заявок на посаду (public/account.php —
+    // створення посилання й список; public/apply-position.php — форма
+    // кандидата). Заміна окремих apply-ceo.php/apply-exec-director.php
+    // для НОВИХ заявок; старі форми й дані лишаються без змін. ---
+    'account_create_position_link_title' => 'Створити посилання на заявку',
+    'position_title_field'   => 'Назва посади',
+    'err_position_title_required' => 'Вкажіть назву посади.',
+    'create_position_link_submit' => 'Створити посилання',
+    'flash_position_link_created' => 'Посилання створено: %s',
+
+    'account_position_apps_title' => 'Заявки на посади',
+    'account_position_apps_empty' => 'Активних заявок немає.',
+    'position_apps_col_position'  => 'Посада',
+    'position_apps_col_candidate' => 'Кандидат',
+    'position_apps_col_status'    => 'Статус',
+    'position_apps_col_submitted' => 'Подано',
+    'position_apps_status_pending'   => 'Очікує заповнення',
+    'position_apps_status_submitted' => 'На розгляді',
+    'position_apps_status_confirmed' => 'Підтверджено',
+    'action_confirm_application' => 'Підтвердити',
+    'flash_position_app_confirmed' => 'Заявку підтверджено. Користувачу присвоєно посаду «%s» і роль Адміністратора.',
+    'flash_position_app_no_user' => 'Не вдалося підтвердити: акаунта з email «%s» не знайдено. Кандидат мав зареєструватися перед поданням заявки.',
+
+    'title_apply_position'   => 'AI LAB HUB — Заявка на посаду',
+    'apply_position_intro'   => 'Заповніть контактні дані, щоб подати заявку на цю посаду.',
+    'apply_position_submit'  => 'Надіслати',
+    'apply_position_thanks_title' => 'Дякуємо!',
+    'apply_position_thanks_text'  => 'Заявку надіслано. Ми зв’яжемося з вами найближчим часом.',
+    'apply_position_no_account_error' => 'Акаунта з цим email не знайдено. Спершу зареєструйтеся на сайті з цим email, а тоді заповніть форму ще раз.',
+
+    // --- Кнопка «Поділитися» (app/footer.php + public/assets/js/share-button.js) ---
+    'share_button'       => 'Поділитися',
+    'share_copy_link'    => 'Скопіювати посилання',
+    'share_copied'       => 'Посилання скопійовано',
+    'share_email'        => 'Електронна пошта',
+    'share_product_text' => 'Перегляньте %s на AI LAB HUB',
 ];
 
 /**
@@ -302,48 +353,145 @@ function director_position_capacity(?string $key): int
 }
 
 /**
- * Поточна мова інтерфейсу: значення з сесії, якщо воно валідне,
- * інакше — мова за замовчуванням.
+ * Поточна мова інтерфейсу: значення з сесії, якщо воно є серед активних
+ * (config/languages.php), інакше — мова оригіналу.
  */
 function current_lang(): string
 {
-    $lang = $_SESSION['lang'] ?? LANG_DEFAULT;
+    $lang = $_SESSION['lang'] ?? translation_source_lang();
 
-    return in_array($lang, LANGS, true) ? $lang : LANG_DEFAULT;
+    return in_array($lang, active_lang_codes(), true) ? $lang : translation_source_lang();
 }
 
-/** Зберігає обрану мову в сесію (тихо ігнорує непідтримувані значення). */
+/** Зберігає обрану мову в сесію (тихо ігнорує неактивні коди мови). */
 function set_lang(string $lang): void
 {
-    if (in_array($lang, LANGS, true)) {
+    if (in_array($lang, active_lang_codes(), true)) {
         $_SESSION['lang'] = $lang;
     }
 }
 
 /**
+ * Власне PDO-з'єднання для перекладу статичних написів — створюється
+ * лише за потреби (кеш-міс у ui_translations, див. t() нижче), тож
+ * сторінки, які й без цього не працюють з БД, зайвого з'єднання не платять.
+ */
+function translation_pdo(): PDO
+{
+    static $pdo = null;
+    if ($pdo === null) {
+        $pdo = require __DIR__ . '/../config/database.php';
+    }
+
+    return $pdo;
+}
+
+/**
+ * Усі закешовані переклади написів для мови одним запитом (замість
+ * запиту на кожен окремий викор t() на сторінці). Для мови оригіналу
+ * не викликається взагалі — t() повертає оригінал без БД.
+ *
+ * @return array<string, string>
+ */
+function ui_translations_map(string $lang): array
+{
+    static $cache = [];
+    if (!isset($cache[$lang])) {
+        $stmt = translation_pdo()->prepare(
+            'SELECT key_name, translated_text FROM ui_translations WHERE lang = :lang'
+        );
+        $stmt->execute([':lang' => $lang]);
+        $cache[$lang] = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
+
+    return $cache[$lang];
+}
+
+/**
  * Переклад за ключем для поточної мови.
- * Порядок пошуку: поточна мова → мова за замовчуванням → сам ключ.
+ *
+ * Мова оригіналу → повертає $GLOBALS['TRANSLATIONS'][$key] напряму, без
+ * звернення до ui_translations. Інша активна мова → готовий переклад із
+ * ui_translations (один запит на все на сторінку); якщо конкретного ключа
+ * там ще нема (новий рядок у коді) — автопереклад і кешування «на льоту»
+ * через cached_translation() (app/translation-cache.php).
  */
 function t(string $key): string
 {
     $lang = current_lang();
-    $entry = $GLOBALS['TRANSLATIONS'][$key] ?? null;
+    $sourceText = $GLOBALS['TRANSLATIONS'][$key] ?? $key;
 
-    if ($entry === null) {
-        return $key;
+    if ($lang === translation_source_lang()) {
+        return $sourceText;
     }
 
-    return $entry[$lang] ?? $entry[LANG_DEFAULT] ?? $key;
+    $map = ui_translations_map($lang);
+    if (isset($map[$key]) && $map[$key] !== '') {
+        return $map[$key];
+    }
+
+    return cached_translation(translation_pdo(), 'ui_translations', ['key_name' => $key], $lang, $sourceText);
+}
+
+/**
+ * Назва категорії/підкатегорії поточною мовою.
+ *
+ * Готовий переклад лежить прямо в рядку (колонка name_en, заповнена
+ * вручну один раз при додаванні категорії/підкатегорії — назв мало,
+ * автопереклад тут не потрібен). Українська (name) завжди заповнена;
+ * якщо перекладу нема — лишаємо українську, щоб ніколи не показати
+ * порожній напис.
+ *
+ * @param array{name: string, name_en?: string|null} $row
+ */
+function localized_name(array $row): string
+{
+    if (current_lang() !== translation_source_lang() && !empty($row['name_en'])) {
+        return (string) $row['name_en'];
+    }
+
+    return (string) $row['name'];
+}
+
+/**
+ * Довільне текстове поле сутності з БД поточною мовою — для контенту
+ * картки продукту (short_description, full_description, main_features,
+ * target_audience у product_translations; plan_name, description у
+ * pricing_plan_translations).
+ *
+ * Мова оригіналу → значення напряму з $row[$field], без звернення до
+ * таблиці перекладів. Інша активна мова → cached_translation() шукає
+ * готовий переклад і, якщо нема, перекладає й кешує (app/translation-cache.php).
+ *
+ * @param array<string, mixed> $row Рядок із БД; має містити 'id'.
+ */
+function localized_field(PDO $pdo, string $table, string $idColumn, array $row, string $field): string
+{
+    $sourceText = (string) ($row[$field] ?? '');
+    $lang = current_lang();
+
+    if ($lang === translation_source_lang()) {
+        return $sourceText;
+    }
+
+    return cached_translation(
+        $pdo,
+        $table,
+        [$idColumn => (int) $row['id'], 'field_name' => $field],
+        $lang,
+        $sourceText
+    );
 }
 
 /*
  * Перемикач мови.
  *
- * Посилання ведуть на поточну сторінку з ?lang=uk|en. Зберігаємо вибір
- * у сесію і, якщо вивід ще не почався, робимо чистий редірект назад на цю ж
- * сторінку без параметра lang (інші параметри зберігаються). Якщо заголовки
- * вже надіслані (translations.php підключено пізно, напр. із підвалу) —
- * просто зберігаємо вибір, він застосується з наступного завантаження.
+ * Посилання ведуть на поточну сторінку з ?lang=<код активної мови>.
+ * Зберігаємо вибір у сесію і, якщо вивід ще не почався, робимо чистий
+ * редірект назад на цю ж сторінку без параметра lang (інші параметри
+ * зберігаються). Якщо заголовки вже надіслані (translations.php
+ * підключено пізно, напр. із підвалу) — просто зберігаємо вибір, він
+ * застосується з наступного завантаження.
  */
 if (isset($_GET['lang'])) {
     set_lang((string) $_GET['lang']);

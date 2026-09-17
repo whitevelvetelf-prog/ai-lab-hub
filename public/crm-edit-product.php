@@ -3,21 +3,19 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — CRM: додавання нового AI-продукту.
+ * AI LAB HUB — CRM: редагування наявного AI-продукту.
  *
- * Форма + обробник POST у цьому ж файлі.
- * Повну перевірку доступу до сторінки буде додано пізніше; наразі за
- * роллю ($_SESSION['role']) розмежовано лише видимість службових полів.
+ * Дзеркало crm-add-product.php, але:
+ *   * завантажує продукт за ?id= у форму (GET) і оновлює його (POST UPDATE);
+ *   * при збереженні пише products.updated_by_user_id = поточний користувач
+ *     і оновлює updated_at (це «те місце в коді, де оновлюється updated_at»);
+ *   * created_by та is_archived НЕ чіпаються — редагування продукту в списку
+ *     «Завершені» лишає його завершеним, не перекидає в «Активні»;
+ *   * службові поля партнерки (affiliate_url / internal_registration_url)
+ *     редагує лише admin; employee їх не бачить і не надсилає — при його
+ *     збереженні поточні значення цих колонок зберігаються як є.
  *
- * Логіка збереження:
- *   1. Валідація обов'язкових полів.
- *   2. Антидубль-перевірка: пошук у products за схожою назвою (LIKE)
- *      АБО за нормалізованим офіційним URL (без http/https, www, слешу).
- *      Якщо знайдено схожі записи — показуємо їх і чекаємо підтвердження
- *      («Зберегти все одно»).
- *   3. Вставка у products + product_categories + product_subcategories
- *      + pricing_plans у межах транзакції.
- *   4. status виставляється автоматично (див. autostatus нижче).
+ * Доступ — лише employee / admin (як і crm-list.php).
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -25,6 +23,11 @@ require_once __DIR__ . '/../app/translations.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+
+if (!auth_has_role('employee', 'admin')) {
+    header('Location: account.php');
+    exit;
+}
 
 /** Службові посилання партнерки бачить і редагує лише admin. */
 $isAdmin = auth_role() === 'admin';
@@ -80,7 +83,7 @@ function product_slug(string $name): string
 function crm_fetch_url(string $url): ?string
 {
     $ua = 'Mozilla/5.0 (compatible; AILabHubBot/1.0)';
-    $maxBytes = 2000000; // 2 МБ — достатньо для <head> та основного тексту
+    $maxBytes = 2000000;
 
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
@@ -161,11 +164,8 @@ function crm_trim_title(string $title): string
 }
 
 /**
- * Базове автозаповнення картки продукту зі сторінки офіційного сайту.
- * БЕЗ AI: сторінка завантажується, HTML чиститься (script/style/теги),
- * назва й опис дістаються простими евристиками — title сторінки як назва,
- * meta description як короткий опис. Повноцінну AI-обробку підключимо
- * окремим кроком, коли визначимося з конкретним AI API.
+ * Базове автозаповнення картки продукту зі сторінки офіційного сайту
+ * (без AI — прості евристики). Ідентичне crm-add-product.php.
  *
  * @return array{ok: bool, error?: string, fields?: array<string, string>, meta?: array<string, mixed>}
  */
@@ -187,7 +187,6 @@ function crm_autofill_from_url(string $rawUrl): array
         return ['ok' => false, 'error' => 'Не вдалося визначити домен у URL.'];
     }
 
-    // Мінімальний захист від SSRF: без localhost та приватних діапазонів.
     if (preg_match('/^(localhost|127\.|0\.|10\.|192\.168\.|169\.254\.)/i', $host)
         || preg_match('/^172\.(1[6-9]|2\d|3[01])\./', $host)
         || $host === '::1') {
@@ -204,7 +203,6 @@ function crm_autofill_from_url(string $rawUrl): array
         return ['ok' => false, 'error' => 'Не вдалося завантажити сторінку за цим URL.'];
     }
 
-    // Приводимо до UTF-8, якщо сторінка оголошує інше кодування.
     if (preg_match('#<meta[^>]+charset=["\']?\s*([a-z0-9\-]+)#i', $html, $cs)) {
         $charset = strtoupper(trim($cs[1]));
         if ($charset !== '' && $charset !== 'UTF-8' && function_exists('mb_convert_encoding')) {
@@ -225,8 +223,6 @@ function crm_autofill_from_url(string $rawUrl): array
     $ogDescription = crm_meta($html, 'og:description', 'property');
     $ogSiteName = crm_meta($html, 'og:site_name', 'property');
 
-    // Основний текст сторінки — для запасного короткого опису, якщо немає
-    // meta description. Спершу викидаємо службові блоки, потім усі теги.
     $body = preg_replace(
         '#<(script|style|noscript|svg|template|head|nav|footer)\b[^>]*>.*?</\1>#is',
         ' ',
@@ -235,7 +231,6 @@ function crm_autofill_from_url(string $rawUrl): array
     $body = preg_replace('#<[^>]+>#', ' ', $body) ?? $body;
     $bodyText = crm_clean_text($body);
 
-    // Запасний короткий опис — перше змістовне речення зі сторінки.
     $firstSentence = '';
     if ($bodyText !== '') {
         $firstSentence = preg_match('#(.{40,300}?[.!?])(\s|$)#u', $bodyText, $sentence)
@@ -243,11 +238,9 @@ function crm_autofill_from_url(string $rawUrl): array
             : mb_substr($bodyText, 0, 200);
     }
 
-    // Евристика назви: og:site_name → og:title → <title> (до роздільника).
     $name = $ogSiteName !== '' ? $ogSiteName : ($ogTitle !== '' ? $ogTitle : $pageTitle);
     $name = crm_trim_title($name);
 
-    // Евристика короткого опису: meta description → og:description → 1-ше речення.
     $shortDescription = $metaDescription !== ''
         ? $metaDescription
         : ($ogDescription !== '' ? $ogDescription : $firstSentence);
@@ -269,18 +262,18 @@ function crm_autofill_from_url(string $rawUrl): array
 }
 
 /**
- * Миттєва перевірка на можливий дублікат за назвою та/або офіційним URL —
- * той самий принцип, що й серверна антидубль-перевірка при збереженні.
+ * Пошук можливих дублікатів за назвою / URL, ВИКЛЮЧАЮЧИ сам продукт, що
+ * редагується.
  *
  * @return array<int, array<string, mixed>>
  */
-function crm_find_similar(PDO $pdo, string $name, string $officialUrl): array
+function crm_find_similar(PDO $pdo, string $name, string $officialUrl, int $selfId): array
 {
     $name = trim($name);
     $normUrl = $officialUrl !== '' ? normalize_url($officialUrl) : '';
 
     $conditions = [];
-    $params = [];
+    $params = [':self' => $selfId];
     if (mb_strlen($name) >= 2) {
         $conditions[] = "(name LIKE CONCAT('%', :name1, '%') OR :name2 LIKE CONCAT('%', name, '%'))";
         $params[':name1'] = $name;
@@ -298,14 +291,17 @@ function crm_find_similar(PDO $pdo, string $name, string $officialUrl): array
     }
 
     $stmt = $pdo->prepare(
-        'SELECT id, name, official_url, status FROM products WHERE '
+        'SELECT id, name, official_url, status FROM products WHERE id <> :self AND ('
         . implode(' OR ', $conditions)
-        . ' ORDER BY name LIMIT 20'
+        . ') ORDER BY name LIMIT 20'
     );
     $stmt->execute($params);
 
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+// --- id продукту, що редагуємо -----------------------------------------
+$productId = (int) ($_GET['id'] ?? $_POST['id'] ?? 0);
 
 // --- AJAX-ендпоінти: автозаповнення з URL + миттєва перевірка дубліката ---
 if (($_GET['ajax'] ?? '') !== '') {
@@ -325,7 +321,8 @@ if (($_GET['ajax'] ?? '') !== '') {
             ['similar' => crm_find_similar(
                 $pdo,
                 (string) ($_GET['name'] ?? ''),
-                trim((string) ($_GET['url'] ?? ''))
+                trim((string) ($_GET['url'] ?? '')),
+                $productId
             )],
             JSON_UNESCAPED_UNICODE
         );
@@ -337,11 +334,37 @@ if (($_GET['ajax'] ?? '') !== '') {
     exit;
 }
 
+// --- Завантаження продукту --------------------------------------------
+$productStmt = $pdo->prepare('SELECT * FROM products WHERE id = :id');
+$productStmt->execute([':id' => $productId]);
+$dbRow = $productStmt->fetch(PDO::FETCH_ASSOC);
+
+if ($dbRow === false) {
+    header('Location: crm-list.php');
+    exit;
+}
+
+$dbCategoryIds = array_map(
+    'intval',
+    $pdo->query('SELECT category_id FROM product_categories WHERE product_id = ' . (int) $productId)
+        ->fetchAll(PDO::FETCH_COLUMN)
+);
+$dbSubcategoryIds = array_map(
+    'intval',
+    $pdo->query('SELECT subcategory_id FROM product_subcategories WHERE product_id = ' . (int) $productId)
+        ->fetchAll(PDO::FETCH_COLUMN)
+);
+$dbPlansStmt = $pdo->prepare(
+    'SELECT plan_name, price, period, description FROM pricing_plans WHERE product_id = :id ORDER BY id'
+);
+$dbPlansStmt->execute([':id' => $productId]);
+$dbPlans = $dbPlansStmt->fetchAll(PDO::FETCH_ASSOC);
+
 // --- Логотип: куди зберігати і що приймати ------------------------------
 $logoUploadDir  = __DIR__ . '/assets/images/logos';
 $logoUploadRel  = 'assets/images/logos';
 $logoAllowedExt = ['png', 'jpg', 'jpeg', 'webp', 'svg'];
-$logoMaxBytes   = 2 * 1024 * 1024; // 2 МБ
+$logoMaxBytes   = 2 * 1024 * 1024;
 
 // --- Довідники для форми --------------------------------------------------
 $allCategories = $pdo->query('SELECT id, name FROM categories ORDER BY name')->fetchAll();
@@ -373,41 +396,40 @@ $partnershipOptions = [
     'partner_connected' => 'Партнерку підключено',
     'no_partnership' => 'Без партнерки',
 ];
-// --- Мова(и) перекладу для полів "(EN)" у формі --------------------------
-// Форма зараз показує лише одну додаткову мову (EN) — але сам запис у
-// product_translations / pricing_plan_translations не хардкодить 'en':
-// бере код мови з config/languages.php (усе, що лишилось після виключення
-// мови оригіналу зі списку активних).
-$targetLang = array_values(array_diff(active_lang_codes(), [translation_source_lang()]))[0] ?? null;
 
 // --- Стан сторінки -----------------------------------------------------------
 $errors = [];
 $similar = [];
 $noticeDuplicate = false;
-$savedProductId = null;
+$saved = false;
 
+/** Значення форми: на GET — з БД, на POST — із запиту. */
 $old = [
-    'name' => '',
-    'logo_url' => '',
-    'official_url' => '',
-    'internal_registration_url' => '',
-    'affiliate_url' => '',
-    'partnership_status' => 'found',
-    'short_description' => '',
-    'short_description_en' => '',
-    'full_description' => '',
-    'full_description_en' => '',
-    'main_features' => '',
-    'main_features_en' => '',
-    'target_audience' => '',
-    'target_audience_en' => '',
-    'en_verified' => false,
-    'categories' => [],
-    'subcategories' => [],
-    'platform' => [],
-    'skill_level' => '',
+    'name' => (string) $dbRow['name'],
+    'logo_url' => (string) ($dbRow['logo_url'] ?? ''),
+    'official_url' => (string) ($dbRow['official_url'] ?? ''),
+    'internal_registration_url' => (string) ($dbRow['internal_registration_url'] ?? ''),
+    'affiliate_url' => (string) ($dbRow['affiliate_url'] ?? ''),
+    'partnership_status' => (string) $dbRow['partnership_status'],
+    'short_description' => (string) ($dbRow['short_description'] ?? ''),
+    'full_description' => (string) ($dbRow['full_description'] ?? ''),
+    'main_features' => (string) ($dbRow['main_features'] ?? ''),
+    'target_audience' => (string) ($dbRow['target_audience'] ?? ''),
+    'categories' => $dbCategoryIds,
+    'subcategories' => $dbSubcategoryIds,
+    'platform' => array_values(array_filter(array_map('trim', explode(',', (string) ($dbRow['platform'] ?? ''))))),
+    'skill_level' => in_array((string) $dbRow['skill_level'], ['none', 'basic', 'course'], true)
+        ? (string) $dbRow['skill_level']
+        : '',
 ];
-$plans = [];
+$plans = array_map(static function (array $p): array {
+    return [
+        'plan_name' => (string) $p['plan_name'],
+        'price' => $p['price'] === null ? '' : rtrim(rtrim(number_format((float) $p['price'], 2, '.', ''), '0'), '.'),
+        'period' => (string) $p['period'],
+        'description' => (string) ($p['description'] ?? ''),
+    ];
+}, $dbPlans);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $forceSave = ($_POST['action'] ?? '') === 'force';
@@ -416,8 +438,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['logo_url'] = trim((string) ($_POST['logo_url'] ?? ''));
     $old['official_url'] = trim((string) ($_POST['official_url'] ?? ''));
     $old['short_description'] = trim((string) ($_POST['short_description'] ?? ''));
-    $old['short_description_en'] = trim((string) ($_POST['short_description_en'] ?? ''));
-    $old['en_verified'] = ($_POST['en_verified'] ?? '') === '1';
 
     // --- Логотип: завантажений файл має пріоритет над полем URL ------------
     $logoFile = $_FILES['logo_file'] ?? null;
@@ -439,56 +459,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Статус партнерства — лише з дозволеного переліку.
     $submittedPartnership = (string) ($_POST['partnership_status'] ?? '');
     $old['partnership_status'] = array_key_exists($submittedPartnership, $partnershipOptions)
         ? $submittedPartnership
-        : 'found';
+        : $old['partnership_status'];
 
-    // Службові посилання партнерки приймаємо лише від admin (employee їх не бачить і не надсилає).
+    // Службові посилання партнерки приймаємо лише від admin. Для employee
+    // лишаємо поточні значення з БД недоторканими.
     if ($isAdmin) {
         $old['internal_registration_url'] = trim((string) ($_POST['internal_registration_url'] ?? ''));
         $old['affiliate_url'] = trim((string) ($_POST['affiliate_url'] ?? ''));
+    } else {
+        $old['internal_registration_url'] = (string) ($dbRow['internal_registration_url'] ?? '');
+        $old['affiliate_url'] = (string) ($dbRow['affiliate_url'] ?? '');
     }
-    $old['full_description'] = trim((string) ($_POST['full_description'] ?? ''));
-    $old['full_description_en'] = trim((string) ($_POST['full_description_en'] ?? ''));
-    $old['main_features'] = trim((string) ($_POST['main_features'] ?? ''));
-    $old['main_features_en'] = trim((string) ($_POST['main_features_en'] ?? ''));
-    $old['target_audience'] = trim((string) ($_POST['target_audience'] ?? ''));
-    $old['target_audience_en'] = trim((string) ($_POST['target_audience_en'] ?? ''));
 
-    // Категорії — лише валідні id.
+    $old['full_description'] = trim((string) ($_POST['full_description'] ?? ''));
+    $old['main_features'] = trim((string) ($_POST['main_features'] ?? ''));
+    $old['target_audience'] = trim((string) ($_POST['target_audience'] ?? ''));
+
     $old['categories'] = array_values(array_intersect(
         array_map('intval', (array) ($_POST['categories'] ?? [])),
         $validCategoryIds
     ));
 
-    // Підкатегорії — лише ті, що належать до обраних категорій.
     $old['subcategories'] = array_values(array_filter(
         array_map('intval', (array) ($_POST['subcategories'] ?? [])),
         static fn (int $sid): bool => isset($subcategoryParent[$sid])
             && in_array($subcategoryParent[$sid], $old['categories'], true)
     ));
 
-    // Платформа.
     $old['platform'] = array_values(array_intersect(
         (array) ($_POST['platform'] ?? []),
         array_keys($platformOptions)
     ));
 
-    // Рівень навичок.
     $skill = (string) ($_POST['skill_level'] ?? '');
     $old['skill_level'] = in_array($skill, ['none', 'basic', 'course'], true) ? $skill : '';
 
-    // Тарифні плани — рядки з масивів; повністю порожні пропускаємо.
     $planNames = (array) ($_POST['plan_name'] ?? []);
+    $plans = [];
     foreach ($planNames as $i => $planName) {
         $planName = trim((string) $planName);
-        $planNameEn = trim((string) ($_POST['plan_name_en'][$i] ?? ''));
         $priceRaw = trim((string) ($_POST['plan_price'][$i] ?? ''));
         $period = (string) ($_POST['plan_period'][$i] ?? 'free');
         $planDesc = trim((string) ($_POST['plan_desc'][$i] ?? ''));
-        $planDescEn = trim((string) ($_POST['plan_desc_en'][$i] ?? ''));
 
         if ($planName === '' && $priceRaw === '' && $planDesc === '') {
             continue;
@@ -499,11 +514,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $plans[] = [
             'plan_name' => $planName,
-            'plan_name_en' => $planNameEn,
             'price' => $priceRaw === '' ? null : round((float) str_replace(',', '.', $priceRaw), 2),
             'period' => $period,
             'description' => $planDesc,
-            'description_en' => $planDescEn,
         ];
     }
 
@@ -523,41 +536,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // --- Антидубль-перевірка ----------------------------------------------
+    // --- Антидубль-перевірка (виключаючи сам продукт) --------------------
     if ($errors === [] && !$forceSave) {
-        $normUrl = normalize_url($old['official_url']);
-        $dupStmt = $pdo->prepare(
-            "SELECT id, name, official_url, status
-             FROM products
-             WHERE name LIKE CONCAT('%', :name1, '%')
-                OR :name2 LIKE CONCAT('%', name, '%')
-                OR (
-                    official_url IS NOT NULL AND official_url <> '' AND
-                    TRIM(TRAILING '/' FROM
-                        REPLACE(REPLACE(REPLACE(LOWER(TRIM(official_url)), 'https://', ''), 'http://', ''), 'www.', '')
-                    ) = :norm_url
-                )
-             ORDER BY name
-             LIMIT 20"
-        );
-        $dupStmt->execute([
-            ':name1' => $old['name'],
-            ':name2' => $old['name'],
-            ':norm_url' => $normUrl,
-        ]);
-        $similar = $dupStmt->fetchAll();
+        $similar = crm_find_similar($pdo, $old['name'], $old['official_url'], $productId);
     }
 
     // --- Збереження -------------------------------------------------------
     if ($errors === [] && ($similar === [] || $forceSave)) {
         $movedLogoAbsPath = null;
         try {
-            // Публічне посилання «Офіційний сайт»: партнерське, якщо задане, інакше офіційне.
             $publicOfficialUrl = $old['affiliate_url'] !== '' ? $old['affiliate_url'] : $old['official_url'];
 
-            // --- Логотип --------------------------------------------------
-            // Пріоритет: валідний завантажений файл → інакше вписаний URL → інакше порожньо.
-            $logoValue = $old['logo_url'] !== '' ? $old['logo_url'] : null;
+            // Логотип: новий файл → інакше вписаний URL → інакше поточне значення.
+            $logoValue = $old['logo_url'] !== '' ? $old['logo_url'] : ($dbRow['logo_url'] ?: null);
 
             if ($logoFileProvided) {
                 if (!is_dir($logoUploadDir) && !mkdir($logoUploadDir, 0775, true) && !is_dir($logoUploadDir)) {
@@ -584,13 +575,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $logoValue = $logoUploadRel . '/' . $filename;
             }
 
-            // --- AUTOSTATUS -------------------------------------------------
-            // published — щойно заповнені всі обов'язкові поля: назва,
-            // офіційний сайт, короткий опис і хоча б одна категорія.
-            // Статус партнерства на публікацію більше не впливає — усі
-            // чотири значення її дозволяють. pending_registration лишається
-            // сигналом для команди (див. підсвітку в crm-list.php), що
-            // партнерку ще можна підключити й замінити посилання на affiliate.
+            // AUTOSTATUS — так само, як у формі додавання.
             $requiredComplete = $old['name'] !== ''
                 && $publicOfficialUrl !== ''
                 && $old['short_description'] !== ''
@@ -600,17 +585,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->beginTransaction();
 
-            $insert = $pdo->prepare(
-                'INSERT INTO products
-                    (name, logo_url, official_url, internal_registration_url, affiliate_url,
-                     short_description, full_description, main_features, target_audience,
-                     platform, skill_level, status, partnership_status, created_by)
-                 VALUES
-                    (:name, :logo_url, :official_url, :internal_registration_url, :affiliate_url,
-                     :short_description, :full_description, :main_features, :target_audience,
-                     :platform, :skill_level, :status, :partnership_status, NULL)'
+            // is_archived та created_by НЕ чіпаємо. updated_by_user_id —
+            // поточний користувач; updated_at оновлюємо явно.
+            $update = $pdo->prepare(
+                'UPDATE products SET
+                    name = :name,
+                    logo_url = :logo_url,
+                    official_url = :official_url,
+                    internal_registration_url = :internal_registration_url,
+                    affiliate_url = :affiliate_url,
+                    short_description = :short_description,
+                    full_description = :full_description,
+                    main_features = :main_features,
+                    target_audience = :target_audience,
+                    platform = :platform,
+                    skill_level = :skill_level,
+                    status = :status,
+                    partnership_status = :partnership_status,
+                    updated_by_user_id = :updated_by,
+                    updated_at = NOW()
+                 WHERE id = :id'
             );
-            $insert->execute([
+            $update->execute([
                 ':name' => $old['name'],
                 ':logo_url' => $logoValue,
                 ':official_url' => $publicOfficialUrl,
@@ -624,55 +620,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':skill_level' => $old['skill_level'] !== '' ? $old['skill_level'] : 'none',
                 ':status' => $status,
                 ':partnership_status' => $old['partnership_status'],
+                ':updated_by' => auth_user_id(),
+                ':id' => $productId,
             ]);
-            $savedProductId = (int) $pdo->lastInsertId();
 
-            // Ручний переклад (EN) продукту, якщо staff одразу вписав його
-            // у форму: кешується в product_translations. source='manual', лише
-            // якщо позначено чекбокс «EN перевірено вручну» — інакше 'auto'
-            // (текст все одно збережеться, але автопереклад ще зможе його
-            // замінити, якщо колись знадобиться перегенерувати).
-            if ($targetLang !== null) {
-                $enSource = $old['en_verified'] ? 'manual' : 'auto';
-                $productEnFields = [
-                    'short_description' => $old['short_description_en'],
-                    'full_description' => $old['full_description_en'],
-                    'main_features' => $old['main_features_en'],
-                    'target_audience' => $old['target_audience_en'],
-                ];
-                foreach ($productEnFields as $fieldName => $fieldValue) {
-                    if (trim($fieldValue) === '') {
-                        continue;
-                    }
-                    translation_store(
-                        $pdo,
-                        'product_translations',
-                        ['product_id' => $savedProductId, 'field_name' => $fieldName],
-                        $targetLang,
-                        $fieldValue,
-                        $enSource
-                    );
-                }
-            }
-
+            // M2M та тарифи: повна заміна набору.
+            $pdo->prepare('DELETE FROM product_categories WHERE product_id = :p')->execute([':p' => $productId]);
             if ($old['categories'] !== []) {
-                $pcStmt = $pdo->prepare(
-                    'INSERT INTO product_categories (product_id, category_id) VALUES (:p, :c)'
-                );
+                $pcStmt = $pdo->prepare('INSERT INTO product_categories (product_id, category_id) VALUES (:p, :c)');
                 foreach ($old['categories'] as $categoryId) {
-                    $pcStmt->execute([':p' => $savedProductId, ':c' => $categoryId]);
+                    $pcStmt->execute([':p' => $productId, ':c' => $categoryId]);
                 }
             }
 
+            $pdo->prepare('DELETE FROM product_subcategories WHERE product_id = :p')->execute([':p' => $productId]);
             if ($old['subcategories'] !== []) {
-                $psStmt = $pdo->prepare(
-                    'INSERT INTO product_subcategories (product_id, subcategory_id) VALUES (:p, :s)'
-                );
+                $psStmt = $pdo->prepare('INSERT INTO product_subcategories (product_id, subcategory_id) VALUES (:p, :s)');
                 foreach ($old['subcategories'] as $subcategoryId) {
-                    $psStmt->execute([':p' => $savedProductId, ':s' => $subcategoryId]);
+                    $psStmt->execute([':p' => $productId, ':s' => $subcategoryId]);
                 }
             }
 
+            $pdo->prepare('DELETE FROM pricing_plans WHERE product_id = :p')->execute([':p' => $productId]);
             if ($plans !== []) {
                 $planStmt = $pdo->prepare(
                     'INSERT INTO pricing_plans (product_id, plan_name, price, period, description)
@@ -680,57 +649,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 foreach ($plans as $plan) {
                     $planStmt->execute([
-                        ':p' => $savedProductId,
+                        ':p' => $productId,
                         ':n' => $plan['plan_name'],
                         ':pr' => $plan['price'],
                         ':pe' => $plan['period'],
                         ':d' => $plan['description'] !== '' ? $plan['description'] : null,
                     ]);
-                    $savedPlanId = (int) $pdo->lastInsertId();
-
-                    if ($targetLang !== null) {
-                        $planEnFields = [
-                            'plan_name' => $plan['plan_name_en'],
-                            'description' => $plan['description_en'],
-                        ];
-                        foreach ($planEnFields as $fieldName => $fieldValue) {
-                            if (trim($fieldValue) === '') {
-                                continue;
-                            }
-                            translation_store(
-                                $pdo,
-                                'pricing_plan_translations',
-                                ['plan_id' => $savedPlanId, 'field_name' => $fieldName],
-                                $targetLang,
-                                $fieldValue,
-                                $enSource
-                            );
-                        }
-                    }
                 }
             }
 
             $pdo->commit();
+            $saved = true;
 
-            // Успіх — очищаємо форму.
-            $old = array_merge($old, [
-                'name' => '', 'logo_url' => '', 'official_url' => '',
-                'internal_registration_url' => '', 'affiliate_url' => '',
-                'partnership_status' => 'found',
-                'short_description' => '', 'short_description_en' => '',
-                'full_description' => '', 'full_description_en' => '',
-                'main_features' => '', 'main_features_en' => '',
-                'target_audience' => '', 'target_audience_en' => '',
-                'en_verified' => false,
-                'categories' => [], 'subcategories' => [], 'platform' => [], 'skill_level' => '',
-            ]);
-            $plans = [];
+            // Перечитуємо продукт, щоб форма показала збережений стан.
+            $productStmt->execute([':id' => $productId]);
+            $dbRow = $productStmt->fetch(PDO::FETCH_ASSOC);
             $similar = [];
         } catch (Throwable $ex) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
             }
-            // Прибираємо осиротілий файл логотипа, якщо запис у БД не вдався.
             if ($movedLogoAbsPath !== null && is_file($movedLogoAbsPath)) {
                 @unlink($movedLogoAbsPath);
             }
@@ -741,10 +679,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Рядки тарифів для показу: submitted або один порожній.
+// Рядки тарифів для показу: наявні або один порожній.
 $displayPlans = $plans !== []
     ? $plans
     : [['plan_name' => '', 'price' => '', 'period' => 'free', 'description' => '']];
+
+$isArchived = (int) $dbRow['is_archived'] === 1;
 
 ?>
 <!DOCTYPE html>
@@ -752,7 +692,7 @@ $displayPlans = $plans !== []
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — CRM: додати продукт</title>
+    <title>AI LAB HUB — CRM: редагувати продукт #<?= (int) $productId ?></title>
     <style>
         *,
         *::before,
@@ -823,7 +763,21 @@ $displayPlans = $plans !== []
             color: var(--text-muted);
         }
 
-        /* Панель форми */
+        .archived-flag {
+            display: inline-block;
+            margin-left: 10px;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #fcd34d;
+            background: rgba(251, 191, 36, 0.15);
+            border: 1px solid rgba(251, 191, 36, 0.5);
+            vertical-align: middle;
+        }
+
         .form {
             padding: 28px;
             background: var(--card-bg);
@@ -929,7 +883,6 @@ $displayPlans = $plans !== []
             color: #00032c;
         }
 
-        /* Checkboxes */
         .checks {
             display: flex;
             flex-wrap: wrap;
@@ -949,7 +902,6 @@ $displayPlans = $plans !== []
             accent-color: var(--accent);
         }
 
-        /* Редактор тарифних планів */
         .plans-editor {
             display: grid;
             gap: 14px;
@@ -971,24 +923,6 @@ $displayPlans = $plans !== []
         .plan-row .textarea {
             padding: 9px 11px;
             font-size: 0.92rem;
-        }
-
-        .plan-row__en {
-            grid-column: 1 / -1;
-            display: flex;
-            gap: 10px;
-            margin-top: 2px;
-        }
-
-        .plan-row__en .input {
-            flex: 1;
-            min-width: 0;
-        }
-
-        @media (max-width: 680px) {
-            .plan-row__en {
-                flex-direction: column;
-            }
         }
 
         .plan-row__remove {
@@ -1017,7 +951,6 @@ $displayPlans = $plans !== []
             }
         }
 
-        /* Кнопки */
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -1066,7 +999,6 @@ $displayPlans = $plans !== []
             margin-top: 28px;
         }
 
-        /* Автозаповнення з URL */
         .autofill {
             padding: 16px 18px;
             border: 1px dashed rgba(91, 140, 255, 0.55);
@@ -1116,7 +1048,6 @@ $displayPlans = $plans !== []
             color: #6ee7b7;
         }
 
-        /* Повідомлення */
         .notice {
             margin-bottom: 24px;
             padding: 18px 20px;
@@ -1129,6 +1060,10 @@ $displayPlans = $plans !== []
             margin: 0 0 8px;
             font-size: 1.05rem;
             font-weight: 700;
+        }
+
+        .notice a {
+            color: #bcd0ff;
         }
 
         .notice--error {
@@ -1149,10 +1084,6 @@ $displayPlans = $plans !== []
         .notice ul {
             margin: 8px 0 0;
             padding-left: 20px;
-        }
-
-        .notice a {
-            color: #bcd0ff;
         }
 
         .similar-list {
@@ -1207,23 +1138,25 @@ $displayPlans = $plans !== []
 
     <div class="page">
         <p style="margin:0 0 16px;">
-            <a class="btn btn--ghost btn--sm" href="crm-list.php">← До списку продуктів</a>
+            <a class="btn btn--ghost btn--sm" href="crm-list.php<?= $isArchived ? '?view=archived' : '' ?>">← До списку продуктів</a>
         </p>
-        <h1 class="page__title">CRM — додати AI-продукт</h1>
+        <h1 class="page__title">
+            CRM — редагувати #<?= (int) $productId ?>
+            <?php if ($isArchived): ?><span class="archived-flag">у завершених</span><?php endif; ?>
+        </h1>
         <p class="page__subtitle">
             Статус (<strong>in_progress</strong> / <strong>published</strong>) визначається автоматично —
             за заповненістю обов'язкових полів (назва, офіційний сайт, короткий опис, хоча б одна категорія).
-            Статус партнерства на публікацію не впливає.
+            Редагування не змінює приналежність до списку «Активні / Завершені».
             <?php if ($isAdmin): ?>Ви увійшли як <strong>admin</strong>: службові поля партнерки доступні.<?php else: ?>Службові поля партнерки бачить лише admin.<?php endif; ?>
         </p>
 
-        <?php if ($savedProductId !== null): ?>
+        <?php if ($saved): ?>
             <div class="notice notice--success">
-                <p class="notice__title">Продукт збережено ✓</p>
+                <p class="notice__title">Продукт оновлено ✓</p>
                 <p style="margin:0;">
-                    ID у базі: <strong>#<?= (int) $savedProductId ?></strong>.
-                    <a href="product.php?id=<?= (int) $savedProductId ?>">Відкрити картку продукту</a>
-                    · <a href="index.php">до напрямків AI</a>
+                    <a href="crm-list.php<?= $isArchived ? '?view=archived' : '' ?>">← до списку продуктів</a>
+                    · <a href="product.php?id=<?= (int) $productId ?>" target="_blank" rel="noopener">відкрити картку</a>
                 </p>
             </div>
         <?php endif; ?>
@@ -1242,7 +1175,7 @@ $displayPlans = $plans !== []
         <?php if ($noticeDuplicate): ?>
             <div class="notice notice--warn">
                 <p class="notice__title">Знайдено схожі продукти в базі</p>
-                <p style="margin:0;">Перевірте, чи це не дублікат. Дані форми збережено нижче — можна відкоригувати їх або натиснути «Зберегти все одно».</p>
+                <p style="margin:0;">Перевірте, чи це не дублікат. Зміни збережено у формі нижче — можна відкоригувати їх або натиснути «Зберегти все одно».</p>
                 <ul class="similar-list">
                     <?php foreach ($similar as $row): ?>
                         <li class="similar-item">
@@ -1256,19 +1189,19 @@ $displayPlans = $plans !== []
             </div>
         <?php endif; ?>
 
-        <form class="form" method="post" action="crm-add-product.php" enctype="multipart/form-data" novalidate>
+        <form class="form" method="post" action="crm-edit-product.php?id=<?= (int) $productId ?>" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="id" value="<?= (int) $productId ?>">
+
             <div class="field autofill" id="autofill-box">
-                <label class="field__label" for="autofill_url">Автозаповнити з посилання</label>
+                <label class="field__label" for="autofill_url">Перезаповнити з посилання</label>
                 <div class="autofill__row">
                     <input class="input" type="url" id="autofill_url"
                            placeholder="https://офіційний-сайт-продукту.com">
-                    <button type="button" class="btn btn--ghost btn--sm" id="autofill-btn">Автозаповнити</button>
+                    <button type="button" class="btn btn--ghost btn--sm" id="autofill-btn">Заповнити</button>
                 </div>
                 <p class="field__hint">
-                    Завантажимо сторінку за цим URL, приберемо HTML і витягнемо назву та опис
-                    (поки що без AI — прості евристики: заголовок сторінки → назва,
-                    meta description → короткий опис). Поля лише заповнюються чернетково —
-                    перевірте й відкоригуйте їх перед збереженням.
+                    Завантажимо сторінку за цим URL і перезапишемо назву, офіційний сайт і короткий опис
+                    чернетковими значеннями (без AI, за евристиками). Наявні дані буде замінено — перевірте перед збереженням.
                 </p>
                 <p class="autofill__status" id="autofill-status" role="status" aria-live="polite" hidden></p>
             </div>
@@ -1282,12 +1215,15 @@ $displayPlans = $plans !== []
 
             <div class="field">
                 <span class="field__label">Логотип</span>
+                <?php if ((string) $dbRow['logo_url'] !== ''): ?>
+                    <p class="field__hint" style="margin-bottom:8px;">Поточний: <code><?= e($dbRow['logo_url']) ?></code></p>
+                <?php endif; ?>
                 <input class="input" type="file" id="logo_file" name="logo_file"
                        accept="image/png,image/jpeg,image/webp,image/svg+xml">
-                <p class="field__hint">PNG, JPG, JPEG, WEBP або SVG, до 2&nbsp;МБ. Файл зберігається на нашому сервері.</p>
+                <p class="field__hint">PNG, JPG, JPEG, WEBP або SVG, до 2&nbsp;МБ. Новий файл замінить поточний логотип.</p>
                 <input class="input" type="text" id="logo_url" name="logo_url" style="margin-top:10px;"
                        value="<?= e($old['logo_url']) ?>" placeholder="або URL логотипа: https://…/logo.png">
-                <p class="field__hint">Якщо файл не вибрано — використовується це посилання (на чужому сервері). Файл має пріоритет над URL.</p>
+                <p class="field__hint">Якщо файл не вибрано — використовується це посилання. Файл має пріоритет над URL.</p>
             </div>
 
             <div class="field">
@@ -1323,51 +1259,20 @@ $displayPlans = $plans !== []
                     <?php endforeach; ?>
                 </select>
                 <p class="field__hint">
-                    Не впливає на публікацію — продукт стає published, щойно заповнені обов'язкові поля.
-                    «Очікує реєстрації» додатково підсвічує рядок у списку продуктів: партнерку ще можна
-                    підключити й замінити посилання на affiliate.
+                    Не впливає на публікацію і на архівацію. Перенесення в «Завершені» — окрема ручна дія у списку продуктів.
                 </p>
             </div>
 
             <div class="field">
-                <label class="field__label" for="short_description">Короткий опис (UA) <span class="req">*</span></label>
+                <label class="field__label" for="short_description">Короткий опис <span class="req">*</span></label>
                 <textarea class="textarea" id="short_description" name="short_description" required
                           placeholder="1–2 речення для картки в каталозі"><?= e($old['short_description']) ?></textarea>
             </div>
 
             <div class="field">
-                <label class="field__label" for="short_description_en">Короткий опис (EN)</label>
-                <textarea class="textarea" id="short_description_en" name="short_description_en"
-                          placeholder="1–2 sentences for the catalog card"><?= e($old['short_description_en']) ?></textarea>
-                <p class="field__hint">Не обов'язково — якщо порожнє, на сторінці з EN-мовою покажеться українська версія (і згодом автоматично перекладеться).</p>
-            </div>
-
-            <div class="field">
-                <label class="check">
-                    <input type="checkbox" id="en_verified" name="en_verified" value="1"
-                        <?= $old['en_verified'] ? 'checked' : '' ?>>
-                    EN текст перевірено вручну
-                </label>
-                <p class="field__hint">
-                    Стосується всіх полів (EN) нижче — короткий/повний опис, основні функції, для кого,
-                    назви й описи тарифних планів. Позначте, якщо самостійно написали або вичитали цей
-                    текст: він збережеться як «перевірений вручну» (source='manual') і автопереклад більше
-                    ніколи його не перезапише. Без позначки текст теж збережеться, але лишається «auto» —
-                    його ще можна буде перегенерувати автоперекладом.
-                </p>
-            </div>
-
-            <div class="field">
-                <label class="field__label" for="full_description">Повний опис (UA)</label>
+                <label class="field__label" for="full_description">Повний опис</label>
                 <textarea class="textarea" id="full_description" name="full_description"
                           placeholder="Розгорнутий опис для сторінки продукту"><?= e($old['full_description']) ?></textarea>
-            </div>
-
-            <div class="field">
-                <label class="field__label" for="full_description_en">Повний опис (EN)</label>
-                <textarea class="textarea" id="full_description_en" name="full_description_en"
-                          placeholder="Full description for the product page"><?= e($old['full_description_en']) ?></textarea>
-                <p class="field__hint">Не обов'язково — якщо порожнє, на сторінці з EN-мовою покажеться українська версія.</p>
             </div>
 
             <div class="field">
@@ -1398,29 +1303,15 @@ $displayPlans = $plans !== []
             </div>
 
             <div class="field">
-                <label class="field__label" for="main_features">Основні функції (UA)</label>
+                <label class="field__label" for="main_features">Основні функції</label>
                 <textarea class="textarea" id="main_features" name="main_features"
                           placeholder="По одному пункту на рядок"><?= e($old['main_features']) ?></textarea>
             </div>
 
             <div class="field">
-                <label class="field__label" for="main_features_en">Основні функції (EN)</label>
-                <textarea class="textarea" id="main_features_en" name="main_features_en"
-                          placeholder="One item per line"><?= e($old['main_features_en']) ?></textarea>
-                <p class="field__hint">Не обов'язково — той самий порядок рядків, що й в українській версії.</p>
-            </div>
-
-            <div class="field">
-                <label class="field__label" for="target_audience">Для кого призначений (UA)</label>
+                <label class="field__label" for="target_audience">Для кого призначений</label>
                 <textarea class="textarea" id="target_audience" name="target_audience"
                           placeholder="Хто цільова аудиторія продукту"><?= e($old['target_audience']) ?></textarea>
-            </div>
-
-            <div class="field">
-                <label class="field__label" for="target_audience_en">Для кого призначений (EN)</label>
-                <textarea class="textarea" id="target_audience_en" name="target_audience_en"
-                          placeholder="Who the product is for"><?= e($old['target_audience_en']) ?></textarea>
-                <p class="field__hint">Не обов'язково — якщо порожнє, на сторінці з EN-мовою покажеться українська версія.</p>
             </div>
 
             <div class="field">
@@ -1453,7 +1344,7 @@ $displayPlans = $plans !== []
                     <?php foreach ($displayPlans as $plan): ?>
                         <div class="plan-row">
                             <input class="input" type="text" name="plan_name[]"
-                                   value="<?= e($plan['plan_name']) ?>" placeholder="Назва плану (UA)">
+                                   value="<?= e($plan['plan_name']) ?>" placeholder="Назва плану">
                             <input class="input" type="number" name="plan_price[]" step="0.01" min="0"
                                    value="<?= e($plan['price']) ?>" placeholder="Ціна">
                             <select class="select" name="plan_period[]">
@@ -1464,14 +1355,8 @@ $displayPlans = $plans !== []
                                 <?php endforeach; ?>
                             </select>
                             <input class="input" type="text" name="plan_desc[]"
-                                   value="<?= e($plan['description']) ?>" placeholder="Короткий опис плану (UA)">
+                                   value="<?= e($plan['description']) ?>" placeholder="Короткий опис плану">
                             <button type="button" class="plan-row__remove" data-remove-plan>Видалити</button>
-                            <div class="plan-row__en">
-                                <input class="input" type="text" name="plan_name_en[]"
-                                       value="<?= e($plan['plan_name_en'] ?? '') ?>" placeholder="Plan name (EN, optional)">
-                                <input class="input" type="text" name="plan_desc_en[]"
-                                       value="<?= e($plan['description_en'] ?? '') ?>" placeholder="Short plan description (EN, optional)">
-                            </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
@@ -1481,35 +1366,30 @@ $displayPlans = $plans !== []
             </div>
 
             <div class="actions">
-                <button type="submit" class="btn btn--primary" name="action" value="save">Зберегти продукт</button>
+                <button type="submit" class="btn btn--primary" name="action" value="save">Зберегти зміни</button>
                 <?php if ($noticeDuplicate): ?>
                     <button type="submit" class="btn btn--ghost" name="action" value="force">Зберегти все одно</button>
                 <?php endif; ?>
-                <a class="btn btn--ghost" href="index.php">Скасувати</a>
+                <a class="btn btn--ghost" href="crm-list.php<?= $isArchived ? '?view=archived' : '' ?>">Скасувати</a>
             </div>
         </form>
     </div>
 
     <template id="plan-row-template">
         <div class="plan-row">
-            <input class="input" type="text" name="plan_name[]" placeholder="Назва плану (UA)">
+            <input class="input" type="text" name="plan_name[]" placeholder="Назва плану">
             <input class="input" type="number" name="plan_price[]" step="0.01" min="0" placeholder="Ціна">
             <select class="select" name="plan_period[]">
                 <?php foreach ($periodOptions as $value => $label): ?>
                     <option value="<?= e($value) ?>"><?= e($label) ?></option>
                 <?php endforeach; ?>
             </select>
-            <input class="input" type="text" name="plan_desc[]" placeholder="Короткий опис плану (UA)">
+            <input class="input" type="text" name="plan_desc[]" placeholder="Короткий опис плану">
             <button type="button" class="plan-row__remove" data-remove-plan>Видалити</button>
-            <div class="plan-row__en">
-                <input class="input" type="text" name="plan_name_en[]" placeholder="Plan name (EN, optional)">
-                <input class="input" type="text" name="plan_desc_en[]" placeholder="Short plan description (EN, optional)">
-            </div>
         </div>
     </template>
 
     <script>
-        // --- Підкатегорії залежать від обраних категорій ---
         var catSelect = document.getElementById('categories');
         var subSelect = document.getElementById('subcategories');
 
@@ -1528,7 +1408,6 @@ $displayPlans = $plans !== []
         catSelect.addEventListener('change', syncSubcategories);
         syncSubcategories();
 
-        // --- Динамічні тарифні плани ---
         var editor = document.getElementById('plans-editor');
         var tpl = document.getElementById('plan-row-template');
 
@@ -1544,15 +1423,13 @@ $displayPlans = $plans !== []
             if (rows.length > 1) {
                 event.target.closest('.plan-row').remove();
             } else {
-                // останній рядок лише очищаємо
                 event.target.closest('.plan-row')
                     .querySelectorAll('input').forEach(function (i) { i.value = ''; });
             }
         });
 
-        // --- Автозаповнення форми з URL + миттєва перевірка дубліката ---
         (function () {
-            var endpoint = 'crm-add-product.php';
+            var endpoint = 'crm-edit-product.php?id=<?= (int) $productId ?>';
             var urlInput = document.getElementById('autofill_url');
             var autofillBtn = document.getElementById('autofill-btn');
             var autofillStatus = document.getElementById('autofill-status');
@@ -1586,7 +1463,6 @@ $displayPlans = $plans !== []
                 el.dispatchEvent(new Event('input', { bubbles: true }));
             }
 
-            // --- Миттєва перевірка дубліката за назвою / URL ---
             var dupTimer = null;
             var dupController = null;
 
@@ -1603,7 +1479,7 @@ $displayPlans = $plans !== []
                 dupController = ('AbortController' in window) ? new AbortController() : null;
                 setStatus(dupCheck, 'Перевіряємо, чи такий продукт уже є в базі…', 'pending');
 
-                var query = endpoint + '?ajax=dupcheck'
+                var query = endpoint + '&ajax=dupcheck'
                     + '&name=' + encodeURIComponent(name)
                     + '&url=' + encodeURIComponent(url);
 
@@ -1615,7 +1491,7 @@ $displayPlans = $plans !== []
                     .then(function (data) {
                         var similar = (data && data.similar) || [];
                         if (!similar.length) {
-                            setStatus(dupCheck, 'Схожих продуктів у базі не знайдено.', 'ok');
+                            setStatus(dupCheck, 'Інших схожих продуктів у базі не знайдено.', 'ok');
                             return;
                         }
                         var names = similar.slice(0, 5).map(function (p) { return p.name; }).join(', ');
@@ -1644,7 +1520,6 @@ $displayPlans = $plans !== []
             nameInput.addEventListener('blur', runDuplicateCheck);
             officialUrlInput.addEventListener('blur', runDuplicateCheck);
 
-            // --- Автозаповнення з офіційного сайту ---
             autofillBtn.addEventListener('click', function () {
                 var url = (urlInput.value || '').trim();
                 if (!url) {
@@ -1656,7 +1531,7 @@ $displayPlans = $plans !== []
                 autofillBtn.disabled = true;
                 setStatus(autofillStatus, 'Завантажуємо сторінку та розбираємо вміст…', 'pending');
 
-                fetch(endpoint + '?ajax=autofill&url=' + encodeURIComponent(url), {
+                fetch(endpoint + '&ajax=autofill&url=' + encodeURIComponent(url), {
                     headers: { 'X-Requested-With': 'fetch' }
                 })
                     .then(function (response) { return response.json(); })
@@ -1675,11 +1550,9 @@ $displayPlans = $plans !== []
                         fillField('short_description', fields.short_description);
                         setStatus(
                             autofillStatus,
-                            'Поля заповнено чернетково (без AI, за евристиками). '
-                                + 'Перевірте й відкоригуйте їх перед збереженням.',
+                            'Поля перезаповнено чернетково (без AI, за евристиками). Перевірте перед збереженням.',
                             'ok'
                         );
-                        // Одразу після заповнення назви — миттєва перевірка дубліката.
                         runDuplicateCheck();
                     })
                     .catch(function () {

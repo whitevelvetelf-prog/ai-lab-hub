@@ -1,0 +1,116 @@
+/* AI LAB HUB — кнопка «Поділитися» + випадаюче меню (десктоп без Web Share API)
+   + тост підтвердження копіювання. Той самий «ghost icon-button» стиль, що
+   й .save-btn (saved-products.css): прозорий фон, кругла touch-зона 40px,
+   rgba(255,255,255,.08) на hover, #5b8cff outline на фокус. */
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 999px;
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s ease, border-color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.share-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.share-btn:focus-visible {
+    outline: 2px solid #5b8cff;
+    outline-offset: 2px;
+}
+
+.share-btn svg {
+    width: 20px;
+    height: 20px;
+    display: block;
+    pointer-events: none;
+}
+
+/* Мобільна шапка (< 768px): та самая позиція, що й перемикач мови —
+   кнопка асистента (з текстом) лишається пріоритетною й не стискається,
+   share-кнопка сідає поруч без зламу розкладки. */
+@media (max-width: 480px) {
+    .share-btn {
+        order: 3;
+    }
+}
+
+/* ===== Випадаюче меню (десктоп, коли navigator.share недоступний) ===== */
+.share-menu {
+    position: absolute;
+    z-index: 10000;
+    min-width: 200px;
+    padding: 8px;
+    border-radius: 14px;
+    background: #0b0f3d;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.share-menu[hidden] {
+    display: none;
+}
+
+.share-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 10px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #ffffff;
+    font-size: 0.92rem;
+    font-family: inherit;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.share-menu__item:hover,
+.share-menu__item:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.share-menu__item svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    color: #a5c0ff;
+}
+
+/* ===== Тост підтвердження («Посилання скопійовано») ===== */
+.share-toast {
+    position: fixed;
+    z-index: 10001;
+    max-width: 240px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: #2116ad;
+    color: #fff;
+    font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    box-shadow: 0 10px 28px rgba(0, 3, 44, 0.5);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    pointer-events: none;
+}
+
+.share-toast.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}

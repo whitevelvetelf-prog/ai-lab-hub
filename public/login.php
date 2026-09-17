@@ -191,6 +191,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             border-color: var(--accent);
         }
 
+        .field__hint-link {
+            margin: 8px 0 0;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        .field__hint-link a {
+            color: #bcd0ff;
+            text-decoration: none;
+        }
+
+        .field__hint-link a:hover {
+            text-decoration: underline;
+        }
+
         .btn {
             display: inline-block;
             padding: 12px 24px;
@@ -282,6 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <input class="input" type="password" id="password" name="password" required>
                         <button type="button" class="pw-toggle" data-pw-toggle="password" aria-label="<?= htmlspecialchars(t('pw_show_aria'), ENT_QUOTES) ?>"><?= htmlspecialchars(t('pw_show'), ENT_QUOTES) ?></button>
                     </div>
+                    <p class="field__hint-link"><a href="forgot-password.php"><?= htmlspecialchars(t('forgot_password_link'), ENT_QUOTES) ?></a></p>
                 </div>
                 <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></button>
             </form>

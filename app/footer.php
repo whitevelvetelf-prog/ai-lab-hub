@@ -198,6 +198,203 @@ require_once __DIR__ . '/paw-icon.php';
         }
     }
 
+    /* ===== Пошук у шапці =====
+       Розмітку вставляє public/assets/js/site-search.js. .site-search
+       завжди йде окремим (повношириним) другим рядком під навігацією —
+       order: 10 + flex-basis: 100% всередині гнучкого .site-header
+       (та сама техніка, що й для #siteNav на мобільному нижче), тож
+       ані кнопка Елі, ані гамбургер не зачіпаються: обидва лишаються
+       в першому рядку, як і раніше. */
+    .site-search {
+        order: 10;
+        flex-basis: 100%;
+        width: 100%;
+    }
+
+    .site-search__inner {
+        position: relative;
+        width: 65%;
+        max-width: 600px;
+        min-width: 280px;
+        margin: 0 auto;
+    }
+
+    .site-search__form {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .site-search__icon {
+        position: absolute;
+        left: 14px;
+        width: 18px;
+        height: 18px;
+        color: rgba(255, 255, 255, 0.55);
+        pointer-events: none;
+    }
+
+    .site-search__input {
+        width: 100%;
+        padding: 11px 40px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.06);
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-family: inherit;
+    }
+
+    .site-search__input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .site-search__input::-webkit-search-cancel-button {
+        display: none;
+    }
+
+    .site-search__clear {
+        display: none;
+        position: absolute;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: 999px;
+        background: transparent;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 1.1rem;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .site-search__clear.is-visible {
+        display: inline-flex;
+    }
+
+    .site-search__clear:hover {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .site-search__results {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        background: #0b0f3d;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        border-radius: 14px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        padding: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 60;
+    }
+
+    .site-search__results[hidden] {
+        display: none;
+    }
+
+    .site-search__item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #ffffff;
+        cursor: pointer;
+    }
+
+    .site-search__item:hover,
+    .site-search__item.is-active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .site-search__thumb {
+        flex-shrink: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        object-fit: cover;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: #ffffff;
+        background: linear-gradient(135deg, #2116ad, #5b8cff);
+    }
+
+    .site-search__text {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .site-search__name {
+        font-weight: 600;
+        font-size: 0.92rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .site-search__meta {
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.6);
+    }
+
+    .site-search__empty {
+        margin: 0;
+        padding: 14px 8px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.75);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .site-search__empty a {
+        color: #a5c0ff;
+        font-weight: 600;
+    }
+
+    .site-search__viewall {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        margin-top: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        color: #a5c0ff;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.88rem;
+    }
+
+    .site-search__viewall:hover {
+        color: #ffffff;
+    }
+
+    /* Мобільний — поле на всю ширину рядка (немає сенсу тримати 65%-обмеження
+       на вузькому екрані), трохи більший розмір торкання. Рядок 1 (лого,
+       кнопка Елі, гамбургер) цей блок не займає — лишається компактним. */
+    @media (max-width: 768px) {
+        .site-search__inner {
+            width: 100%;
+            max-width: none;
+            min-width: 0;
+        }
+
+        .site-search__input {
+            font-size: 1rem;
+            padding: 12px 40px;
+        }
+    }
+
     /* ===== Підвал ===== */
     .site-footer {
         margin-top: 64px;
@@ -319,7 +516,7 @@ require_once __DIR__ . '/paw-icon.php';
             <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
         </ul>
 
-        <a class="site-footer__support" href="#">
+        <a class="site-footer__support" href="/donate.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
             <?= htmlspecialchars(t('footer_support'), ENT_QUOTES) ?>
         </a>
@@ -355,6 +552,19 @@ require_once __DIR__ . '/paw-icon.php';
     })();
 </script>
 
+<?php /* ===== Пошук у шапці: довге поле на 2-му рядку + живі підказки ===== */ ?>
+<script>
+    window.SEARCH_I18N = {
+        placeholder: <?= json_encode(t('search_placeholder'), JSON_UNESCAPED_UNICODE) ?>,
+        clearAria: <?= json_encode(t('search_clear_aria'), JSON_UNESCAPED_UNICODE) ?>,
+        noResults: <?= json_encode(t('search_no_results'), JSON_UNESCAPED_UNICODE) ?>,
+        noResultsHint: <?= json_encode(t('search_no_results_hint'), JSON_UNESCAPED_UNICODE) ?>,
+        askEli: <?= json_encode(t('search_ask_eli_link'), JSON_UNESCAPED_UNICODE) ?>,
+        viewAll: <?= json_encode(t('search_view_all'), JSON_UNESCAPED_UNICODE) ?>
+    };
+</script>
+<script src="/assets/js/site-search.js"></script>
+
 <script>
     /* Перемикач мови UA/EN. Вставляємо в кожну шапку сайту, щоб не дублювати
        розмітку в десятках сторінок. Посилання ведуть на поточний URL із
@@ -363,6 +573,7 @@ require_once __DIR__ . '/paw-icon.php';
     (function () {
         var current = <?= json_encode(current_lang()) ?>;
         var label = <?= json_encode(t('lang_switch')) ?>;
+        var languages = <?= json_encode(active_languages(), JSON_UNESCAPED_UNICODE) ?>;
         var header = document.querySelector('.site-header');
         if (!header || header.querySelector('.site-lang')) {
             return;
@@ -379,13 +590,13 @@ require_once __DIR__ . '/paw-icon.php';
         box.setAttribute('role', 'group');
         box.setAttribute('aria-label', label);
 
-        [['uk', 'UA'], ['en', 'EN']].forEach(function (pair) {
+        Object.keys(languages).forEach(function (code) {
             var a = document.createElement('a');
-            a.className = 'site-lang__btn' + (pair[0] === current ? ' is-active' : '');
-            a.href = langUrl(pair[0]);
-            a.textContent = pair[1];
-            a.setAttribute('lang', pair[0]);
-            if (pair[0] === current) {
+            a.className = 'site-lang__btn' + (code === current ? ' is-active' : '');
+            a.href = langUrl(code);
+            a.textContent = languages[code];
+            a.setAttribute('lang', code);
+            if (code === current) {
                 a.setAttribute('aria-current', 'true');
             }
             box.appendChild(a);
@@ -399,6 +610,18 @@ require_once __DIR__ . '/paw-icon.php';
         }
     })();
 </script>
+
+<?php /* ===== Кнопка «Поділитися»: одна на всі сторінки, поруч із «Викликати Асистента» ===== */ ?>
+<script>
+    window.SHARE_I18N = {
+        button: <?= json_encode(t('share_button'), JSON_UNESCAPED_UNICODE) ?>,
+        copyLink: <?= json_encode(t('share_copy_link'), JSON_UNESCAPED_UNICODE) ?>,
+        copied: <?= json_encode(t('share_copied'), JSON_UNESCAPED_UNICODE) ?>,
+        email: <?= json_encode(t('share_email'), JSON_UNESCAPED_UNICODE) ?>,
+        productText: <?= json_encode(t('share_product_text'), JSON_UNESCAPED_UNICODE) ?>
+    };
+</script>
+<script src="/assets/js/share-button.js"></script>
 
 <script>
     if ('serviceWorker' in navigator) {

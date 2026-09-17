@@ -18,14 +18,14 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 $categoryId = (int) ($_GET['id'] ?? 0);
 
-$catStmt = $pdo->prepare("SELECT id, name, slug FROM categories WHERE id = :id");
+$catStmt = $pdo->prepare("SELECT id, name, name_en, slug FROM categories WHERE id = :id");
 $catStmt->execute([':id' => $categoryId]);
 $category = $catStmt->fetch();
 
 $subcategories = [];
 if ($category !== false) {
     $subStmt = $pdo->prepare(
-        "SELECT id, name, slug
+        "SELECT id, name, name_en, slug
          FROM subcategories
          WHERE category_id = :id
          ORDER BY id"
@@ -138,7 +138,7 @@ $subcategoryIcons = [
     'navigation'         => 'compass',
 ];
 
-$pageTitle = $category !== false ? (string) $category['name'] : t('category_not_found');
+$pageTitle = $category !== false ? localized_name($category) : t('category_not_found');
 
 ?>
 <!DOCTYPE html>
@@ -377,7 +377,7 @@ $pageTitle = $category !== false ? (string) $category['name'] : t('category_not_
         <h1 class="category__title"><?= htmlspecialchars(t('category_not_found'), ENT_QUOTES) ?></h1>
         <p class="category__empty"><?= htmlspecialchars(t('category_not_found_text'), ENT_QUOTES) ?></p>
 <?php else: ?>
-        <h1 class="category__title"><?= htmlspecialchars((string) $category['name'], ENT_QUOTES) ?></h1>
+        <h1 class="category__title"><?= htmlspecialchars(localized_name($category), ENT_QUOTES) ?></h1>
 
         <?php if ($subcategories === []): ?>
         <p class="category__empty"><?= htmlspecialchars(t('category_empty'), ENT_QUOTES) ?></p>
@@ -394,7 +394,7 @@ $pageTitle = $category !== false ? (string) $category['name'] : t('category_not_
                     <span class="subcategory-card__icon">
                         <i data-lucide="<?= htmlspecialchars($icon, ENT_QUOTES) ?>"></i>
                     </span>
-                    <h2 class="subcategory-card__name"><?= htmlspecialchars((string) $subcategory['name'], ENT_QUOTES) ?></h2>
+                    <h2 class="subcategory-card__name"><?= htmlspecialchars(localized_name($subcategory), ENT_QUOTES) ?></h2>
                 </a>
             <?php endforeach; ?>
         </div>
