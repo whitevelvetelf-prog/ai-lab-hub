@@ -18,7 +18,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 $productId = (int) ($_GET['id'] ?? 0);
 
 $stmt = $pdo->prepare(
-    "SELECT id, name, logo_url, official_url,
+    "SELECT id, name, logo_url, official_url, affiliate_url,
             short_description, full_description, main_features, target_audience,
             platform, skill_level, status
      FROM products
@@ -308,6 +308,25 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 
         .product-cta {
             margin-top: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .affiliate-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.55);
+            cursor: help;
+        }
+
+        .affiliate-badge svg {
+            width: 14px;
+            height: 14px;
+            flex-shrink: 0;
         }
 
         /* 3. Короткий опис */
@@ -537,6 +556,8 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             preg_split('/\r\n|\r|\n/', localized_product_field($pdo, $product, 'main_features')) ?: []
         ), static fn($f) => $f !== ''));
         $planCount = count($plans);
+        $isAffiliateLink = !empty($product['affiliate_url']);
+        $visitUrl = $isAffiliateLink ? $product['affiliate_url'] : $product['official_url'];
         ?>
         <!-- 1. Логотип + назва продукту -->
         <div class="product-head">
@@ -546,7 +567,13 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 
         <!-- 2. Кнопка переходу на сайт -->
         <div class="product-cta">
-            <a class="btn btn--primary" href="<?= htmlspecialchars($product['official_url'] ?: '#', ENT_QUOTES) ?>"<?= $product['official_url'] ? ' target="_blank" rel="noopener"' : '' ?>><?= htmlspecialchars(t('product_visit_site'), ENT_QUOTES) ?></a>
+            <a class="btn btn--primary" href="<?= htmlspecialchars($visitUrl ?: '#', ENT_QUOTES) ?>"<?= $visitUrl ? ' target="_blank" rel="noopener' . ($isAffiliateLink ? ' sponsored' : '') . '"' : '' ?>><?= htmlspecialchars(t('product_visit_site'), ENT_QUOTES) ?></a>
+            <?php if ($isAffiliateLink): ?>
+            <span class="affiliate-badge" title="<?= htmlspecialchars(t('product_affiliate_tooltip'), ENT_QUOTES) ?>">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <?= htmlspecialchars(t('product_affiliate_badge'), ENT_QUOTES) ?>
+            </span>
+            <?php endif; ?>
         </div>
 
         <!-- 3. Короткий опис -->

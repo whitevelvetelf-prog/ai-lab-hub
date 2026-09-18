@@ -503,10 +503,119 @@ require_once __DIR__ . '/paw-icon.php';
         .site-footer__social {
             margin-left: 0;
         }
+
+        .site-footer__newsletter {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .newsletter-form__input {
+            min-width: 0;
+            flex: 1;
+        }
+    }
+
+    /* ===== Форма підписки на розсилку ===== */
+    .site-footer__newsletter {
+        max-width: 1080px;
+        margin: 0 auto 28px;
+        padding-bottom: 28px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 20px;
+    }
+
+    .newsletter-form__title {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .newsletter-form {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .newsletter-form__input {
+        min-width: 220px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.08);
+        color: #ffffff;
+        font-size: 0.92rem;
+        font-family: inherit;
+    }
+
+    .newsletter-form__input::placeholder {
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .newsletter-form__submit {
+        padding: 10px 20px;
+        border-radius: 999px;
+        border: none;
+        font-size: 0.9rem;
+        font-weight: 700;
+        font-family: inherit;
+        color: #00032c;
+        background: linear-gradient(135deg, #5b8cff, #a5c0ff);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .newsletter-form__submit:hover {
+        background: linear-gradient(135deg, #6f9bff, #b8ceff);
+    }
+
+    .newsletter-form__submit:disabled {
+        opacity: 0.6;
+        cursor: default;
+    }
+
+    .newsletter-form__message {
+        flex-basis: 100%;
+        font-size: 0.85rem;
+    }
+
+    .newsletter-form__message.is-success {
+        color: #7cffb2;
+    }
+
+    .newsletter-form__message.is-error {
+        color: #ff9b9b;
+    }
+
+    /* ===== Дисклеймер про партнерські посилання ===== */
+    .site-footer__disclaimer {
+        max-width: 1080px;
+        margin: 24px auto 0;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 0.78rem;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
     }
 </style>
 
 <footer class="site-footer">
+    <div class="site-footer__newsletter">
+        <p class="newsletter-form__title"><?= htmlspecialchars(t('newsletter_title'), ENT_QUOTES) ?></p>
+        <form class="newsletter-form" id="newsletterForm" novalidate>
+            <input class="newsletter-form__input" type="email" id="newsletterEmail" name="email"
+                   placeholder="<?= htmlspecialchars(t('newsletter_placeholder'), ENT_QUOTES) ?>" required>
+            <button class="newsletter-form__submit" type="submit"><?= htmlspecialchars(t('newsletter_submit'), ENT_QUOTES) ?></button>
+            <span class="newsletter-form__message" id="newsletterMessage" role="status" hidden></span>
+        </form>
+    </div>
+
     <div class="site-footer__inner">
         <ul class="site-footer__links">
             <li><a href="blog.php"><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a></li>
@@ -536,6 +645,8 @@ require_once __DIR__ . '/paw-icon.php';
             </a>
         </nav>
     </div>
+
+    <p class="site-footer__disclaimer"><?= htmlspecialchars(t('footer_disclaimer'), ENT_QUOTES) ?></p>
 </footer>
 
 <script>
@@ -625,6 +736,17 @@ require_once __DIR__ . '/paw-icon.php';
 
 <?php /* ===== Кнопка «Назад» на картці продукту: розмітку дає app/back-button.php ===== */ ?>
 <script src="/assets/js/back-button.js"></script>
+
+<?php /* ===== Форма підписки на розсилку: розмітка вище, у цьому ж файлі ===== */ ?>
+<script>
+    window.NEWSLETTER_I18N = {
+        success: <?= json_encode(t('newsletter_success'), JSON_UNESCAPED_UNICODE) ?>,
+        already: <?= json_encode(t('newsletter_already'), JSON_UNESCAPED_UNICODE) ?>,
+        invalid: <?= json_encode(t('newsletter_error_invalid'), JSON_UNESCAPED_UNICODE) ?>,
+        error: <?= json_encode(t('newsletter_error_generic'), JSON_UNESCAPED_UNICODE) ?>
+    };
+</script>
+<script src="/assets/js/newsletter-form.js" defer></script>
 
 <script>
     if ('serviceWorker' in navigator) {

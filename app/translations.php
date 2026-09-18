@@ -315,6 +315,23 @@ $GLOBALS['TRANSLATIONS'] = [
     'share_copied'       => 'Посилання скопійовано',
     'share_email'        => 'Електронна пошта',
     'share_product_text' => 'Перегляньте %s на AI LAB HUB',
+
+    // --- Дисклеймер про партнерські посилання (app/footer.php, product.php) ---
+    'footer_disclaimer'        => 'AI LAB HUB може отримувати комісію за покупки, здійснені через деякі посилання на сайті — це не впливає на вартість для вас.',
+    'product_affiliate_badge'  => 'партнерське посилання',
+    'product_affiliate_tooltip' => 'Це партнерське посилання: якщо ви скористаєтесь ним, AI LAB HUB може отримати невелику комісію.',
+
+    // --- Внутрішня реклама (app/ads.php, app/ad-banner.php) ---
+    'ad_label' => 'Реклама',
+
+    // --- Форма підписки на розсилку (app/footer.php + public/assets/js/newsletter-form.js) ---
+    'newsletter_title'         => 'Дізнавайтесь про нові AI-інструменти першими',
+    'newsletter_placeholder'   => 'Ваш email',
+    'newsletter_submit'        => 'Підписатись',
+    'newsletter_success'       => 'Дякуємо! Ви підписані на розсилку.',
+    'newsletter_already'       => 'Ви вже підписані.',
+    'newsletter_error_invalid' => 'Некоректний email.',
+    'newsletter_error_generic' => 'Не вдалося підписатись. Спробуйте пізніше.',
 ];
 
 /**
