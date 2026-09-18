@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -32,6 +33,9 @@ $subcategories = [];
 $plans = [];
 
 if ($product !== false) {
+    analytics_log_view($pdo, 'product', (int) $product['id']);
+
+
     $catStmt = $pdo->prepare(
         "SELECT c.name, c.name_en
          FROM product_categories pc
@@ -567,7 +571,7 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 
         <!-- 2. Кнопка переходу на сайт -->
         <div class="product-cta">
-            <a class="btn btn--primary" href="<?= htmlspecialchars($visitUrl ?: '#', ENT_QUOTES) ?>"<?= $visitUrl ? ' target="_blank" rel="noopener' . ($isAffiliateLink ? ' sponsored' : '') . '"' : '' ?>><?= htmlspecialchars(t('product_visit_site'), ENT_QUOTES) ?></a>
+            <a class="btn btn--primary" href="<?= $visitUrl ? 'go.php?product_id=' . (int) $product['id'] : '#' ?>"<?= $visitUrl ? ' target="_blank" rel="noopener' . ($isAffiliateLink ? ' sponsored' : '') . '"' : '' ?>><?= htmlspecialchars(t('product_visit_site'), ENT_QUOTES) ?></a>
             <?php if ($isAffiliateLink): ?>
             <span class="affiliate-badge" title="<?= htmlspecialchars(t('product_affiliate_tooltip'), ENT_QUOTES) ?>">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>

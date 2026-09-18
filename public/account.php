@@ -997,6 +997,7 @@ if ($user !== null && $user['role'] === 'user') {
             <?php if ($user['role'] === 'admin'): ?>
                 <div class="section">
                     <h2 class="section__title"><?= htmlspecialchars(t('account_stats_title'), ENT_QUOTES) ?></h2>
+                    <p><a href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
                     <div class="summary">
                         <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>
                         <span><?= htmlspecialchars(t('stats_users_label'), ENT_QUOTES) ?> (user): <strong><?= (int) $userStats['users'] ?></strong></span>

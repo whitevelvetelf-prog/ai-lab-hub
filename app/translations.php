@@ -324,6 +324,9 @@ $GLOBALS['TRANSLATIONS'] = [
     // --- Внутрішня реклама (app/ads.php, app/ad-banner.php) ---
     'ad_label' => 'Реклама',
 
+    // --- Статистика сайту для admin (public/admin-stats.php, посилання в account.php) ---
+    'account_site_stats_link' => 'Статистика сайту →',
+
     // --- Форма підписки на розсилку (app/footer.php + public/assets/js/newsletter-form.js) ---
     'newsletter_title'         => 'Дізнавайтесь про нові AI-інструменти першими',
     'newsletter_placeholder'   => 'Ваш email',

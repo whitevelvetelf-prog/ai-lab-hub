@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -24,6 +25,8 @@ $category = $catStmt->fetch();
 
 $subcategories = [];
 if ($category !== false) {
+    analytics_log_view($pdo, 'category', (int) $category['id']);
+
     $subStmt = $pdo->prepare(
         "SELECT id, name, name_en, slug
          FROM subcategories

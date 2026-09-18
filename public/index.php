@@ -12,9 +12,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/ads.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+
+analytics_log_view($pdo, 'home');
 
 $homepageBanner = ads_pick_campaign($pdo, 'homepage_banner');
 

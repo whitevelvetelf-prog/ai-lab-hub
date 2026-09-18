@@ -22,9 +22,12 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/search.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+
+analytics_log_view($pdo, 'other');
 
 $subcategoryId = (int) ($_GET['subcategory'] ?? 0);
 $categoryId    = (int) ($_GET['category'] ?? 0);
