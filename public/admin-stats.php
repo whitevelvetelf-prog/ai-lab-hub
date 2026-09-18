@@ -48,27 +48,54 @@ $today = stats_period_totals($pdo, date('Y-m-d 00:00:00'));
 $last7 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-7 days')));
 $last30 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-30 days')));
 
-$topViewed = $pdo->query(
+/**
+ * Фільтр періоду для топ-10 таблиць нижче — окремий від карток
+ * сьогодні/7/30 днів вище (ті лишаються фіксованими для загальної картини).
+ */
+$periodLabels = [
+    'today' => 'Сьогодні',
+    '7d'    => '7 днів',
+    '30d'   => '30 днів',
+    'all'   => 'Увесь час',
+];
+$period = (string) ($_GET['period'] ?? 'all');
+if (!array_key_exists($period, $periodLabels)) {
+    $period = 'all';
+}
+$periodSince = match ($period) {
+    'today' => date('Y-m-d 00:00:00'),
+    '7d'    => date('Y-m-d H:i:s', strtotime('-7 days')),
+    '30d'   => date('Y-m-d H:i:s', strtotime('-30 days')),
+    default => null,
+};
+
+$topViewed = $pdo->prepare(
     "SELECT pv.page_id AS product_id, p.name, COUNT(*) AS views
      FROM page_views pv
      JOIN products p ON p.id = pv.page_id
      WHERE pv.page_type = 'product'
+       AND (:since1 IS NULL OR pv.viewed_at >= :since2)
      GROUP BY pv.page_id, p.name
      ORDER BY views DESC
      LIMIT 10"
-)->fetchAll();
+);
+$topViewed->execute([':since1' => $periodSince, ':since2' => $periodSince]);
+$topViewed = $topViewed->fetchAll();
 
-$topClicked = $pdo->query(
+$topClicked = $pdo->prepare(
     "SELECT lc.product_id, p.name,
             SUM(CASE WHEN lc.link_type = 'official' THEN 1 ELSE 0 END) AS official_clicks,
             SUM(CASE WHEN lc.link_type = 'affiliate' THEN 1 ELSE 0 END) AS affiliate_clicks,
             COUNT(*) AS total_clicks
      FROM link_clicks lc
      JOIN products p ON p.id = lc.product_id
+     WHERE (:since1 IS NULL OR lc.clicked_at >= :since2)
      GROUP BY lc.product_id, p.name
      ORDER BY total_clicks DESC
      LIMIT 10"
-)->fetchAll();
+);
+$topClicked->execute([':since1' => $periodSince, ':since2' => $periodSince]);
+$topClicked = $topClicked->fetchAll();
 
 ?>
 <!DOCTYPE html>
@@ -200,13 +227,42 @@ $topClicked = $pdo->query(
         }
 
         .section__title {
-            margin: 0 0 16px;
+            margin: 0 0 4px;
             font-size: 1.3rem;
             font-weight: 700;
         }
 
         .section {
             margin-bottom: 40px;
+        }
+
+        .period-switch {
+            display: inline-flex;
+            gap: 4px;
+            padding: 3px;
+            margin-bottom: 20px;
+            border-radius: 999px;
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+        }
+
+        .period-switch__btn {
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: color 0.15s ease, background 0.15s ease;
+        }
+
+        .period-switch__btn:hover {
+            color: #ffffff;
+        }
+
+        .period-switch__btn.is-active {
+            color: #00032c;
+            background: linear-gradient(135deg, #5b8cff, #a5c0ff);
         }
 
         .table-wrap {
@@ -305,8 +361,15 @@ $topClicked = $pdo->query(
             </div>
         </div>
 
+        <div class="period-switch">
+            <?php foreach ($periodLabels as $key => $label): ?>
+                <a class="period-switch__btn<?= $key === $period ? ' is-active' : '' ?>" href="admin-stats.php?period=<?= e($key) ?>"><?= e($label) ?></a>
+            <?php endforeach; ?>
+        </div>
+
         <section class="section">
             <h2 class="section__title">Топ-10 продуктів за переглядами картки</h2>
+            <p class="stat-card__sub" style="margin-bottom: 16px;">Період: <?= e($periodLabels[$period]) ?></p>
             <div class="table-wrap">
                 <table class="table">
                     <thead>
@@ -333,6 +396,7 @@ $topClicked = $pdo->query(
 
         <section class="section">
             <h2 class="section__title">Топ-10 продуктів за кліками «Перейти на сайт»</h2>
+            <p class="stat-card__sub" style="margin-bottom: 16px;">Період: <?= e($periodLabels[$period]) ?></p>
             <div class="table-wrap">
                 <table class="table">
                     <thead>
