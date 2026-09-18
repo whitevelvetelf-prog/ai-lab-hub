@@ -8,7 +8,8 @@
  *
  * Тут: маніфест, іконки, theme-color, мета для iOS «на початковий екран»,
  * стилі банера встановлення (pwa-install.css), кнопки «зберегти в
- * добірку» (saved-products.css) та кнопки «Поділитися» (share-button.css).
+ * добірку» (saved-products.css), кнопки «Поділитися» (share-button.css)
+ * та кнопки «Назад» на картці продукту (back-button.css).
  * Файли фізично лежать у public/ (веб-корінь), тому шляхи абсолютні від /.
  */
 
@@ -23,3 +24,4 @@
 <link rel="stylesheet" href="/assets/css/pwa-install.css">
 <link rel="stylesheet" href="/assets/css/saved-products.css">
 <link rel="stylesheet" href="/assets/css/share-button.css">
+<link rel="stylesheet" href="/assets/css/back-button.css">

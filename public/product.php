@@ -236,31 +236,6 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             padding: 24px 24px 72px;
         }
 
-        /* Стрілка повернення до чату з Елею (видима, лише якщо є активна
-           розмова — розкривається скриптом, щоб не зʼявлятись у тих, хто
-           потрапив на сторінку іншим шляхом). */
-        .back-to-eli {
-            display: none;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-decoration: none;
-            transition: color 0.15s ease;
-        }
-
-        .back-to-eli:hover {
-            color: #ffffff;
-        }
-
-        .back-to-eli svg {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-        }
-
         /* 1. Логотип + назва продукту */
         .product-head {
             display: flex;
@@ -542,10 +517,7 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
     </header>
 
     <div class="page">
-        <a href="eli.php" class="back-to-eli" id="backToEli">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
-            <?= htmlspecialchars(t('back_to_eli'), ENT_QUOTES) ?>
-        </a>
+        <?php include __DIR__ . '/../app/back-button.php'; ?>
 <?php if ($product === false): ?>
         <div class="product-head">
             <h1 class="product-head__name"><?= htmlspecialchars(t('product_not_found'), ENT_QUOTES) ?></h1>
@@ -645,17 +617,5 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 <?php endif; ?>
     </div>
     <?php include __DIR__ . '/../app/footer.php'; ?>
-    <script>
-        (function () {
-            try {
-                if (sessionStorage.getItem('eliChatState')) {
-                    var backLink = document.getElementById('backToEli');
-                    if (backLink) {
-                        backLink.style.display = 'inline-flex';
-                    }
-                }
-            } catch (e) {}
-        })();
-    </script>
 </body>
 </html>

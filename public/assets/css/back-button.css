@@ -1,0 +1,23 @@
+/* AI LAB HUB — кнопка «Назад» на картці продукту (app/back-button.php). */
+
+.back-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.back-nav:hover {
+    color: #ffffff;
+}
+
+.back-nav svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}

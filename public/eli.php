@@ -936,7 +936,17 @@ require_once __DIR__ . '/../app/translations.php';
         var restored = loadState();
         if (restored) {
             chatState = restored;
-            renderHistory(chatState);
+            // saved-products.js підключений з defer у app/footer.php (нижче
+            // за це вбудоване вставлення), тож window.savedProductsButton
+            // з'являється лише перед DOMContentLoaded — чекаємо на нього,
+            // інакше кнопка «зберегти» на відновлених картках не малюється.
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function () {
+                    renderHistory(chatState);
+                });
+            } else {
+                renderHistory(chatState);
+            }
         } else {
             playStage(GREETING_SRC, { freeze: true });
         }

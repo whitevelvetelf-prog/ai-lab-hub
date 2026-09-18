@@ -623,6 +623,9 @@ require_once __DIR__ . '/paw-icon.php';
 </script>
 <script src="/assets/js/share-button.js"></script>
 
+<?php /* ===== Кнопка «Назад» на картці продукту: розмітку дає app/back-button.php ===== */ ?>
+<script src="/assets/js/back-button.js"></script>
+
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function () {
