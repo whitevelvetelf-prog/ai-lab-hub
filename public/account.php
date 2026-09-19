@@ -335,7 +335,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
                 $host = (string) ($_SERVER['HTTP_HOST'] ?? 'ailabhub-directory.com');
                 $link = $scheme . '://' . $host . '/apply-position.php?token=' . $token;
 
-                $_SESSION['account_flash'] = sprintf(t('flash_position_link_created'), $link);
+                // Посилання має бути клікабельним (не голим текстом) — тому окремий
+                // "довірений" HTML-прапор замість звичайного plain-text flash.
+                $_SESSION['account_flash_html'] = sprintf(
+                    t('flash_position_link_created'),
+                    '<a href="' . e($link) . '">' . e($link) . '</a>'
+                );
             } catch (PDOException $ex) {
                 $_SESSION['account_flash'] = t('flash_admin_request_failed');
             }
@@ -399,7 +404,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
 }
 
 $flash = $_SESSION['account_flash'] ?? null;
-unset($_SESSION['account_flash']);
+$flashHtml = $_SESSION['account_flash_html'] ?? null;
+unset($_SESSION['account_flash'], $_SESSION['account_flash_html']);
 
 // Заявка «на розгляді» для поточного user; список заявок для admin.
 $pendingRequest = null;
@@ -465,7 +471,7 @@ if ($user !== null && $user['role'] === 'user') {
     )->fetchAll();
 
     $adminRequests = $pdo->query(
-        "SELECT r.id, r.requested_at, r.`position`,
+        "SELECT r.id, r.user_id, r.requested_at, r.`position`,
                 r.first_name, r.last_name, r.phone, r.email,
                 u.name AS user_name, u.email AS user_email
            FROM admin_requests r
@@ -481,6 +487,50 @@ if ($user !== null && $user['role'] === 'user') {
           LIMIT 100"
     )->fetchAll();
 }
+
+// -----------------------------------------------------------------------
+// Об'єднаний список заявок для акордеону «Заявки»: працівники (employee_
+// requests) + адміністратор/директори (admin_requests) — один вхідний
+// пункт замість кількох окремих секцій. Кожен елемент позначений типом.
+// -----------------------------------------------------------------------
+$mergedRequests = [];
+foreach ($pendingRequests as $req) {
+    $mergedRequests[] = [
+        'kind'         => 'employee',
+        'sort_at'      => (string) $req['created_at'],
+        'type_label'   => $roleLabels['employee'],
+        'title'        => trim((string) $req['last_name'] . ' ' . (string) $req['first_name']),
+        'meta_name'    => (string) $req['user_name'],
+        'meta_email'   => (string) $req['user_email'],
+        'meta_phone'   => null,
+        'requested_at' => (string) $req['created_at'],
+        'request_id'   => (int) $req['id'],
+        'can_decide'   => true,
+        'slots_full'   => false,
+    ];
+}
+foreach ($adminRequests as $req) {
+    $reqPositionKey = $req['position'] ?? null;
+    $reqPositionLabel = director_position_label($reqPositionKey);
+    $isDirectorReq = $reqPositionKey !== null;
+    $reqApplicantName = trim((string) ($req['last_name'] ?? '') . ' ' . (string) ($req['first_name'] ?? ''));
+
+    $mergedRequests[] = [
+        'kind'         => $isDirectorReq ? 'director' : 'admin_role',
+        'sort_at'      => (string) $req['requested_at'],
+        'type_label'   => $isDirectorReq ? ($reqPositionLabel ?? (string) $reqPositionKey) : $roleLabels['admin'],
+        'title'        => (string) $req['user_name'],
+        'meta_name'    => $isDirectorReq ? $reqApplicantName : '',
+        'meta_email'   => (string) $req['user_email'],
+        'meta_phone'   => ($isDirectorReq && !empty($req['phone'])) ? (string) $req['phone'] : null,
+        'requested_at' => (string) $req['requested_at'],
+        'request_id'   => (int) $req['id'],
+        'can_decide'   => !$isDirectorReq || account_is_owner($user),
+        'slots_full'   => $isDirectorReq
+            && account_director_slots_full($pdo, (string) $reqPositionKey, (int) $req['user_id']),
+    ];
+}
+usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_at']) <=> strtotime($b['sort_at']));
 
 ?>
 <!DOCTYPE html>
@@ -830,6 +880,42 @@ if ($user !== null && $user['role'] === 'user') {
             background: rgba(52, 211, 153, 0.12);
         }
 
+        .notice a {
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        .notice a:hover {
+            color: #bcd0ff;
+        }
+
+        .section__link {
+            color: #bcd0ff;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .section__link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .request-type-badge {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 1px 9px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #bcd0ff;
+            background: rgba(91, 140, 255, 0.16);
+            border: 1px solid rgba(91, 140, 255, 0.4);
+            vertical-align: middle;
+        }
+
         .request-list {
             list-style: none;
             margin: 0;
@@ -868,6 +954,111 @@ if ($user !== null && $user['role'] === 'user') {
             background: #4ade9f;
         }
 
+        /* Акордеон розділів кабінету */
+        .accordion {
+            margin: 16px 0;
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            overflow: hidden;
+        }
+
+        .accordion__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 20px;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            font: inherit;
+            font-weight: 700;
+            font-size: 1.1rem;
+            text-align: left;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .accordion__header:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .accordion__header:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: -2px;
+        }
+
+        .accordion__chevron {
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            transition: transform 0.25s ease;
+        }
+
+        .accordion.is-open > .accordion__header .accordion__chevron {
+            transform: rotate(180deg);
+            color: #ffffff;
+        }
+
+        .accordion__panel {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.28s ease;
+        }
+
+        .accordion.is-open > .accordion__panel {
+            grid-template-rows: 1fr;
+        }
+
+        .accordion__panel-inner {
+            min-height: 0;
+            overflow: hidden;
+            padding: 0 20px 20px;
+        }
+
+        /* Закріплена кнопка «згорнути назад» — фіксована відносно вікна
+           перегляду, лишається доступною незалежно від прокрутки довгого
+           вмісту розгорнутого розділу. */
+        .accordion-back {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: #2116ad;
+            color: #ffffff;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+            transition: background 0.15s ease, transform 0.15s ease;
+        }
+
+        .accordion-back:hover {
+            background: #3226c9;
+            transform: translateY(-1px);
+        }
+
+        .accordion-back[hidden] {
+            display: none;
+        }
+
+        .accordion-back__chevron {
+            font-size: 0.85rem;
+        }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -878,6 +1069,29 @@ if ($user !== null && $user['role'] === 'user') {
 
             .account-panel {
                 padding: 24px;
+            }
+
+            .accordion__header {
+                padding: 15px 16px;
+                font-size: 1.02rem;
+            }
+
+            .accordion__panel-inner {
+                padding: 0 16px 16px;
+            }
+
+            .accordion-back {
+                right: 12px;
+                bottom: 12px;
+                padding: 11px 14px;
+                font-size: 0.85rem;
+            }
+
+            .accordion-back__label {
+                max-width: 40vw;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
     </style>
@@ -934,22 +1148,31 @@ if ($user !== null && $user['role'] === 'user') {
                 </div>
             </div>
 
-            <?php if ($flash !== null): ?>
+            <?php if ($flashHtml !== null): ?>
+                <div class="notice notice--ok"><?= $flashHtml /* безпечний HTML: побудований сервером із e()-екранованих частин, див. create_position_application */ ?></div>
+            <?php elseif ($flash !== null): ?>
                 <div class="notice notice--ok"><?= e($flash) ?></div>
             <?php endif; ?>
 
-            <div class="section">
-                <h2 class="section__title"><?= htmlspecialchars(t('account_saved_title'), ENT_QUOTES) ?></h2>
-                <?php if ($savedCount > 0): ?>
-                <div class="empty-state">
-                    <?= htmlspecialchars(sprintf(t('account_saved_count'), $savedCount), ENT_QUOTES) ?>
-                    <a href="saved.php"><?= htmlspecialchars(t('account_saved_open_link'), ENT_QUOTES) ?></a>
+            <div class="accordion" id="acc-saved">
+                <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-saved-panel">
+                    <span class="accordion__title"><?= htmlspecialchars(t('account_saved_title'), ENT_QUOTES) ?></span>
+                    <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                </button>
+                <div class="accordion__panel" id="acc-saved-panel">
+                    <div class="accordion__panel-inner">
+                        <?php if ($savedCount > 0): ?>
+                        <div class="empty-state">
+                            <?= htmlspecialchars(sprintf(t('account_saved_count'), $savedCount), ENT_QUOTES) ?>
+                            <a class="section__link" href="saved.php"><?= htmlspecialchars(t('account_saved_open_link'), ENT_QUOTES) ?></a>
+                        </div>
+                        <?php else: ?>
+                        <div class="empty-state">
+                            <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a class="section__link" href="catalog.php"><?= htmlspecialchars(t('saved_empty_link'), ENT_QUOTES) ?></a>.
+                        </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                <?php else: ?>
-                <div class="empty-state">
-                    <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a href="catalog.php"><?= htmlspecialchars(t('saved_empty_link'), ENT_QUOTES) ?></a>.
-                </div>
-                <?php endif; ?>
             </div>
 
             <?php // ТЕРМІНОВО приховано: подача заявки "Стати працівником" для user.
@@ -995,186 +1218,196 @@ if ($user !== null && $user['role'] === 'user') {
             <?php endif; ?>
 
             <?php if ($user['role'] === 'admin'): ?>
-                <div class="section">
-                    <h2 class="section__title"><?= htmlspecialchars(t('account_stats_title'), ENT_QUOTES) ?></h2>
-                    <p><a href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
-                    <div class="summary">
-                        <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>
-                        <span><?= htmlspecialchars(t('stats_users_label'), ENT_QUOTES) ?> (user): <strong><?= (int) $userStats['users'] ?></strong></span>
-                        <span><?= htmlspecialchars(t('stats_employees_label'), ENT_QUOTES) ?> (employee): <strong><?= (int) $userStats['employees'] ?></strong></span>
-                        <span><?= htmlspecialchars(t('stats_admins_label'), ENT_QUOTES) ?> (admin): <strong><?= (int) $userStats['admins'] ?></strong></span>
-                        <span><?= htmlspecialchars(t('stats_pending_label'), ENT_QUOTES) ?>
-                            <strong><a href="#employee-requests"><?= count($pendingRequests) ?></a></strong>
-                        </span>
+                <div class="accordion" id="acc-stats">
+                    <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-stats-panel">
+                        <span class="accordion__title"><?= htmlspecialchars(t('account_stats_accordion_title'), ENT_QUOTES) ?></span>
+                        <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="accordion__panel" id="acc-stats-panel">
+                        <div class="accordion__panel-inner">
+                            <p><a class="section__link" href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
+                            <div class="summary">
+                                <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>
+                                <span><?= htmlspecialchars(t('stats_users_label'), ENT_QUOTES) ?> (user): <strong><?= (int) $userStats['users'] ?></strong></span>
+                                <span><?= htmlspecialchars(t('stats_employees_label'), ENT_QUOTES) ?> (employee): <strong><?= (int) $userStats['employees'] ?></strong></span>
+                                <span><?= htmlspecialchars(t('stats_admins_label'), ENT_QUOTES) ?> (admin): <strong><?= (int) $userStats['admins'] ?></strong></span>
+                                <span><?= htmlspecialchars(t('stats_pending_label'), ENT_QUOTES) ?>
+                                    <strong><a class="section__link" href="#requests" data-accordion-jump="requests"><?= count($mergedRequests) ?></a></strong>
+                                </span>
+                            </div>
+
+                            <?php if ($staffEmployees !== []): ?>
+                                <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_employees_title'), ENT_QUOTES) ?></h3>
+                                <ul class="request-list">
+                                    <?php foreach ($staffEmployees as $emp): ?>
+                                        <?php
+                                        $empName = trim((string) ($emp['last_name'] ?? '') . ' ' . (string) ($emp['first_name'] ?? ''));
+                                        if ($empName === '') {
+                                            $empName = (string) $emp['name'];
+                                        }
+                                        ?>
+                                        <li class="request-card">
+                                            <div>
+                                                <strong>
+                                                    <?php if ($emp['employee_number'] !== null): ?>№<?= (int) $emp['employee_number'] ?> · <?php endif; ?><?= e($empName) ?>
+                                                </strong>
+                                                <span class="request-card__meta">
+                                                    <?= e($emp['email']) ?>
+                                                    <?php if (!empty($emp['role_since'])): ?>
+                                                        <?= htmlspecialchars(t('account_role_since_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $emp['role_since']))) ?>
+                                                    <?php endif; ?>
+                                                </span>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+
+                            <?php if ($staffAdmins !== []): ?>
+                                <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_admins_title'), ENT_QUOTES) ?></h3>
+                                <ul class="request-list">
+                                    <?php foreach ($staffAdmins as $adm): ?>
+                                        <li class="request-card">
+                                            <div>
+                                                <strong><?= e($adm['name']) ?></strong>
+                                                <span class="request-card__meta"><?= e($adm['email']) ?></span>
+                                            </div>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
                     </div>
-
-                    <?php if ($staffEmployees !== []): ?>
-                        <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_employees_title'), ENT_QUOTES) ?></h3>
-                        <ul class="request-list">
-                            <?php foreach ($staffEmployees as $emp): ?>
-                                <?php
-                                $empName = trim((string) ($emp['last_name'] ?? '') . ' ' . (string) ($emp['first_name'] ?? ''));
-                                if ($empName === '') {
-                                    $empName = (string) $emp['name'];
-                                }
-                                ?>
-                                <li class="request-card">
-                                    <div>
-                                        <strong>
-                                            <?php if ($emp['employee_number'] !== null): ?>№<?= (int) $emp['employee_number'] ?> · <?php endif; ?><?= e($empName) ?>
-                                        </strong>
-                                        <span class="request-card__meta">
-                                            <?= e($emp['email']) ?>
-                                            <?php if (!empty($emp['role_since'])): ?>
-                                                <?= htmlspecialchars(t('account_role_since_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $emp['role_since']))) ?>
-                                            <?php endif; ?>
-                                        </span>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-
-                    <?php if ($staffAdmins !== []): ?>
-                        <h3 class="section__subtitle"><?= htmlspecialchars(t('account_staff_admins_title'), ENT_QUOTES) ?></h3>
-                        <ul class="request-list">
-                            <?php foreach ($staffAdmins as $adm): ?>
-                                <li class="request-card">
-                                    <div>
-                                        <strong><?= e($adm['name']) ?></strong>
-                                        <span class="request-card__meta"><?= e($adm['email']) ?></span>
-                                    </div>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
                 </div>
 
-                <div class="section" id="admin-requests">
-                    <h2 class="section__title"><?= htmlspecialchars(t('account_admin_requests_title'), ENT_QUOTES) ?></h2>
-                    <?php if ($adminRequests === []): ?>
-                        <div class="empty-state"><?= htmlspecialchars(t('account_admin_requests_empty'), ENT_QUOTES) ?></div>
-                    <?php else: ?>
-                        <ul class="request-list">
-                            <?php foreach ($adminRequests as $req): ?>
-                                <?php
-                                $reqPositionKey = $req['position'] ?? null;
-                                $reqPositionLabel = director_position_label($reqPositionKey);
-                                $isDirectorReq = $reqPositionKey !== null;
-                                // Заявку на посаду директора підтверджує лише власниця;
-                                // заявку на роль Адміністратора (position = NULL) — будь-який admin.
-                                $canDecide = !$isDirectorReq || account_is_owner($user);
-                                // Ліміт позицій (1 / 2) — approve вимикаємо, коли всі зайняті.
-                                $slotsFull = $isDirectorReq
-                                    && account_director_slots_full($pdo, (string) $reqPositionKey, (int) $req['user_id']);
-                                $reqApplicantName = trim((string) ($req['last_name'] ?? '') . ' ' . (string) ($req['first_name'] ?? ''));
-                                ?>
-                                <li class="request-card">
-                                    <div>
-                                        <strong>
-                                            <?= e($req['user_name']) ?>
-                                            — <?= $isDirectorReq
-                                                ? e($reqPositionLabel ?? $reqPositionKey)
-                                                : htmlspecialchars(t('account_admin_request_role_label'), ENT_QUOTES) ?>
-                                        </strong>
-                                        <span class="request-card__meta">
-                                            <?php if ($isDirectorReq && $reqApplicantName !== ''): ?>
-                                                <?= e($reqApplicantName) ?> ·
-                                            <?php endif; ?>
-                                            <?= e($req['user_email']) ?>
-                                            <?php if ($isDirectorReq && !empty($req['phone'])): ?>
-                                                · <?= e($req['phone']) ?>
-                                            <?php endif; ?>
-                                            <?= htmlspecialchars(t('account_requested_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $req['requested_at']))) ?>
-                                        </span>
-                                    </div>
-                                    <?php if ($canDecide): ?>
-                                        <div class="btn-row">
-                                            <?php if (!$slotsFull): ?>
+                <div class="accordion" id="requests">
+                    <button type="button" class="accordion__header" aria-expanded="false" aria-controls="requests-panel">
+                        <span class="accordion__title"><?= htmlspecialchars(t('account_requests_title'), ENT_QUOTES) ?></span>
+                        <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="accordion__panel" id="requests-panel">
+                        <div class="accordion__panel-inner">
+                            <?php if ($mergedRequests === []): ?>
+                                <div class="empty-state"><?= htmlspecialchars(t('account_admin_requests_empty'), ENT_QUOTES) ?></div>
+                            <?php else: ?>
+                                <ul class="request-list">
+                                    <?php foreach ($mergedRequests as $req): ?>
+                                        <li class="request-card">
+                                            <div>
+                                                <strong>
+                                                    <?= e($req['title']) ?><span class="request-type-badge"><?= e($req['type_label']) ?></span>
+                                                </strong>
+                                                <span class="request-card__meta">
+                                                    <?php if ($req['meta_name'] !== ''): ?>
+                                                        <?= e($req['meta_name']) ?> ·
+                                                    <?php endif; ?>
+                                                    <?= e($req['meta_email']) ?>
+                                                    <?php if ($req['meta_phone'] !== null): ?>
+                                                        · <?= e($req['meta_phone']) ?>
+                                                    <?php endif; ?>
+                                                    <?= htmlspecialchars(t('account_requested_prefix'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime($req['requested_at']))) ?>
+                                                </span>
+                                            </div>
+                                            <?php if ($req['kind'] === 'employee'): ?>
                                                 <form method="post" action="account.php">
-                                                    <input type="hidden" name="action" value="approve_admin_request">
-                                                    <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
+                                                    <input type="hidden" name="action" value="approve_request">
+                                                    <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
                                                     <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
                                                 </form>
+                                            <?php elseif ($req['can_decide']): ?>
+                                                <div class="btn-row">
+                                                    <?php if (!$req['slots_full']): ?>
+                                                        <form method="post" action="account.php">
+                                                            <input type="hidden" name="action" value="approve_admin_request">
+                                                            <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
+                                                            <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
+                                                        </form>
+                                                    <?php else: ?>
+                                                        <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_position_full_note'), ENT_QUOTES) ?></span>
+                                                    <?php endif; ?>
+                                                    <form method="post" action="account.php">
+                                                        <input type="hidden" name="action" value="reject_admin_request">
+                                                        <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
+                                                        <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
+                                                    </form>
+                                                </div>
                                             <?php else: ?>
-                                                <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_position_full_note'), ENT_QUOTES) ?></span>
+                                                <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_request_owner_only_note'), ENT_QUOTES) ?></span>
                                             <?php endif; ?>
-                                            <form method="post" action="account.php">
-                                                <input type="hidden" name="action" value="reject_admin_request">
-                                                <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
-                                                <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
-                                            </form>
-                                        </div>
-                                    <?php else: ?>
-                                        <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_request_owner_only_note'), ENT_QUOTES) ?></span>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
-                </div>
-
-                <?php if (account_is_owner($user)): ?>
-                <div class="section">
-                    <h2 class="section__title"><?= htmlspecialchars(t('account_create_position_link_title'), ENT_QUOTES) ?></h2>
-                    <form method="post" action="account.php" novalidate>
-                        <input type="hidden" name="action" value="create_position_application">
-                        <div class="field">
-                            <label class="field__label" for="position_title"><?= htmlspecialchars(t('position_title_field'), ENT_QUOTES) ?></label>
-                            <input class="input" type="text" id="position_title" name="position_title" maxlength="255" required>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
                         </div>
-                        <button type="submit" class="btn btn--primary"><?= htmlspecialchars(t('create_position_link_submit'), ENT_QUOTES) ?></button>
-                    </form>
+                    </div>
                 </div>
-                <?php endif; ?>
 
-                <div class="section" id="position-applications">
-                    <h2 class="section__title"><?= htmlspecialchars(t('account_position_apps_title'), ENT_QUOTES) ?></h2>
-                    <?php if ($positionApplications === []): ?>
-                        <div class="empty-state"><?= htmlspecialchars(t('account_position_apps_empty'), ENT_QUOTES) ?></div>
-                    <?php else: ?>
-                        <?php
-                        $positionStatusLabels = [
-                            'pending' => t('position_apps_status_pending'),
-                            'submitted' => t('position_apps_status_submitted'),
-                            'confirmed' => t('position_apps_status_confirmed'),
-                        ];
-                        ?>
-                        <ul class="request-list">
-                            <?php foreach ($positionApplications as $app): ?>
-                                <?php
-                                $appCandidate = trim((string) ($app['last_name'] ?? '') . ' ' . (string) ($app['first_name'] ?? ''));
-                                $appStatusLabel = $positionStatusLabels[$app['status']] ?? $app['status'];
-                                ?>
-                                <li class="request-card">
-                                    <div>
-                                        <strong><?= e($app['position_title']) ?> — <?= e($appStatusLabel) ?></strong>
-                                        <span class="request-card__meta">
-                                            <?php if ($appCandidate !== ''): ?>
-                                                <?= e($appCandidate) ?> ·
-                                            <?php endif; ?>
-                                            <?php if (!empty($app['email'])): ?>
-                                                <?= e($app['email']) ?>
-                                                <?php if (!empty($app['phone'])): ?> · <?= e($app['phone']) ?><?php endif; ?> ·
-                                            <?php endif; ?>
-                                            <?php if (!empty($app['submitted_at'])): ?>
-                                                <?= htmlspecialchars(t('position_apps_col_submitted'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $app['submitted_at']))) ?>
-                                            <?php else: ?>
-                                                <?= e(date('d.m.Y', (int) strtotime((string) $app['created_at']))) ?>
-                                            <?php endif; ?>
-                                        </span>
+                <div class="accordion" id="acc-position">
+                    <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-position-panel">
+                        <span class="accordion__title"><?= htmlspecialchars(t('account_position_apps_title'), ENT_QUOTES) ?></span>
+                        <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="accordion__panel" id="acc-position-panel">
+                        <div class="accordion__panel-inner">
+                            <?php if (account_is_owner($user)): ?>
+                                <h3 class="section__subtitle"><?= htmlspecialchars(t('account_create_position_link_title'), ENT_QUOTES) ?></h3>
+                                <form method="post" action="account.php" novalidate>
+                                    <input type="hidden" name="action" value="create_position_application">
+                                    <div class="field">
+                                        <label class="field__label" for="position_title"><?= htmlspecialchars(t('position_title_field'), ENT_QUOTES) ?></label>
+                                        <input class="input" type="text" id="position_title" name="position_title" maxlength="255" required>
                                     </div>
-                                    <?php if ($app['status'] === 'submitted'): ?>
-                                        <form method="post" action="account.php">
-                                            <input type="hidden" name="action" value="confirm_position_application">
-                                            <input type="hidden" name="application_id" value="<?= (int) $app['id'] ?>">
-                                            <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_confirm_application'), ENT_QUOTES) ?></button>
-                                        </form>
-                                    <?php endif; ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php endif; ?>
+                                    <button type="submit" class="btn btn--primary"><?= htmlspecialchars(t('create_position_link_submit'), ENT_QUOTES) ?></button>
+                                </form>
+                            <?php endif; ?>
+
+                            <?php if ($positionApplications === []): ?>
+                                <div class="empty-state"><?= htmlspecialchars(t('account_position_apps_empty'), ENT_QUOTES) ?></div>
+                            <?php else: ?>
+                                <?php
+                                $positionStatusLabels = [
+                                    'pending' => t('position_apps_status_pending'),
+                                    'submitted' => t('position_apps_status_submitted'),
+                                    'confirmed' => t('position_apps_status_confirmed'),
+                                ];
+                                ?>
+                                <ul class="request-list">
+                                    <?php foreach ($positionApplications as $app): ?>
+                                        <?php
+                                        $appCandidate = trim((string) ($app['last_name'] ?? '') . ' ' . (string) ($app['first_name'] ?? ''));
+                                        $appStatusLabel = $positionStatusLabels[$app['status']] ?? $app['status'];
+                                        ?>
+                                        <li class="request-card">
+                                            <div>
+                                                <strong><?= e($app['position_title']) ?> — <?= e($appStatusLabel) ?></strong>
+                                                <span class="request-card__meta">
+                                                    <?php if ($appCandidate !== ''): ?>
+                                                        <?= e($appCandidate) ?> ·
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($app['email'])): ?>
+                                                        <?= e($app['email']) ?>
+                                                        <?php if (!empty($app['phone'])): ?> · <?= e($app['phone']) ?><?php endif; ?> ·
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($app['submitted_at'])): ?>
+                                                        <?= htmlspecialchars(t('position_apps_col_submitted'), ENT_QUOTES) ?> <?= e(date('d.m.Y', (int) strtotime((string) $app['submitted_at']))) ?>
+                                                    <?php else: ?>
+                                                        <?= e(date('d.m.Y', (int) strtotime((string) $app['created_at']))) ?>
+                                                    <?php endif; ?>
+                                                </span>
+                                            </div>
+                                            <?php if ($app['status'] === 'submitted'): ?>
+                                                <form method="post" action="account.php">
+                                                    <input type="hidden" name="action" value="confirm_position_application">
+                                                    <input type="hidden" name="application_id" value="<?= (int) $app['id'] ?>">
+                                                    <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_confirm_application'), ENT_QUOTES) ?></button>
+                                                </form>
+                                            <?php endif; ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+                        </div>
+                    </div>
                 </div>
 
                 <?php // ТЕРМІНОВО приховано: секція перегляду/схвалення заявок на працівника.
@@ -1209,9 +1442,19 @@ if ($user !== null && $user['role'] === 'user') {
             <?php endif; ?>
 
             <?php if (auth_has_role('employee', 'admin')): ?>
-                <div class="staff-note">
-                    <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
-                    · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>.
+                <div class="accordion" id="acc-crm">
+                    <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-crm-panel">
+                        <span class="accordion__title"><?= htmlspecialchars(t('account_crm_section_title'), ENT_QUOTES) ?></span>
+                        <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                    </button>
+                    <div class="accordion__panel" id="acc-crm-panel">
+                        <div class="accordion__panel-inner">
+                            <div class="staff-note">
+                                <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
+                                · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             <?php endif; ?>
 
@@ -1219,6 +1462,113 @@ if ($user !== null && $user['role'] === 'user') {
                 <a class="btn btn--ghost" href="logout.php"><?= htmlspecialchars(t('account_logout'), ENT_QUOTES) ?></a>
             </div>
         </section>
+
+        <button type="button" id="accordionBackBtn" class="accordion-back" hidden>
+            <span class="accordion-back__chevron" aria-hidden="true">&#9652;</span>
+            <span class="accordion-back__label"><?= htmlspecialchars(t('account_accordion_collapse'), ENT_QUOTES) ?></span>
+        </button>
+
+        <script>
+        (function () {
+            var accordions = Array.prototype.slice.call(document.querySelectorAll('.accordion'));
+            var backBtn = document.getElementById('accordionBackBtn');
+            if (accordions.length === 0 || !backBtn) {
+                return;
+            }
+            var backLabelBase = backBtn.querySelector('.accordion-back__label').textContent;
+
+            function setExpanded(acc, isOpen) {
+                var header = acc.querySelector('.accordion__header');
+                acc.classList.toggle('is-open', isOpen);
+                if (header) {
+                    header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                }
+            }
+
+            function updateBackBtn(openAcc) {
+                if (openAcc) {
+                    var titleEl = openAcc.querySelector('.accordion__title');
+                    var label = titleEl ? titleEl.textContent : '';
+                    backBtn.querySelector('.accordion-back__label').textContent = label
+                        ? backLabelBase + ' — ' + label
+                        : backLabelBase;
+                    backBtn.dataset.target = openAcc.id;
+                    backBtn.hidden = false;
+                } else {
+                    backBtn.hidden = true;
+                    delete backBtn.dataset.target;
+                }
+            }
+
+            function closeAll(except) {
+                accordions.forEach(function (acc) {
+                    if (acc !== except) {
+                        setExpanded(acc, false);
+                    }
+                });
+            }
+
+            function openAccordion(acc) {
+                closeAll(acc);
+                setExpanded(acc, true);
+                updateBackBtn(acc);
+            }
+
+            accordions.forEach(function (acc) {
+                var header = acc.querySelector('.accordion__header');
+                if (!header) {
+                    return;
+                }
+                header.addEventListener('click', function () {
+                    if (acc.classList.contains('is-open')) {
+                        setExpanded(acc, false);
+                        updateBackBtn(null);
+                    } else {
+                        openAccordion(acc);
+                    }
+                });
+            });
+
+            backBtn.addEventListener('click', function () {
+                var id = backBtn.dataset.target;
+                var acc = id ? document.getElementById(id) : null;
+                if (acc) {
+                    setExpanded(acc, false);
+                    acc.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                updateBackBtn(null);
+            });
+
+            function openFromHash() {
+                var hash = window.location.hash.replace('#', '');
+                if (!hash) {
+                    return;
+                }
+                var target = document.getElementById(hash);
+                if (target && target.classList.contains('accordion')) {
+                    openAccordion(target);
+                    window.setTimeout(function () {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 50);
+                }
+            }
+
+            document.querySelectorAll('[data-accordion-jump]').forEach(function (link) {
+                link.addEventListener('click', function (event) {
+                    var id = link.getAttribute('data-accordion-jump');
+                    var target = id ? document.getElementById(id) : null;
+                    if (target) {
+                        event.preventDefault();
+                        openAccordion(target);
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            window.addEventListener('hashchange', openFromHash);
+            openFromHash();
+        })();
+        </script>
 <?php endif; ?>
     </div>
     <?php include __DIR__ . '/../app/footer.php'; ?>

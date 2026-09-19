@@ -176,6 +176,12 @@ $GLOBALS['TRANSLATIONS'] = [
     'account_crm_add_link'       => 'додати новий AI-продукт',
     'account_logout'             => 'Вийти з акаунту',
 
+    // --- account.php: акордеон-структура кабінету ---
+    'account_requests_title'         => 'Заявки',
+    'account_stats_accordion_title'  => 'Статистика сайту',
+    'account_crm_section_title'      => 'CRM',
+    'account_accordion_collapse'     => 'Згорнути',
+
     // --- login.php / register.php ---
     'title_login'            => 'AI LAB HUB — Вхід',
     'login_heading'          => 'Вхід',
