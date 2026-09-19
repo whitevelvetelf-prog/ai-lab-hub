@@ -522,6 +522,11 @@ require_once __DIR__ . '/../app/translations.php';
             .site-footer {
                 display: none;
             }
+
+            /* Підвал прихований — відступ під нього (footer.php) не потрібен. */
+            body {
+                padding-bottom: 0;
+            }
         }
     </style>
     <?php include __DIR__ . '/../app/header.php'; ?>
