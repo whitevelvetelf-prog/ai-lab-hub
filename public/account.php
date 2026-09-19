@@ -494,21 +494,8 @@ if ($user !== null && $user['role'] === 'user') {
 // пункт замість кількох окремих секцій. Кожен елемент позначений типом.
 // -----------------------------------------------------------------------
 $mergedRequests = [];
-foreach ($pendingRequests as $req) {
-    $mergedRequests[] = [
-        'kind'         => 'employee',
-        'sort_at'      => (string) $req['created_at'],
-        'type_label'   => $roleLabels['employee'],
-        'title'        => trim((string) $req['last_name'] . ' ' . (string) $req['first_name']),
-        'meta_name'    => (string) $req['user_name'],
-        'meta_email'   => (string) $req['user_email'],
-        'meta_phone'   => null,
-        'requested_at' => (string) $req['created_at'],
-        'request_id'   => (int) $req['id'],
-        'can_decide'   => true,
-        'slots_full'   => false,
-    ];
-}
+// ТЕРМІНОВО приховано: заявки на роль Працівника ($pendingRequests) не
+// потрапляють у об'єднаний список — лишаються лише адмін/директори.
 foreach ($adminRequests as $req) {
     $reqPositionKey = $req['position'] ?? null;
     $reqPositionLabel = director_position_label($reqPositionKey);
@@ -1029,8 +1016,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
         .accordion-back {
             position: fixed;
             right: 20px;
-            bottom: 20px;
-            z-index: 500;
+            bottom: calc(var(--footer-h, 0px) + 16px);
+            z-index: 90; /* нижче за шапку/підвал (100), вище за контент */
             display: inline-flex;
             align-items: center;
             gap: 8px;

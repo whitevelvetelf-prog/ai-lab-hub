@@ -414,9 +414,25 @@ require_once __DIR__ . '/paw-icon.php';
     }
 
     /* ===== Підвал ===== */
+    /* Закріплений підвал: завжди видимий унизу вікна. Компактна смуга;
+       розсилка й дисклеймер — у панелі .site-footer__more, що розгортається
+       вгору. Висоту смуги JS кладе в --footer-h (відступ body і позиція
+       кнопки «згорнути» в кабінеті). z-index 100 — як у шапки; вони не
+       перетинаються (шапка зверху, підвал знизу). */
+    body {
+        padding-bottom: var(--footer-h, 72px);
+    }
+
     .site-footer {
-        margin-top: 64px;
-        padding: 40px 24px 32px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        margin-top: 0;
+        padding: 10px 24px;
+        max-height: 80vh;
+        overflow-y: auto;
         background: linear-gradient(160deg, #00032c 0%, #2116ad 100%);
         border-top: 1px solid rgba(255, 255, 255, 0.14);
         color: rgba(255, 255, 255, 0.75);
@@ -506,20 +522,51 @@ require_once __DIR__ . '/paw-icon.php';
         height: 18px;
     }
 
+    .site-footer__toggle {
+        padding: 8px 14px;
+        border-radius: 999px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        background: transparent;
+        color: rgba(255, 255, 255, 0.85);
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .site-footer__more {
+        display: none;
+        padding-top: 14px;
+    }
+
+    .site-footer.is-expanded .site-footer__more {
+        display: block;
+    }
+
     @media (max-width: 640px) {
+        .site-footer {
+            padding: 8px 12px;
+        }
+
         .site-footer__inner {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 22px;
+            gap: 8px 12px;
         }
 
         .site-footer__links {
-            flex-direction: column;
-            gap: 12px;
+            gap: 4px 12px;
+        }
+
+        .site-footer__links a {
+            font-size: 0.8rem;
+        }
+
+        .site-footer__support {
+            padding: 6px 12px;
+            font-size: 0.8rem;
         }
 
         .site-footer__social {
-            margin-left: 0;
+            display: none;
         }
 
         .site-footer__newsletter {
@@ -623,7 +670,8 @@ require_once __DIR__ . '/paw-icon.php';
     }
 </style>
 
-<footer class="site-footer">
+<footer class="site-footer" id="siteFooter">
+    <div class="site-footer__more" id="siteFooterMore">
     <div class="site-footer__newsletter">
         <p class="newsletter-form__title"><?= htmlspecialchars(t('newsletter_title'), ENT_QUOTES) ?></p>
         <form class="newsletter-form" id="newsletterForm" novalidate>
@@ -632,6 +680,8 @@ require_once __DIR__ . '/paw-icon.php';
             <button class="newsletter-form__submit" type="submit"><?= htmlspecialchars(t('newsletter_submit'), ENT_QUOTES) ?></button>
             <span class="newsletter-form__message" id="newsletterMessage" role="status" hidden></span>
         </form>
+    </div>
+    <p class="site-footer__disclaimer"><?= htmlspecialchars(t('footer_disclaimer'), ENT_QUOTES) ?></p>
     </div>
 
     <div class="site-footer__inner">
@@ -662,39 +712,35 @@ require_once __DIR__ . '/paw-icon.php';
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
             </a>
         </nav>
-    </div>
 
-    <p class="site-footer__disclaimer"><?= htmlspecialchars(t('footer_disclaimer'), ENT_QUOTES) ?></p>
+        <button type="button" class="site-footer__toggle" id="siteFooterToggle" aria-expanded="false" aria-controls="siteFooterMore">▲ <?= htmlspecialchars(t('newsletter_submit'), ENT_QUOTES) ?></button>
+    </div>
 </footer>
 
 <script>
-    /* Підвал притиснутий до низу вікна: якщо контенту мало, зайву висоту
-       додаємо до margin-top підвалу (без зміни розкладки body сторінок).
-       Довгі сторінки лишаються як були. */
+    /* Закріплений підвал: висоту смуги пишемо в --footer-h (відступ body,
+       позиція плаваючих кнопок); кнопка розгортає панель розсилки. */
     (function () {
-        var footer = document.querySelector('.site-footer');
+        var footer = document.getElementById('siteFooter');
         if (!footer) {
             return;
         }
-        var base = 64;
-        var busy = false;
-        function pin() {
-            if (busy) {
-                return;
-            }
-            busy = true;
-            footer.style.marginTop = base + 'px';
-            var free = window.innerHeight - document.documentElement.scrollHeight;
-            if (free > 0) {
-                footer.style.marginTop = (base + free) + 'px';
-            }
-            busy = false;
+        var toggle = document.getElementById('siteFooterToggle');
+        function sync() {
+            document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
         }
-        pin();
-        window.addEventListener('load', pin);
-        window.addEventListener('resize', pin);
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                var open = footer.classList.toggle('is-expanded');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                sync();
+            });
+        }
+        sync();
+        window.addEventListener('load', sync);
+        window.addEventListener('resize', sync);
         if (window.ResizeObserver) {
-            new ResizeObserver(pin).observe(document.body);
+            new ResizeObserver(sync).observe(footer);
         }
     })();
 </script>

@@ -35,7 +35,7 @@
 .pwa-install-banner {
     position: fixed;
     left: 50%;
-    bottom: 16px;
+    bottom: calc(var(--footer-h, 0px) + 16px);
     z-index: 9999;
     width: calc(100% - 24px);
     max-width: 460px;
