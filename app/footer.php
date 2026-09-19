@@ -27,6 +27,24 @@ require_once __DIR__ . '/paw-icon.php';
         flex-wrap: wrap;
     }
 
+    /* ===== Закріплена шапка =====
+       Лишається зверху при прокрутці на всіх сторінках. Фон напівпрозорий
+       із розмиттям, щоб контент не просвічував крізь логотип і меню.
+       scroll-padding-top — щоб якорі (#requests тощо) не ховались під нею. */
+    html {
+        scroll-padding-top: 96px;
+    }
+
+    .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(0, 3, 44, 0.92);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .site-nav__toggle {
         display: none;
         width: 44px;
@@ -648,6 +666,38 @@ require_once __DIR__ . '/paw-icon.php';
 
     <p class="site-footer__disclaimer"><?= htmlspecialchars(t('footer_disclaimer'), ENT_QUOTES) ?></p>
 </footer>
+
+<script>
+    /* Підвал притиснутий до низу вікна: якщо контенту мало, зайву висоту
+       додаємо до margin-top підвалу (без зміни розкладки body сторінок).
+       Довгі сторінки лишаються як були. */
+    (function () {
+        var footer = document.querySelector('.site-footer');
+        if (!footer) {
+            return;
+        }
+        var base = 64;
+        var busy = false;
+        function pin() {
+            if (busy) {
+                return;
+            }
+            busy = true;
+            footer.style.marginTop = base + 'px';
+            var free = window.innerHeight - document.documentElement.scrollHeight;
+            if (free > 0) {
+                footer.style.marginTop = (base + free) + 'px';
+            }
+            busy = false;
+        }
+        pin();
+        window.addEventListener('load', pin);
+        window.addEventListener('resize', pin);
+        if (window.ResizeObserver) {
+            new ResizeObserver(pin).observe(document.body);
+        }
+    })();
+</script>
 
 <script>
     (function () {
