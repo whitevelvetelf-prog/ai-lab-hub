@@ -12,6 +12,39 @@
  * просто не показує банер, це не помилка).
  */
 
+/*
+ * Режим «зона» (ad server, app/ads.php → getAdForZone): задано $zoneId
+ * (обов'язково) і, за потреби, $categoryId / $subcategoryId:
+ *   $zoneId = 1; $categoryId = 5; include __DIR__ . '/../app/ad-banner.php';
+ * Немає оголошення — нічого не виводиться (без порожньої рамки).
+ */
+if (isset($zoneId)) {
+    require_once __DIR__ . '/ads.php';
+
+    $zoneAd = getAdForZone((int) $zoneId, isset($categoryId) ? (int) $categoryId : null, isset($subcategoryId) ? (int) $subcategoryId : null, $pdo ?? null);
+    if ($zoneAd === null) {
+        return;
+    }
+    $zoneAdId = (int) $zoneAd['id'];
+    ?>
+<div class="ad-zone" id="ad-zone-<?= $zoneAdId ?>">
+    <span class="ad-zone__label"><?= htmlspecialchars(t('ad_label'), ENT_QUOTES) ?></span>
+    <a class="ad-zone__link" href="/ad-click.php?id=<?= $zoneAdId ?>" target="_blank" rel="sponsored noopener">
+        <img class="ad-zone__image" src="<?= htmlspecialchars($zoneAd['image_url'], ENT_QUOTES) ?>" alt="" loading="lazy">
+    </a>
+</div>
+<script>
+    fetch('/log-impression.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'ad_id=<?= $zoneAdId ?>',
+        keepalive: true
+    }).catch(function () {});
+</script>
+<?php
+    return;
+}
+
 if (!isset($campaign) || $campaign === null) {
     return;
 }

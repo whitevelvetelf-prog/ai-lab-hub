@@ -55,3 +55,38 @@
     font-size: 0.92rem;
     color: rgba(255, 255, 255, 0.75);
 }
+
+/* Ad server: блок оголошення в зоні (app/ad-banner.php, режим $zoneId). */
+
+.ad-zone {
+    position: relative;
+    width: 100%;
+    margin: 20px 0;
+    padding: 28px 12px 12px;
+    background: #00032c;
+    border: 1px solid #2116ad;
+    border-radius: 16px;
+    box-shadow: 0 0 0 1px rgba(33, 22, 173, 0.35), 0 8px 24px rgba(0, 3, 44, 0.5);
+}
+
+.ad-zone__label {
+    position: absolute;
+    top: 8px;
+    left: 14px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.ad-zone__link {
+    display: block;
+}
+
+.ad-zone__image {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
