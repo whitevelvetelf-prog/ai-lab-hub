@@ -61,13 +61,13 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
  * IS NULL); якщо контекст не заданий — підходять лише універсальні.
  * Серед рівнозначних вибір випадковий.
  *
- * @return array{id:int,image_url:string,target_url:string}|null
+ * @return array{id:int,image_url:string,target_url:string,headline:?string,subtext:?string}|null
  */
 function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId = null, ?PDO $pdo = null): ?array
 {
     $pdo ??= require __DIR__ . '/../config/database.php';
 
-    $sql = "SELECT a.id, a.image_url, a.target_url
+    $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext
             FROM ads a
             JOIN ad_campaigns c ON c.id = a.campaign_id
             WHERE a.zone_id = :zone

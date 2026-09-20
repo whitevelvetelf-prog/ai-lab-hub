@@ -104,6 +104,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $adErrors[] = 'Посилання оголошення має починатись з http:// або https:// (або бути відносним шляхом).';
         }
 
+        // Текст банера (необов'язковий): показується поверх зображення і
+        // перекладається автоматично (ad_translations).
+        $headline = trim((string) ($_POST['headline'] ?? ''));
+        $subtext = trim((string) ($_POST['subtext'] ?? ''));
+        if (mb_strlen($headline) > 255) {
+            $adErrors[] = 'Заголовок задовгий (максимум 255 символів).';
+        }
+        if (mb_strlen($subtext) > 500) {
+            $adErrors[] = 'Підпис задовгий (максимум 500 символів).';
+        }
+
         // Категорія / підкатегорія: "" — усі, "c:ID" — категорія, "s:ID" — підкатегорія.
         $categoryId = null;
         $subcategoryId = null;
@@ -149,14 +160,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($adErrors === [] && $imageUrl !== null) {
             try {
                 $ins = $pdo->prepare(
-                    "INSERT INTO ads (campaign_id, zone_id, image_url, target_url, category_id, subcategory_id, status)
-                     VALUES (:cid, :zone, :image, :target, :cat, :sub, 'active')"
+                    "INSERT INTO ads (campaign_id, zone_id, image_url, target_url, headline, subtext, category_id, subcategory_id, status)
+                     VALUES (:cid, :zone, :image, :target, :headline, :subtext, :cat, :sub, 'active')"
                 );
                 $ins->execute([
-                    ':cid'    => $campaignId,
-                    ':zone'   => $zoneId,
-                    ':image'  => $imageUrl,
-                    ':target' => $targetUrl,
+                    ':cid'      => $campaignId,
+                    ':zone'     => $zoneId,
+                    ':image'    => $imageUrl,
+                    ':target'   => $targetUrl,
+                    ':headline' => $headline !== '' ? $headline : null,
+                    ':subtext'  => $subtext !== '' ? $subtext : null,
                     ':cat'    => $categoryId,
                     ':sub'    => $subcategoryId,
                 ]);
@@ -172,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Оголошення кампанії з показами/кліками (підзапити — без множення рядків).
 $adsStmt = $pdo->prepare(
-    "SELECT a.id, a.image_url, a.target_url, a.status, a.category_id, a.subcategory_id,
+    "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext, a.status, a.category_id, a.subcategory_id,
             z.name AS zone_name, c.name AS category_name, s.name AS subcategory_name,
             (SELECT COUNT(*) FROM ad_impressions i WHERE i.ad_id = a.id) AS impressions,
             (SELECT COUNT(*) FROM ad_clicks k WHERE k.ad_id = a.id) AS clicks
@@ -276,6 +289,9 @@ $flashAdAdded = isset($_GET['ad_added']);
                                     <a href="<?= crm_ads_e($ad['target_url']) ?>" target="_blank" rel="noopener noreferrer" title="<?= crm_ads_e($ad['target_url']) ?>">
                                         <img class="table__thumb" src="<?= crm_ads_e($ad['image_url']) ?>" alt="">
                                     </a>
+                                    <?php if ((string) $ad['headline'] !== ''): ?>
+                                        <span class="table__muted" title="<?= crm_ads_e($ad['subtext']) ?>"><?= crm_ads_e($ad['headline']) ?></span>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <?= crm_ads_e($ad['zone_name']) ?><br>
@@ -345,13 +361,24 @@ $flashAdAdded = isset($_GET['ad_added']);
             <div class="field">
                 <label class="field__label" for="image_file">Зображення банера <span class="req">*</span></label>
                 <input class="input" type="file" id="image_file" name="image_file" accept=".png,.jpg,.jpeg,.webp,.gif,.svg">
-                <p class="field__hint">PNG, JPG, WEBP, GIF або SVG до 2 МБ. Рекомендований формат — широкий банер (напр. 970×150).</p>
+                <p class="field__hint">PNG, JPG, WEBP, GIF або SVG до 2 МБ. Це фон банера (без тексту всередині) — текст додається полями «Заголовок» і «Підпис». Рекомендований формат — широкий банер (напр. 970×150).</p>
             </div>
 
             <div class="field">
                 <label class="field__label" for="image_url">…або URL зображення</label>
                 <input class="input" type="text" id="image_url" name="image_url" maxlength="500" value="<?= crm_ads_e($adValues['image_url'] ?? '') ?>" placeholder="https://…">
                 <p class="field__hint">Використовується, лише якщо файл не обрано.</p>
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="headline">Заголовок</label>
+                <input class="input" type="text" id="headline" name="headline" maxlength="255" value="<?= crm_ads_e($adValues['headline'] ?? '') ?>">
+                <p class="field__hint">Виводиться текстом поверх зображення і перекладається на EN автоматично. Порожньо — банер покаже лише картинку.</p>
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="subtext">Підпис</label>
+                <input class="input" type="text" id="subtext" name="subtext" maxlength="500" value="<?= crm_ads_e($adValues['subtext'] ?? '') ?>">
             </div>
 
             <div class="field">

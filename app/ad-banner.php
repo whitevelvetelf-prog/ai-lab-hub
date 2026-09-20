@@ -26,11 +26,28 @@ if (isset($zoneId)) {
         return;
     }
     $zoneAdId = (int) $zoneAd['id'];
+
+    // Текст оголошення — з БД і перекладається як решта контенту
+    // (ad_translations, app/translations.php → localized_field).
+    $adPdo = $pdo ?? translation_pdo();
+    $adHeadline = localized_field($adPdo, 'ad_translations', 'ad_id', $zoneAd, 'headline');
+    $adSubtext = localized_field($adPdo, 'ad_translations', 'ad_id', $zoneAd, 'subtext');
+    $adHasText = trim($adHeadline) !== '' || trim($adSubtext) !== '';
     ?>
 <div class="ad-zone" id="ad-zone-<?= $zoneAdId ?>">
     <span class="ad-zone__label"><?= htmlspecialchars(t('ad_label'), ENT_QUOTES) ?></span>
-    <a class="ad-zone__link" href="/ad-click.php?id=<?= $zoneAdId ?>" target="_blank" rel="sponsored noopener">
+    <a class="ad-zone__link<?= $adHasText ? '' : ' ad-zone__link--image-only' ?>" href="/ad-click.php?id=<?= $zoneAdId ?>" target="_blank" rel="sponsored noopener">
         <img class="ad-zone__image" src="<?= htmlspecialchars($zoneAd['image_url'], ENT_QUOTES) ?>" alt="" loading="lazy">
+        <?php if ($adHasText): ?>
+        <span class="ad-zone__text">
+            <?php if (trim($adHeadline) !== ''): ?>
+            <span class="ad-zone__headline"><?= htmlspecialchars($adHeadline, ENT_QUOTES) ?></span>
+            <?php endif; ?>
+            <?php if (trim($adSubtext) !== ''): ?>
+            <span class="ad-zone__subtext"><?= htmlspecialchars($adSubtext, ENT_QUOTES) ?></span>
+            <?php endif; ?>
+        </span>
+        <?php endif; ?>
     </a>
 </div>
 <script>
