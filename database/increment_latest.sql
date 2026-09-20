@@ -58,7 +58,8 @@ CREATE TABLE IF NOT EXISTS ad_clicks (
 
 -- Тестова зона та internal-оголошення (Marketplace-промо) для сторінки категорії.
 INSERT IGNORE INTO ad_zones (id, name, page_type) VALUES
-(1, 'Сторінка категорії - верх', 'category');
+(1, 'Сторінка категорії - верх', 'category'),
+(2, 'Сторінка підкатегорії - верх', 'subcategory');
 
 INSERT IGNORE INTO ad_campaigns (id, campaign_type, advertiser_name, status, start_date, notes) VALUES
 (1, 'internal', 'AI LAB HUB', 'active', CURDATE(), 'Промо Marketplace — internal-заповнювач');

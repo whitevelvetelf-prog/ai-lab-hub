@@ -421,6 +421,16 @@ $cardColors = [
 
         <h1 class="catalog__title"><?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></h1>
 
+        <?php
+        // Реклама лише на сторінці підкатегорії (не пошук, не «всі продукти»).
+        if (!$isSearch && !empty($subcategory)) {
+            $zoneId = 2; /* «Сторінка підкатегорії - верх» */
+            $categoryId = (int) $subcategory['category_id'];
+            $subcategoryId = (int) $subcategory['id'];
+            include __DIR__ . '/../app/ad-banner.php';
+        }
+        ?>
+
         <?php if ($products === [] && $isSearch): ?>
         <p class="catalog__empty">
             <?= htmlspecialchars(t('search_no_results'), ENT_QUOTES) ?><br>
