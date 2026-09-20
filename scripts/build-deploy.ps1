@@ -7,6 +7,7 @@
     RUN (from anywhere):
         powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1
         powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -Output deploy5.zip
+        powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -IncludeMarketplace -Output deploy-mp.zip
 
     INCLUDED (discovered dynamically, so new files are picked up automatically
     without editing this script):
@@ -34,10 +35,26 @@
       - public/assets/images/ads/uploads/   ad banners uploaded via the ads CRM
       - public/assets/images/marketplace/covers/   Marketplace cover images uploaded via the CRM
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
+      - MARKETPLACE (until the first Marketplace release) - left out unless -IncludeMarketplace is passed:
+          public/mp-*.php (internal CRM), public/marketplace.php, public/marketplace-category.php,
+          public/offer.php, public/get.php (public part),
+          public/assets/css/mp-*.css,
+          database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
+          config/marketplace.php.
+        Shared code that the switch keeps dormant (public_enabled = false by default) IS always
+        shipped: app/marketplace.php, app/mp-card.php, app/site-header.php, app/footer.php,
+        public/index.php, app/translations.php.
+        config/marketplace.php is NEVER put in the archive under its own name - even with the flag -
+        so a deploy can not overwrite the server's real settings (storage path, public_enabled).
+        With -IncludeMarketplace it goes in as config/marketplace.dist.php (a template to copy by hand,
+        see database/MARKETPLACE_HOSTING.md).
 #>
 
 param(
-    [string] $Output = 'deploy5.zip'
+    [string] $Output = 'deploy5.zip',
+
+    # Explicit opt-in: add the Marketplace files (see the EXCLUDED list above) to the archive.
+    [switch] $IncludeMarketplace
 )
 
 $ErrorActionPreference = 'Stop'
@@ -102,6 +119,25 @@ $images = Get-RelativeFiles -Dir 'public/assets/images' -Filter '*' -Recurse |
     Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' -and $_ -notmatch '^public/assets/images/ads/uploads/' -and $_ -notmatch '^public/assets/images/marketplace/covers/' }
 $files.AddRange([string[]] $images)
 
+# Marketplace: explicit exclusion unless -IncludeMarketplace (files stay on disk, only kept out of the zip).
+$marketplacePatterns = @(
+    '^public/mp-[^/]+\.php$',
+    '^public/(marketplace|marketplace-category|offer|get)\.php$',
+    '^public/assets/css/mp-[^/]+\.css$',
+    '^database/migration-[^/]*-marketplace-[^/]*\.sql$',
+    '^config/marketplace(\.[a-z]+)?\.php$'
+)
+$marketplaceFiles = @($files | Where-Object { $f = $_; $marketplacePatterns | Where-Object { $f -match $_ } })
+$files = @($files | Where-Object { $_ -notin $marketplaceFiles })
+
+# Archive entry name per file (default: same as the path). config/marketplace.php only as a .dist template.
+$entryNames = @{}
+if ($IncludeMarketplace) {
+    $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
+    $files += 'config/marketplace.php'
+    $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
+}
+
 $files = $files | Select-Object -Unique | Sort-Object
 
 # Make sure every listed file exists.
@@ -121,8 +157,10 @@ $zip = New-Object System.IO.Compression.ZipArchive($fs, [System.IO.Compression.Z
 try {
     foreach ($rel in $files) {
         $full = Join-Path $root ($rel -replace '/', '\')
+        $entry = $rel
+        if ($entryNames.ContainsKey($rel)) { $entry = $entryNames[$rel] }
         [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
-            $zip, $full, $rel, [System.IO.Compression.CompressionLevel]::Optimal
+            $zip, $full, $entry, [System.IO.Compression.CompressionLevel]::Optimal
         ) | Out-Null
     }
 }
@@ -134,3 +172,8 @@ finally {
 $size = (Get-Item $outPath).Length
 Write-Output ("Done: {0}" -f $outPath)
 Write-Output ("Size: {0:N0} bytes, files: {1}" -f $size, $files.Count)
+if ($IncludeMarketplace) {
+    Write-Output "Marketplace files INCLUDED (-IncludeMarketplace): config/marketplace.php shipped as config/marketplace.dist.php"
+} else {
+    Write-Output ("Marketplace files excluded: {0} (pass -IncludeMarketplace for the release)" -f $marketplaceFiles.Count)
+}

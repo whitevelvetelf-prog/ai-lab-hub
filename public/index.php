@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/ads.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/marketplace.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -20,6 +21,16 @@ $pdo = require __DIR__ . '/../config/database.php';
 analytics_log_view($pdo, 'home');
 
 $homepageBanner = ads_pick_campaign($pdo, 'homepage_banner');
+
+// Блок Marketplace під hero: лише коли public_enabled = true і є опубліковані пропозиції.
+$mpHomeOffers = [];
+if (mp_public_nav_visible()) {
+    try {
+        $mpHomeOffers = mp_public_listings($pdo, current_lang(), ['limit' => 3]);
+    } catch (Throwable $e) {
+        $mpHomeOffers = [];
+    }
+}
 
 $categories = $pdo->query(
     "SELECT id, name, name_en, slug
@@ -333,6 +344,9 @@ $categoryIcons = [
         }
     </style>
     <?php include __DIR__ . '/../app/header.php'; ?>
+    <?php if ($mpHomeOffers !== []): ?>
+    <link rel="stylesheet" href="<?= css_asset('mp-public.css') ?>">
+    <?php endif; ?>
 </head>
 <body>
     <?php include __DIR__ . '/../app/site-header.php'; ?>
@@ -345,6 +359,23 @@ $categoryIcons = [
                 <p class="hero__subtitle"><?= htmlspecialchars(t('hero_subtitle'), ENT_QUOTES) ?></p>
             </div>
         </section>
+
+        <?php if ($mpHomeOffers !== []): ?>
+        <section class="mp-home">
+            <div class="mp-home__head">
+                <div>
+                    <h2 class="mp-home__title"><?= htmlspecialchars(t('mp_home_title'), ENT_QUOTES) ?></h2>
+                    <p class="mp-home__text"><?= htmlspecialchars(t('mp_home_text'), ENT_QUOTES) ?></p>
+                </div>
+                <a class="mp-btn" href="marketplace.php"><?= htmlspecialchars(t('mp_home_all'), ENT_QUOTES) ?></a>
+            </div>
+            <div class="mp-grid">
+                <?php foreach ($mpHomeOffers as $card): ?>
+                    <?php include __DIR__ . '/../app/mp-card.php'; ?>
+                <?php endforeach; ?>
+            </div>
+        </section>
+        <?php endif; ?>
 
         <section class="directions">
             <h2 class="directions__title"><?= htmlspecialchars(t('directions_title'), ENT_QUOTES) ?></h2>

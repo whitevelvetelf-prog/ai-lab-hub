@@ -23,4 +23,10 @@ return [
 
     // Обкладинки мають бути доступні з веба (public/).
     'cover_dir' => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
+
+    // Перемикач публічної частини Marketplace. false → marketplace.php, marketplace-category.php,
+    // offer.php, get.php віддають 404, пунктів меню/блоку на головній немає.
+    // Для розробки НЕ змінюйте тут: створіть config/marketplace.local.php (у .gitignore) з
+    //   <?php return ['public_enabled' => true];
+    'public_enabled' => false,
 ];

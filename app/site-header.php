@@ -9,7 +9,13 @@
  * Потрібні app/auth.php (auth_check), app/translations.php (t()) і стилі
  * public/assets/css/site-nav.css у <head> сторінки. Закріплення шапки,
  * мовний перемикач, гамбургер і пошук додає app/footer.php.
+ *
+ * Пункт «Marketplace» (поруч із «Головна»; на мобільному — у гамбургер-меню, бо це той самий
+ * #siteNav) показується лише коли config/marketplace.php → public_enabled = true і є хоча б
+ * одна опублікована пропозиція (mp_public_nav_visible()).
  */
+
+require_once __DIR__ . '/marketplace.php';
 
 ?>
 <header class="site-header">
@@ -18,6 +24,9 @@
     </a>
     <nav class="site-nav" id="siteNav">
         <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
+        <?php if (mp_public_nav_visible()): ?>
+        <a class="site-nav__link" href="marketplace.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?></a>
+        <?php endif; ?>
         <?php if (auth_check()): ?>
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
         <?php else: ?>

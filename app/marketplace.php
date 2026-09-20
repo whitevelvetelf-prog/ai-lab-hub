@@ -23,10 +23,18 @@ function mp_config(): array
             'allowed_extensions' => ['pdf', 'md', 'txt', 'json', 'csv', 'zip'],
             'file_storage_dir'   => dirname(__DIR__) . '/storage/marketplace/files',
             'cover_dir'          => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
+            // Публічна частина (marketplace.php, offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
+            'public_enabled'     => false,
         ];
-        $file = __DIR__ . '/../config/marketplace.php';
-        $custom = is_file($file) ? require $file : [];
-        $cfg = array_merge($defaults, is_array($custom) ? $custom : []);
+        $cfg = $defaults;
+        // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.
+        foreach (['marketplace.php', 'marketplace.local.php'] as $name) {
+            $file = __DIR__ . '/../config/' . $name;
+            $custom = is_file($file) ? require $file : [];
+            if (is_array($custom)) {
+                $cfg = array_merge($cfg, $custom);
+            }
+        }
     }
 
     return $cfg;
@@ -398,4 +406,269 @@ function mp_user_label(?string $name, ?string $employeeNumber): string
     }
 
     return $name;
+}
+
+// =========================================================================
+// Публічна частина (marketplace.php, marketplace-category.php, offer.php, get.php)
+// Працює лише при config 'public_enabled' => true; показує лише status='published'.
+// Публічно НІКОЛИ не віддаються delivery_url і file_id — лише get.php (єдина точка видачі).
+// =========================================================================
+
+/** Чи ввімкнена публічна частина. */
+function mp_public_enabled(): bool
+{
+    return mp_config()['public_enabled'] === true;
+}
+
+/** 404 без розкриття причини (вимкнено / чернетка / архів / немає такого id). */
+function mp_not_found(): never
+{
+    http_response_code(404);
+    header('Content-Type: text/html; charset=utf-8');
+    echo "<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>404 Not Found</title></head>"
+        . "<body><h1>Not Found</h1><p>The requested URL was not found on this server.</p></body></html>";
+    exit;
+}
+
+/** Публічні сторінки: при вимкненому перемикачі — 404. Викликати першим рядком сторінки. */
+function mp_public_require(): void
+{
+    if (!mp_public_enabled()) {
+        mp_not_found();
+    }
+}
+
+/**
+ * Показувати пункти навігації Marketplace: перемикач увімкнено І є хоча б одна опублікована пропозиція.
+ * Ніколи не кидає виняток (напр. таблиць mp_* ще немає на хостингу) — тоді false.
+ */
+function mp_public_nav_visible(): bool
+{
+    static $visible = null;
+    if ($visible !== null) {
+        return $visible;
+    }
+    $visible = false;
+    if (!mp_public_enabled()) {
+        return false;
+    }
+    try {
+        $pdo = translation_pdo();
+        $visible = $pdo->query("SELECT 1 FROM mp_listings WHERE section = 'solution' AND status = 'published' LIMIT 1")->fetchColumn() !== false;
+    } catch (Throwable) {
+        $visible = false;
+    }
+
+    return $visible;
+}
+
+/** Мова оригіналу контенту (uk) — для назв категорій. */
+function mp_source_lang(): string
+{
+    return function_exists('translation_source_lang') ? translation_source_lang() : 'uk';
+}
+
+/**
+ * Категорії розділу з назвами поточною мовою (запасний варіант — мова оригіналу, потім slug)
+ * і кількістю опублікованих пропозицій.
+ *
+ * @return list<array{id:int,slug:string,name:string,cnt:int}>
+ */
+function mp_public_categories(PDO $pdo, string $lang, string $section = 'solution'): array
+{
+    $stmt = $pdo->prepare(
+        "SELECT c.id, c.slug,
+                COALESCE(NULLIF(tl.name, ''), NULLIF(ts.name, ''), c.slug) AS name,
+                (SELECT COUNT(*) FROM mp_listing_categories lc
+                   JOIN mp_listings l ON l.id = lc.listing_id
+                  WHERE lc.category_id = c.id AND l.section = :section2 AND l.status = 'published') AS cnt
+         FROM mp_categories c
+         LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = :lang
+         LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = :src
+         WHERE c.section = :section AND c.is_active = 1
+         ORDER BY c.sort_order, c.id"
+    );
+    $stmt->execute([':section' => $section, ':section2' => $section, ':lang' => $lang, ':src' => mp_source_lang()]);
+
+    return array_map(
+        static fn(array $r): array => ['id' => (int) $r['id'], 'slug' => (string) $r['slug'], 'name' => (string) $r['name'], 'cnt' => (int) $r['cnt']],
+        $stmt->fetchAll(PDO::FETCH_ASSOC)
+    );
+}
+
+/** Спільна частина SELECT: тексти поточною мовою, запасний варіант (по кожному полю) — мова оригіналу (source_lang). */
+function mp_public_select(): string
+{
+    return "SELECT l.id, l.cover_image, l.platform, l.skill_level, l.license, l.delivery_type, l.claims_count,
+                   l.published_at, l.source_lang, s.display_name AS seller_name,
+                   COALESCE(NULLIF(tc.title, ''), ts.title)           AS title,
+                   COALESCE(NULLIF(tc.short_desc, ''), ts.short_desc) AS short_desc,
+                   COALESCE(NULLIF(tc.full_desc, ''), ts.full_desc)   AS full_desc,
+                   COALESCE(NULLIF(tc.features, ''), ts.features)     AS features,
+                   COALESCE(NULLIF(tc.for_whom, ''), ts.for_whom)     AS for_whom,
+                   IF(tc.title IS NULL OR tc.title = '', l.source_lang, tc.lang) AS text_lang
+            FROM mp_listings l
+            LEFT JOIN mp_sellers s ON s.id = l.seller_id
+            LEFT JOIN mp_listing_translations tc ON tc.listing_id = l.id AND tc.lang = :lang
+            LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
+            WHERE l.section = 'solution' AND l.status = 'published'
+              AND COALESCE(NULLIF(tc.title, ''), ts.title) IS NOT NULL";
+}
+
+/**
+ * Опубліковані пропозиції для карток. Фільтри: category_id, q (пошук за назвою: у мові інтерфейсу або оригіналу).
+ *
+ * @param array{category_id?:int,q?:string,limit?:int} $opts
+ * @return list<array<string,mixed>> кожен рядок має 'categories' => list<{id,name}>
+ */
+function mp_public_listings(PDO $pdo, string $lang, array $opts = []): array
+{
+    $sql = mp_public_select();
+    $params = [':lang' => $lang];
+    $catId = (int) ($opts['category_id'] ?? 0);
+    if ($catId > 0) {
+        $sql .= ' AND EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)';
+        $params[':cat'] = $catId;
+    }
+    $q = trim((string) ($opts['q'] ?? ''));
+    if ($q !== '') {
+        $sql .= " AND (tc.title LIKE :q1 ESCAPE '\\\\' OR ts.title LIKE :q2 ESCAPE '\\\\')";
+        $like = '%' . addcslashes($q, '%_\\') . '%';
+        $params[':q1'] = $like;
+        $params[':q2'] = $like;
+    }
+    $limit = max(1, min(200, (int) ($opts['limit'] ?? 60)));
+    $sql .= ' ORDER BY l.published_at DESC, l.id DESC LIMIT ' . $limit;
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+
+    return mp_attach_categories($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang);
+}
+
+/** Одна опублікована пропозиція за id або null (чернетки/архів/невідомий id → null). */
+function mp_public_listing(PDO $pdo, int $id, string $lang): ?array
+{
+    $stmt = $pdo->prepare(mp_public_select() . ' AND l.id = :id');
+    $stmt->execute([':lang' => $lang, ':id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($row === false) {
+        return null;
+    }
+
+    return mp_attach_categories($pdo, [$row], $lang)[0];
+}
+
+/**
+ * Додає до рядків ключ 'categories' (назви поточною мовою). Один запит на всі рядки.
+ *
+ * @param list<array<string,mixed>> $rows
+ * @return list<array<string,mixed>>
+ */
+function mp_attach_categories(PDO $pdo, array $rows, string $lang): array
+{
+    if ($rows === []) {
+        return [];
+    }
+    $ids = array_map(static fn(array $r): int => (int) $r['id'], $rows);
+    $in = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare(
+        "SELECT lc.listing_id, c.id, COALESCE(NULLIF(tl.name, ''), NULLIF(ts.name, ''), c.slug) AS name
+         FROM mp_listing_categories lc
+         JOIN mp_categories c ON c.id = lc.category_id AND c.is_active = 1
+         LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = ?
+         LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = ?
+         WHERE lc.listing_id IN ($in)
+         ORDER BY c.sort_order, c.id"
+    );
+    $stmt->execute(array_merge([$lang, mp_source_lang()], $ids));
+    $byListing = [];
+    foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $byListing[(int) $r['listing_id']][] = ['id' => (int) $r['id'], 'name' => (string) $r['name']];
+    }
+    foreach ($rows as &$row) {
+        $row['categories'] = $byListing[(int) $row['id']] ?? [];
+    }
+    unset($row);
+
+    return $rows;
+}
+
+/** URL обкладинки або null (cover_image зберігається як 'covers/<файл>' відносно public/assets/images/marketplace/). */
+function mp_cover_url(?string $cover): ?string
+{
+    if ($cover === null || !preg_match('~^covers/[A-Za-z0-9._-]+$~', $cover)) {
+        return null;
+    }
+
+    return '/assets/images/marketplace/' . $cover;
+}
+
+/** Підпис рівня навичок (ключі t() skill_*): none/basic/course. */
+function mp_skill_text(?string $skill): ?string
+{
+    return match ($skill) {
+        'none', 'basic', 'course' => t('skill_' . $skill),
+        default => null,
+    };
+}
+
+/** http(s)-посилання без пробілів/керівних символів — безпечне для Location. */
+function mp_safe_redirect_url(string $url): bool
+{
+    return mp_is_http_url($url) && !preg_match('/[\x00-\x1F\x7F\s]/', $url);
+}
+
+/**
+ * Реєструє «отримання» не частіше 1 разу на добу для пари (користувач АБО сесія + пропозиція)
+ * й збільшує mp_listings.claims_count. Повертає true, якщо claim створено.
+ *
+ * Користувач: перевірка за mp_claims (user_id). Гість: у mp_claims немає колонки сесії (ALTER заборонено),
+ * тож ліміт для гостя тримається в $_SESSION['mp_claimed'][listing_id] = unix-час останнього claim.
+ * Рядок листингу блокується (FOR UPDATE), щоб два паралельні запити не порахувалися двічі.
+ */
+function mp_register_claim(PDO $pdo, int $listingId, ?int $userId): bool
+{
+    $now = time();
+    if ($userId === null) {
+        $last = (int) ($_SESSION['mp_claimed'][$listingId] ?? 0);
+        if ($last > $now - 86400) {
+            return false;
+        }
+    }
+
+    $pdo->beginTransaction();
+    try {
+        $lock = $pdo->prepare("SELECT id FROM mp_listings WHERE id = :id AND status = 'published' FOR UPDATE");
+        $lock->execute([':id' => $listingId]);
+        if ($lock->fetchColumn() === false) {
+            $pdo->rollBack();
+
+            return false;
+        }
+        if ($userId !== null) {
+            $seen = $pdo->prepare('SELECT 1 FROM mp_claims WHERE listing_id = :l AND user_id = :u AND created_at > (NOW() - INTERVAL 1 DAY) LIMIT 1');
+            $seen->execute([':l' => $listingId, ':u' => $userId]);
+            if ($seen->fetchColumn() !== false) {
+                $pdo->rollBack();
+
+                return false;
+            }
+        }
+        $ins = $pdo->prepare('INSERT INTO mp_claims (listing_id, user_id) VALUES (:l, :u)');
+        $ins->execute([':l' => $listingId, ':u' => $userId]);
+        $upd = $pdo->prepare('UPDATE mp_listings SET claims_count = claims_count + 1 WHERE id = :l');
+        $upd->execute([':l' => $listingId]);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+    if ($userId === null) {
+        $_SESSION['mp_claimed'][$listingId] = $now;
+    }
+
+    return true;
 }

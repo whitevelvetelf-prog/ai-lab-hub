@@ -15,6 +15,7 @@
 require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/translations.php';
 require_once __DIR__ . '/paw-icon.php';
+require_once __DIR__ . '/marketplace.php';
 
 ?>
 <style>
@@ -754,6 +755,9 @@ require_once __DIR__ . '/paw-icon.php';
     <div class="site-footer__inner">
         <ul class="site-footer__links">
             <li><a href="blog.php"><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a></li>
+            <?php if (mp_public_nav_visible()): ?>
+            <li><a href="marketplace.php"><?= htmlspecialchars(t('footer_marketplace'), ENT_QUOTES) ?></a></li>
+            <?php endif; ?>
             <li><a href="about.php"><?= htmlspecialchars(t('footer_about'), ENT_QUOTES) ?></a></li>
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
             <li><a href="terms.php"><?= htmlspecialchars(t('footer_terms'), ENT_QUOTES) ?></a></li>

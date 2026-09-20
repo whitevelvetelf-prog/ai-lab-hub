@@ -33,3 +33,6 @@
 
 # Пакет для заливки на хостинг (генерується; містить zip і логотипи) — не в git.
 /hosting-upload/
+
+# Локальне перевизначення налаштувань Marketplace (напр. public_enabled => true для розробки).
+/config/marketplace.local.php
