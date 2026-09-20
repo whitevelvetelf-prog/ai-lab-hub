@@ -56,16 +56,25 @@ CREATE TABLE IF NOT EXISTS ad_clicks (
     FOREIGN KEY (ad_id) REFERENCES ads(id)
 );
 
--- Тестова зона та internal-оголошення (Marketplace-промо) для сторінки категорії.
+-- Зони та внутрішні оголошення AI LAB HUB (промо Елі й підтримки проєкту)
+-- для сторінок категорії (зона 1) і підкатегорії (зона 2). Показуються, коли
+-- немає активної платної кампанії. UPDATE — щоб оновити рядок 1, якщо раніше
+-- застосовано попередню версію блоку (INSERT IGNORE наявні рядки не змінює).
 INSERT IGNORE INTO ad_zones (id, name, page_type) VALUES
 (1, 'Сторінка категорії - верх', 'category'),
 (2, 'Сторінка підкатегорії - верх', 'subcategory');
 
 INSERT IGNORE INTO ad_campaigns (id, campaign_type, advertiser_name, status, start_date, notes) VALUES
-(1, 'internal', 'AI LAB HUB', 'active', CURDATE(), 'Промо Marketplace — internal-заповнювач');
+(1, 'internal', 'AI LAB HUB', 'active', CURDATE(), 'Внутрішнє промо: Еля та підтримка проєкту');
 
 INSERT IGNORE INTO ads (id, campaign_id, zone_id, image_url, target_url, category_id, subcategory_id, status) VALUES
-(1, 1, 1, '/assets/images/ads/marketplace-promo.svg', 'donate.php', NULL, NULL, 'active');
+(1, 1, 1, '/assets/images/ads/eli-promo.svg', 'eli.php', NULL, NULL, 'active'),
+(2, 1, 1, '/assets/images/ads/support-promo.svg', 'donate.php', NULL, NULL, 'active'),
+(3, 1, 2, '/assets/images/ads/eli-promo.svg', 'eli.php', NULL, NULL, 'active'),
+(4, 1, 2, '/assets/images/ads/support-promo.svg', 'donate.php', NULL, NULL, 'active');
+
+UPDATE ads SET image_url = '/assets/images/ads/eli-promo.svg', target_url = 'eli.php' WHERE id = 1 AND image_url LIKE '%marketplace-promo%';
+UPDATE ad_campaigns SET notes = 'Внутрішнє промо: Еля та підтримка проєкту' WHERE id = 1 AND notes LIKE 'Промо Marketplace%';
 
 -- EN-підпис посилання «реклама» у меню CRM кабінету (admin).
 INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VALUES
