@@ -1,6 +1,62 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
+-- Ad server (зони, кампанії, оголошення, покази, кліки).
+-- Лише CREATE TABLE IF NOT EXISTS — безпечно для повторного запуску.
+-- Не плутати зі старою таблицею campaigns (банер головної сторінки).
+-- =====================================================================
+CREATE TABLE IF NOT EXISTS ad_zones (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    page_type ENUM('category', 'subcategory', 'global') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ad_campaigns (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    campaign_type ENUM('paid', 'internal') NOT NULL DEFAULT 'paid',
+    advertiser_name VARCHAR(255) NOT NULL,
+    contact_email VARCHAR(255) NULL,
+    payment_type ENUM('fixed_period') NULL,
+    paid_amount DECIMAL(10,2) NULL,
+    status ENUM('active', 'paused', 'expired') NOT NULL DEFAULT 'active',
+    start_date DATE NOT NULL,
+    end_date DATE NULL,
+    notes TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS ads (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    campaign_id INT NOT NULL,
+    zone_id INT NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    target_url VARCHAR(500) NOT NULL,
+    category_id INT NULL,
+    subcategory_id INT NULL,
+    status ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (campaign_id) REFERENCES ad_campaigns(id),
+    FOREIGN KEY (zone_id) REFERENCES ad_zones(id)
+);
+
+CREATE TABLE IF NOT EXISTS ad_impressions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ad_id INT NOT NULL,
+    session_id VARCHAR(100) NULL,
+    shown_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ad_id) REFERENCES ads(id)
+);
+
+CREATE TABLE IF NOT EXISTS ad_clicks (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    ad_id INT NOT NULL,
+    session_id VARCHAR(100) NULL,
+    clicked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (ad_id) REFERENCES ads(id)
+);
+
+-- =====================================================================
 -- Партія (хвиля 9/N): "Публікації", "Чат-боти" (Текст та Чат-боти),
 -- "Тренди" (SEO та контент), "Візуалізація даних" (Дизайн та креатив).
 --
