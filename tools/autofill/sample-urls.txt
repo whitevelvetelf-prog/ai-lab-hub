@@ -1,0 +1,4 @@
+# Приклад для discover:urls. Формат: "https://сайт" або "Назва | https://сайт"
+# Кожен рядок пройде повний пайплайн (fetch → enrich → validate)
+Ideogram | https://ideogram.ai
+https://www.descript.com

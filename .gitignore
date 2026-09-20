@@ -19,3 +19,11 @@
 # Локальний дебаг-лог листів (app/mailer.php) — може містити токени входу,
 # ніколи не комітити. Створюється лише коли mail() недоступний (dev-оточення).
 /storage/
+
+# tools/autofill: локальний інструмент автонаповнення. Ключ API в config.php,
+# робочі дані (sqlite), SQL-пакети й вивантаження існуючих продуктів — не в git.
+# (Те саме є у tools/autofill/.gitignore; тут — друга лінія захисту.)
+/tools/autofill/config.php
+/tools/autofill/data/
+/tools/autofill/export/
+/tools/autofill/existing.csv
