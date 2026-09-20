@@ -743,6 +743,23 @@ require_once __DIR__ . '/paw-icon.php';
             new ResizeObserver(sync).observe(footer);
         }
     })();
+
+    /* Висота закріпленої шапки → --header-h (top для закріплених стрілок «назад»). */
+    (function () {
+        var header = document.querySelector('.site-header');
+        if (!header) {
+            return;
+        }
+        function sync() {
+            document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+        }
+        sync();
+        window.addEventListener('load', sync);
+        window.addEventListener('resize', sync);
+        if (window.ResizeObserver) {
+            new ResizeObserver(sync).observe(header);
+        }
+    })();
 </script>
 
 <script>

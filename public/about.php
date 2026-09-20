@@ -6,6 +6,7 @@ declare(strict_types=1);
  * AI LAB HUB — Про проєкт.
  */
 
+require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 
 ?>
@@ -118,14 +119,11 @@ require_once __DIR__ . '/../app/translations.php';
             color: var(--accent);
         }
     </style>
+    <link rel="stylesheet" href="/assets/css/site-nav.css">
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
-    <header class="site-header">
-        <a class="site-header__brand" href="index.php">
-            <img class="site-header__logo" src="/logo.png" alt="AI LAB HUB">
-        </a>
-    </header>
+    <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
         <h1 class="stub__title">Про проєкт</h1>

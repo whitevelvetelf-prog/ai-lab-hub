@@ -6,6 +6,7 @@ declare(strict_types=1);
  * AI LAB HUB — Блог: стаття.
  */
 
+require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 
@@ -86,9 +87,21 @@ $article = $slug !== '' ? blog_load_article($slug, current_lang()) : null;
             padding: 48px 24px 64px;
         }
 
+        /* Закріплена стрілка «назад»: лишається під закріпленою шапкою при
+           прокрутці. --header-h (висота шапки) кладе app/footer.php; z-index
+           нижчий за шапку/підвал (100), щоб не перекривати їх. */
         .back-link {
+            position: sticky;
+            top: calc(var(--header-h, 84px) + 8px);
+            z-index: 90;
             display: inline-block;
             margin: 0 0 20px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(0, 3, 44, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
             font-size: 0.95rem;
             font-weight: 600;
             color: var(--text-muted);
@@ -181,14 +194,11 @@ $article = $slug !== '' ? blog_load_article($slug, current_lang()) : null;
             color: var(--text-muted);
         }
     </style>
+    <link rel="stylesheet" href="/assets/css/site-nav.css">
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
-    <header class="site-header">
-        <a class="site-header__brand" href="index.php">
-            <img class="site-header__logo" src="/logo.png" alt="AI LAB HUB">
-        </a>
-    </header>
+    <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
         <a class="back-link" href="blog.php"><?= htmlspecialchars(t('blog_back'), ENT_QUOTES) ?></a>
