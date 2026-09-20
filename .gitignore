@@ -27,3 +27,6 @@
 /tools/autofill/data/
 /tools/autofill/export/
 /tools/autofill/existing.csv
+
+# Пакет для заливки на хостинг (генерується; містить zip і логотипи) — не в git.
+/hosting-upload/
