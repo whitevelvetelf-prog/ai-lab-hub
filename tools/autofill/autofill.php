@@ -38,6 +38,13 @@ try {
         case 'enrich':
             Enricher::run((int)$opt('limit', 50));
             break;
+        // Гібридний режим без API-ключа (див. src/Pack.php і README)
+        case 'enrich:export':
+            Pack::export((int)$opt('limit', 0), isset($args['redo']));
+            break;
+        case 'enrich:import':
+            Pack::import((string)($args['_'][1] ?? ''));
+            break;
         case 'validate':
             Validator::run();
             break;
@@ -93,6 +100,8 @@ AI LAB HUB — автонаповнення каталогу
   discover:gh  [--topic ai-tools] [--min-stars 500] [--pages 3]
 
   fetch|enrich [--limit 50]       окремі кроки; validate — перевірка якості
+  enrich:export [--limit 10] [--redo]   без API-ключа: пакет сторінок → export/enrich/pack_NNNN.json
+  enrich:import <pack_NNNN.result.json> без API-ключа: прийняти картки, які написав Claude Code
   run [--limit 50]                fetch → enrich → validate
   review [--n 20]                 картки з сумнівами;  approve <id...> | reject <id...>
   sample [--n 10]                 вибірково перевірити валідні

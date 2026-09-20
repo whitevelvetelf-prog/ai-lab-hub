@@ -39,6 +39,18 @@ php autofill.php export-manual                         # → export/manual.csv (
 
 Імпорт безпечний для повторів: `INSERT … WHERE NOT EXISTS` за `website`, категорії/тарифи додаються лише щойно створеним продуктам.
 
+## Гібридний режим без API-ключа
+Замість `enrich` (платний виклик Claude через API) картки можна писати в Claude Code за підпискою — лише з тексту сторінок, який уже завантажив скрипт (без веб-пошуку, тож факти не вигадуються):
+```
+php autofill.php fetch --limit 10                 # скрипт завантажує сайти
+php autofill.php enrich:export --limit 10         # → export/enrich/pack_0001.json + INSTRUCTIONS.md
+#   Claude Code: «Прочитай export/enrich/INSTRUCTIONS.md та pack_0001.json і збережи картки в pack_0001.result.json»
+php autofill.php enrich:import export/enrich/pack_0001.result.json   # → стадія enriched
+php autofill.php validate                         # ті самі перевірки, що й для карток від API
+php autofill.php export                           # SQL-пакет
+```
+`--redo` у `enrich:export` знову бере вже запаковані (`packed`) сайти, якщо результат не прийшов. `enrich:import` відкидає рядки з неправильними id/полями/категоріями й пояснює чому. Розміри: `pack_size`, `pack_text_chars_home`, `pack_text_chars_pricing` у `config.php`.
+
 ## Що свідомо НЕ автоматизується
 - Партнерська реєстрація — лише **підказка**: якщо на сайті знайдено сторінку affiliate/referral, її URL кладеться в `internal_registration_url`. Статус партнерства = «Знайдено».
 - Рейтинги/відгуки/кількість користувачів не збираються й у тексті карток відсікаються валідатором.

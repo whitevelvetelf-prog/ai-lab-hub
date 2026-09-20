@@ -29,6 +29,11 @@ return [
     // Ключі моделей монетизації (значення в БД задаються в schema_map.php)
     'monetization_models' => ['free', 'freemium', 'paid', 'subscription', 'one_time', 'open_source', 'usage_based'],
 
+    // Гібридний режим без API-ключа (enrich:export / enrich:import): розміри пакета й тексту сторінок
+    'pack_size'               => 10,     // скільки сайтів у одному пакеті
+    'pack_text_chars_home'    => 4000,   // символів тексту головної в пакеті
+    'pack_text_chars_pricing' => 2500,   // символів тексту сторінки цін
+
     'paths' => [
         'data'   => __DIR__ . '/data',
         'export' => __DIR__ . '/export',

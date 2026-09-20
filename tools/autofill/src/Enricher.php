@@ -7,7 +7,7 @@ declare(strict_types=1);
  */
 final class Enricher
 {
-    private const SYSTEM = <<<'TXT'
+    public const SYSTEM = <<<'TXT'
 Ти готуєш картку продукту для українськомовного каталогу цифрових продуктів та AI-інструментів.
 
 Правила:
@@ -116,7 +116,7 @@ TXT;
         return $msg;
     }
 
-    private static function tool(): array
+    public static function tool(): array
     {
         return [
             'name' => 'save_product',

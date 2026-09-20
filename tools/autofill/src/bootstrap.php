@@ -97,6 +97,6 @@ function cyr_ratio(string $s): float
     return preg_match_all('/\p{Cyrillic}/u', $s) / $letters;
 }
 
-foreach (['Db', 'Http', 'Robots', 'Taxonomy', 'Candidates', 'Existing', 'Stats', 'Discover', 'Fetcher', 'Enricher', 'Validator', 'Exporter'] as $c) {
+foreach (['Db', 'Http', 'Robots', 'Taxonomy', 'Candidates', 'Existing', 'Stats', 'Discover', 'Fetcher', 'Enricher', 'Pack', 'Validator', 'Exporter'] as $c) {
     require_once __DIR__ . '/' . $c . '.php';
 }
