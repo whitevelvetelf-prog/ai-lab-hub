@@ -18,6 +18,73 @@ require_once __DIR__ . '/paw-icon.php';
 
 ?>
 <style>
+    /* ===== Закріплена стрілка «назад» (на всіх сторінках) =====
+       Веде на попередню сторінку (history.back), а без історії — на головну.
+       JS переносить її першим елементом у закріплену шапку (.site-header),
+       тож вона завжди на видному місці й не накладається на контент.
+       Запасний варіант — position: fixed під шапкою (top від --header-h,
+       z-index 95 < 100 у шапки й підвалу), якщо шапки на сторінці нема.
+       Старі текстові посилання «← До …» (.back-link, .back-nav) сховані,
+       щоб не дублювати стрілку. */
+    .site-back {
+        position: fixed;
+        left: 16px;
+        top: calc(var(--header-h, 84px) + 12px);
+        z-index: 95;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        color: #ffffff;
+        background: rgba(0, 3, 44, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        text-decoration: none;
+        transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .site-back[hidden] {
+        display: none;
+    }
+
+    .site-header .site-back {
+        position: static;
+        flex-shrink: 0;
+        box-shadow: none;
+    }
+
+    .site-back:hover {
+        background: rgba(91, 140, 255, 0.35);
+        border-color: rgba(255, 255, 255, 0.5);
+    }
+
+    .site-back svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .back-link,
+    .back-nav {
+        display: none !important;
+    }
+
+    @media (max-width: 600px) {
+        .site-back {
+            left: 10px;
+            width: 38px;
+            height: 38px;
+        }
+
+        .site-header .site-back {
+            width: 38px;
+            height: 38px;
+        }
+    }
+
     /* ===== Шапка: гнучка розкладка + гамбургер на вузьких екранах =====
        Кнопка «Викликати Асистента» (.site-header__cta) винесена з <nav>,
        тож на мобільному лишається видимою поруч із гамбургером; гамбургер
@@ -716,6 +783,45 @@ require_once __DIR__ . '/paw-icon.php';
         <button type="button" class="site-footer__toggle" id="siteFooterToggle" aria-expanded="false" aria-controls="siteFooterMore">▲ <?= htmlspecialchars(t('newsletter_submit'), ENT_QUOTES) ?></button>
     </div>
 </footer>
+
+<a class="site-back" id="siteBack" href="index.php" aria-label="<?= htmlspecialchars(t('back_button'), ENT_QUOTES) ?>" title="<?= htmlspecialchars(t('back_button'), ENT_QUOTES) ?>">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>
+</a>
+
+<script>
+    /* Стрілка «назад»: якщо є історія цієї вкладки з нашого ж домену —
+       history.back() (повертає туди, звідки прийшли), інакше звичайний
+       перехід на головну (href). На головній без такої історії ховаємо. */
+    (function () {
+        var back = document.getElementById('siteBack');
+        if (!back) {
+            return;
+        }
+        var canGoBack = false;
+        try {
+            canGoBack = !!document.referrer
+                && new URL(document.referrer).origin === window.location.origin
+                && window.history.length > 1;
+        } catch (e) {
+            canGoBack = false;
+        }
+        var path = window.location.pathname;
+        if (!canGoBack && (path === '/' || path === '/index.php')) {
+            back.hidden = true;
+            return;
+        }
+        var header = document.querySelector('.site-header');
+        if (header) {
+            header.insertBefore(back, header.firstChild);
+        }
+        back.addEventListener('click', function (event) {
+            if (canGoBack) {
+                event.preventDefault();
+                window.history.back();
+            }
+        });
+    })();
+</script>
 
 <script>
     /* Закріплений підвал: висоту смуги пишемо в --footer-h (відступ body,
