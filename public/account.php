@@ -1438,7 +1438,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                         <div class="accordion__panel-inner">
                             <div class="staff-note">
                                 <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
-                                · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>.
+                                · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
+                                · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
                         </div>
                     </div>

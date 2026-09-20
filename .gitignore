@@ -9,6 +9,10 @@
 # змінюється незалежно від коду.
 /public/assets/images/logos/
 
+# Зображення оголошень, завантажені через CRM реклами (crm-edit-campaign.php) —
+# так само користувацький контент.
+/public/assets/images/ads/uploads/
+
 # Тимчасові архіви для заливання (deploy.zip, deploy2.zip, …) — не код проєкту.
 /deploy*.zip
 

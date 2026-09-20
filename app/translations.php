@@ -174,6 +174,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'account_crm_access_prefix'  => 'Доступ до CRM:',
     'account_crm_list_link'      => 'список продуктів',
     'account_crm_add_link'       => 'додати новий AI-продукт',
+    'account_crm_ads_link'       => 'реклама',
     'account_logout'             => 'Вийти з акаунту',
 
     // --- account.php: акордеон-структура кабінету ---

@@ -31,6 +31,7 @@
       - database/fix-*.sql   one-off hosting patches, not standard migrations
       - public/assets/images/task-category-page.txt   working note
       - public/assets/images/logos/   user uploads from the CRM
+      - public/assets/images/ads/uploads/   ad banners uploaded via the ads CRM
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
 #>
 
@@ -97,7 +98,7 @@ $imageExcludes = @(
     'public/assets/images/task-category-page.txt'
 )
 $images = Get-RelativeFiles -Dir 'public/assets/images' -Filter '*' -Recurse |
-    Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' }
+    Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' -and $_ -notmatch '^public/assets/images/ads/uploads/' }
 $files.AddRange([string[]] $images)
 
 $files = $files | Select-Object -Unique | Sort-Object

@@ -67,6 +67,10 @@ INSERT IGNORE INTO ad_campaigns (id, campaign_type, advertiser_name, status, sta
 INSERT IGNORE INTO ads (id, campaign_id, zone_id, image_url, target_url, category_id, subcategory_id, status) VALUES
 (1, 1, 1, '/assets/images/ads/marketplace-promo.svg', 'donate.php', NULL, NULL, 'active');
 
+-- EN-підпис посилання «реклама» у меню CRM кабінету (admin).
+INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VALUES
+('account_crm_ads_link', 'en', 'ads', 'manual');
+
 -- =====================================================================
 -- Партія (хвиля 9/N): "Публікації", "Чат-боти" (Текст та Чат-боти),
 -- "Тренди" (SEO та контент), "Візуалізація даних" (Дизайн та креатив).
