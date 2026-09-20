@@ -14,6 +14,20 @@
  * Файли фізично лежать у public/ (веб-корінь), тому шляхи абсолютні від /.
  */
 
+/**
+ * URL стилю з версією (mtime файлу): після деплою браузер не тримає
+ * стару копію CSS зі свіжою розміткою (кеш веб-сервера/браузера).
+ */
+if (!function_exists('css_asset')) {
+    function css_asset(string $name): string
+    {
+        $path = __DIR__ . '/../public/assets/css/' . $name;
+        $v = is_file($path) ? (int) filemtime($path) : 0;
+
+        return '/assets/css/' . $name . ($v > 0 ? '?v=' . $v : '');
+    }
+}
+
 ?>
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <link rel="manifest" href="/manifest.json">
@@ -22,8 +36,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="AI LAB HUB">
-<link rel="stylesheet" href="/assets/css/pwa-install.css">
-<link rel="stylesheet" href="/assets/css/saved-products.css">
-<link rel="stylesheet" href="/assets/css/share-button.css">
-<link rel="stylesheet" href="/assets/css/back-button.css">
-<link rel="stylesheet" href="/assets/css/ad-banner.css">
+<link rel="stylesheet" href="<?= css_asset('pwa-install.css') ?>">
+<link rel="stylesheet" href="<?= css_asset('saved-products.css') ?>">
+<link rel="stylesheet" href="<?= css_asset('share-button.css') ?>">
+<link rel="stylesheet" href="<?= css_asset('back-button.css') ?>">
+<link rel="stylesheet" href="<?= css_asset('ad-banner.css') ?>">

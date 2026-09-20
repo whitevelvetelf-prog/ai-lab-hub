@@ -80,6 +80,18 @@
     color: rgba(255, 255, 255, 0.5);
 }
 
+/* Картка-посилання: текст білий, без підкреслення й «синього» стилю посилання
+   в усіх станах; власний градієнт — запасний фон, якщо зображення не
+   завантажилось. */
+.ad-zone__link,
+.ad-zone__link:link,
+.ad-zone__link:visited,
+.ad-zone__link:hover,
+.ad-zone__link:active {
+    color: #ffffff;
+    text-decoration: none;
+}
+
 .ad-zone__link {
     position: relative;
     display: flex;
@@ -87,8 +99,7 @@
     min-height: 150px;
     overflow: hidden;
     border-radius: 10px;
-    color: #ffffff;
-    text-decoration: none;
+    background: linear-gradient(135deg, #2116ad 0%, #00032c 100%);
 }
 
 /* Зображення — лише фон/декор картки; текст поверх нього — звичайний HTML. */
@@ -110,14 +121,19 @@
 }
 
 .ad-zone__headline {
+    display: block;
     font-size: clamp(1.15rem, 3.2vw, 1.7rem);
     font-weight: 800;
     line-height: 1.25;
+    color: #ffffff;
+    text-decoration: none;
 }
 
 .ad-zone__subtext {
+    display: block;
     font-size: clamp(0.9rem, 2vw, 1.1rem);
     color: rgba(255, 255, 255, 0.82);
+    text-decoration: none;
 }
 
 /* Оголошення без тексту (картинка сама є банером) — як раніше. */
