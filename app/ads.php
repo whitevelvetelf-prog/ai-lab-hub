@@ -50,3 +50,56 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
 
     return $internal !== false ? $internal : null;
 }
+
+/**
+ * Ad server (зони): оголошення для зони $zoneId.
+ *
+ * Пошук в ads/ad_campaigns (таблиці з increment_latest.sql): спершу серед
+ * активних платних кампаній у межах start_date/end_date, якщо нема — серед
+ * internal (fallback). Оголошення, прив'язане до тієї ж категорії/
+ * підкатегорії, має пріоритет над універсальним (category_id/subcategory_id
+ * IS NULL); якщо контекст не заданий — підходять лише універсальні.
+ * Серед рівнозначних вибір випадковий.
+ *
+ * @return array{id:int,image_url:string,target_url:string}|null
+ */
+function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId = null, ?PDO $pdo = null): ?array
+{
+    $pdo ??= require __DIR__ . '/../config/database.php';
+
+    $sql = "SELECT a.id, a.image_url, a.target_url
+            FROM ads a
+            JOIN ad_campaigns c ON c.id = a.campaign_id
+            WHERE a.zone_id = :zone
+              AND a.status = 'active'
+              AND c.campaign_type = :type
+              AND c.status = 'active'
+              AND c.start_date <= CURDATE()
+              AND (c.end_date IS NULL OR c.end_date >= CURDATE())
+              AND " . ($categoryId !== null
+                ? '(a.category_id IS NULL OR a.category_id = :cat)'
+                : 'a.category_id IS NULL') . "
+              AND " . ($subcategoryId !== null
+                ? '(a.subcategory_id IS NULL OR a.subcategory_id = :sub)'
+                : 'a.subcategory_id IS NULL') . "
+            ORDER BY (a.category_id IS NOT NULL) + (a.subcategory_id IS NOT NULL) DESC, RAND()
+            LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+
+    foreach (['paid', 'internal'] as $type) {
+        $params = [':zone' => $zoneId, ':type' => $type];
+        if ($categoryId !== null) {
+            $params[':cat'] = $categoryId;
+        }
+        if ($subcategoryId !== null) {
+            $params[':sub'] = $subcategoryId;
+        }
+        $stmt->execute($params);
+        $ad = $stmt->fetch();
+        if ($ad !== false) {
+            return $ad;
+        }
+    }
+
+    return null;
+}
