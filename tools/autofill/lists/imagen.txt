@@ -1,0 +1,36 @@
+# Мультимедіа › Генерація зображень — 30 кандидатів для discover:urls
+# Запуск: php autofill.php discover:urls lists/imagen.txt --subcat "Мультимедіа › Генерація зображень"
+# Формат: Назва | https://офіційний-сайт. Адреси перевірено 2026-09-21 (сторінка відкрилась і належить продукту,
+# а якщо сайт віддавав 403/500 — підтверджено видачею пошуку по власному домену продукту).
+# Не входять: Midjourney, Stable Diffusion, Playground, NightCafe, Krea, Leonardo, Ideogram, Recraft, Adobe Firefly,
+# Canva, DreamStudio, FLUX.1 та інші, що вже є в existing.csv або в базі.
+Artbreeder | https://www.artbreeder.com
+getimg.ai | https://getimg.ai
+Civitai | https://civitai.com
+Pixlr | https://pixlr.com
+DeepAI | https://deepai.org
+SeaArt AI | https://www.seaart.ai
+Mage | https://www.mage.space
+Scenario | https://www.scenario.com
+Dream by WOMBO | https://dream.ai
+StarryAI | https://starryai.com
+Hotpot AI | https://hotpot.ai
+Clipdrop | https://clipdrop.co
+OpenArt | https://openart.ai
+Dzine | https://www.dzine.ai
+Microsoft Designer | https://designer.microsoft.com
+Google Gemini (Nano Banana) | https://gemini.google.com
+Vivago | https://vivago.ai
+PixAI | https://pixai.art
+ComfyUI | https://www.comfy.org
+Draw Things | https://drawthings.ai
+Astria | https://www.astria.ai
+Segmind | https://www.segmind.com
+Gencraft | https://gencraft.com
+Stockimg AI | https://www.stockimg.ai
+Craiyon | https://www.craiyon.com
+Tensor.Art | https://tensor.art
+Lexica | https://lexica.art
+Meta AI | https://www.meta.ai
+Magnific | https://www.magnific.com
+Google Flow (ImageFX) | https://flow.google.com
