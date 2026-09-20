@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS mp_categories (
   PRIMARY KEY (id),
   UNIQUE KEY uq_section_slug (section, slug),
   KEY idx_parent (parent_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS mp_category_translations (
   category_id INT UNSIGNED NOT NULL,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS mp_category_translations (
   name        VARCHAR(150) NOT NULL,
   is_auto     TINYINT(1)   NOT NULL DEFAULT 0,
   PRIMARY KEY (category_id, lang)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 2. Продавці / автори. user_id = NULL → "продавець" це сама платформа.
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS mp_sellers (
   PRIMARY KEY (id),
   UNIQUE KEY uq_slug (slug),
   KEY idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 3. Пропозиції (єдина таблиця для solution / course / job)
@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS mp_listings (
   PRIMARY KEY (id),
   KEY idx_section_status (section, status, published_at),
   KEY idx_seller (seller_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Тексти окремо від пропозиції — архітектура під 80+ мов
 -- (нова мова = нові рядки, а не нові колонки)
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS mp_listing_translations (
   is_auto     TINYINT(1)   NOT NULL DEFAULT 0,
   updated_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (listing_id, lang)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Many-to-many: пропозиція може бути в кількох категоріях
 CREATE TABLE IF NOT EXISTS mp_listing_categories (
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS mp_listing_categories (
   category_id INT UNSIGNED NOT NULL,
   PRIMARY KEY (listing_id, category_id),
   KEY idx_category (category_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 4. Файли для завантаження (зберігаються ПОЗА webroot,
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS mp_files (
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_sha (sha256)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 5. "Отримано" — лише лічильник/статистика (НЕ рейтинг і НЕ відгуки)
@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS mp_claims (
   PRIMARY KEY (id),
   KEY idx_listing (listing_id, created_at),
   KEY idx_user (user_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 6. Журнал модерації
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS mp_moderation_log (
   created_at DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   KEY idx_listing (listing_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
 -- 7. Стартові дані: продавець "AI LAB HUB" (сама платформа)
