@@ -382,6 +382,8 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
 <?php else: ?>
         <h1 class="category__title"><?= htmlspecialchars(localized_name($category), ENT_QUOTES) ?></h1>
 
+        <?php $zoneId = 1; /* «Сторінка категорії - верх» */ include __DIR__ . '/../app/ad-banner.php'; ?>
+
         <?php if ($subcategories === []): ?>
         <p class="category__empty"><?= htmlspecialchars(t('category_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>

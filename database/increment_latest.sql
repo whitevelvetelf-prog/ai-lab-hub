@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS ad_clicks (
     FOREIGN KEY (ad_id) REFERENCES ads(id)
 );
 
+-- Тестова зона та internal-оголошення (Marketplace-промо) для сторінки категорії.
+INSERT IGNORE INTO ad_zones (id, name, page_type) VALUES
+(1, 'Сторінка категорії - верх', 'category');
+
+INSERT IGNORE INTO ad_campaigns (id, campaign_type, advertiser_name, status, start_date, notes) VALUES
+(1, 'internal', 'AI LAB HUB', 'active', CURDATE(), 'Промо Marketplace — internal-заповнювач');
+
+INSERT IGNORE INTO ads (id, campaign_id, zone_id, image_url, target_url, category_id, subcategory_id, status) VALUES
+(1, 1, 1, '/assets/images/ads/marketplace-promo.svg', 'donate.php', NULL, NULL, 'active');
+
 -- =====================================================================
 -- Партія (хвиля 9/N): "Публікації", "Чат-боти" (Текст та Чат-боти),
 -- "Тренди" (SEO та контент), "Візуалізація даних" (Дизайн та креатив).
