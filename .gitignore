@@ -13,6 +13,9 @@
 # так само користувацький контент.
 /public/assets/images/ads/uploads/
 
+# Обкладинки пропозицій Marketplace, завантажені через CRM (mp-add-offer.php) — користувацький контент.
+/public/assets/images/marketplace/covers/
+
 # Тимчасові архіви для заливання (deploy.zip, deploy2.zip, …) — не код проєкту.
 /deploy*.zip
 

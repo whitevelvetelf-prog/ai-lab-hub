@@ -32,6 +32,7 @@
       - public/assets/images/task-category-page.txt   working note
       - public/assets/images/logos/   user uploads from the CRM
       - public/assets/images/ads/uploads/   ad banners uploaded via the ads CRM
+      - public/assets/images/marketplace/covers/   Marketplace cover images uploaded via the CRM
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
 #>
 
@@ -98,7 +99,7 @@ $imageExcludes = @(
     'public/assets/images/task-category-page.txt'
 )
 $images = Get-RelativeFiles -Dir 'public/assets/images' -Filter '*' -Recurse |
-    Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' -and $_ -notmatch '^public/assets/images/ads/uploads/' }
+    Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' -and $_ -notmatch '^public/assets/images/ads/uploads/' -and $_ -notmatch '^public/assets/images/marketplace/covers/' }
 $files.AddRange([string[]] $images)
 
 $files = $files | Select-Object -Unique | Sort-Object
