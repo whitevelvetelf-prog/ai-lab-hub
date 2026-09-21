@@ -18,6 +18,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
+require_once __DIR__ . '/../app/mpb-rules.php';
 
 mp_public_require();
 
@@ -396,7 +397,7 @@ mpb_open($pageTitle);
             <div class="mp-field">
                 <label class="mp-check mp-check--block">
                     <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?>>
-                    <span><?= mp_e(t('mpb_f_rules_text')) ?> <a href="mp-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a></span>
+                    <span><?= mp_e(mpb_rules_checkbox_text($lang)) ?> <a href="mp-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a></span>
                 </label>
             </div>
 

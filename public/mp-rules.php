@@ -17,7 +17,10 @@ require_once __DIR__ . '/../app/mpb-rules.php';
 mp_public_require();
 
 $rules = mpb_rules_render();
-$title = $rules !== null && $rules['title'] !== '' ? $rules['title'] : t('mpb_rules_title');
+if ($rules === null) {
+    mp_not_found();   // файлу правил немає — сторінки немає (тексту в коді/рядках інтерфейсу не тримаємо)
+}
+$title = $rules['title'] !== '' ? $rules['title'] : t('mpb_f_rules_link');
 
 mpb_open($title, false);
 ?>
@@ -28,11 +31,7 @@ mpb_open($title, false);
             <p class="mp-note"><?= mp_e(t('mpb_rules_uk_only')) ?></p>
         <?php endif; ?>
         <article class="mp-panel mp-rules" lang="uk">
-            <?php if ($rules !== null): ?>
-                <?= $rules['html'] /* усе екрановано в mpb_rules_render() */ ?>
-            <?php else: ?>
-                <p class="mp-text"><?= mp_e(t('mpb_rules_placeholder')) ?></p>
-            <?php endif; ?>
+            <?= $rules['html'] /* усе екрановано в mpb_rules_render() */ ?>
         </article>
     </div>
 <?php mpb_close(); ?>

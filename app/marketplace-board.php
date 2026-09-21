@@ -770,6 +770,9 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
     $isStaff = mpb_is_staff();
     $ttl = max(1, (int) mp_config()['listing_ttl_days']);
     $filesToDelete = [];
+    // Версія Правил, з якими погодився автор (config 'rules_version'); порожня → NULL.
+    $rv = trim((string) mp_config()['rules_version']);
+    $rv = $rv !== '' ? mb_substr($rv, 0, 20) : null;
 
     try {
         $pdo->beginTransaction();
@@ -782,10 +785,10 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
             $ins = $pdo->prepare(
                 "INSERT INTO mp_listings
                    (section, seller_id, status, pricing_model, price_type, price_amount, currency, delivery_type, source_lang,
-                    is_remote, city, contact_name, contact_phone, contact_telegram, contact_email, rules_accepted_at,
+                    is_remote, city, contact_name, contact_phone, contact_telegram, contact_email, rules_accepted_at, rules_version,
                     created_by, moderated_by, moderated_at, published_at, expires_at)
                  VALUES ('board', :sid, :st, 'free', :pt, :pa, :cur, 'contact', :lang,
-                    :rem, :city, :cn, :cp, :ct, :ce, NOW(),
+                    :rem, :city, :cn, :cp, :ct, :ce, NOW(), :rv,
                     :cb, :mb, $modAt, $modAt, $expAt)"
             );
             $ins->execute([
@@ -793,6 +796,7 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
                 ':lang' => $lang, ':rem' => $d['is_remote'] ? 1 : 0, ':city' => $d['city'],
                 ':cn' => $d['contact']['name'] ?: null, ':cp' => $d['contact']['phone'] ?: null,
                 ':ct' => $d['contact']['telegram'] ?: null, ':ce' => $d['contact']['email'] ?: null,
+                ':rv' => $rv,
                 ':cb' => $userId,
                 ':mb' => $isStaff ? $userId : null,
             ]);
@@ -812,7 +816,7 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
             $upd = $pdo->prepare(
                 "UPDATE mp_listings SET status = :st, price_type = :pt, price_amount = :pa, currency = :cur,
                         is_remote = :rem, city = :city, contact_name = :cn, contact_phone = :cp, contact_telegram = :ct,
-                        contact_email = :ce, rules_accepted_at = NOW(), reject_reason = NULL,
+                        contact_email = :ce, rules_accepted_at = NOW(), rules_version = :rv, reject_reason = NULL,
                         moderated_by = :mb, moderated_at = $modSql, published_at = $pubSql, expires_at = $expSql
                  WHERE id = :id AND section = 'board'"
             );
@@ -821,6 +825,7 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
                 ':rem' => $d['is_remote'] ? 1 : 0, ':city' => $d['city'],
                 ':cn' => $d['contact']['name'] ?: null, ':cp' => $d['contact']['phone'] ?: null,
                 ':ct' => $d['contact']['telegram'] ?: null, ':ce' => $d['contact']['email'] ?: null,
+                ':rv' => $rv,
                 ':mb' => $isStaff ? $userId : $existing['moderated_by'],
                 ':id' => $id,
             ]);

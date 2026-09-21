@@ -1,8 +1,9 @@
 -- =====================================================================
 -- AI LAB HUB — міграція: EN-написи сторінки Правил і галочки згоди Marketplace
 --
---   Ключі: mpb_f_rules_text (текст галочки), mpb_f_rules_link, footer_mp_rules, mpb_rules_uk_only.
---   Українські тексти — у app/translations.php. Безпечно повторювати: INSERT IGNORE (унікальний
+--   Ключі: mpb_f_rules_text (EN-переклад тексту галочки; УКРАЇНСЬКИЙ текст галочки береться з
+--   docs/marketplace_rules_uk.md, розділ «Текст для галочки», у app/translations.php його немає),
+--   mpb_f_rules_link, footer_mp_rules, mpb_rules_uk_only. Решта українських рядків — у app/translations.php. Безпечно повторювати: INSERT IGNORE (унікальний
 --   ключ (key_name, lang)); якщо EN-рядок mpb_f_rules_link уже є з 07 — він не перезаписується.
 --   Тільки INSERT: жодних DROP/DELETE/TRUNCATE/ALTER.
 -- =====================================================================

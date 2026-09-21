@@ -100,7 +100,6 @@ INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VAL
 ('mpb_photo_order', 'en', 'Order', 'manual'),
 ('mpb_photo_cover', 'en', 'Make cover', 'manual'),
 ('mpb_photo_delete', 'en', 'Delete', 'manual'),
-('mpb_f_rules_a', 'en', 'I agree to the', 'manual'),
 ('mpb_f_rules_link', 'en', 'Listing rules', 'manual'),
 ('mpb_submit_new', 'en', 'Submit for moderation', 'manual'),
 ('mpb_submit_save', 'en', 'Save changes', 'manual'),
@@ -158,7 +157,6 @@ INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VAL
 ('mpb_err_archive', 'en', 'Could not archive the listing.', 'manual'),
 ('mpb_err_extend_early', 'en', 'You can extend when 30 days or less remain.', 'manual'),
 ('mpb_err_extend_status', 'en', 'This listing cannot be extended.', 'manual'),
-('mpb_rules_title', 'en', 'Listing rules', 'manual'),
 ('mpb_rules_placeholder', 'en', 'The listing rules text will be published soon.', 'manual');
 
 INSERT INTO mp_category_translations (category_id, lang, name)

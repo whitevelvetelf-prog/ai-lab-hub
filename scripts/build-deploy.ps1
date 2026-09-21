@@ -42,7 +42,10 @@
           public/offer.php, public/get.php (public part),
           app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
           public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
-          docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php),
+          docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php), docs/.htaccess (no web access),
+        The Marketplace build STOPS with an error if the rules file still has [placeholders], the word
+        DRAFT (in Ukrainian), or the line 'Edition from: [date]', or if 'rules_version' in config/marketplace.php
+        (which ships as config/marketplace.dist.php) is empty / not YYYY-MM-DD.
           public/assets/css/mp-*.css,
           database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
           config/marketplace.php.
@@ -59,7 +62,11 @@ param(
     [string] $Output = 'deploy5.zip',
 
     # Explicit opt-in: add the Marketplace files (see the EXCLUDED list above) to the archive.
-    [switch] $IncludeMarketplace
+    [switch] $IncludeMarketplace,
+
+    # Files checked by the draft guard (parameters exist so the guard can be tested without touching real files).
+    [string] $RulesFile = 'docs/marketplace_rules_uk.md',
+    [string] $ConfigFile = 'config/marketplace.php'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -142,8 +149,38 @@ if ($IncludeMarketplace) {
     $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
     $files += 'public/uploads/marketplace/.htaccess'
     $files += 'docs/marketplace_rules_uk.md'
+    $files += 'docs/.htaccess'
     $files += 'config/marketplace.php'
     $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
+}
+
+# Release guard: never ship a draft of the listing rules (only with -IncludeMarketplace).
+if ($IncludeMarketplace) {
+    $draftWord = [regex]::Unescape('\u0427\u0415\u0420\u041D\u0415\u0422\u041A\u0410')                 # Ukrainian "DRAFT"
+    $editionRx = [regex]::Unescape('\u0420\u0435\u0434\u0430\u043A\u0446\u0456\u044F \u0432\u0456\u0434:') + '\s*\['   # "Edition from:" + "[" (date placeholder)
+    $problems = @()
+    $rulesPath = if ([System.IO.Path]::IsPathRooted($RulesFile)) { $RulesFile } else { Join-Path $root ($RulesFile -replace '/', '\') }
+    if (-not (Test-Path $rulesPath)) {
+        $problems += "rules file not found: $RulesFile"
+    } else {
+        $rulesText = [System.IO.File]::ReadAllText($rulesPath, [System.Text.Encoding]::UTF8)
+        $markers = @([regex]::Matches($rulesText, '\[[^\]\r\n]*\]') | ForEach-Object { $_.Value } | Select-Object -Unique)
+        if ($markers.Count -gt 0) { $problems += ("$RulesFile still has $($markers.Count) [placeholder] marker(s): " + ($markers -join ' ')) }
+        if ($rulesText -match $draftWord) { $problems += "$RulesFile still contains the word $draftWord (draft notice)" }
+        if ($rulesText -match $editionRx) { $problems += "$RulesFile still has the line 'Edition from: [date]' (date placeholder)" }
+    }
+    $cfgPath = if ([System.IO.Path]::IsPathRooted($ConfigFile)) { $ConfigFile } else { Join-Path $root ($ConfigFile -replace '/', '\') }
+    if (-not (Test-Path $cfgPath)) {
+        $problems += "config file not found: $ConfigFile"
+    } else {
+        $cfgText = [System.IO.File]::ReadAllText($cfgPath, [System.Text.Encoding]::UTF8)
+        if ($cfgText -notmatch "'rules_version'\s*=>\s*'\d{4}-\d{2}-\d{2}'") {
+            $problems += "'rules_version' in $ConfigFile (ships as config/marketplace.dist.php) is empty or not YYYY-MM-DD"
+        }
+    }
+    if ($problems.Count -gt 0) {
+        Write-Error ("MARKETPLACE BUILD STOPPED - do not release a draft:`n  - " + ($problems -join "`n  - ") + "`nFix the listed items and run the build again. No archive was written.")
+    }
 }
 
 $files = $files | Select-Object -Unique | Sort-Object

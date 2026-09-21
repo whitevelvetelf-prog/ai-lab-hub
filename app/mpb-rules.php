@@ -9,7 +9,8 @@ declare(strict_types=1);
  * # / ## заголовки, абзаци, списки «- », цитати «> », горизонтальну лінію. Увесь текст екранується.
  * Фрагменти в квадратних дужках [ ... ] (місця для підстановки) виводяться видимим маркером.
  * Рядок «Редакція від: …» показує дату з config 'rules_version'. Розділ «Текст для галочки…» на сторінку
- * не виводиться (галочку в mp-post.php беруть із рядків інтерфейсу mpb_f_rules_text).
+ * не виводиться на сторінку: його бере mpb_rules_checkbox_text() для галочки в mp-post.php (той самий файл —
+ * єдине джерело тексту; у app/translations.php тексту Правил немає).
  */
 
 const MPB_RULES_FILE = __DIR__ . '/../docs/marketplace_rules_uk.md';
@@ -108,4 +109,59 @@ function mpb_rules_render(?string $file = null): ?array
     $flush();
 
     return ['title' => $title, 'html' => $html];
+}
+
+/**
+ * Текст галочки з розділу «Текст для галочки…» файлу правил (блок цитати «> …»), або null.
+ */
+function mpb_rules_checkbox_uk(?string $file = null): ?string
+{
+    $file ??= MPB_RULES_FILE;
+    if (!is_file($file)) {
+        return null;
+    }
+    $in = false;
+    $parts = [];
+    foreach (preg_split('/\r\n|\r|\n/', (string) file_get_contents($file)) ?: [] as $line) {
+        if (preg_match('/^##\s+Текст для галочки/u', $line) === 1) {
+            $in = true;
+            continue;
+        }
+        if (!$in) {
+            continue;
+        }
+        if (preg_match('/^##?\s/u', $line) === 1) {
+            break;   // наступний заголовок — кінець розділу
+        }
+        if (preg_match('/^>\s?(.*)$/u', $line, $m) === 1 && trim($m[1]) !== '') {
+            $parts[] = trim($m[1]);
+        }
+    }
+
+    return $parts === [] ? null : implode(' ', $parts);
+}
+
+/**
+ * Текст галочки для мови інтерфейсу: українською — дослівно з md; іншими мовами — готовий переклад
+ * ключа mpb_f_rules_text з ui_translations (мова → en); без перекладу — український текст із md.
+ * (t() тут не викликаємо: українського значення в app/translations.php свідомо немає.)
+ */
+function mpb_rules_checkbox_text(string $lang): string
+{
+    $uk = mpb_rules_checkbox_uk() ?? '';
+    if ($lang === 'uk') {
+        return $uk;
+    }
+    try {
+        foreach ([$lang, 'en'] as $l) {
+            $map = ui_translations_map($l);
+            if (!empty($map['mpb_f_rules_text'])) {
+                return (string) $map['mpb_f_rules_text'];
+            }
+        }
+    } catch (Throwable) {
+        // немає таблиці ui_translations — лишається український текст
+    }
+
+    return $uk;
 }
