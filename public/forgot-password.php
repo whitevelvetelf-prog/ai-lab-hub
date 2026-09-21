@@ -73,9 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $insert->bindValue(':ttl', TOKEN_TTL_MINUTES, PDO::PARAM_INT);
                 $insert->execute();
 
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $host = (string) ($_SERVER['HTTP_HOST'] ?? 'ailabhub-directory.com');
-                $link = $scheme . '://' . $host . '/login-via-token.php?token=' . $token;
+                // Домен — лише з конфігурації (не з заголовка Host): див. mail_site_url().
+                $link = mail_site_url() . '/login-via-token.php?token=' . $token;
 
                 send_mail(
                     (string) $user['email'],

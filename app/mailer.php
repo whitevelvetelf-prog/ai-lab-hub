@@ -28,6 +28,34 @@ declare(strict_types=1);
 const MAIL_FROM_ADDRESS = 'hello@ailabhub-directory.com';
 const MAIL_FROM_NAME = 'AI LAB HUB';
 
+/**
+ * Базова адреса сайту для посилань у листах (без слеша в кінці). НІКОЛИ не бере домен із заголовка Host
+ * запиту, який контролює клієнт (інакше атакуючий підмінить Host і лист із токеном входу поведе жертву
+ * на його домен — «password reset poisoning»). Порядок:
+ *   1) 'site_url' із config/marketplace.local.php або config/marketplace.php (http/https-адреса);
+ *   2) локальна розробка: Host, але лише localhost / 127.0.0.1 / *.test;
+ *   3) інакше — канонічний продакшн-домен.
+ */
+function mail_site_url(): string
+{
+    foreach (['marketplace.local.php', 'marketplace.php'] as $name) {
+        $file = __DIR__ . '/../config/' . $name;
+        $cfg = is_file($file) ? require $file : [];
+        $url = is_array($cfg) ? rtrim(trim((string) ($cfg['site_url'] ?? '')), '/') : '';
+        if ($url !== '' && preg_match('#^https?://[A-Za-z0-9.\-]+(?::\d{1,5})?$#', $url) === 1) {
+            return $url;
+        }
+    }
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    if (preg_match('/^(?:localhost|127\.0\.0\.1|[a-z0-9-]+(?:\.[a-z0-9-]+)*\.test)(?::\d{1,5})?$/', $host) === 1) {
+        $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+
+        return $scheme . '://' . $host;
+    }
+
+    return 'https://ailabhub-directory.com';
+}
+
 /** Надсилає HTML+text лист; true — якщо mail() підтвердив прийняття до відправки. */
 function send_mail(string $to, string $subject, string $htmlBody, string $textBody): bool
 {
