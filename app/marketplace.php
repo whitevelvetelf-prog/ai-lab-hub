@@ -40,6 +40,12 @@ function mp_config(): array
             'reveals_per_day'    => 30,
             'reports_threshold'  => 3,
             'cron_token'         => '',
+            'mail_transport'     => 'mail',
+            'site_url'           => '',
+            'verify_ttl_hours'   => 24,
+            'verify_resend_min'  => 2,
+            'verify_max_per_day' => 5,
+            'report_min_verified_hours' => 24,
         ];
         $cfg = $defaults;
         // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.

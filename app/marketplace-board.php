@@ -1061,7 +1061,19 @@ function mpb_report(PDO $pdo, int $listingId, int $userId, string $reason, strin
         throw $e;
     }
 
-    $cnt = $pdo->prepare('SELECT ' . mpb_reports_sql() . ' FROM mp_listings l WHERE l.id = :id');
+    // Для автозняття рахуються лише скарги від staff і користувачів, чий email підтверджено давніше за
+    // report_min_verified_hours (свіжі акаунти не можуть «знести» оголошення хвилею скарг).
+    $hours = max(0, (int) mp_config()['report_min_verified_hours']);
+    $cnt = $pdo->prepare(
+        "SELECT COUNT(*) FROM mp_reports r
+         JOIN mp_listings l ON l.id = r.listing_id
+         JOIN users u ON u.id = r.reporter_id
+         WHERE l.id = :id AND r.created_at > COALESCE(l.moderated_at, '1970-01-01 00:00:00')
+           AND (u.role IN ('employee', 'admin') OR EXISTS (
+                 SELECT 1 FROM mp_email_verifications v
+                 WHERE v.user_id = r.reporter_id AND v.email = u.email AND v.verified_at IS NOT NULL
+                   AND v.verified_at < (NOW() - INTERVAL $hours HOUR)))"
+    );
     $cnt->execute([':id' => $listingId]);
     $n = (int) $cnt->fetchColumn();
     if ($n >= (int) mp_config()['reports_threshold']) {

@@ -12,12 +12,12 @@ declare(strict_types=1);
  * employee/admin публікують одразу. delivery_type завжди 'contact': контакти показує mp-contact.php.
  * Захист: CSRF, honeypot, ліміти активних/за добу, антидубль назви в межах продавця, стоп-слова,
  * ≤2 посилань в описах, обов'язкова згода з Правилами.
- * Підтвердження email у системі відсутнє, тож тут його НЕ вимагаємо (див. звіт).
+ * Потрібен підтверджений email (mpv_require_verified; employee/admin звільнені).
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
 
 mp_public_require();
 
@@ -30,6 +30,7 @@ if ($user === null) {
     header('Location: login.php');
     exit;
 }
+mpv_require_verified($pdo, $userId);   // публікація й редагування — лише з підтвердженим email (staff звільнені)
 
 $cfg = mp_config();
 $lang = current_lang();

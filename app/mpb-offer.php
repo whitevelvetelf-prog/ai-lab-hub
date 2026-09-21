@@ -159,17 +159,18 @@ mpb_open((string) $board['title'], !$isLive);
         var form = document.getElementById('mpContactForm'), box = document.getElementById('mpContacts');
         if (!form || !box) { return; }
         function safeHref(h) { return /^(tel:|mailto:|https:\/\/t\.me\/)/.test(h || '') ? h : null; }
-        function say(text, loginUrl) {
+        function say(text, loginUrl, verifyUrl) {
             box.textContent = '';
             var p = document.createElement('p'); p.className = 'mp-text'; p.textContent = text; box.appendChild(p);
             if (loginUrl) { var a = document.createElement('a'); a.className = 'mp-btn mp-btn--primary'; a.href = loginUrl; a.textContent = <?= json_encode(t('nav_login'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>; box.appendChild(a); }
+            if (verifyUrl) { var b = document.createElement('a'); b.className = 'mp-btn mp-btn--primary'; b.href = verifyUrl; b.textContent = <?= json_encode(t('mpv_send_btn'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>; box.appendChild(b); }
         }
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
                 .then(function (r) { return r.json().catch(function () { return {}; }); })
                 .then(function (j) {
-                    if (!j.ok) { say(j.message || form.dataset.error, j.login_url); return; }
+                    if (!j.ok) { say(j.message || form.dataset.error, j.login_url, j.verify_url); return; }
                     box.textContent = '';
                     var ul = document.createElement('ul'); ul.className = 'mp-contact-list';
                     j.contacts.forEach(function (c) {

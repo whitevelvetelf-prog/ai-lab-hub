@@ -10,7 +10,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
 
 mp_public_require();
 mpb_require_post();
@@ -19,6 +19,7 @@ mpb_require_post();
 $pdo = require __DIR__ . '/../config/database.php';
 
 $userId = mpb_require_login();
+mpv_require_verified($pdo, $userId);   // скаржитись можна лише з підтвердженим email
 $id = (int) ($_POST['id'] ?? 0);
 $reason = is_string($_POST['reason'] ?? null) ? (string) $_POST['reason'] : '';
 $note = is_string($_POST['note'] ?? null) ? trim((string) $_POST['note']) : '';

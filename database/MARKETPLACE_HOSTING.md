@@ -104,3 +104,22 @@ adm.tools → Хостинг → **Cron** → додати завдання ра
 1. Резервна копія бази. 2. Імпорт 06, потім 07. 3. Налаштування PHP і cron (5.2, 5.3). 4. Код: `build-deploy.ps1 -IncludeMarketplace`. 5. Перевірка `.htaccess` (5.2). 6. Ще з `public_enabled=false` переглянути CRM: `mp-moderation.php`, `mp-list.php`. 7. `'public_enabled' => true`, пройти сценарій: подати оголошення → схвалити → побачити в списку → показати контакт.
 
 Публічна частина не вимагає підтвердження email: у системі його немає (див. звіт етапу 4).
+
+---
+
+## 6. Підтвердження email (етап 5) — НЕ залито на хостинг
+
+Вимагається для дій у Marketplace: подача/редагування оголошення, розкриття контакту, скарга (вибране, перегляд, пошук — без підтвердження; employee/admin звільнені). Каталог і решта сайту не змінюються.
+
+**SQL (після 06 і 07):** `hosting-upload/08-marketplace-email-verification.sql` (таблиця `mp_email_verifications`, лише `CREATE TABLE IF NOT EXISTS`) і `09-marketplace-ui-strings-email.sql` (EN-тексти, `INSERT IGNORE`).
+
+**Листи.** Сайт надсилає пошту через PHP `mail()` (`app/mailer.php`, `send_mail()`; SMTP у проєкті немає) — так само, як лист «вхід без пароля». У `config/marketplace.php` на хостингу:
+
+```php
+'mail_transport' => 'mail',                      // 'log' — лише для розробки (пише в storage/marketplace-mail.log)
+'site_url'       => 'https://<ваш-домен>',       // ОБОВ'ЯЗКОВО задайте: інакше домен у посиланні береться із заголовка Host
+```
+
+Відправник — `hello@ailabhub-directory.com` (константа `MAIL_FROM_ADDRESS` у `app/mailer.php`); щоб листи не потрапляли в спам, у DNS домену мають бути SPF/DKIM для відправлення через хостинг. **Перевірте до запуску:** зареєструйте тестовий акаунт із реальною поштою, натисніть «Надіслати лист», переконайтесь, що лист дійшов (і не в «Спам»). Якщо `mail()` на хостингу не працює — потрібен SMTP (PHPMailer/SMTP хостингу) — це окрема робота в `app/mailer.php`.
+
+Ліміти в конфігу: `verify_ttl_hours` (24), `verify_resend_min` (2), `verify_max_per_day` (5), `report_min_verified_hours` (24). Токен — 32 випадкових байти, у БД лише sha256, одноразовий.

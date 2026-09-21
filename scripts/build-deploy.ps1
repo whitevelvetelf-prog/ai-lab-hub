@@ -40,7 +40,7 @@
           public/mp-*.php (CRM, author cabinet, contact/report/favorite handlers, cron script),
           public/marketplace.php, public/marketplace-solutions.php, public/marketplace-category.php,
           public/offer.php, public/get.php (public part),
-          app/marketplace-board.php, app/mpb-*.php (classified board code),
+          app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
           public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
           public/assets/css/mp-*.css,
           database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
@@ -127,7 +127,7 @@ $files.AddRange([string[]] $images)
 $marketplacePatterns = @(
     '^public/mp-[^/]+\.php$',
     '^public/(marketplace|marketplace-solutions|marketplace-category|offer|get)\.php$',
-    '^app/(marketplace-board|mpb-[^/]+)\.php$',
+    '^app/(marketplace-board|marketplace-email|mpb-[^/]+)\.php$',
     '^public/assets/css/mp-[^/]+\.css$',
     '^database/migration-[^/]*-marketplace-[^/]*\.sql$',
     '^config/marketplace(\.[a-z]+)?\.php$'
