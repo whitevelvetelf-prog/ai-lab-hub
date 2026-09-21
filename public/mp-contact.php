@@ -62,6 +62,9 @@ $res = mpb_reveal($pdo, $id, (int) auth_user_id());
 if ($res['status'] === 'notfound') {
     $fail(404, 'notfound', t('mpb_contact_notfound'));
 }
+if ($res['status'] === 'rate') {
+    $fail(429, 'rate', t('mpb_rate_limited'));
+}
 if ($res['status'] === 'limit') {
     $fail(429, 'limit', sprintf(t('mpb_contact_limit'), (int) mp_config()['reveals_per_day']));
 }

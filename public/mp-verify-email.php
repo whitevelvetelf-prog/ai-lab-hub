@@ -27,6 +27,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         'too_soon' => ['error', sprintf(t('mpv_too_soon'), (int) mp_config()['verify_resend_min'])],
         'daily'    => ['error', sprintf(t('mpv_daily'), (int) mp_config()['verify_max_per_day'])],
         'already'  => ['ok', t('mpv_already')],
+        'rate'     => ['error', t('mpb_rate_limited')],
         default    => ['error', t('mpv_fail')],
     };
     mpb_flash($msg[0], $msg[1]);

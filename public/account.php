@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/mailer.php';   // mail_site_url()
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -331,9 +332,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
                 );
                 $insert->execute([':title' => $positionTitle, ':token' => $token, ':uid' => $user['id']]);
 
-                $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $host = (string) ($_SERVER['HTTP_HOST'] ?? 'ailabhub-directory.com');
-                $link = $scheme . '://' . $host . '/apply-position.php?token=' . $token;
+                $link = mail_site_url() . '/apply-position.php?token=' . $token;
 
                 // Посилання має бути клікабельним (не голим текстом) — тому окремий
                 // "довірений" HTML-прапор замість звичайного plain-text flash.

@@ -239,6 +239,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $errors[] = 'mpb_err_duplicate';
         }
 
+        // IP-ліміт нових оголошень (другий шар; лише створення, лише не-staff) — реєструємо, коли все інше пройшло
+        if ($errors === [] && $existing === null && !$isStaff && !mpb_ip_hit($pdo, 'post', (int) $cfg['ip_limit_post'])) {
+            $errors[] = 'mpb_rate_limited';
+        }
+
         // Збереження
         if ($errors === []) {
             $created = [];

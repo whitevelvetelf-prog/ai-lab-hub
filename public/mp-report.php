@@ -30,6 +30,7 @@ $msg = match ($res) {
     'duplicate' => ['error', 'mpb_report_duplicate'],
     'own'       => ['error', 'mpb_report_own'],
     'invalid'   => ['error', 'mpb_report_invalid'],
+    'rate'      => ['error', 'mpb_rate_limited'],
     default     => ['error', 'mpb_report_notfound'],
 };
 mpb_flash($msg[0], t($msg[1]));

@@ -81,7 +81,7 @@ function mpv_deliver(string $to, string $subject, string $html, string $text): b
  * Надсилає користувачу лист підтвердження на його поточний email.
  * Ліміти: не частіше 1 листа на verify_resend_min хв (на користувача) і verify_max_per_day на добу (на користувача й email).
  *
- * @return string sent | too_soon | daily | already | fail
+ * @return string sent | too_soon | daily | rate | already | fail
  */
 function mpv_send(PDO $pdo, int $userId): string
 {
@@ -124,6 +124,11 @@ function mpv_send(PDO $pdo, int $userId): string
         $day->execute([':u' => $userId, ':e' => (string) $email]);
         if ((int) $day->fetchColumn() >= (int) $cfg['verify_max_per_day']) {
             return 'daily';
+        }
+
+        // IP-ліміт листів (другий шар); не витрачаємо, якщо ліміт перевищено
+        if (!mpb_ip_hit($pdo, 'mail', (int) $cfg['ip_limit_mail'])) {
+            return 'rate';
         }
 
         $ins = $pdo->prepare(

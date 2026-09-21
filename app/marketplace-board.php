@@ -53,6 +53,104 @@ function mpb_unlock(PDO $pdo, string $name): void
     $stmt->execute([':n' => substr($name, 0, 64)]);
 }
 
+// =========================================================================
+// IP-ліміти (другий шар; основні ліміти — на акаунт)
+// =========================================================================
+
+/**
+ * IP клієнта. За замовчуванням — REMOTE_ADDR. Заголовок проксі береться ЛИШЕ якщо в конфігу
+ * 'trusted_proxy_header' задано (напр. 'X-Forwarded-For'); тоді — його ОСТАННІЙ елемент (додає довірений проксі),
+ * і лише якщо це коректний IP. Інакше — REMOTE_ADDR.
+ */
+function mpb_client_ip(): string
+{
+    $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+    $hdr = trim((string) mp_config()['trusted_proxy_header']);
+    if ($hdr !== '' && preg_match('/^[A-Za-z0-9-]+$/', $hdr) === 1) {
+        $key = 'HTTP_' . strtoupper(str_replace('-', '_', $hdr));
+        $val = $_SERVER[$key] ?? '';
+        if (is_string($val) && $val !== '') {
+            $parts = explode(',', $val);
+            $last = trim((string) end($parts));
+            if (filter_var($last, FILTER_VALIDATE_IP) !== false) {
+                $ip = $last;
+            }
+        }
+    }
+
+    return $ip;
+}
+
+/**
+ * Ключ для БД: sha256(нормалізований IP + сіль). IPv6 зводиться до /64 (одна домашня мережа = один ключ),
+ * IPv4-mapped IPv6 — до IPv4. IP у відкритому вигляді ніде не зберігається й не логується.
+ */
+function mpb_ip_key(string $ip): string
+{
+    $bin = @inet_pton($ip);
+    if ($bin === false) {
+        $norm = 'invalid:' . $ip;
+    } else {
+        if (strlen($bin) === 16 && str_starts_with($bin, "\0\0\0\0\0\0\0\0\0\0\xff\xff")) {
+            $bin = substr($bin, 12);
+        } elseif (strlen($bin) === 16) {
+            $bin = substr($bin, 0, 8);
+        }
+        $norm = bin2hex($bin);
+    }
+    $salt = (string) mp_config()['rate_limit_salt'];
+    if ($salt === '') {
+        $salt = 'mp-rl-default:' . dirname(__DIR__);   // запасна сіль; на сервері задайте власну в конфігу
+    }
+
+    return hash('sha256', $norm . '|' . $salt);
+}
+
+/**
+ * Реєструє спробу дії з цього IP у добовому вікні й каже, чи вона дозволена (true) або ліміт перевищено (false).
+ * Лічильник — атомарний upsert у mp_rate_limits. Немає таблиці (міграція 12 не застосована) → дозволено + запис у лог.
+ * Виклик — лише для не-staff і лише в момент, коли дія справді виконується.
+ */
+function mpb_ip_hit(PDO $pdo, string $action, int $limit): bool
+{
+    $key = mpb_ip_key(mpb_client_ip());
+    try {
+        $pdo->prepare(
+            'INSERT INTO mp_rate_limits (key_hash, action, window_start, hits) VALUES (:k, :a, CURDATE(), 1)
+             ON DUPLICATE KEY UPDATE hits = hits + 1'
+        )->execute([':k' => $key, ':a' => $action]);
+        $sel = $pdo->prepare('SELECT hits FROM mp_rate_limits WHERE key_hash = :k AND action = :a AND window_start = CURDATE()');
+        $sel->execute([':k' => $key, ':a' => $action]);
+        $hits = (int) $sel->fetchColumn();
+    } catch (PDOException $e) {
+        error_log('[marketplace] ip rate limit unavailable: ' . $e->getMessage());
+
+        return true;
+    }
+    if ($hits > $limit) {
+        error_log(sprintf('[marketplace] ip rate limit exceeded: action=%s hits=%d limit=%d ip_key=%s user=%s', $action, $hits, $limit, substr($key, 0, 12), (string) (auth_user_id() ?? '-')));
+
+        return false;
+    }
+
+    return true;
+}
+
+/** Прибирає лічильники IP-лімітів старші за 3 доби (єдиний DELETE цього етапу). Повертає кількість рядків. */
+function mpb_rate_cleanup(PDO $pdo): int
+{
+    try {
+        $stmt = $pdo->prepare('DELETE FROM mp_rate_limits WHERE window_start < (NOW() - INTERVAL 3 DAY)');
+        $stmt->execute();
+
+        return $stmt->rowCount();
+    } catch (PDOException $e) {
+        error_log('[marketplace] rate limit cleanup failed: ' . $e->getMessage());
+
+        return 0;
+    }
+}
+
 /** Разове повідомлення для наступної сторінки (сесія). */
 function mpb_flash(string $type, string $text): void
 {
@@ -1057,7 +1155,7 @@ function mpb_expire_due(PDO $pdo): int
 // Скарги, вибране, контакти
 // =========================================================================
 
-/** @return string ok | duplicate | own | invalid | notfound */
+/** @return string ok | duplicate | own | invalid | notfound | rate */
 function mpb_report(PDO $pdo, int $listingId, int $userId, string $reason, string $note): string
 {
     if (!in_array($reason, MPB_REPORT_REASONS, true)) {
@@ -1074,6 +1172,9 @@ function mpb_report(PDO $pdo, int $listingId, int $userId, string $reason, strin
     }
     if ($row['owner'] !== null && (int) $row['owner'] === $userId) {
         return 'own';
+    }
+    if (!mpb_is_staff() && !mpb_ip_hit($pdo, 'report', (int) mp_config()['ip_limit_report'])) {
+        return 'rate';
     }
     try {
         $ins = $pdo->prepare('INSERT INTO mp_reports (listing_id, reporter_id, reason, note) VALUES (:l, :u, :r, :n)');
@@ -1172,7 +1273,7 @@ function mpb_contacts(PDO $pdo, int $listingId): array
  * Власник і employee/admin бачать без обліку; решта — з лімітом за добу.
  * Повторний показ того самого оголошення тому ж користувачу за добу ліміт не з'їдає.
  *
- * @return array{status:string,contacts:list<array<string,mixed>>}  status: ok | notfound | limit
+ * @return array{status:string,contacts:list<array<string,mixed>>}  status: ok | notfound | limit | rate
  */
 function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
 {
@@ -1206,6 +1307,9 @@ function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
             $cnt->execute([':u' => $userId]);
             if ((int) $cnt->fetchColumn() >= (int) mp_config()['reveals_per_day']) {
                 return ['status' => 'limit', 'contacts' => []];
+            }
+            if (!mpb_ip_hit($pdo, 'reveal', (int) mp_config()['ip_limit_reveal'])) {
+                return ['status' => 'rate', 'contacts' => []];
             }
             $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id) VALUES (:l, :u)')->execute([':l' => $listingId, ':u' => $userId]);
         }

@@ -7,6 +7,8 @@ declare(strict_types=1);
  *
  *   published + expires_at <= NOW()  →  expired  (запис 'expired' у mp_moderation_log)
  *
+ * Також чистить mp_rate_limits (рядки старші за 3 доби) — єдиний DELETE цього скрипта поза статусами.
+ *
  * Це лише «прибирання» статусу: публічні сторінки в будь-якому разі перевіряють expires_at > NOW(),
  * тож коректність сайту від cron НЕ залежить.
  *
@@ -34,4 +36,5 @@ if (!$isCli) {
 $pdo = require __DIR__ . '/../config/database.php';
 
 $n = mpb_expire_due($pdo);
-echo date('Y-m-d H:i:s') . ' expired: ' . $n . "\n";
+$r = mpb_rate_cleanup($pdo);   // лічильники IP-лімітів старші за 3 доби
+echo date('Y-m-d H:i:s') . ' expired: ' . $n . ' rate_limit_rows_deleted: ' . $r . "\n";

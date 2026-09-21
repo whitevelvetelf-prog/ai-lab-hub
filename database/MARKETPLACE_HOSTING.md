@@ -140,3 +140,12 @@ adm.tools → Хостинг → **Cron** → додати завдання ра
 - **`docs/` на хостингу.** Збірка з `-IncludeMarketplace` кладе `docs/marketplace_rules_uk.md` і `docs/.htaccess` (`Require all denied`) у корінь проєкту — поруч із `app/`, `config/`, `public/`; PHP читає файл з диска. Теку не має бути видно з вебу: після заливки відкрийте `https://<домен>/docs/marketplace_rules_uk.md` — має бути 404 або 403 (якщо домен дивиться на `public/`, буде 404, `.htaccess` — страховка на випадок іншої розкладки).
 - **Збірка не випустить чернетку.** `build-deploy.ps1 -IncludeMarketplace` зупиняється з помилкою `MARKETPLACE BUILD STOPPED`, якщо в md лишились `[маркери]`, слово «ЧЕРНЕТКА» або рядок «Редакція від: [дата]», або якщо `rules_version` у `config/marketplace.php` (з нього робиться `marketplace.dist.php`) порожній чи не `YYYY-MM-DD`. Архів при цьому не створюється. Збірка без прапорця Marketplace цього не перевіряє.
 - **Версія згоди.** `hosting-upload/11-marketplace-rules-version.sql` — `ALTER TABLE mp_listings ADD COLUMN rules_version VARCHAR(20) NULL` (ідемпотентно). **Залити ДО коду:** код пише в цю колонку при кожному збереженні оголошення (разом із `rules_accepted_at`; значення = `rules_version` з конфігу). Старі записи лишаються `NULL`.
+
+---
+
+## 8. IP-ліміти (другий шар) — НЕ залито на хостинг
+
+- **SQL:** `hosting-upload/12-marketplace-rate-limits.sql` (таблиця `mp_rate_limits`, лише `CREATE TABLE IF NOT EXISTS`) і `13-marketplace-ui-strings-ratelimit.sql` (EN-напис «Too many requests…»). Залити **до коду**: без таблиці IP-ліміти не працюють (дія дозволяється, помилка пишеться в error log).
+- **Конфіг (`config/marketplace.php` на сервері):** задайте `'rate_limit_salt' => '<довгий випадковий рядок>'` — IP зберігається лише як `sha256(IP + сіль)`. Без солі використовується запасна, слабша. `'trusted_proxy_header'` лишайте порожнім, якщо сайт не за проксі/CDN; якщо за проксі (напр. Cloudflare) — вкажіть заголовок (`'X-Forwarded-For'`), береться його **останній** елемент. Для Cloudflare зручніше `'CF-Connecting-IP'`. Не задавайте заголовок «про запас»: якщо проксі його не перезаписує, клієнт зможе підробляти IP.
+- **Ліміти на добу з одного IP** (`ip_limit_reveal` 100, `ip_limit_report` 20, `ip_limit_post` 15, `ip_limit_mail` 20) — щедрі, бо мобільні оператори віддають один IP багатьом. Не стосуються employee/admin.
+- **Прибирання:** `mp-cron-expire.php` видаляє з `mp_rate_limits` рядки старші за 3 доби (cron з розділу 5.3).

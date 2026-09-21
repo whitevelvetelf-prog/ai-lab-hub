@@ -56,15 +56,34 @@ function mail_site_url(): string
     return 'https://ailabhub-directory.com';
 }
 
+/** Прибирає CR, LF і NUL зі значення, що потрапляє в заголовок листа (захист від header injection). */
+function mail_header_clean(string $value): string
+{
+    return str_replace(["\r", "\n", "\0"], '', $value);
+}
+
 /** Надсилає HTML+text лист; true — якщо mail() підтвердив прийняття до відправки. */
 function send_mail(string $to, string $subject, string $htmlBody, string $textBody): bool
 {
+    // Усе, що йде в заголовки (to, subject, from, reply-to), — без CR/LF/NUL. Адресу, яка після очищення змінилась
+    // (тобто містила розрив рядка), відхиляємо цілком — а не «лагодимо» мовчки.
+    $toClean = mail_header_clean($to);
+    if ($toClean === '' || $toClean !== $to) {
+        error_log('[mail] recipient rejected: empty or contains CR/LF/NUL');
+
+        return false;
+    }
+    $to = $toClean;
+    $subject = mail_header_clean($subject);
+    $fromName = mail_header_clean(MAIL_FROM_NAME);
+    $fromAddress = mail_header_clean(MAIL_FROM_ADDRESS);
+
     $boundary = bin2hex(random_bytes(16));
     $headers = implode("\r\n", [
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-        'From: ' . MAIL_FROM_NAME . ' <' . MAIL_FROM_ADDRESS . '>',
-        'Reply-To: ' . MAIL_FROM_ADDRESS,
+        'From: ' . $fromName . ' <' . $fromAddress . '>',
+        'Reply-To: ' . $fromAddress,
     ]);
 
     $body = "--{$boundary}\r\n"
