@@ -6,7 +6,8 @@ declare(strict_types=1);
  * AI LAB HUB — Marketplace: рендер Правил розміщення оголошень із docs/marketplace_rules_uk.md.
  *
  * Текст правил редагується в цьому md-файлі (без правок коду). Рендерер розуміє лише те, що є у файлі:
- * # / ## заголовки, абзаци, списки «- », цитати «> », горизонтальну лінію. Увесь текст екранується.
+ * # / ## заголовки, абзаци, списки «- », цитати «> », горизонтальну лінію та посилання [текст](url) (лише відносні *.php
+ * або https; решта не стає посиланням). Увесь текст екранується.
  * Фрагменти в квадратних дужках [ ... ] (місця для підстановки) виводяться видимим маркером.
  * Рядок «Редакція від: …» показує дату з config 'rules_version'. Розділ «Текст для галочки…» на сторінку
  * не виводиться на сторінку: його бере mpb_rules_checkbox_text() для галочки в mp-post.php (той самий файл —
@@ -15,12 +16,28 @@ declare(strict_types=1);
 
 const MPB_RULES_FILE = __DIR__ . '/../docs/marketplace_rules_uk.md';
 
-/** Екранує текст і підсвічує [місця для підстановки]. */
+/** Безпечний href для посилання в тексті правил: відносна сторінка сайту (*.php) або https-адреса. */
+function mpb_rules_safe_href(string $url): bool
+{
+    return preg_match('@^(?:[A-Za-z0-9_\-]+\.php(?:\?[A-Za-z0-9_=&%.\-]*)?(?:#[A-Za-z0-9_\-]+)?|https://[A-Za-z0-9.\-]+(?::\d{1,5})?(?:/[A-Za-z0-9._~%/\-]*)?(?:\?[A-Za-z0-9_=&%.\-]*)?)$@', $url) === 1;
+}
+
+/** Екранує текст, підсвічує [місця для підстановки] і перетворює [текст](безпечний-url) на посилання. */
 function mpb_rules_inline(string $text): string
 {
-    $safe = htmlspecialchars($text, ENT_QUOTES);
+    $parts = preg_split('/(\[[^\]\n]+\]\([^)\s]+\))/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$text];
+    $html = '';
+    foreach ($parts as $i => $part) {
+        if ($i % 2 === 1 && preg_match('/^\[([^\]\n]+)\]\(([^)\s]+)\)$/u', $part, $m) === 1 && mpb_rules_safe_href($m[2])) {
+            $ext = str_starts_with($m[2], 'https://') ? ' target="_blank" rel="noopener noreferrer"' : '';
+            $html .= '<a href="' . htmlspecialchars($m[2], ENT_QUOTES) . '"' . $ext . '>' . htmlspecialchars($m[1], ENT_QUOTES) . '</a>';
+            continue;
+        }
+        $safe = htmlspecialchars($part, ENT_QUOTES);
+        $html .= preg_replace('/\[[^\]\n]*\]/u', '<mark class="mp-ph">$0</mark>', $safe) ?? $safe;
+    }
 
-    return preg_replace('/\[[^\]\n]*\]/u', '<mark class="mp-ph">$0</mark>', $safe) ?? $safe;
+    return $html;
 }
 
 /** Дата редакції з конфігу для показу: 2026-09-21 → 21.09.2026 (некоректне значення показується як є). */

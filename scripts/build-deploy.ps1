@@ -164,7 +164,8 @@ if ($IncludeMarketplace) {
         $problems += "rules file not found: $RulesFile"
     } else {
         $rulesText = [System.IO.File]::ReadAllText($rulesPath, [System.Text.Encoding]::UTF8)
-        $markers = @([regex]::Matches($rulesText, '\[[^\]\r\n]*\]') | ForEach-Object { $_.Value } | Select-Object -Unique)
+        # [text](url) is a normal markdown link, not a placeholder: only brackets NOT followed by "(" count as markers.
+        $markers = @([regex]::Matches($rulesText, '\[[^\]\r\n]*\](?!\()') | ForEach-Object { $_.Value } | Select-Object -Unique)
         if ($markers.Count -gt 0) { $problems += ("$RulesFile still has $($markers.Count) [placeholder] marker(s): " + ($markers -join ' ')) }
         if ($rulesText -match $draftWord) { $problems += "$RulesFile still contains the word $draftWord (draft notice)" }
         if ($rulesText -match $editionRx) { $problems += "$RulesFile still has the line 'Edition from: [date]' (date placeholder)" }
