@@ -36,3 +36,8 @@
 
 # Локальне перевизначення налаштувань Marketplace (напр. public_enabled => true для розробки).
 /config/marketplace.local.php
+
+# Фото оголошень дошки Marketplace (етап 4) — користувацький контент. У git лише .htaccess
+# (забороняє виконання PHP у теці); саму теку створює код, якщо її немає.
+/public/uploads/marketplace/*
+!/public/uploads/marketplace/.htaccess

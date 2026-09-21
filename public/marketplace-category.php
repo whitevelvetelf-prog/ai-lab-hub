@@ -48,12 +48,12 @@ $offers = mp_public_listings($pdo, $lang, ['category_id' => $categoryId, 'limit'
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <div class="mp-page">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
+        <a class="mp-back" href="marketplace-solutions.php"><?= mp_e(t('mp_back')) ?></a>
 
         <h1 class="mp-title"><?= mp_e($category['name']) ?></h1>
 
         <ul class="mp-cats">
-            <li><a class="mp-chip" href="marketplace.php"><?= mp_e(t('mp_all_categories')) ?></a></li>
+            <li><a class="mp-chip" href="marketplace-solutions.php"><?= mp_e(t('mp_all_categories')) ?></a></li>
             <?php foreach ($categories as $c): ?>
                 <li>
                     <a class="mp-chip<?= $c['id'] === $categoryId ? ' is-active' : '' ?>" href="marketplace-category.php?id=<?= (int) $c['id'] ?>">

@@ -25,6 +25,21 @@ function mp_config(): array
             'cover_dir'          => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
             // Публічна частина (marketplace.php, offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
             'public_enabled'     => false,
+            // Дошка оголошень (етап 4) — пояснення в config/marketplace.php.
+            'photo_dir'          => dirname(__DIR__) . '/public/uploads/marketplace',
+            'photo_url'          => '/uploads/marketplace',
+            'photo_max_count'    => 8,
+            'photo_max_bytes'    => 5 * 1024 * 1024,
+            'photo_max_side'     => 1600,
+            'photo_thumb_side'   => 400,
+            'listing_ttl_days'   => 30,
+            'max_active_per_user' => 5,
+            'max_new_per_day'    => 10,
+            'max_links_in_desc'  => 2,
+            'stop_words'         => [],
+            'reveals_per_day'    => 30,
+            'reports_threshold'  => 3,
+            'cron_token'         => '',
         ];
         $cfg = $defaults;
         // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.
@@ -83,7 +98,7 @@ function mp_csrf_verify(): bool
 /** @return array<string,string> */
 function mp_status_labels(): array
 {
-    return ['draft' => 'Чернетка', 'pending' => 'На модерації', 'published' => 'Опубліковано', 'rejected' => 'Відхилено', 'archived' => 'Архів'];
+    return ['draft' => 'Чернетка', 'pending' => 'На модерації', 'published' => 'Опубліковано', 'rejected' => 'Відхилено', 'archived' => 'Архів', 'expired' => 'Термін минув'];
 }
 
 /** @return array<string,string> статуси, які можна вибрати у формі */
@@ -439,27 +454,13 @@ function mp_public_require(): void
 }
 
 /**
- * Показувати пункти навігації Marketplace: перемикач увімкнено І є хоча б одна опублікована пропозиція.
- * Ніколи не кидає виняток (напр. таблиць mp_* ще немає на хостингу) — тоді false.
+ * Показувати пункти навігації Marketplace: достатньо ввімкненого перемикача (дошка оголошень
+ * має сенс і порожньою — там є кнопка «Подати оголошення»). При вимкненому перемикачі —
+ * жодних запитів до БД.
  */
 function mp_public_nav_visible(): bool
 {
-    static $visible = null;
-    if ($visible !== null) {
-        return $visible;
-    }
-    $visible = false;
-    if (!mp_public_enabled()) {
-        return false;
-    }
-    try {
-        $pdo = translation_pdo();
-        $visible = $pdo->query("SELECT 1 FROM mp_listings WHERE section = 'solution' AND status = 'published' LIMIT 1")->fetchColumn() !== false;
-    } catch (Throwable) {
-        $visible = false;
-    }
-
-    return $visible;
+    return mp_public_enabled();
 }
 
 /** Мова оригіналу контенту (uk) — для назв категорій. */

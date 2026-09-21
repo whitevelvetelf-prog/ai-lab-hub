@@ -34,10 +34,14 @@
       - public/assets/images/logos/   user uploads from the CRM
       - public/assets/images/ads/uploads/   ad banners uploaded via the ads CRM
       - public/assets/images/marketplace/covers/   Marketplace cover images uploaded via the CRM
+      - public/uploads/marketplace/   classified-board photos uploaded by users (only its .htaccess is shipped, with -IncludeMarketplace)
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
       - MARKETPLACE (until the first Marketplace release) - left out unless -IncludeMarketplace is passed:
-          public/mp-*.php (internal CRM), public/marketplace.php, public/marketplace-category.php,
+          public/mp-*.php (CRM, author cabinet, contact/report/favorite handlers, cron script),
+          public/marketplace.php, public/marketplace-solutions.php, public/marketplace-category.php,
           public/offer.php, public/get.php (public part),
+          app/marketplace-board.php, app/mpb-*.php (classified board code),
+          public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
           public/assets/css/mp-*.css,
           database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
           config/marketplace.php.
@@ -122,7 +126,8 @@ $files.AddRange([string[]] $images)
 # Marketplace: explicit exclusion unless -IncludeMarketplace (files stay on disk, only kept out of the zip).
 $marketplacePatterns = @(
     '^public/mp-[^/]+\.php$',
-    '^public/(marketplace|marketplace-category|offer|get)\.php$',
+    '^public/(marketplace|marketplace-solutions|marketplace-category|offer|get)\.php$',
+    '^app/(marketplace-board|mpb-[^/]+)\.php$',
     '^public/assets/css/mp-[^/]+\.css$',
     '^database/migration-[^/]*-marketplace-[^/]*\.sql$',
     '^config/marketplace(\.[a-z]+)?\.php$'
@@ -134,6 +139,7 @@ $files = @($files | Where-Object { $_ -notin $marketplaceFiles })
 $entryNames = @{}
 if ($IncludeMarketplace) {
     $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
+    $files += 'public/uploads/marketplace/.htaccess'
     $files += 'config/marketplace.php'
     $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
 }

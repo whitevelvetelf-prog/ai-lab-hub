@@ -64,3 +64,43 @@ CRM зберігає обкладинки в `public/assets/images/marketplace/c
 - Ліміт «Отримано» — не частіше 1 разу на добу для пари (користувач + пропозиція). Для гостя ліміт тримається в сесії (у `mp_claims` немає колонки сесії); очистивши cookie, гість може порахуватися знову.
 - Усі файли мають `scan_status = 'pending'`: антивірусної перевірки ще немає. Видача блокується лише для статусів `infected` / `blocked`.
 - Ціни, рейтинги й відгуки в Marketplace відсутні; усі пропозиції безкоштовні (`pricing_model = 'free'`).
+
+---
+
+## 5. Дошка оголошень (етап 4) — НЕ залито на хостинг
+
+Стан: код і SQL готові, **на хостинг нічого не заливалось**, `public_enabled` лишається `false`.
+
+### 5.1 SQL (після 04 і 05, у phpMyAdmin, utf-8)
+
+| Файл | Що робить |
+|---|---|
+| `hosting-upload/06-marketplace-classifieds.sql` (= `database/migration-2026-09-21-marketplace-classifieds.sql`) | 11 нових колонок `mp_listings` (лише `ALTER ... ADD COLUMN`, кожна — після перевірки в `information_schema`), 3 індекси (`CREATE INDEX` з такою ж перевіркою), таблиці `mp_listing_photos`, `mp_reports`, `mp_favorites`, `mp_contact_reveals`, 9 стартових категорій розділу `board` |
+| `hosting-upload/07-marketplace-ui-strings-classifieds.sql` | EN-тексти інтерфейсу (147 ключів `mpb_*`) і EN-назви категорій дошки |
+
+Обидва можна запускати повторно. Перевірка: `SELECT COUNT(*) FROM mp_categories WHERE section='board';` → 9.
+
+### 5.2 Тека фото та PHP-налаштування
+
+- Фото зберігаються в **`public/uploads/marketplace/`** (у вебі). Тека має бути доступна PHP на запис (755/775). Код створить її сам; збірка з `-IncludeMarketplace` кладе туди `.htaccess`.
+- `.htaccess` віддає лише `jpg/png/webp` під випадковими іменами й забороняє виконання PHP. **Перевірка після заливки:** створіть у теці `probe.php` з `<?php echo 'X';`, відкрийте `https://<домен>/uploads/marketplace/probe.php` — має бути 403 (не «X»), потім видаліть файл. Якщо виходить «X» або 200 — хостинг ігнорує `.htaccess` (`AllowOverride None`): публікацію вмикати не можна, поки не закрито виконання PHP у цій теці.
+- До 8 фото по 5 МБ: у PHP (adm.tools → Хостинг → PHP) поставте `upload_max_filesize` ≥ 6M, `post_max_size` ≥ 48M, `max_file_uploads` ≥ 8, `memory_limit` ≥ 128M. Розширення `gd` (з WebP) і `fileinfo` мають бути ввімкнені.
+- Ліміти та антиспам — у `config/marketplace.php`: `photo_max_count`, `photo_max_bytes`, `listing_ttl_days` (30), `max_active_per_user` (5), `max_new_per_day` (10), `max_links_in_desc` (2), `stop_words` (порожньо), `reveals_per_day` (30), `reports_threshold` (3).
+
+### 5.3 Cron: завершення терміну (`mp-cron-expire.php`)
+
+Скрипт переводить `published → expired` (і пише в журнал). Публічні сторінки перевіряють `expires_at > NOW()` самі, тож без cron сайт працює правильно — cron лише «прибирає» статуси.
+
+adm.tools → Хостинг → **Cron** → додати завдання раз на годину:
+
+```
+0 * * * * php /home/<акаунт>/<домен>/public/mp-cron-expire.php
+```
+
+(шлях — до реального `public/mp-cron-expire.php`; версію PHP оберіть таку саму, як у сайту). Якщо cron хостингу вміє лише викликати URL: у `config/marketplace.php` задайте довгий випадковий `'cron_token' => '...'` і викликайте `https://<домен>/mp-cron-expire.php?token=<ключ>`. Порожній `cron_token` (за замовчуванням) → HTTP-доступ до скрипта вимкнений (404).
+
+### 5.4 Порядок випуску (коли вирішите)
+
+1. Резервна копія бази. 2. Імпорт 06, потім 07. 3. Налаштування PHP і cron (5.2, 5.3). 4. Код: `build-deploy.ps1 -IncludeMarketplace`. 5. Перевірка `.htaccess` (5.2). 6. Ще з `public_enabled=false` переглянути CRM: `mp-moderation.php`, `mp-list.php`. 7. `'public_enabled' => true`, пройти сценарій: подати оголошення → схвалити → побачити в списку → показати контакт.
+
+Публічна частина не вимагає підтвердження email: у системі його немає (див. звіт етапу 4).

@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  * Лише employee / admin. Колонки: Статус (першим), Назва, Категорії, Тип видачі, Продавець,
  * Отримано (claims_count), Хто додав, Оновлено, Редагувати. Фільтри: статус, категорія, пошук за назвою.
- * Створення/редагування — mp-add-offer.php. Публічної частини поки немає.
+ * Створення/редагування «Готових рішень» — mp-add-offer.php; оголошення користувачів (розділ board) —
+ * перегляд і модерація в mp-moderation.php. Колонка «Скарги» — унікальні скарги після останньої модерації.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -35,7 +36,7 @@ if (!in_array($fCat, $catIds, true)) {
     $fCat = 0;
 }
 
-$where = ["l.section = 'solution'"];
+$where = ["l.section IN ('solution', 'board')"];
 $params = [];
 if ($fStatus !== '') {
     $where[] = 'l.status = :status';
@@ -53,7 +54,8 @@ if ($fQ !== '') {
 $whereSql = implode(' AND ', $where);
 
 $stmt = $pdo->prepare(
-    "SELECT l.id, l.status, l.delivery_type, l.claims_count, l.updated_at,
+    "SELECT l.id, l.section, l.status, l.delivery_type, l.claims_count, l.updated_at,
+            (SELECT COUNT(*) FROM mp_reports r WHERE r.listing_id = l.id AND r.created_at > COALESCE(l.moderated_at, '1970-01-01 00:00:00')) AS reports_count,
             t.title,
             s.display_name AS seller_name,
             u.name AS creator_name, u.employee_number AS creator_number,
@@ -63,7 +65,7 @@ $stmt = $pdo->prepare(
                LEFT JOIN mp_category_translations ct ON ct.category_id = c.id AND ct.lang = 'uk'
               WHERE lc.listing_id = l.id) AS categories_list
      FROM mp_listings l
-     LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = 'uk'
+     LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = COALESCE((SELECT x.lang FROM mp_listing_translations x WHERE x.listing_id = l.id AND x.lang = 'uk'), l.source_lang)
      LEFT JOIN mp_sellers s ON s.id = l.seller_id
      LEFT JOIN users u ON u.id = l.created_by
      WHERE $whereSql
@@ -77,7 +79,7 @@ $rows = array_slice($rows, 0, MP_LIST_LIMIT);
 
 // Підсумок за статусами (без фільтрів — загальна картина)
 $counts = array_fill_keys(array_keys($statusLabels), 0);
-foreach ($pdo->query("SELECT status, COUNT(*) c FROM mp_listings WHERE section = 'solution' GROUP BY status")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+foreach ($pdo->query("SELECT status, COUNT(*) c FROM mp_listings WHERE section IN ('solution', 'board') GROUP BY status")->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $counts[(string) $r['status']] = (int) $r['c'];
 }
 $total = array_sum($counts);
@@ -108,6 +110,7 @@ $deliveryLabels = mp_delivery_labels();
 
         <div class="toolbar">
             <a class="btn btn--primary btn--sm" href="mp-add-offer.php">+ Нова пропозиція</a>
+            <a class="btn btn--ghost btn--sm" href="mp-moderation.php">Модерація оголошень (на модерації: <?= (int) $counts['pending'] ?>)</a>
         </div>
 
         <div class="summary">
@@ -160,6 +163,7 @@ $deliveryLabels = mp_delivery_labels();
                         <th>Тип видачі</th>
                         <th>Продавець</th>
                         <th class="table__num">Отримано</th>
+                        <th class="table__num">Скарги</th>
                         <th>Хто додав</th>
                         <th>Оновлено</th>
                         <th></th>
@@ -168,7 +172,7 @@ $deliveryLabels = mp_delivery_labels();
                 <tbody>
                     <?php if ($rows === []): ?>
                         <tr>
-                            <td class="empty-state" colspan="9">
+                            <td class="empty-state" colspan="10">
                                 <?= ($fStatus !== '' || $fCat > 0 || $fQ !== '') ? 'За цими фільтрами нічого не знайдено.' : 'Ще немає жодної пропозиції.' ?>
                                 <a href="mp-add-offer.php">Створити пропозицію</a>.
                             </td>
@@ -179,21 +183,24 @@ $deliveryLabels = mp_delivery_labels();
                             $id = (int) $r['id'];
                             $status = (string) $r['status'];
                             $updated = strtotime((string) $r['updated_at']);
+                            $isBoard = (string) $r['section'] === 'board';
+                            $editUrl = $isBoard ? 'mp-moderation.php?id=' . $id : 'mp-add-offer.php?id=' . $id;
                             ?>
                             <tr>
                                 <td><span class="badge badge--<?= mp_e($status) ?>"><?= mp_e($statusLabels[$status] ?? $status) ?></span></td>
                                 <td class="table__nowrap">
-                                    <a class="table__name" href="mp-add-offer.php?id=<?= $id ?>"><?= mp_e($r['title'] ?? '(без назви)') ?></a>
-                                    <span class="table__id">#<?= $id ?></span>
+                                    <a class="table__name" href="<?= mp_e($editUrl) ?>"><?= mp_e($r['title'] ?? '(без назви)') ?></a>
+                                    <span class="table__id">#<?= $id ?><?= $isBoard ? ' · оголошення' : '' ?></span>
                                 </td>
                                 <td class="cell-clip"><?= $r['categories_list'] !== null && $r['categories_list'] !== '' ? mp_e($r['categories_list']) : '<span class="table__muted">—</span>' ?></td>
                                 <td class="table__nowrap"><?= mp_e($deliveryLabels[$r['delivery_type']] ?? $r['delivery_type']) ?></td>
                                 <td class="table__nowrap"><?= mp_e($r['seller_name'] ?? '—') ?></td>
                                 <td class="table__num"><?= (int) $r['claims_count'] ?></td>
+                                <td class="table__num"><?= (int) $r['reports_count'] > 0 ? '<strong>' . (int) $r['reports_count'] . '</strong>' : '<span class="table__muted">0</span>' ?></td>
                                 <td class="table__nowrap"><?= mp_e(mp_user_label($r['creator_name'], $r['creator_number'])) ?></td>
                                 <td class="table__nowrap table__muted"><?= $updated ? mp_e(date('d.m.Y H:i', $updated)) : '—' ?></td>
                                 <td class="table__nowrap">
-                                    <a class="btn btn--ghost btn--sm" href="mp-add-offer.php?id=<?= $id ?>">Редагувати</a>
+                                    <a class="btn btn--ghost btn--sm" href="<?= mp_e($editUrl) ?>"><?= $isBoard ? 'Переглянути' : 'Редагувати' ?></a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

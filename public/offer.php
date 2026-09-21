@@ -5,14 +5,15 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: сторінка пропозиції (?id=N).
  *
- * Показує лише status='published'; чернетки, архів, невідомий id і вимкнений перемикач → 404.
+ * Розділ 'board' (оголошення користувачів) — app/mpb-offer.php. Розділ 'solution' нижче:
+ * показує лише status='published'; чернетки, архів, невідомий id і вимкнений перемикач → 404.
  * Кнопка «Отримати» веде на get.php — єдину точку видачі (посилання/файл/контакт). Прямий URL
  * посилання, контакт і файл тут не виводяться. Рейтингів і відгуків немає.
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/marketplace.php';
+require_once __DIR__ . '/../app/marketplace-board.php';   // підключає app/marketplace.php
 
 mp_public_require();
 
@@ -21,6 +22,14 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 $lang = current_lang();
 $id = (int) ($_GET['id'] ?? 0);
+
+// Дошка оголошень (section='board'): окремий шаблон, контакти — лише через mp-contact.php.
+$board = $id > 0 ? mpb_listing($pdo, $id, $lang) : null;
+if ($board !== null) {
+    include __DIR__ . '/../app/mpb-offer.php';
+    exit;
+}
+
 $offer = $id > 0 ? mp_public_listing($pdo, $id, $lang) : null;
 if ($offer === null) {
     mp_not_found();
