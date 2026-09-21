@@ -204,6 +204,20 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             }
         }
 
+        // Ліміти й збереження — під блокуванням користувача: паралельні запити з різних сесій не обходять
+        // ліміт активних/за добу. Блокування звільняється наприкінці запиту (shutdown) або при закритті з'єднання.
+        $postLock = 'mp_post_' . $userId;
+        if (mpb_lock($pdo, $postLock)) {
+            register_shutdown_function(static function () use ($pdo, $postLock): void {
+                try {
+                    mpb_unlock($pdo, $postLock);
+                } catch (Throwable) {
+                }
+            });
+        } else {
+            $errors[] = 'mpb_err_save';
+        }
+
         // Ліміти й антидубль (employee/admin не обмежуються)
         $sellerId = $existing !== null ? (int) $existing['seller_id'] : null;
         if ($existing === null) {

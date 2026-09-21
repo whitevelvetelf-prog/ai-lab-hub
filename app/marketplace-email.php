@@ -96,18 +96,6 @@ function mpv_send(PDO $pdo, int $userId): string
         return 'already';
     }
 
-    $soon = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND created_at > (NOW() - INTERVAL ' . max(1, (int) $cfg['verify_resend_min']) . ' MINUTE)');
-    $soon->execute([':u' => $userId]);
-    if ((int) $soon->fetchColumn() > 0) {
-        return 'too_soon';
-    }
-    // Добовий ліміт — на пару (користувач, email): після зміни email лічильник починається заново.
-    $day = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND email = :e AND created_at > (NOW() - INTERVAL 1 DAY)');
-    $day->execute([':u' => $userId, ':e' => (string) $email]);
-    if ((int) $day->fetchColumn() >= (int) $cfg['verify_max_per_day']) {
-        return 'daily';
-    }
-
     // Посилання будується лише з site_url. Немає site_url (і це не 'log') — лист не надсилаємо,
     // пишемо помилку в лог, користувач бачить нейтральне «не вдалося надіслати».
     $base = mpv_site_url();
@@ -118,13 +106,34 @@ function mpv_send(PDO $pdo, int $userId): string
         return 'fail';
     }
 
+    // Ліміти + запис — під блокуванням користувача (паралельні запити не обходять «1 лист на 2 хв» і «5 на добу»).
+    $lock = 'mp_mail_' . $userId;
+    if (!mpb_lock($pdo, $lock)) {
+        return 'too_soon';
+    }
     $token = bin2hex(random_bytes(32));
     $ttl = max(1, (int) $cfg['verify_ttl_hours']);
-    $ins = $pdo->prepare(
-        "INSERT INTO mp_email_verifications (user_id, email, token_hash, expires_at) VALUES (:u, :e, :h, NOW() + INTERVAL $ttl HOUR)"
-    );
-    $ins->execute([':u' => $userId, ':e' => (string) $email, ':h' => hash('sha256', $token)]);
-    $rowId = (int) $pdo->lastInsertId();
+    try {
+        $soon = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND created_at > (NOW() - INTERVAL ' . max(1, (int) $cfg['verify_resend_min']) . ' MINUTE)');
+        $soon->execute([':u' => $userId]);
+        if ((int) $soon->fetchColumn() > 0) {
+            return 'too_soon';
+        }
+        // Добовий ліміт — на пару (користувач, email): після зміни email лічильник починається заново.
+        $day = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND email = :e AND created_at > (NOW() - INTERVAL 1 DAY)');
+        $day->execute([':u' => $userId, ':e' => (string) $email]);
+        if ((int) $day->fetchColumn() >= (int) $cfg['verify_max_per_day']) {
+            return 'daily';
+        }
+
+        $ins = $pdo->prepare(
+            "INSERT INTO mp_email_verifications (user_id, email, token_hash, expires_at) VALUES (:u, :e, :h, NOW() + INTERVAL $ttl HOUR)"
+        );
+        $ins->execute([':u' => $userId, ':e' => (string) $email, ':h' => hash('sha256', $token)]);
+        $rowId = (int) $pdo->lastInsertId();
+    } finally {
+        mpb_unlock($pdo, $lock);
+    }
 
     $link = ($base ?? '') . '/mp-verify.php?token=' . $token;   // 'log' без site_url: відносне посилання
     $subject = t('mpv_mail_subject');

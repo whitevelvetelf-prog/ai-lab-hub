@@ -34,6 +34,25 @@ function mpb_is_staff(): bool
     return mp_is_staff();   // роль з БД, а не з сесії
 }
 
+/**
+ * Іменоване блокування MySQL (GET_LOCK) — серіалізує «перевірив ліміт → виконав дію» для одного користувача.
+ * Без нього N паралельних запитів (з різних сесій одного акаунта) усі бачать «ліміт ще не вичерпано».
+ * Блокування сесійне: звільняється mpb_unlock() або закриттям з'єднання наприкінці запиту.
+ */
+function mpb_lock(PDO $pdo, string $name, int $timeoutSec = 10): bool
+{
+    $stmt = $pdo->prepare('SELECT GET_LOCK(:n, :t)');
+    $stmt->execute([':n' => substr($name, 0, 64), ':t' => $timeoutSec]);
+
+    return (int) $stmt->fetchColumn() === 1;
+}
+
+function mpb_unlock(PDO $pdo, string $name): void
+{
+    $stmt = $pdo->prepare('SELECT RELEASE_LOCK(:n)');
+    $stmt->execute([':n' => substr($name, 0, 64)]);
+}
+
 /** Разове повідомлення для наступної сторінки (сесія). */
 function mpb_flash(string $type, string $text): void
 {
@@ -1174,15 +1193,24 @@ function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
         return ['status' => 'notfound', 'contacts' => []];
     }
 
-    $seen = $pdo->prepare('SELECT 1 FROM mp_contact_reveals WHERE listing_id = :l AND user_id = :u AND created_at > (NOW() - INTERVAL 1 DAY) LIMIT 1');
-    $seen->execute([':l' => $listingId, ':u' => $userId]);
-    if ($seen->fetchColumn() === false) {
-        $cnt = $pdo->prepare('SELECT COUNT(*) FROM mp_contact_reveals WHERE user_id = :u AND created_at > (NOW() - INTERVAL 1 DAY)');
-        $cnt->execute([':u' => $userId]);
-        if ((int) $cnt->fetchColumn() >= (int) mp_config()['reveals_per_day']) {
-            return ['status' => 'limit', 'contacts' => []];
+    // «Перевірка ліміту + запис» — під блокуванням користувача, щоб паралельні запити не обходили ліміт.
+    $lock = 'mp_reveal_' . $userId;
+    if (!mpb_lock($pdo, $lock)) {
+        return ['status' => 'limit', 'contacts' => []];
+    }
+    try {
+        $seen = $pdo->prepare('SELECT 1 FROM mp_contact_reveals WHERE listing_id = :l AND user_id = :u AND created_at > (NOW() - INTERVAL 1 DAY) LIMIT 1');
+        $seen->execute([':l' => $listingId, ':u' => $userId]);
+        if ($seen->fetchColumn() === false) {
+            $cnt = $pdo->prepare('SELECT COUNT(*) FROM mp_contact_reveals WHERE user_id = :u AND created_at > (NOW() - INTERVAL 1 DAY)');
+            $cnt->execute([':u' => $userId]);
+            if ((int) $cnt->fetchColumn() >= (int) mp_config()['reveals_per_day']) {
+                return ['status' => 'limit', 'contacts' => []];
+            }
+            $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id) VALUES (:l, :u)')->execute([':l' => $listingId, ':u' => $userId]);
         }
-        $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id) VALUES (:l, :u)')->execute([':l' => $listingId, ':u' => $userId]);
+    } finally {
+        mpb_unlock($pdo, $lock);
     }
 
     return ['status' => 'ok', 'contacts' => mpb_contacts($pdo, $listingId)];
