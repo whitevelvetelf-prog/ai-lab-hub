@@ -10,6 +10,15 @@ declare(strict_types=1);
  */
 
 if (session_status() === PHP_SESSION_NONE) {
+    // Кукі сесії: HttpOnly (JS не читає — XSS не краде сесію), SameSite=Lax (міжсайтові POST не несуть кукі —
+    // додатковий захист від CSRF), Secure — коли запит по HTTPS.
+    session_set_cookie_params([
+        'lifetime' => 0,
+        'path'     => '/',
+        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
 }
 

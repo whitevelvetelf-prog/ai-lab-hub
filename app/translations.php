@@ -33,9 +33,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/translation-cache.php';
 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Сесія стартує в auth.php (з безпечними параметрами кукі: HttpOnly, SameSite=Lax) — щоб кукі не створювалась без них,
+// якщо цей файл підключено раніше за auth.php.
+require_once __DIR__ . '/auth.php';
 
 /**
  * Словник фраз мовою оригіналу: ключ => 'текст українською'.
