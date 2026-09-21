@@ -320,7 +320,6 @@ function mp_inspect_offer_file(?array $file, array &$errors): ?array
     if ($file === null || (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
         return null;
     }
-    $cfg = mp_config();
     if ((int) $file['error'] !== UPLOAD_ERR_OK) {
         $errors[] = mp_upload_error_text((int) $file['error']);
         return null;
@@ -330,6 +329,20 @@ function mp_inspect_offer_file(?array $file, array &$errors): ?array
         $errors[] = 'Файл не був завантажений через форму.';
         return null;
     }
+
+    return mp_validate_offer_file($tmp, (string) $file['name'], $errors);
+}
+
+/**
+ * Перевірка вмісту й типу файлу за шляхом (розмір, розширення з білого списку, реальний MIME за finfo,
+ * відсутність нульових байтів у текстових форматах, sha256). Спільна для CRM-форми (після перевірки
+ * завантаження) і CLI-імпорту стартових матеріалів (scripts/mp-import-seed.php).
+ *
+ * @return array{tmp:string,name:string,ext:string,mime:string,size:int,sha256:string}|null null → помилка додана в $errors
+ */
+function mp_validate_offer_file(string $tmp, string $originalName, array &$errors): ?array
+{
+    $cfg = mp_config();
     $size = (int) filesize($tmp);
     if ($size <= 0) {
         $errors[] = 'Файл порожній.';
@@ -340,7 +353,7 @@ function mp_inspect_offer_file(?array $file, array &$errors): ?array
         return null;
     }
 
-    $name = mp_clean_filename((string) $file['name']);
+    $name = mp_clean_filename($originalName);
     $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
     if (!in_array($ext, (array) $cfg['allowed_extensions'], true) || !isset(MP_FILE_MIME[$ext])) {
         $errors[] = 'Дозволені формати файлу: ' . implode(', ', (array) $cfg['allowed_extensions']) . '.';
@@ -369,9 +382,10 @@ function mp_inspect_offer_file(?array $file, array &$errors): ?array
  * Якщо файл із таким sha256 уже є — дубль не створюється, повертається наявний id (existing=true).
  *
  * @param array{tmp:string,name:string,ext:string,mime:string,size:int,sha256:string} $info
+ * @param bool $isUpload true — файл із $_FILES (move_uploaded_file); false — локальний файл (CLI-імпорт, copy)
  * @return array{id:int,existing:bool,original_name:string,stored_path:?string}
  */
-function mp_save_offer_file(PDO $pdo, array $info, ?int $userId): array
+function mp_save_offer_file(PDO $pdo, array $info, ?int $userId, bool $isUpload = true): array
 {
     $stmt = $pdo->prepare('SELECT id, original_name FROM mp_files WHERE sha256 = :h ORDER BY id LIMIT 1');
     $stmt->execute([':h' => $info['sha256']]);
@@ -386,7 +400,9 @@ function mp_save_offer_file(PDO $pdo, array $info, ?int $userId): array
     }
     $stored = bin2hex(random_bytes(16));   // випадкове ім'я без розширення
     $path = $dir . '/' . $stored;
-    if (!move_uploaded_file($info['tmp'], $path)) {
+    // Завантаження через форму — move_uploaded_file; CLI-імпорт (файл не «завантажено») — копіювання.
+    $stored_ok = $isUpload ? move_uploaded_file($info['tmp'], $path) : copy($info['tmp'], $path);
+    if (!$stored_ok) {
         throw new RuntimeException('Не вдалося зберегти файл на сервері.');
     }
     @chmod($path, 0640);
