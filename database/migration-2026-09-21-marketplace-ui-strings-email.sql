@@ -30,4 +30,7 @@ INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VAL
 ('mpv_mail_intro', 'en', 'To use the Marketplace, please confirm your email using this link:', 'manual'),
 ('mpv_mail_button', 'en', 'Confirm email', 'manual'),
 ('mpv_mail_expiry', 'en', 'The link is valid for %d hours and works once.', 'manual'),
-('mpv_mail_ignore', 'en', 'If you did not request this, just ignore this message.', 'manual');
+('mpv_mail_ignore', 'en', 'If you did not request this, just ignore this message.', 'manual'),
+('mpv_confirm_title', 'en', 'Confirm your email', 'manual'),
+('mpv_confirm_text', 'en', 'Click the button to confirm your email and use the Marketplace.', 'manual'),
+('mpv_confirm_btn', 'en', 'Confirm email', 'manual');

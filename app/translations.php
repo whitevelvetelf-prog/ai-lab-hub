@@ -260,6 +260,9 @@ $GLOBALS['TRANSLATIONS'] = [
     'mpv_mail_button'                => 'Підтвердити email',
     'mpv_mail_expiry'                => 'Посилання діє %d год і працює один раз.',
     'mpv_mail_ignore'                => 'Якщо ви цього не робили — просто проігноруйте лист.',
+    'mpv_confirm_title'              => 'Підтвердження email',
+    'mpv_confirm_text'               => 'Натисніть кнопку, щоб підтвердити email і користуватися Marketplace.',
+    'mpv_confirm_btn'                => 'Підтвердити email',
 
     // --- index.php: hero + напрямки ---
     'title_home'        => 'AI LAB HUB — Головна',

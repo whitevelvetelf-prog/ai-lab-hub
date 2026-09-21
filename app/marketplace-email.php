@@ -50,17 +50,15 @@ function mpv_require_verified(PDO $pdo, int $userId): void
     }
 }
 
-/** Абсолютна адреса для посилання в листі (config site_url або Host запиту). */
-function mpv_site_url(): string
+/**
+ * Абсолютна адреса сайту для посилань у листах — ЛИШЕ з config 'site_url' (http/https, без слеша в кінці).
+ * Заголовок Host не використовується ніде (захист від підміни домену в листі). Порожньо/некоректно → null.
+ */
+function mpv_site_url(): ?string
 {
-    $cfg = trim((string) mp_config()['site_url']);
-    if ($cfg !== '') {
-        return rtrim($cfg, '/');
-    }
-    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host = preg_replace('/[^A-Za-z0-9.\-:\[\]]/', '', (string) ($_SERVER['HTTP_HOST'] ?? 'localhost')) ?: 'localhost';
+    $cfg = rtrim(trim((string) mp_config()['site_url']), '/');
 
-    return $scheme . '://' . $host;
+    return preg_match('#^https?://[A-Za-z0-9.\-]+(?::\d{1,5})?(?:/[A-Za-z0-9._~/\-]*)?$#', $cfg) === 1 ? $cfg : null;
 }
 
 /** Відправка листа: 'log' → storage/marketplace-mail.log (без відправки), інакше send_mail() (PHP mail()). */
@@ -110,6 +108,16 @@ function mpv_send(PDO $pdo, int $userId): string
         return 'daily';
     }
 
+    // Посилання будується лише з site_url. Немає site_url (і це не 'log') — лист не надсилаємо,
+    // пишемо помилку в лог, користувач бачить нейтральне «не вдалося надіслати».
+    $base = mpv_site_url();
+    $logOnly = (string) $cfg['mail_transport'] === 'log';
+    if ($base === null && !$logOnly) {
+        error_log("[marketplace] verification email NOT sent (user {$userId}): config 'site_url' is empty or invalid");
+
+        return 'fail';
+    }
+
     $token = bin2hex(random_bytes(32));
     $ttl = max(1, (int) $cfg['verify_ttl_hours']);
     $ins = $pdo->prepare(
@@ -118,7 +126,7 @@ function mpv_send(PDO $pdo, int $userId): string
     $ins->execute([':u' => $userId, ':e' => (string) $email, ':h' => hash('sha256', $token)]);
     $rowId = (int) $pdo->lastInsertId();
 
-    $link = mpv_site_url() . '/mp-verify.php?token=' . $token;
+    $link = ($base ?? '') . '/mp-verify.php?token=' . $token;   // 'log' без site_url: відносне посилання
     $subject = t('mpv_mail_subject');
     $text = t('mpv_mail_intro') . "\n" . $link . "\n\n" . sprintf(t('mpv_mail_expiry'), $ttl) . "\n" . t('mpv_mail_ignore');
     $html = '<p>' . mp_e(t('mpv_mail_intro')) . '</p><p><a href="' . mp_e($link) . '">' . mp_e(t('mpv_mail_button')) . '</a></p>'
@@ -135,14 +143,14 @@ function mpv_send(PDO $pdo, int $userId): string
 }
 
 /**
- * Підтвердження за токеном з листа (одноразове).
+ * Стан токена БЕЗ його витрачання (для GET-сторінки з кнопкою).
  *
- * @return string ok | invalid | expired | used | changed
+ * @return array{status:string,id:int} status: ok | invalid | expired | used | changed
  */
-function mpv_confirm(PDO $pdo, string $token): string
+function mpv_check(PDO $pdo, string $token): array
 {
     if (preg_match('/^[a-f0-9]{64}$/', $token) !== 1) {
-        return 'invalid';
+        return ['status' => 'invalid', 'id' => 0];
     }
     $stmt = $pdo->prepare(
         'SELECT v.id, v.email, v.verified_at, (v.expires_at <= NOW()) AS expired, u.email AS current_email
@@ -151,20 +159,36 @@ function mpv_confirm(PDO $pdo, string $token): string
     $stmt->execute([':h' => hash('sha256', $token)]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row === false) {
-        return 'invalid';
+        return ['status' => 'invalid', 'id' => 0];
     }
+    $id = (int) $row['id'];
     if ($row['verified_at'] !== null) {
-        return 'used';
+        return ['status' => 'used', 'id' => $id];
     }
     if ((int) $row['expired'] === 1) {
-        return 'expired';
+        return ['status' => 'expired', 'id' => $id];
     }
     if ($row['current_email'] === null || strcasecmp((string) $row['current_email'], (string) $row['email']) !== 0) {
-        return 'changed';   // email змінено після надсилання листа
+        return ['status' => 'changed', 'id' => $id];   // email змінено після надсилання листа
+    }
+
+    return ['status' => 'ok', 'id' => $id];
+}
+
+/**
+ * Підтвердження за токеном (виконується лише POST-ом із mp-verify.php; одноразове).
+ *
+ * @return string ok | invalid | expired | used | changed
+ */
+function mpv_confirm(PDO $pdo, string $token): string
+{
+    $c = mpv_check($pdo, $token);
+    if ($c['status'] !== 'ok') {
+        return $c['status'];
     }
     // Одноразовість: UPDATE лише поки verified_at ще NULL і термін не минув.
     $upd = $pdo->prepare('UPDATE mp_email_verifications SET verified_at = NOW() WHERE id = :id AND verified_at IS NULL AND expires_at > NOW()');
-    $upd->execute([':id' => (int) $row['id']]);
+    $upd->execute([':id' => $c['id']]);
 
     return $upd->rowCount() === 1 ? 'ok' : 'used';
 }
