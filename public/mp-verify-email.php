@@ -48,7 +48,9 @@ mpb_open(t('mpv_title'));
         <section class="mp-panel">
             <?php if ($verified): ?>
                 <p class="mp-text"><?= mp_e(t('mpv_already')) ?></p>
-                <p class="mp-actions"><a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a></p>
+                <?php if (mpb_posting_open()): ?>
+                    <p class="mp-actions"><a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a></p>
+                <?php endif; ?>
             <?php else: ?>
                 <p class="mp-text"><?= mp_e(sprintf(t('mpv_page_text'), $email)) ?></p>
                 <?= mpv_block_html() ?>

@@ -151,6 +151,25 @@ function mpb_rate_cleanup(PDO $pdo): int
     }
 }
 
+/**
+ * Чи може ПОТОЧНИЙ користувач створювати/редагувати оголошення: подачу відкрито для всіх (posting_enabled)
+ * або він employee/admin (роль — з БД). Серверна перевірка; інтерфейс лише відображає її.
+ */
+function mpb_posting_open(): bool
+{
+    return mp_posting_enabled() || mpb_is_staff();
+}
+
+/** Сторінка «Подача оголошень відкриється згодом» (403) і завершення скрипта. */
+function mpb_posting_closed_page(): never
+{
+    $body = '<p class="mp-text">' . mp_e(t('mpb_posting_closed')) . '</p>';
+    if (!auth_check()) {
+        $body .= '<p class="mp-note">' . mp_e(t('mpb_posting_staff_login')) . ' <a href="login.php">' . mp_e(t('nav_login')) . '</a></p>';
+    }
+    mpb_message_page(403, t('mpb_posting_closed_title'), $body, 'marketplace.php');
+}
+
 /** Разове повідомлення для наступної сторінки (сесія). */
 function mpb_flash(string $type, string $text): void
 {
@@ -885,6 +904,10 @@ function mpb_seller_has_title(PDO $pdo, int $sellerId, string $title, int $excep
 function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int $sellerId, string $lang, array $newPhotos, array $deletePhotoIds, array $photoOrder): int
 {
     $isStaff = mpb_is_staff();
+    if (!$isStaff && !mp_posting_enabled()) {
+        // Найнижчий рівень захисту: навіть якщо якась сторінка забуде перевірку, збереження від не-staff неможливе.
+        throw new RuntimeException('Listing submission is closed for regular users');
+    }
     $ttl = max(1, (int) mp_config()['listing_ttl_days']);
     $filesToDelete = [];
     // Версія Правил, з якими погодився автор (config 'rules_version'); порожня → NULL.
@@ -1021,6 +1044,9 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
 /** @return string 'ok' або ключ помилки (t()) */
 function mpb_extend(PDO $pdo, array $own, int $userId): string
 {
+    if (!mpb_posting_open()) {
+        return 'mpb_posting_closed';
+    }
     $ttl = max(1, (int) mp_config()['listing_ttl_days']);
     $id = (int) $own['id'];
     $status = (string) $own['status'];

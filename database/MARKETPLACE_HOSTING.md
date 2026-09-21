@@ -1,151 +1,161 @@
 # Marketplace: випуск на хостинг (Хостинг Україна, adm.tools)
 
-Стан на 2026-09-21: **на хостинг нічого не залито**. Код Marketplace у збірку потрапляє лише з прапорцем `-IncludeMarketplace`; публічна частина вимкнена перемикачем `public_enabled`.
+Стан на 2026-09-21: **нічого не залито**. Запуск — **поетапний**:
 
-## 0. Що де лежить
+| Етап | `public_enabled` | `posting_enabled` | Хто що бачить |
+|---|---|---|---|
+| **1 (цей випуск)** | `true` (після перевірок) | **`false`** | «Готові рішення» й дошка відкриті всім; **створювати/редагувати оголошення можуть лише employee/admin**. Звичайний користувач бачить «Подача оголошень відкриється згодом»; кнопки «Подати оголошення» і сторінки Правил для публіки немає. Вибране, перегляд, розкриття контактів (з підтвердженим email) і скарги працюють. |
+| 2 (пізніше) | `true` | `true` | Подача відкрита всім. Див. розділ «Як відкрити подачу для всіх». |
 
-| Що | Файл | Коли |
+Пакет: `hosting-upload/` (ігнорується git). Найкоротший маршрут — `hosting-upload/00-START-HERE.md`; тут — повний порядок і пояснення.
+**Виконуйте кроки строго по порядку.** SQL — **до** коду; `public_enabled` вмикається **останнім**.
+
+---
+
+## Крок 1. Резервна копія
+1. phpMyAdmin → ваша база → **Експорт** (швидкий, SQL, utf-8) → збережіть файл.
+2. Файловий менеджер → скопіюйте (або заархівуйте) поточний код сайту (`app/`, `public/`, `config/`).
+3. Запишіть, де лежить `config/database.php` — його заливка **не чіпає**.
+
+## Крок 2. Перевірка середовища (версії, розширення)
+Найзручніше — файл `hosting-upload/_check-env.php`:
+1. Завантажте його в **`public/`** (веб-корінь сайту).
+2. Відкрийте `https://ваш-домен/_check-env.php?run=1`. Файл **сам видаляється** після показу (перевірте, що його немає, і за потреби видаліть вручну).
+3. Що має бути:
+   - **PHP ≥ 8.1** (код використовує тип `never`). Змінити: adm.tools → Хостинг → PHP.
+   - розширення **`fileinfo`**, **`gd` з підтримкою WebP**, `mbstring`, `pdo_mysql` (`exif` — бажано);
+   - **`upload_max_filesize` ≥ 6M, `post_max_size` ≥ 48M, `max_file_uploads` ≥ 8, `memory_limit` ≥ 128M, `display_errors` = Off** (змініть у налаштуваннях PHP хостингу);
+   - версія БД: **MySQL ≥ 5.7 або MariaDB ≥ 10.3** (SQL використовує `PREPARE/EXECUTE`, `ON DUPLICATE KEY`, `GET_LOCK`). Локально перевірено на MySQL 8.4; на MariaDB окремо не запускалось — після імпорту звірте контрольні запити кроку 3.
+4. Вручну (phpMyAdmin → SQL): `SELECT VERSION();` і `SHOW TABLES LIKE 'ui_translations';` (має бути 1 рядок — таблиця з міграції 2026-09-17-translation-tables).
+
+## Крок 3. SQL-міграції — по номерах, **ДО заливки коду**
+Імпорт (вкладка **Імпорт**, utf-8). **Варіант А (рекомендую):** один файл `marketplace-ALL-04-14.sql` (усе нижче підряд). **Варіант Б:** окремі файли по номерах:
+
+| № | Файл | Що робить |
 |---|---|---|
-| Таблиці `mp_*` (9 шт., з COLLATE), стартові категорії й продавець | `hosting-upload/04-marketplace-core.sql` (= `database/migration-2026-09-21-marketplace-core.sql`) | до коду |
-| Тексти інтерфейсу EN + EN-назви категорій | `hosting-upload/05-marketplace-ui-strings.sql` (= `database/migration-2026-09-21-marketplace-ui-strings.sql`) | після 04 |
-| Код (CRM + публічна частина + шаблон конфігу) | `powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -IncludeMarketplace -Output deploy-mp.zip` | після баз і теки |
+| 04 | `04-marketplace-core.sql` | 9 таблиць `mp_*`, продавець `ailabhub`, 7 категорій «Готових рішень» |
+| 05 | `05-marketplace-ui-strings.sql` | EN-написи вітрини й EN-назви категорій рішень |
+| 06 | `06-marketplace-classifieds.sql` | 11 колонок `mp_listings` (`ADD COLUMN` за перевіркою), індекси, таблиці фото/скарг/вибраного/розкриттів, 9 категорій дошки (з `hardware`) |
+| 07 | `07-marketplace-ui-strings-classifieds.sql` | EN-написи дошки й категорій дошки |
+| 08 | `08-marketplace-email-verification.sql` | `mp_email_verifications` |
+| 09 | `09-marketplace-ui-strings-email.sql` | EN-написи підтвердження email |
+| 10 | `10-marketplace-ui-strings-rules.sql` | EN-текст галочки згоди, підвал, «Правила лише українською» |
+| 11 | `11-marketplace-rules-version.sql` | колонка `mp_listings.rules_version` (`ADD COLUMN` за перевіркою) |
+| 12 | `12-marketplace-rate-limits.sql` | `mp_rate_limits` (IP-ліміти) |
+| 13 | `13-marketplace-ui-strings-ratelimit.sql` | EN «Too many requests…» |
+| 14 | `14-marketplace-ui-strings-posting.sql` | EN «Listing submission will open soon» |
 
-Обидва SQL безпечно запускати повторно (`CREATE TABLE IF NOT EXISTS`, `INSERT ... WHERE NOT EXISTS` / `INSERT IGNORE`); у них немає `DROP`/`DELETE`/`TRUNCATE`/`ALTER`.
+Усі файли безпечно запускати повторно: лише `CREATE TABLE IF NOT EXISTS`, `ADD COLUMN`/`CREATE INDEX` за перевіркою в `information_schema`, `INSERT … WHERE NOT EXISTS` / `INSERT IGNORE`. **Немає `DROP`/`DELETE`/`TRUNCATE`; `ALTER` — лише `mp_listings ADD COLUMN`; таблиці каталогу й `users` не чіпаються.**
 
-Звичайна збірка **без** прапорця (`build-deploy.ps1`) Marketplace-сторінок, CRM, міграцій і `config/marketplace.php` не містить. Спільний код, який лише «спить» за перемикачем (`app/marketplace.php`, `app/mp-card.php`, шапка, підвал, головна, `translations.php`), їде завжди — без конфігу `public_enabled` = `false`, тож на сайті нічого не змінюється.
-
-## 1. Тека для файлів пропозицій — ПОЗА webroot
-
-Файли (pdf, md, txt, json, csv, zip), які завантажують у CRM, зберігаються під випадковими іменами й віддаються тільки через `get.php` для залогінених. Тека **не повинна** бути доступна за URL.
-
-1. adm.tools → **Хостинг** → ваш акаунт → **Файловий менеджер** (або FTP).
-2. Знайдіть корінь сайту (тека, у якій лежить `public` або `www`, куди розпаковується код). Тека **на рівень вище веб-кореня** (веб-корінь = тека, яку віддає домен) — поза webroot.
-   - Якщо домен дивиться на теку `public` проєкту (поруч лежать `app/`, `config/`) — корінь проєкту вже поза webroot.
-   - Якщо домен дивиться на теку `www`, а проєкт лежить усередині неї — створіть теку поруч із `www`, а не в ній.
-3. Створіть теку, напр. `marketplace-files`. Права: **750** (або 755), власник — користувач PHP (стандартно на shared-хостингу це ваш акаунт). PHP має вміти в неї **писати** (для завантаження в CRM) і **читати** (для `get.php`).
-4. Дізнайтеся абсолютний шлях: у файловому менеджері він видно вгорі (`/home/<акаунт>/<домен>/...`). Перевірити напевно: тимчасово залийте `pathcheck.php` з вмістом `<?php echo dirname($_SERVER['DOCUMENT_ROOT']);` у веб-корінь, відкрийте його в браузері, **одразу видаліть**.
-5. Перевірка, що тека закрита: спробуйте відкрити в браузері `https://<домен>/marketplace-files/` — має бути 404/403, а не список файлів.
-
-Значення для конфігу — повний шлях **без слеша в кінці**, наприклад `/home/gu621051/ailabhub.example/marketplace-files`.
-
-## 2. Тека для обкладинок (у webroot)
-
-CRM зберігає обкладинки в `public/assets/images/marketplace/covers/`. Створіть її (або `public/assets/images/marketplace/` — код створить `covers` сам, якщо PHP має право писати), права 755/775. Цю теку збірка не перезаписує (обкладинки — користувацький контент, як логотипи).
-
-## 3. Конфіг на хостингу
-
-Реальний `config/marketplace.php` збірка **ніколи** не кладе під цим іменем (щоб деплой не затирав налаштування сервера). З `-IncludeMarketplace` у архіві є шаблон `config/marketplace.dist.php`:
-
-1. У файловому менеджері скопіюйте `config/marketplace.dist.php` → `config/marketplace.php`.
-2. Змініть два рядки:
-
-```php
-'file_storage_dir' => '/home/gu621051/ailabhub.example/marketplace-files',   // шлях із кроку 1
-'public_enabled'   => false,                                                 // true — лише на запуску (крок 5)
+Контрольні запити (вкладка SQL) — очікуване в дужках:
+```sql
+SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME LIKE 'mp\_%';   -- 15
+SELECT section, COUNT(*) FROM mp_categories GROUP BY section;                                                -- board 9, solution 7
+SELECT COUNT(*) FROM mp_sellers WHERE slug = 'ailabhub';                                                      -- 1
+SELECT slug FROM mp_categories WHERE section = 'board' AND slug = 'hardware';                                 -- 1 рядок
+SHOW COLUMNS FROM mp_listings LIKE 'rules_version';                                                           -- 1 рядок
+SELECT COUNT(*) FROM ui_translations WHERE key_name IN ('mpb_posting_closed','mpb_rate_limited') AND lang='en'; -- 2
 ```
 
-3. Решту (`max_upload_bytes`, `max_cover_bytes`, `allowed_extensions`) не чіпайте, доки не треба. Ліміт файлу за замовчуванням 10 МБ; реально його обмежують ще `upload_max_filesize` і `post_max_size` у налаштуваннях PHP (adm.tools → Хостинг → PHP: поставте ≥ 12M обидва).
-4. Файл `config/marketplace.local.php` (локальне перевизначення) на хостингу **не потрібен**.
+## Крок 4. Тека для файлів пропозицій — ПОЗА webroot
+Файли (pdf, md, zip…) віддає лише `get.php` залогованим. Тека **не має** бути доступна за URL.
+1. Корінь проєкту = тека, де лежать `app/`, `config/`, `public/`. Якщо домен дивиться на `public/`, корінь уже поза веб-коренем; створіть поряд теку `marketplace-files`. Якщо проєкт лежить усередині веб-кореня — створіть її **поруч із** веб-коренем, не в ньому.
+2. Права **750/755**, PHP має вміти писати й читати.
+3. Запишіть **абсолютний шлях** (вгорі файлового менеджера, `/home/<акаунт>/…`) — він піде в конфіг (крок 6).
+4. Перевірка: `https://ваш-домен/marketplace-files/` → **404/403**.
 
-## 4. Порядок випуску
+## Крок 5. Код — `code/deploy-mp.zip`
+Розпакуйте в корінь проєкту **з перезаписом** (не в `public/`), потім Ctrl+F5 (сервіс-воркер).
+- Додається: `docs/` (правила + `.htaccess`), `public/uploads/marketplace/.htaccess`, `config/marketplace.dist.php` (шаблон), `app/…`, `public/mp-*.php`, `public/marketplace*.php`, `public/offer.php`, `public/get.php`.
+- **Не** входять і **не** перезаписуються: `config/database.php`, `config/marketplace.php` (створюєте самі), `config/marketplace.local.php`, `storage/`, `scripts/`, `marketplace-seed/`.
+- Крім Marketplace, архів містить актуальні **виправлення безпеки сайту**: лист відновлення пароля будує посилання з `site_url` (не з `Host`), кукі сесії `HttpOnly`+`SameSite=Lax`, захист заголовків листів. Тому робіть копію з кроку 1.
 
-1. phpMyAdmin → **Експорт** (резервна копія бази).
-2. Імпорт `04-marketplace-core.sql`, потім `05-marketplace-ui-strings.sql` (utf-8). Перевірка: `SELECT COUNT(*) FROM mp_categories;` → 7, `SELECT COUNT(*) FROM mp_sellers;` → 1.
-3. Створити теки (кроки 1–2) і `config/marketplace.php` з `public_enabled = false` (крок 3).
-4. Зібрати й залити код: `build-deploy.ps1 -IncludeMarketplace -Output deploy-mp.zip`, розпакувати в корінь сайту з перезаписом. Після цього Ctrl+F5.
-5. У CRM (`mp-list.php`, `mp-add-offer.php`, роль employee/admin) створити пропозицію (краще по одній кожного типу: link, file, contact), опублікувати. Публічно все ще 404 — це нормально.
-6. Увімкнути: у `config/marketplace.php` поставити `'public_enabled' => true`. Пункт «Marketplace» з'явиться в меню, підвалі й на головній, щойно є хоча б одна опублікована пропозиція.
-7. Перевірити гостем і залогіненим: `marketplace.php`, картку, «Отримати» для link/contact, для file — гість бачить «Потрібен вхід», залогінений отримує файл.
+## Крок 6. Конфіг `config/marketplace.php`
+1. Локальний `hosting-upload/marketplace.config.HOSTING.php` → заповніть **два** місця: `file_storage_dir` (шлях з кроку 4) і `site_url` (адреса сайту точно як відкривається, `https://…`, без слеша; з `www` чи без).
+2. Завантажте як **`config/marketplace.php`** (не `.dist`). На цьому етапі: **`'public_enabled' => false`, `'posting_enabled' => false`**.
+3. `rate_limit_salt` уже згенерована — не міняйте її після запуску. `trusted_proxy_header` лишайте порожнім (якщо сайт не за проксі; за Cloudflare — `CF-Connecting-IP`).
+4. Ключі, яких немає у файлі, беруться зі значень за замовчуванням у коді. `config/marketplace.dist.php` після цього можна видалити.
 
-**Відкат:** `'public_enabled' => false` у `config/marketplace.php` — усі публічні сторінки віддають 404, пункти меню зникають. База й файли лишаються.
+## Крок 7. Перевірка заборони виконання PHP і закритих тек
+1. У `public/uploads/marketplace/` створіть `probe.php` з `<?php echo 'X';` → відкрийте `https://ваш-домен/uploads/marketplace/probe.php` → має бути **403** (не «X» і не 200) → **видаліть `probe.php`**.
+2. Якщо «X» або 200 — хостинг ігнорує `.htaccess` (`AllowOverride None`): **публікацію вмикати не можна**, поки не закрито виконання PHP у цій теці (зверніться до підтримки).
+3. `https://ваш-домен/docs/marketplace_rules_uk.md` → **404/403**. `https://ваш-домен/storage/` → 404/403.
+4. Тека `public/uploads/marketplace/` доступна PHP на запис (755/775).
 
-## 5. Що варто знати
+## Крок 8. Cron
+adm.tools → Хостинг → **Cron**, раз на годину:
+`0 * * * * php /home/<акаунт>/…/public/mp-cron-expire.php` (версія PHP — та сама, що в сайту).
+Скрипт переводить прострочені оголошення в `expired` (публічні сторінки самі перевіряють `expires_at`, тож сайт без cron коректний) і чистить лічильники IP-лімітів старші за 3 доби. Якщо cron вміє лише URL — задайте `cron_token` у конфігу й викликайте `…/mp-cron-expire.php?token=<ключ>` (порожній ключ = HTTP вимкнено).
 
-- Ліміт «Отримано» — не частіше 1 разу на добу для пари (користувач + пропозиція). Для гостя ліміт тримається в сесії (у `mp_claims` немає колонки сесії); очистивши cookie, гість може порахуватися знову.
-- Усі файли мають `scan_status = 'pending'`: антивірусної перевірки ще немає. Видача блокується лише для статусів `infected` / `blocked`.
-- Ціни, рейтинги й відгуки в Marketplace відсутні; усі пропозиції безкоштовні (`pricing_model = 'free'`).
+## Крок 9. Пошта: SPF / DKIM / DMARC і тест доставки
+Листи (підтвердження email — без нього не працюють «Показати контакт» і «Поскаржитись»; відновлення пароля) йдуть через PHP `mail()` з `hello@ailabhub-directory.com` (`app/mailer.php`); SMTP у проєкті немає. Без правильних DNS-записів Gmail/ukr.net кладуть такі листи в «Спам» або відхиляють.
+1. **SPF** (TXT на домені): має дозволяти відправку з серверів хостингу. Точне значення візьміть у підтримки/панелі хостингу (приклад форми: `v=spf1 include:<spf-хостингу> ~all`); у домену має бути **один** SPF-запис.
+2. **DKIM**: увімкніть підпис пошти домену в панелі хостингу й додайте виданий TXT-запис (`<selector>._domainkey`).
+3. **DMARC** (TXT `_dmarc`): для початку `v=DMARC1; p=none; rua=mailto:admin@ailabhub-directory.com` (звіти без блокування); після стабільної роботи — `p=quarantine`.
+4. **Тест доставки (обов'язково до вмикання)** — двічі: зі скриптом **відновлення пароля** (`forgot-password.php`) і зі **підтвердженням email** (потребує `public_enabled=true`, див. крок 11 — тому спершу перевірте forgot-password):
+   - завести тестові акаунти на **Gmail** і **ukr.net**;
+   - запросити лист → він має прийти **у «Вхідні», не в «Спам»** (перевірте й «Спам»);
+   - Gmail: «Показати оригінал» → `SPF: PASS`, `DKIM: PASS`, `DMARC: PASS`; ukr.net: перевірте, що лист не в «Спам», при потребі — заголовки листа;
+   - лист має містити посилання на **ваш** домен (`site_url`), а не на чужий/локальний.
+   Якщо `mail()` на хостингу не працює або листи в спамі й DNS правильні — потрібен SMTP (окрема робота в `app/mailer.php`), **вмикати подачу/контакти до цього не варто**.
+
+## Крок 10. Імпорт 7 стартових матеріалів (чернетки)
+1. Залийте вміст `hosting-upload/seed-import/` у **корінь проєкту** (`scripts/mp-import-seed.php`, `marketplace-seed/`).
+2. Консоль/SSH або одноразовий cron: `php scripts/mp-import-seed.php` (пробний запуск: 7 × «СТВОРИТИ (draft)»), потім `php scripts/mp-import-seed.php --apply`. Повтор безпечний.
+3. **Видаліть `scripts/mp-import-seed.php` і `marketplace-seed/` з сервера.**
+4. Перегляньте й опублікуйте в CRM `mp-list.php` (admin/employee). Локальні правки в тексті матеріалів на сервер не переносяться (це нові чернетки з manifest).
+
+## Крок 11. Вмикання (етап 1) і перевірка «наживо»
+1. У `config/marketplace.php`: **`'public_enabled' => true`**, `'posting_enabled'` — **`false`**.
+2. Перевірка за ролями:
+   - **гість:** `marketplace.php`, `marketplace-solutions.php`, картка опублікованого рішення → «Отримати» дає «Потрібен вхід»; `mp-post.php` → «Подача оголошень відкриється згодом» (403); **`mp-rules.php` → 404**; в підвалі немає «Правила оголошень»; кнопки «Подати оголошення» немає;
+   - **звичайний користувач** (тестовий акаунт, email підтверджено): те саме + вибране, «Показати контакт», «Поскаржитись» працюють; `mp-post.php` → «відкриється згодом»; кнопки подачі немає; «Отримати» віддає файл;
+   - **employee/admin:** `mp-post.php` відкривається (форма з галочкою й посиланням на Правила), `mp-rules.php` → 200 (дата 21.09.2026, без жовтих маркерів), `mp-list.php`, `mp-moderation.php`, `mp-add-offer.php`; створене оголошення одразу опубліковане;
+   - `mp-cron-expire.php` через cron відпрацював (лог cron).
+3. Тестові записи заархівуйте в CRM.
+
+## Відкат
+- Швидко: `'public_enabled' => false` у `config/marketplace.php` → усі сторінки Marketplace 404, меню й підвал без Marketplace; база й файли лишаються.
+- Повністю: відновити резервні копії бази й файлів (крок 1). Таблиці `mp_*` можна лишити — вони нічого не ламають.
 
 ---
 
-## 5. Дошка оголошень (етап 4) — НЕ залито на хостинг
-
-Стан: код і SQL готові, **на хостинг нічого не заливалось**, `public_enabled` лишається `false`.
-
-### 5.1 SQL (після 04 і 05, у phpMyAdmin, utf-8)
-
-| Файл | Що робить |
-|---|---|
-| `hosting-upload/06-marketplace-classifieds.sql` (= `database/migration-2026-09-21-marketplace-classifieds.sql`) | 11 нових колонок `mp_listings` (лише `ALTER ... ADD COLUMN`, кожна — після перевірки в `information_schema`), 3 індекси (`CREATE INDEX` з такою ж перевіркою), таблиці `mp_listing_photos`, `mp_reports`, `mp_favorites`, `mp_contact_reveals`, 9 стартових категорій розділу `board` |
-| `hosting-upload/07-marketplace-ui-strings-classifieds.sql` | EN-тексти інтерфейсу (147 ключів `mpb_*`) і EN-назви категорій дошки |
-
-Обидва можна запускати повторно. Перевірка: `SELECT COUNT(*) FROM mp_categories WHERE section='board';` → 9.
-
-### 5.2 Тека фото та PHP-налаштування
-
-- Фото зберігаються в **`public/uploads/marketplace/`** (у вебі). Тека має бути доступна PHP на запис (755/775). Код створить її сам; збірка з `-IncludeMarketplace` кладе туди `.htaccess`.
-- `.htaccess` віддає лише `jpg/png/webp` під випадковими іменами й забороняє виконання PHP. **Перевірка після заливки:** створіть у теці `probe.php` з `<?php echo 'X';`, відкрийте `https://<домен>/uploads/marketplace/probe.php` — має бути 403 (не «X»), потім видаліть файл. Якщо виходить «X» або 200 — хостинг ігнорує `.htaccess` (`AllowOverride None`): публікацію вмикати не можна, поки не закрито виконання PHP у цій теці.
-- До 8 фото по 5 МБ: у PHP (adm.tools → Хостинг → PHP) поставте `upload_max_filesize` ≥ 6M, `post_max_size` ≥ 48M, `max_file_uploads` ≥ 8, `memory_limit` ≥ 128M. Розширення `gd` (з WebP) і `fileinfo` мають бути ввімкнені.
-- Ліміти та антиспам — у `config/marketplace.php`: `photo_max_count`, `photo_max_bytes`, `listing_ttl_days` (30), `max_active_per_user` (5), `max_new_per_day` (10), `max_links_in_desc` (2), `stop_words` (порожньо), `reveals_per_day` (30), `reports_threshold` (3).
-
-### 5.3 Cron: завершення терміну (`mp-cron-expire.php`)
-
-Скрипт переводить `published → expired` (і пише в журнал). Публічні сторінки перевіряють `expires_at > NOW()` самі, тож без cron сайт працює правильно — cron лише «прибирає» статуси.
-
-adm.tools → Хостинг → **Cron** → додати завдання раз на годину:
-
-```
-0 * * * * php /home/<акаунт>/<домен>/public/mp-cron-expire.php
-```
-
-(шлях — до реального `public/mp-cron-expire.php`; версію PHP оберіть таку саму, як у сайту). Якщо cron хостингу вміє лише викликати URL: у `config/marketplace.php` задайте довгий випадковий `'cron_token' => '...'` і викликайте `https://<домен>/mp-cron-expire.php?token=<ключ>`. Порожній `cron_token` (за замовчуванням) → HTTP-доступ до скрипта вимкнений (404).
-
-### 5.4 Порядок випуску (коли вирішите)
-
-1. Резервна копія бази. 2. Імпорт 06, потім 07. 3. Налаштування PHP і cron (5.2, 5.3). 4. Код: `build-deploy.ps1 -IncludeMarketplace`. 5. Перевірка `.htaccess` (5.2). 6. Ще з `public_enabled=false` переглянути CRM: `mp-moderation.php`, `mp-list.php`. 7. `'public_enabled' => true`, пройти сценарій: подати оголошення → схвалити → побачити в списку → показати контакт.
-
-Публічна частина не вимагає підтвердження email: у системі його немає (див. звіт етапу 4).
+## Як відкрити подачу для всіх (етап 2)
+Робіть, лише коли готові юридично:
+1. **Юрист** переглядає `docs/marketplace_rules_uk.md` (контакти, вимоги, відповідальність, персональні дані) і повертає правки.
+2. **Підстановка даних** і правки юриста внесіть у `docs/marketplace_rules_uk.md`. Усі місця для підстановки мають бути заповнені (жодних `[…]`, окрім посилань `[текст](url)`). Оновіть дату: у файлі (рядок «Редакція від»), а головне — `'rules_version' => 'РРРР-ММ-ДД'` у `config/marketplace.php`.
+3. **Прибрати «ЧЕРНЕТКА»**: у файлі не має лишатися банера/слова «ЧЕРНЕТКА» (зараз банер уже прибрано, але **юридичний перегляд ще не проведено** — тому подача закрита).
+4. У репозиторії `config/marketplace.php`: **`'posting_enabled' => true`**.
+5. **Нова збірка:** `powershell -ExecutionPolicy Bypass -File scripts/build-deploy.ps1 -IncludeMarketplace -Output deploy-mp2.zip`. Збірка **зупиниться**, якщо в Правилах лишились маркери/«ЧЕРНЕТКА», а `rules_version` порожній чи не у форматі `РРРР-ММ-ДД`; без попередження «Правила не фіналізовані» вона пройде лише коли все чисто.
+6. Залийте архів із перезаписом (`docs/marketplace_rules_uk.md` оновиться разом із кодом), потім **на сервері** у `config/marketplace.php` поставте `'posting_enabled' => true` і оновіть `rules_version` (серверний конфіг архів не перезаписує).
+7. Перевірка: звичайний користувач з підтвердженим email бачить кнопку «Подати оголошення», форму, галочку з посиланням на Правила; `mp-rules.php` відкривається гостю; у підвалі є «Правила оголошень»; нове оголошення потрапляє на модерацію (`mp-moderation.php`).
+8. Слідкуйте за чергою модерації й скаргами перші дні. Відкат подачі — `'posting_enabled' => false`.
 
 ---
 
-## 6. Підтвердження email (етап 5) — НЕ залито на хостинг
+## Довідка
 
-Вимагається для дій у Marketplace: подача/редагування оголошення, розкриття контакту, скарга (вибране, перегляд, пошук — без підтвердження; employee/admin звільнені). Каталог і решта сайту не змінюються.
+### Налаштування `config/marketplace.php` (значення за замовчуванням)
+| Ключ | Типово | Призначення |
+|---|---|---|
+| `public_enabled` | `false` | публічна частина (вітрини, оголошення, меню) |
+| `posting_enabled` | `false` | подача/редагування оголошень для всіх (інакше лише employee/admin) |
+| `file_storage_dir` | `<проєкт>/storage/marketplace/files` | файли пропозицій **поза webroot** |
+| `site_url` | `''` | адреса сайту для посилань у листах (обов'язково) |
+| `mail_transport` | `mail` | `mail` (PHP `mail()`) або `log` (лише розробка) |
+| `rules_version` | дата | дата редакції Правил (показ на сторінці) |
+| `rate_limit_salt` | `''` | сіль хешування IP (заповнена в шаблоні) |
+| `trusted_proxy_header` | `''` | заголовок проксі з IP (останній елемент); порожньо = `REMOTE_ADDR` |
+| `cron_token` | `''` | ключ для виклику cron через URL |
+| `photo_max_count` / `photo_max_bytes` | 8 / 5 МБ | фото на оголошення |
+| `listing_ttl_days` | 30 | термін оголошення |
+| `max_active_per_user` / `max_new_per_day` | 5 / 10 | ліміти на акаунт (не для staff) |
+| `reveals_per_day` | 30 | розкриття контактів на акаунт за добу |
+| `ip_limit_reveal` / `ip_limit_report` / `ip_limit_post` / `ip_limit_mail` | 100 / 20 / 15 / 20 | ліміти за добу з одного IP (другий шар) |
+| `stop_words`, `max_links_in_desc` | `[]`, 2 | антиспам |
 
-**SQL (після 06 і 07):** `hosting-upload/08-marketplace-email-verification.sql` (таблиця `mp_email_verifications`, лише `CREATE TABLE IF NOT EXISTS`) і `09-marketplace-ui-strings-email.sql` (EN-тексти, `INSERT IGNORE`).
+### Безпека (коротко)
+CSRF на всіх POST; prepared statements; екранування виводу; роль employee/admin перевіряється в БД на кожному запиті; контактів немає в HTML до кліку; фото перекодовуються GD, PHP у `uploads/` заборонено; ліміти захищені від паралельних запитів; IP лише як `sha256(IP+сіль)`; токен підтвердження email — 32 байти, у БД лише sha256, одноразовий, підтвердження POST-ом.
 
-**Листи.** Сайт надсилає пошту через PHP `mail()` (`app/mailer.php`, `send_mail()`; SMTP у проєкті немає) — так само, як лист «вхід без пароля». У `config/marketplace.php` на хостингу:
-
-```php
-'mail_transport' => 'mail',                      // 'log' — лише для розробки (пише в storage/marketplace-mail.log)
-'site_url'       => 'https://<ваш-домен>',       // ОБОВ'ЯЗКОВО: посилання в листі будується лише з нього
-```
-
-Якщо `site_url` порожній або некоректний, а `mail_transport` не `log`, лист **не надсилається**: у PHP error log пишеться `[marketplace] verification email NOT sent … 'site_url' is empty or invalid`, а користувач бачить нейтральне «Не вдалося надіслати лист». Заголовок Host для посилань не використовується ніде. Посилання з листа веде на сторінку з кнопкою «Підтвердити email» — токен витрачається лише POST-ом (з CSRF), тож сканери пошти його не «спалюють».
-
-Відправник — `hello@ailabhub-directory.com` (константа `MAIL_FROM_ADDRESS` у `app/mailer.php`); щоб листи не потрапляли в спам, у DNS домену мають бути SPF/DKIM для відправлення через хостинг. **Перевірте до запуску:** зареєструйте тестовий акаунт із реальною поштою, натисніть «Надіслати лист», переконайтесь, що лист дійшов (і не в «Спам»). Якщо `mail()` на хостингу не працює — потрібен SMTP (PHPMailer/SMTP хостингу) — це окрема робота в `app/mailer.php`.
-
-Ліміти в конфігу: `verify_ttl_hours` (24), `verify_resend_min` (2), `verify_max_per_day` (5), `report_min_verified_hours` (24). Токен — 32 випадкових байти, у БД лише sha256, одноразовий.
-
----
-
-## 7. Правила розміщення оголошень — НЕ залито на хостинг
-
-- Текст: `docs/marketplace_rules_uk.md` (їде в збірці з `-IncludeMarketplace`; сторінка `mp-rules.php` читає його на льоту, тож правки тексту — це заміна цього файлу). **Перед запуском** підставте всі жовті маркери `[ ... ]` на сторінці й приберіть виноску «ЧЕРНЕТКА» з файлу (юрист має переглянути текст).
-- Дата редакції: `'rules_version' => 'YYYY-MM-DD'` у `config/marketplace.php`; показується на сторінці. Змінили текст — оновіть дату.
-- SQL: `hosting-upload/10-marketplace-ui-strings-rules.sql` (EN-текст галочки й підвалу, `INSERT IGNORE`), після 09.
-
-### 7.1 Одне джерело тексту, захист збірки, версія згоди
-
-- **Текст Правил і текст галочки** беруться лише з `docs/marketplace_rules_uk.md` (розділ «Текст для галочки…» — окремий фрагмент; на сторінку Правил він не виводиться). У `app/translations.php` тексту Правил немає; EN-переклад галочки — рядок `mpb_f_rules_text` у `10-…sql`, тож при зміні українського тексту галочки в md оновіть і його.
-- **`docs/` на хостингу.** Збірка з `-IncludeMarketplace` кладе `docs/marketplace_rules_uk.md` і `docs/.htaccess` (`Require all denied`) у корінь проєкту — поруч із `app/`, `config/`, `public/`; PHP читає файл з диска. Теку не має бути видно з вебу: після заливки відкрийте `https://<домен>/docs/marketplace_rules_uk.md` — має бути 404 або 403 (якщо домен дивиться на `public/`, буде 404, `.htaccess` — страховка на випадок іншої розкладки).
-- **Збірка не випустить чернетку.** `build-deploy.ps1 -IncludeMarketplace` зупиняється з помилкою `MARKETPLACE BUILD STOPPED`, якщо в md лишились `[маркери]`, слово «ЧЕРНЕТКА» або рядок «Редакція від: [дата]», або якщо `rules_version` у `config/marketplace.php` (з нього робиться `marketplace.dist.php`) порожній чи не `YYYY-MM-DD`. Архів при цьому не створюється. Збірка без прапорця Marketplace цього не перевіряє.
-- **Версія згоди.** `hosting-upload/11-marketplace-rules-version.sql` — `ALTER TABLE mp_listings ADD COLUMN rules_version VARCHAR(20) NULL` (ідемпотентно). **Залити ДО коду:** код пише в цю колонку при кожному збереженні оголошення (разом із `rules_accepted_at`; значення = `rules_version` з конфігу). Старі записи лишаються `NULL`.
-
----
-
-## 8. IP-ліміти (другий шар) — НЕ залито на хостинг
-
-- **SQL:** `hosting-upload/12-marketplace-rate-limits.sql` (таблиця `mp_rate_limits`, лише `CREATE TABLE IF NOT EXISTS`) і `13-marketplace-ui-strings-ratelimit.sql` (EN-напис «Too many requests…»). Залити **до коду**: без таблиці IP-ліміти не працюють (дія дозволяється, помилка пишеться в error log).
-- **Конфіг (`config/marketplace.php` на сервері):** задайте `'rate_limit_salt' => '<довгий випадковий рядок>'` — IP зберігається лише як `sha256(IP + сіль)`. Без солі використовується запасна, слабша. `'trusted_proxy_header'` лишайте порожнім, якщо сайт не за проксі/CDN; якщо за проксі (напр. Cloudflare) — вкажіть заголовок (`'X-Forwarded-For'`), береться його **останній** елемент. Для Cloudflare зручніше `'CF-Connecting-IP'`. Не задавайте заголовок «про запас»: якщо проксі його не перезаписує, клієнт зможе підробляти IP.
-- **Ліміти на добу з одного IP** (`ip_limit_reveal` 100, `ip_limit_report` 20, `ip_limit_post` 15, `ip_limit_mail` 20) — щедрі, бо мобільні оператори віддають один IP багатьом. Не стосуються employee/admin.
-- **Прибирання:** `mp-cron-expire.php` видаляє з `mp_rate_limits` рядки старші за 3 доби (cron з розділу 5.3).
+### Що НЕ заливати
+`config/marketplace.local.php`, `config/database.php` (на сервері свій), `storage/`, `marketplace-seed/` і `scripts/` (крім одноразового імпорту кроку 10), тестові дані.

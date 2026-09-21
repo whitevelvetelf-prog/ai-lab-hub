@@ -40,6 +40,7 @@ function mp_config(): array
             'reveals_per_day'    => 30,
             'reports_threshold'  => 3,
             'cron_token'         => '',
+            'posting_enabled'    => false,
             'rate_limit_salt'    => '',
             'trusted_proxy_header' => '',
             'ip_limit_reveal'    => 100,
@@ -111,6 +112,21 @@ function mp_live_role(): ?string
 function mp_is_staff(): bool
 {
     return in_array(mp_live_role(), ['employee', 'admin'], true);
+}
+
+/** Чи відкрито подачу оголошень для всіх (config 'posting_enabled'). Для employee/admin подача відкрита завжди — див. mpb_posting_open(). */
+function mp_posting_enabled(): bool
+{
+    return mp_config()['posting_enabled'] === true;
+}
+
+/**
+ * Показувати публіці посилання на Правила (підвал): лише коли подачу відкрито, а поки закрита — тільки співробітникам.
+ * Суто косметика (за сесією, без запиту до БД); справжній доступ до mp-rules.php перевіряє сервер.
+ */
+function mp_rules_link_visible(): bool
+{
+    return mp_posting_enabled() || auth_has_role('employee', 'admin');
 }
 
 /** CRM Marketplace — лише employee та admin (роль перевіряється в БД на кожному запиті); решту відправляє в кабінет. */

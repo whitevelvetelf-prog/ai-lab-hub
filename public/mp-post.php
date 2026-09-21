@@ -25,6 +25,11 @@ mp_public_require();
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
+// Поетапний запуск: поки posting_enabled = false, подавати й редагувати можуть лише employee/admin (сервер, GET і POST).
+if (!mpb_posting_open()) {
+    mpb_posting_closed_page();
+}
+
 $userId = mpb_require_login();
 $user = auth_current_user($pdo);
 if ($user === null) {

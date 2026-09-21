@@ -75,7 +75,9 @@ mpb_open(t('mp_heading'), false);
         <p class="mp-subtitle"><?= mp_e(t('mpb_subtitle')) ?></p>
 
         <div class="mp-actions">
-            <a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a>
+            <?php if (mpb_posting_open()): ?>
+                <a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a>
+            <?php endif; ?>
             <?php if (auth_check()): ?>
                 <a class="mp-btn" href="mp-my.php"><?= mp_e(t('mpb_my_link')) ?></a>
                 <a class="mp-btn" href="mp-favorites.php"><?= mp_e(t('mpb_fav_title')) ?></a>

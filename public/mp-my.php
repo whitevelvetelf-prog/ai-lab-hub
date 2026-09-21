@@ -69,17 +69,25 @@ $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 
+$postingOpen = mpb_posting_open();
+
 mpb_open(t('mpb_my_title'));
 ?>
     <div class="mp-page">
         <h1 class="mp-title"><?= mp_e(t('mpb_my_title')) ?></h1>
         <div class="mp-actions">
-            <a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a>
+            <?php if (mpb_posting_open()): ?>
+                <a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a>
+            <?php endif; ?>
             <a class="mp-btn" href="mp-favorites.php"><?= mp_e(t('mpb_fav_title')) ?></a>
             <a class="mp-btn" href="marketplace.php"><?= mp_e(t('mp_heading')) ?></a>
         </div>
 
         <?= mpb_flash_html() ?>
+
+        <?php if (!$postingOpen): ?>
+            <div class="mp-alert mp-alert--error"><?= mp_e(t('mpb_posting_closed')) ?></div>
+        <?php endif; ?>
 
         <nav class="mp-tabs" aria-label="<?= mp_e(t('mpb_my_title')) ?>">
             <?php foreach ($tabs as $key => [, $labelKey]): ?>
@@ -117,8 +125,8 @@ mpb_open(t('mpb_my_title'));
                                 <p class="mp-alert mp-alert--error mp-alert--inline"><strong><?= mp_e(t('mpb_reject_reason')) ?>:</strong> <?= mp_e($r['reject_reason']) ?></p>
                             <?php endif; ?>
                             <div class="mp-my-item__actions">
-                                <a class="mp-btn" href="mp-post.php?id=<?= $rid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a>
-                                <?php if ($canExtend): ?>
+                                <?php if ($postingOpen): ?><a class="mp-btn" href="mp-post.php?id=<?= $rid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a><?php endif; ?>
+                                <?php if ($canExtend && $postingOpen): ?>
                                     <form method="post" action="mp-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form">
                                         <?= mp_csrf_field() ?><input type="hidden" name="action" value="extend"><input type="hidden" name="id" value="<?= $rid ?>">
                                         <button class="mp-btn" type="submit"><?= mp_e(t('mpb_extend_btn')) ?></button>

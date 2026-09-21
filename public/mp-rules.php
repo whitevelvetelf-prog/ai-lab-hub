@@ -6,7 +6,8 @@ declare(strict_types=1);
  * AI LAB HUB — Marketplace: Правила розміщення оголошень.
  *
  * Текст — docs/marketplace_rules_uk.md (рендерить app/mpb-rules.php); дата редакції — config 'rules_version'.
- * [Місця для підстановки] у тексті виводяться видимим маркером. Доступна лише при public_enabled = true.
+ * [Місця для підстановки] у тексті виводяться видимим маркером. Доступна лише при public_enabled = true;
+ * поки posting_enabled = false — тільки employee/admin (решта — 404).
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -15,6 +16,11 @@ require_once __DIR__ . '/../app/marketplace-board.php';
 require_once __DIR__ . '/../app/mpb-rules.php';
 
 mp_public_require();
+
+// Поетапний запуск: поки подачу закрито, Правила бачать лише employee/admin (посилання в галочці форми); решті — 404.
+if (!mpb_posting_open()) {
+    mp_not_found();
+}
 
 $rules = mpb_rules_render();
 if ($rules === null) {

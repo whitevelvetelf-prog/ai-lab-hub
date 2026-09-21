@@ -43,9 +43,10 @@
           app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
           public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
           docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php), docs/.htaccess (no web access),
-        The Marketplace build STOPS with an error if the rules file still has [placeholders], the word
-        DRAFT (in Ukrainian), or the line 'Edition from: [date]', or if 'rules_version' in config/marketplace.php
-        (which ships as config/marketplace.dist.php) is empty / not YYYY-MM-DD.
+        Staged launch: with 'posting_enabled' => false in config/marketplace.php (ships as marketplace.dist.php) the build
+        passes with a WARNING that the rules are not finalized and submission must stay closed. With 'posting_enabled' => true
+        the build STOPS if the rules file still has [placeholders], the word DRAFT (in Ukrainian) or the line
+        'Edition from: [date]', or if 'rules_version' is empty / not YYYY-MM-DD.
           public/assets/css/mp-*.css,
           database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
           config/marketplace.php.
@@ -154,11 +155,35 @@ if ($IncludeMarketplace) {
     $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
 }
 
-# Release guard: never ship a draft of the listing rules (only with -IncludeMarketplace).
+# Release guard (only with -IncludeMarketplace).
+#  * 'posting_enabled' => true  in config/marketplace.php (ships as marketplace.dist.php): user submission is OPEN, so the
+#    listing rules MUST be final -> the build STOPS while the rules file has [placeholders], the draft notice, the
+#    "Edition from: [date]" line, or rules_version is empty / not YYYY-MM-DD.
+#  * 'posting_enabled' => false: submission is closed to regular users (staged launch) -> the build PASSES, but prints a
+#    clear warning that the rules are not finalized and submission must stay closed (and lists what is still open).
+#  * Always required: the rules file and the config file exist and 'posting_enabled' is present in the config.
 if ($IncludeMarketplace) {
     $draftWord = [regex]::Unescape('\u0427\u0415\u0420\u041D\u0415\u0422\u041A\u0410')                 # Ukrainian "DRAFT"
     $editionRx = [regex]::Unescape('\u0420\u0435\u0434\u0430\u043A\u0446\u0456\u044F \u0432\u0456\u0434:') + '\s*\['   # "Edition from:" + "[" (date placeholder)
-    $problems = @()
+    $problems = @()      # always fatal
+    $rulesIssues = @()   # fatal only when posting_enabled is true
+    $postingOpen = $null
+
+    $cfgPath = if ([System.IO.Path]::IsPathRooted($ConfigFile)) { $ConfigFile } else { Join-Path $root ($ConfigFile -replace '/', '\') }
+    if (-not (Test-Path $cfgPath)) {
+        $problems += "config file not found: $ConfigFile"
+    } else {
+        $cfgText = [System.IO.File]::ReadAllText($cfgPath, [System.Text.Encoding]::UTF8)
+        if ($cfgText -match "'posting_enabled'\s*=>\s*(true|false)") {
+            $postingOpen = ($Matches[1] -eq 'true')
+        } else {
+            $problems += "'posting_enabled' not found (or not true/false) in $ConfigFile (ships as config/marketplace.dist.php)"
+        }
+        if ($cfgText -notmatch "'rules_version'\s*=>\s*'\d{4}-\d{2}-\d{2}'") {
+            $rulesIssues += "'rules_version' in $ConfigFile is empty or not YYYY-MM-DD"
+        }
+    }
+
     $rulesPath = if ([System.IO.Path]::IsPathRooted($RulesFile)) { $RulesFile } else { Join-Path $root ($RulesFile -replace '/', '\') }
     if (-not (Test-Path $rulesPath)) {
         $problems += "rules file not found: $RulesFile"
@@ -166,21 +191,24 @@ if ($IncludeMarketplace) {
         $rulesText = [System.IO.File]::ReadAllText($rulesPath, [System.Text.Encoding]::UTF8)
         # [text](url) is a normal markdown link, not a placeholder: only brackets NOT followed by "(" count as markers.
         $markers = @([regex]::Matches($rulesText, '\[[^\]\r\n]*\](?!\()') | ForEach-Object { $_.Value } | Select-Object -Unique)
-        if ($markers.Count -gt 0) { $problems += ("$RulesFile still has $($markers.Count) [placeholder] marker(s): " + ($markers -join ' ')) }
-        if ($rulesText -match $draftWord) { $problems += "$RulesFile still contains the word $draftWord (draft notice)" }
-        if ($rulesText -match $editionRx) { $problems += "$RulesFile still has the line 'Edition from: [date]' (date placeholder)" }
+        if ($markers.Count -gt 0) { $rulesIssues += ("$RulesFile still has $($markers.Count) [placeholder] marker(s): " + ($markers -join ' ')) }
+        if ($rulesText -match $draftWord) { $rulesIssues += "$RulesFile still contains the word $draftWord (draft notice)" }
+        if ($rulesText -match $editionRx) { $rulesIssues += "$RulesFile still has the line 'Edition from: [date]' (date placeholder)" }
     }
-    $cfgPath = if ([System.IO.Path]::IsPathRooted($ConfigFile)) { $ConfigFile } else { Join-Path $root ($ConfigFile -replace '/', '\') }
-    if (-not (Test-Path $cfgPath)) {
-        $problems += "config file not found: $ConfigFile"
-    } else {
-        $cfgText = [System.IO.File]::ReadAllText($cfgPath, [System.Text.Encoding]::UTF8)
-        if ($cfgText -notmatch "'rules_version'\s*=>\s*'\d{4}-\d{2}-\d{2}'") {
-            $problems += "'rules_version' in $ConfigFile (ships as config/marketplace.dist.php) is empty or not YYYY-MM-DD"
-        }
-    }
+
+    if ($postingOpen -eq $true) { $problems += $rulesIssues }
+
     if ($problems.Count -gt 0) {
         Write-Error ("MARKETPLACE BUILD STOPPED - do not release a draft:`n  - " + ($problems -join "`n  - ") + "`nFix the listed items and run the build again. No archive was written.")
+    }
+    if ($postingOpen -eq $false) {
+        $uaWarn = [regex]::Unescape('\u041F\u0440\u0430\u0432\u0438\u043B\u0430 \u043D\u0435 \u0444\u0456\u043D\u0430\u043B\u0456\u0437\u043E\u0432\u0430\u043D\u0456, \u043F\u043E\u0434\u0430\u0447\u0430 \u043E\u0433\u043E\u043B\u043E\u0448\u0435\u043D\u044C \u043C\u0430\u0454 \u043B\u0438\u0448\u0430\u0442\u0438\u0441\u044F \u0437\u0430\u043A\u0440\u0438\u0442\u043E\u044E')
+        Write-Warning ("RULES ARE NOT FINALIZED: listing submission must stay CLOSED ('posting_enabled' => false in marketplace.dist.php). / " + $uaWarn + ".")
+        if ($rulesIssues.Count -gt 0) {
+            Write-Warning ("Still open in the rules (would BLOCK the build if posting_enabled were true):`n  - " + ($rulesIssues -join "`n  - "))
+        } else {
+            Write-Warning "The rules file/config look clean, but posting_enabled stays false until the lawyer review is done."
+        }
     }
 }
 
