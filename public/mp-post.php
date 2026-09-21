@@ -396,7 +396,7 @@ mpb_open($pageTitle);
             <div class="mp-field">
                 <label class="mp-check mp-check--block">
                     <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?>>
-                    <span><?= mp_e(t('mpb_f_rules_a')) ?> <a href="mp-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a></span>
+                    <span><?= mp_e(t('mpb_f_rules_text')) ?> <a href="mp-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a></span>
                 </label>
             </div>
 

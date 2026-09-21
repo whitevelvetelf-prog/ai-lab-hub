@@ -40,6 +40,7 @@ function mp_config(): array
             'reveals_per_day'    => 30,
             'reports_threshold'  => 3,
             'cron_token'         => '',
+            'rules_version'      => '',
             'mail_transport'     => 'mail',
             'site_url'           => '',
             'verify_ttl_hours'   => 24,

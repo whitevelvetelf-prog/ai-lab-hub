@@ -42,6 +42,7 @@
           public/offer.php, public/get.php (public part),
           app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
           public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
+          docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php),
           public/assets/css/mp-*.css,
           database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
           config/marketplace.php.
@@ -140,6 +141,7 @@ $entryNames = @{}
 if ($IncludeMarketplace) {
     $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
     $files += 'public/uploads/marketplace/.htaccess'
+    $files += 'docs/marketplace_rules_uk.md'
     $files += 'config/marketplace.php'
     $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
 }

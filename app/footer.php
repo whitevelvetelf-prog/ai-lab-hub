@@ -757,6 +757,7 @@ require_once __DIR__ . '/marketplace.php';
             <li><a href="blog.php"><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a></li>
             <?php if (mp_public_nav_visible()): ?>
             <li><a href="marketplace.php"><?= htmlspecialchars(t('footer_marketplace'), ENT_QUOTES) ?></a></li>
+            <li><a href="mp-rules.php"><?= htmlspecialchars(t('footer_mp_rules'), ENT_QUOTES) ?></a></li>
             <?php endif; ?>
             <li><a href="about.php"><?= htmlspecialchars(t('footer_about'), ENT_QUOTES) ?></a></li>
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
