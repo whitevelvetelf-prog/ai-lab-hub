@@ -68,10 +68,49 @@ function mp_e(mixed $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES);
 }
 
-/** CRM Marketplace — лише employee та admin; решту відправляє в кабінет. */
+/**
+ * Актуальна роль поточного користувача З БАЗИ (а не з сесії): пониження/видалення співробітника діє одразу,
+ * а не після завершення його сесії. Один запит на запит сторінки; оновлює $_SESSION['role'].
+ * Немає сесії, користувача чи БД недоступна → null (для рішень про доступ — «не staff»).
+ */
+function mp_live_role(): ?string
+{
+    static $cache = [];
+    $uid = auth_user_id();
+    if ($uid === null) {
+        return null;
+    }
+    if (!array_key_exists($uid, $cache)) {
+        $cache[$uid] = null;
+        try {
+            if (!function_exists('translation_pdo')) {
+                require_once __DIR__ . '/translations.php';
+            }
+            $stmt = translation_pdo()->prepare('SELECT role FROM users WHERE id = :id');
+            $stmt->execute([':id' => $uid]);
+            $role = $stmt->fetchColumn();
+            $cache[$uid] = $role === false ? null : (string) $role;
+        } catch (Throwable $e) {
+            error_log('[marketplace] live role lookup failed: ' . $e->getMessage());
+        }
+        if ($cache[$uid] !== null) {
+            $_SESSION['role'] = $cache[$uid];
+        }
+    }
+
+    return $cache[$uid];
+}
+
+/** Чи є поточний користувач employee/admin — за роллю з БД (див. mp_live_role()). */
+function mp_is_staff(): bool
+{
+    return in_array(mp_live_role(), ['employee', 'admin'], true);
+}
+
+/** CRM Marketplace — лише employee та admin (роль перевіряється в БД на кожному запиті); решту відправляє в кабінет. */
 function mp_require_staff(): void
 {
-    if (!auth_has_role('employee', 'admin')) {
+    if (!mp_is_staff()) {
         header('Location: account.php');
         exit;
     }

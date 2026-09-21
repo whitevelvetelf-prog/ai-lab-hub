@@ -31,7 +31,7 @@ const MPB_PHOTO_NAME_RE = '/^[a-f0-9]{32}(?:_t)?\.(?:jpg|png|webp)$/';
 
 function mpb_is_staff(): bool
 {
-    return auth_has_role('employee', 'admin');
+    return mp_is_staff();   // роль з БД, а не з сесії
 }
 
 /** Разове повідомлення для наступної сторінки (сесія). */
