@@ -169,7 +169,7 @@ JOIN (
   SELECT 'content-design',      'Content and design' UNION ALL
   SELECT 'development',         'Development and bots' UNION ALL
   SELECT 'jobs-gigs',           'Jobs and gigs' UNION ALL
-  SELECT 'accounts-equipment',  'Accounts, subscriptions, equipment' UNION ALL
+  SELECT 'hardware',            'Hardware and equipment' UNION ALL
   SELECT 'other',               'Other'
 ) t ON t.slug = c.slug
 WHERE c.section = 'board'

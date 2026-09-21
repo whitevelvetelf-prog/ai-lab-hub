@@ -156,7 +156,7 @@ SELECT 'board', s.slug, s.sort_order FROM (
   SELECT 'content-design',            5 UNION ALL
   SELECT 'development',               6 UNION ALL
   SELECT 'jobs-gigs',                 7 UNION ALL
-  SELECT 'accounts-equipment',        8 UNION ALL
+  SELECT 'hardware',                  8 UNION ALL
   SELECT 'other',                     9
 ) s
 WHERE NOT EXISTS (
@@ -173,7 +173,7 @@ JOIN (
   SELECT 'content-design',      'Контент і дизайн' UNION ALL
   SELECT 'development',         'Розробка та боти' UNION ALL
   SELECT 'jobs-gigs',           'Робота та підробіток' UNION ALL
-  SELECT 'accounts-equipment',  'Акаунти, підписки, обладнання' UNION ALL
+  SELECT 'hardware',            'Обладнання та техніка' UNION ALL
   SELECT 'other',               'Інше'
 ) t ON t.slug = c.slug
 WHERE c.section = 'board'
