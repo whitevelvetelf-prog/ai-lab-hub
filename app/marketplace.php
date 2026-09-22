@@ -529,6 +529,18 @@ function mp_not_found(): never
     exit;
 }
 
+/**
+ * Сторінки, потрібні співробітникам ДО вмикання публічної частини (форма подачі, «Мої оголошення», Правила, перегляд
+ * оголошення): при public_enabled = false — 404 для всіх, крім employee/admin (роль перевіряється в БД).
+ * Публіка бачить 404, як і раніше. Викликати першим рядком сторінки замість mp_public_require().
+ */
+function mp_public_or_staff_require(): void
+{
+    if (!mp_public_enabled() && !mp_is_staff()) {
+        mp_not_found();
+    }
+}
+
 /** Публічні сторінки: при вимкненому перемикачі — 404. Викликати першим рядком сторінки. */
 function mp_public_require(): void
 {

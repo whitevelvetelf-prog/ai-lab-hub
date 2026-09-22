@@ -15,7 +15,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
 require_once __DIR__ . '/../app/mpb-rules.php';
 
-mp_public_require();
+mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
 // Поетапний запуск: поки подачу закрито, Правила бачать лише employee/admin (посилання в галочці форми); решті — 404.
 if (!mpb_posting_open()) {

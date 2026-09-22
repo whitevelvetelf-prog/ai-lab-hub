@@ -20,7 +20,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
 require_once __DIR__ . '/../app/mpb-rules.php';
 
-mp_public_require();
+mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
