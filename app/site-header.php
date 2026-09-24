@@ -13,6 +13,8 @@
  * Пункт «Marketplace» (поруч із «Головна»; на мобільному — у гамбургер-меню, бо це той самий
  * #siteNav) показується лише коли config/marketplace.php → public_enabled = true і є хоча б
  * одна опублікована пропозиція (mp_public_nav_visible()).
+ * Поки публічна частина вимкнена, пункт бачить лише admin (роль із сесії — суто показ) і веде на
+ * mp-my.php («Мої оголошення» з кнопкою подачі); доступ до сторінок і далі перевіряє сервер за роллю в БД.
  */
 
 require_once __DIR__ . '/marketplace.php';
@@ -26,6 +28,8 @@ require_once __DIR__ . '/marketplace.php';
         <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
         <?php if (mp_public_nav_visible()): ?>
         <a class="site-nav__link" href="marketplace.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?></a>
+        <?php elseif (auth_has_role('admin')): ?>
+        <a class="site-nav__link" href="mp-my.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?></a>
         <?php endif; ?>
         <?php if (auth_check()): ?>
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
