@@ -967,3 +967,34 @@ textarea.mp-input {
     color: #1a1a1a;
     font-weight: 700;
 }
+
+/* Сторінка й картка оголошення: уся інформація, крім заголовка, — одного розміру й кольору,
+   у порядку полів форми подачі (app/mpb-offer.php, app/mpb-card.php). */
+.mp-info {
+    margin: 0 0 24px;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.92);
+}
+
+.mp-info__row {
+    margin: 0 0 12px;
+    font-size: inherit;
+    color: inherit;
+    overflow-wrap: anywhere;
+}
+
+.mp-info__label {
+    font-weight: 600;
+}
+
+.mp-card__info,
+.mp-card__info a {
+    font-size: 0.95rem;
+    font-weight: 400;
+    color: var(--text-muted, rgba(255, 255, 255, 0.75));
+}
+
+.mp-card__desc.mp-card__info,
+.mp-card__price.mp-card__info {
+    margin: 0 0 8px;
+}

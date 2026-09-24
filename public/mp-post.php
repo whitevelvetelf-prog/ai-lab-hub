@@ -58,7 +58,7 @@ if ($id > 0) {
 // --- Початкові значення ------------------------------------------------------
 $v = [
     'title' => '', 'short_desc' => '', 'full_desc' => '', 'categories' => [],
-    'price_type' => 'free', 'price_amount' => '', 'currency' => 'UAH',
+    'price_type' => 'none', 'price_amount' => '', 'currency' => 'UAH',
     'is_remote' => true, 'city' => '',
     'contact_name' => (string) $user['name'], 'contact_phone' => '', 'contact_telegram' => '', 'contact_email' => '',
     'rules' => false,
@@ -283,7 +283,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 $pageTitle = t($existing === null ? 'mpb_post_title' : 'mpb_edit_title');
 $currencyKeys = array_keys(MPB_CURRENCIES);
-$priceLabels = ['free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
+$priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $formAction = 'mp-post.php' . ($existing !== null ? '?id=' . $id : '');
 
 mpb_open($pageTitle);

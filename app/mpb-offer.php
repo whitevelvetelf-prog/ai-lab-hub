@@ -26,7 +26,7 @@ $fallbackLang = (string) $board['text_lang'] !== $lang ? (string) $board['text_l
 $langNames = active_languages();
 $isFav = $viewerId !== null && $isLive && mpb_is_favorite($pdo, $viewerId, $bid);
 $others = $isLive && $board['seller_id'] !== null ? mpb_seller_other($pdo, (int) $board['seller_id'], $bid, $lang) : [];
-$loc = mpb_location_label($board);
+$priceText = mpb_price_label($board);   // '' — ціну не вказано
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
 
@@ -46,15 +46,49 @@ mpb_open((string) $board['title'], !$isLive);
         <?php endif; ?>
 
         <h1 class="mp-title"><?= mp_e($board['title']) ?></h1>
-        <p class="mp-price"><?= mp_e(mpb_price_label($board)) ?></p>
-        <p class="mp-offer__hint">
-            <?php if ($loc !== ''): ?><?= mp_e($loc) ?> · <?php endif; ?>
-            <?php if (!empty($board['published_at'])): ?><?= mp_e(date('d.m.Y', (int) strtotime((string) $board['published_at']))) ?> · <?php endif; ?>
-            <?= mp_e(t('mpb_views')) ?>: <?= (int) $board['views_count'] ?>
-        </p>
 
         <?php if ($fallbackLang !== null): ?>
             <p class="mp-note"><?= mp_e(sprintf(t('mp_original_lang'), $langNames[$fallbackLang] ?? strtoupper($fallbackLang))) ?></p>
+        <?php endif; ?>
+
+        <?php // Поля — у порядку форми подачі (mp-post.php); усе, крім заголовка, одним стилем (.mp-info). ?>
+        <div class="mp-info">
+            <?php if (!empty($board['short_desc'])): ?>
+                <p class="mp-info__row"><?= mp_e($board['short_desc']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($board['full_desc'])): ?>
+                <p class="mp-info__row mp-text--pre"><?= mp_e($board['full_desc']) ?></p>
+            <?php endif; ?>
+            <?php if ($board['categories'] !== []): ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_categories')) ?>:</span> <?= mp_e(implode(', ', array_column($board['categories'], 'name'))) ?></p>
+            <?php endif; ?>
+            <?php if ($priceText !== ''): ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_price_range')) ?>:</span> <?= mp_e($priceText) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($board['city'])): ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_city')) ?>:</span> <?= mp_e($board['city']) ?></p>
+            <?php endif; ?>
+            <?php if ((int) ($board['is_remote'] ?? 0) === 1): ?>
+                <p class="mp-info__row"><?= mp_e(t('mpb_f_remote')) ?></p>
+            <?php endif; ?>
+        </div>
+
+        <?php if ($isLive && !$isOwner): ?>
+            <div class="mp-offer__actions">
+                <form method="post" action="mp-contact.php" id="mpContactForm" data-error="<?= mp_e(t('mpb_contact_error')) ?>">
+                    <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
+                    <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit" id="mpContactBtn"><?= mp_e(t('mpb_contact_btn')) ?></button>
+                </form>
+                <?php if ($viewerId !== null): ?>
+                    <form method="post" action="mp-favorite.php">
+                        <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
+                        <button class="mp-btn mp-btn--lg" type="submit"><?= mp_e(t($isFav ? 'mpb_fav_remove' : 'mpb_fav_add')) ?></button>
+                    </form>
+                <?php else: ?>
+                    <a class="mp-btn mp-btn--lg" href="login.php"><?= mp_e(t('mpb_fav_login')) ?></a>
+                <?php endif; ?>
+            </div>
+            <div id="mpContacts" class="mp-contacts mp-info" aria-live="polite"></div>
         <?php endif; ?>
 
         <?php if ($photos !== []): ?>
@@ -73,23 +107,15 @@ mpb_open((string) $board['title'], !$isLive);
             </div>
         <?php endif; ?>
 
-        <?php if (!empty($board['short_desc'])): ?>
-            <p class="mp-offer__lead"><?= mp_e($board['short_desc']) ?></p>
-        <?php endif; ?>
-        <?php if (!empty($board['full_desc'])): ?>
-            <section class="mp-block"><p class="mp-text mp-text--pre"><?= mp_e($board['full_desc']) ?></p></section>
-        <?php endif; ?>
-
-        <div class="mp-facts">
-            <?php if ($board['categories'] !== []): ?>
-                <div class="mp-fact"><p class="mp-fact__label"><?= mp_e(t('mp_categories_label')) ?></p><p class="mp-fact__value"><?= mp_e(implode(', ', array_column($board['categories'], 'name'))) ?></p></div>
-            <?php endif; ?>
-            <?php if ($loc !== ''): ?>
-                <div class="mp-fact"><p class="mp-fact__label"><?= mp_e(t('mpb_f_city')) ?></p><p class="mp-fact__value"><?= mp_e($loc) ?></p></div>
-            <?php endif; ?>
+        <?php // Службова інформація (не поля форми) — після полів, тим самим стилем. ?>
+        <div class="mp-info">
             <?php if (!empty($board['seller_name'])): ?>
-                <div class="mp-fact"><p class="mp-fact__label"><?= mp_e(t('mp_seller_label')) ?></p><p class="mp-fact__value"><?= mp_e($board['seller_name']) ?></p></div>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mp_seller_label')) ?>:</span> <?= mp_e($board['seller_name']) ?></p>
             <?php endif; ?>
+            <?php if (!empty($board['published_at'])): ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_published_label')) ?>:</span> <?= mp_e(date('d.m.Y', (int) strtotime((string) $board['published_at']))) ?></p>
+            <?php endif; ?>
+            <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_views')) ?>:</span> <?= (int) $board['views_count'] ?></p>
         </div>
 
         <?php if ($isOwner): ?>
@@ -97,22 +123,6 @@ mpb_open((string) $board['title'], !$isLive);
         <?php endif; ?>
 
         <?php if ($isLive && !$isOwner): ?>
-            <div class="mp-offer__actions">
-                <form method="post" action="mp-contact.php" id="mpContactForm" data-error="<?= mp_e(t('mpb_contact_error')) ?>">
-                    <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
-                    <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit" id="mpContactBtn"><?= mp_e(t('mpb_contact_btn')) ?></button>
-                </form>
-                <?php if ($viewerId !== null): ?>
-                    <form method="post" action="mp-favorite.php">
-                        <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
-                        <button class="mp-btn mp-btn--lg" type="submit"><?= mp_e(t($isFav ? 'mpb_fav_remove' : 'mpb_fav_add')) ?></button>
-                    </form>
-                <?php else: ?>
-                    <a class="mp-btn mp-btn--lg" href="login.php"><?= mp_e(t('mpb_fav_login')) ?></a>
-                <?php endif; ?>
-            </div>
-            <div id="mpContacts" class="mp-contacts" aria-live="polite"></div>
-
             <details class="mp-report">
                 <summary><?= mp_e(t('mpb_report_btn')) ?></summary>
                 <?php if ($viewerId !== null): ?>

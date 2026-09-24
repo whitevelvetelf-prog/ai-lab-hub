@@ -19,7 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/marketplace.php';
 
 const MPB_SECTION = 'board';
-const MPB_PRICE_TYPES = ['free', 'fixed', 'negotiable', 'exchange'];
+const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   // 'none' — ціну не вказано
 const MPB_CURRENCIES = ['UAH' => '₴', 'USD' => '$', 'EUR' => '€'];
 const MPB_REPORT_REASONS = ['fraud', 'prohibited', 'spam', 'wrong_category', 'other'];
 const MPB_PER_PAGE = 12;
@@ -279,10 +279,12 @@ function mpb_redirect(string $to): never
 // Ціна, посилання, фото-URL
 // =========================================================================
 
-/** Підпис ціни для картки/сторінки. */
+/** Підпис ціни для картки/сторінки; '' — ціну не вказано (рядок ціни не показується). */
 function mpb_price_label(array $row): string
 {
     switch ((string) ($row['price_type'] ?? 'free')) {
+        case 'none':
+            return '';
         case 'fixed':
             $amount = (float) ($row['price_amount'] ?? 0);
             $cur = (string) ($row['currency'] ?? 'UAH');

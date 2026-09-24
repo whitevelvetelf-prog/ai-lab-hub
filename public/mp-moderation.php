@@ -170,7 +170,7 @@ unset($_SESSION['mpb_flash']);
                 <h2><?= mp_e($r['title'] ?? '(без назви)') ?> <span class="table__id">#<?= $rid ?></span>
                     <span class="badge badge--<?= mp_e($st) ?>"><?= mp_e($statusLabels[$st] ?? $st) ?></span></h2>
                 <div class="mod-meta">
-                    <span>Ціна: <strong><?= mp_e(mpb_price_label($r)) ?></strong></span>
+                    <span>Ціна: <strong><?= mp_e(mpb_price_label($r) ?: t('mpb_pt_none')) ?></strong></span>
                     <?php if ($loc !== ''): ?><span>Місце: <?= mp_e($loc) ?></span><?php endif; ?>
                     <span>Категорії: <?= mp_e($r['categories_list'] ?? '—') ?></span>
                     <span>Автор: <?= mp_e($r['author_name'] ?? '—') ?> <?= $r['author_email'] ? '(' . mp_e($r['author_email']) . ')' : '' ?> · продавець: <?= mp_e($r['seller_name'] ?? '—') ?></span>

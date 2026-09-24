@@ -115,7 +115,7 @@ mpb_open(t('mpb_my_title'));
                             </h2>
                             <p class="mp-my-item__meta">
                                 <span class="mp-status mp-status--<?= mp_e($st) ?>"><?= mp_e(t($statusKey[$st] ?? 'mpb_st_pending')) ?></span>
-                                <span><?= mp_e(mpb_price_label($r)) ?></span>
+                                <span><?= mp_e(mpb_price_label($r) ?: t('mpb_pt_none')) ?></span>
                                 <?php if ($r['expires_at'] !== null && in_array($st, ['published', 'expired'], true)): ?>
                                     <span><?= mp_e(t($live ? 'mpb_until' : 'mpb_ended')) ?> <?= mp_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) ?></span>
                                 <?php endif; ?>

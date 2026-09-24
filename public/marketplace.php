@@ -65,7 +65,7 @@ try {
     $hasSolutions = false;
 }
 
-$priceLabels = ['free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
+$priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $sortLabels = ['new' => t('mpb_sort_new'), 'cheap' => t('mpb_sort_cheap'), 'expensive' => t('mpb_sort_expensive')];
 
 mpb_open(t('mp_heading'), false);
