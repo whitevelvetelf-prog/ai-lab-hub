@@ -26,8 +26,7 @@ function mp_config(): array
             // Публічна частина (marketplace.php, offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
             'public_enabled'     => false,
             // Дошка оголошень (етап 4) — пояснення в config/marketplace.php.
-            'photo_dir'          => dirname(__DIR__) . '/public/uploads/marketplace',
-            'photo_url'          => '/uploads/marketplace',
+            'photo_dir'          => dirname(__DIR__) . '/storage/marketplace/photos',
             'photo_max_count'    => 8,
             'photo_max_bytes'    => 5 * 1024 * 1024,
             'photo_max_side'     => 1600,

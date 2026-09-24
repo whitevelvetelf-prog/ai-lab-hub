@@ -1,6 +1,0 @@
-# AI LAB HUB — тека користувацьких фото. Ніколи не виконувати код тут.
-# Лише mod_rewrite: на shared-хостингу (adm.tools) Require/Order/Deny, Options, RemoveHandler/RemoveType,
-# php_flag чи Header можуть бути заборонені AllowOverride і дають 500.
-# Дозволено лише фото з іменем <32 hex>[_t].jpg|png|webp (MPB_PHOTO_NAME_RE); усе інше (зокрема *.php і лістинг теки) — 403.
-RewriteEngine On
-RewriteRule !^[a-f0-9]{32}(_t)?\.(jpg|png|webp)$ - [F]

@@ -312,13 +312,17 @@ function mpb_location_label(array $row): string
     return implode(' · ', $parts);
 }
 
+/**
+ * URL фото оголошення. Фото лежать ПОЗА webroot (photo_dir), віддає їх public/mp-photo.php з перевіркою прав:
+ * .htaccess-заборону виконання PHP у публічній теці shared-хостинг (adm.tools) не підтримує.
+ */
 function mpb_photo_url(string $name): ?string
 {
     if (preg_match(MPB_PHOTO_NAME_RE, $name) !== 1) {
         return null;
     }
 
-    return rtrim((string) mp_config()['photo_url'], '/') . '/' . $name;
+    return '/mp-photo.php?f=' . $name;
 }
 
 // =========================================================================
@@ -557,62 +561,26 @@ function mpb_photos(PDO $pdo, int $listingId): array
     );
 }
 
-/** Тека фото: створює її й .htaccess (без виконання PHP), повертає шлях. */
+/** Тека фото (поза webroot): створює її за потреби, повертає шлях. */
 function mpb_photo_dir(): string
 {
     $dir = rtrim((string) mp_config()['photo_dir'], '/\\');
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         throw new RuntimeException('Cannot create photo dir');
     }
-    $ht = $dir . '/.htaccess';
-    if (!is_file($ht)) {
-        @file_put_contents($ht, mpb_htaccess());
-    }
 
     return $dir;
 }
 
-/** Вміст .htaccess для теки завантажень: віддаються лише зображення, жодного виконання коду. */
-function mpb_htaccess(): string
+/** Повний шлях до наявного файлу фото за іменем (лише MPB_PHOTO_NAME_RE) або null. */
+function mpb_photo_path(string $name): ?string
 {
-    return <<<'HT'
-# AI LAB HUB — тека користувацьких фото. Ніколи не виконувати код тут.
-Options -Indexes -ExecCGI -Includes
-<IfModule mod_php.c>
-    php_flag engine off
-</IfModule>
-<IfModule mod_php7.c>
-    php_flag engine off
-</IfModule>
-<IfModule mod_php8.c>
-    php_flag engine off
-</IfModule>
-RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar .cgi .pl .py
-RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phps .pht .phar
-# Дозволено лише зображення; усе інше заборонено (Apache 2.4 і 2.2).
-<FilesMatch ".*">
-    <IfModule mod_authz_core.c>
-        Require all denied
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Deny from all
-    </IfModule>
-</FilesMatch>
-<FilesMatch "^[a-f0-9]{32}(_t)?\.(jpg|png|webp)$">
-    <IfModule mod_authz_core.c>
-        Require all granted
-    </IfModule>
-    <IfModule !mod_authz_core.c>
-        Order allow,deny
-        Allow from all
-    </IfModule>
-</FilesMatch>
-<IfModule mod_headers.c>
-    Header set X-Content-Type-Options "nosniff"
-</IfModule>
+    if (preg_match(MPB_PHOTO_NAME_RE, $name) !== 1) {
+        return null;
+    }
+    $path = rtrim((string) mp_config()['photo_dir'], '/\\') . '/' . $name;
 
-HT;
+    return is_file($path) ? $path : null;
 }
 
 /**

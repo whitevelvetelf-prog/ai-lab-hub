@@ -32,9 +32,9 @@ return [
 
     // --- Дошка оголошень (етап 4) ---
 
-    // Фото оголошень: публічна тека (у ній .htaccess забороняє виконання PHP), URL і ліміти.
-    'photo_dir'        => dirname(__DIR__) . '/public/uploads/marketplace',
-    'photo_url'        => '/uploads/marketplace',
+    // Фото оголошень: тека ПОЗА webroot (public/), PHP має вміти писати; створюється автоматично.
+    // Віддає фото public/mp-photo.php з перевіркою прав (.htaccess у публічній теці на adm.tools не працює). Ліміти.
+    'photo_dir'        => dirname(__DIR__) . '/storage/marketplace/photos',
     'photo_max_count'  => 8,
     'photo_max_bytes'  => 5 * 1024 * 1024,   // на одне фото, до перекодування
     'photo_max_side'   => 1600,              // довша сторона збереженого фото, px

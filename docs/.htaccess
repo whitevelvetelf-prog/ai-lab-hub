@@ -1,4 +1,5 @@
 # AI LAB HUB - тека docs/ не призначена для видачі через веб (правила читає PHP з диска).
+# Без Options -Indexes: на adm.tools директива Options у .htaccess дає 500; Require all denied і так закриває перелік файлів.
 <IfModule mod_authz_core.c>
     Require all denied
 </IfModule>
@@ -6,4 +7,3 @@
     Order allow,deny
     Deny from all
 </IfModule>
-Options -Indexes

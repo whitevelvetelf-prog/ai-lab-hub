@@ -34,14 +34,13 @@
       - public/assets/images/logos/   user uploads from the CRM
       - public/assets/images/ads/uploads/   ad banners uploaded via the ads CRM
       - public/assets/images/marketplace/covers/   Marketplace cover images uploaded via the CRM
-      - public/uploads/marketplace/   classified-board photos uploaded by users (only its .htaccess is shipped, with -IncludeMarketplace)
+      - public/uploads/   legacy folder; classified-board photos now live OUTSIDE the webroot (config 'photo_dir', served by public/mp-photo.php)
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
       - MARKETPLACE (until the first Marketplace release) - left out unless -IncludeMarketplace is passed:
-          public/mp-*.php (CRM, author cabinet, contact/report/favorite handlers, cron script),
+          public/mp-*.php (CRM, author cabinet, contact/report/favorite handlers, photo delivery mp-photo.php, cron script),
           public/marketplace.php, public/marketplace-solutions.php, public/marketplace-category.php,
           public/offer.php, public/get.php (public part),
           app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
-          public/uploads/marketplace/.htaccess (blocks script execution in the photo folder),
           docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php), docs/.htaccess (no web access),
         Staged launch: with 'posting_enabled' => false in config/marketplace.php (ships as marketplace.dist.php) the build
         passes with a WARNING that the rules are not finalized and submission must stay closed. With 'posting_enabled' => true
@@ -148,7 +147,6 @@ $files = @($files | Where-Object { $_ -notin $marketplaceFiles })
 $entryNames = @{}
 if ($IncludeMarketplace) {
     $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
-    $files += 'public/uploads/marketplace/.htaccess'
     $files += 'docs/marketplace_rules_uk.md'
     $files += 'docs/.htaccess'
     $files += 'config/marketplace.php'

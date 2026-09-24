@@ -57,30 +57,33 @@ SHOW COLUMNS FROM mp_listings LIKE 'rules_version';                             
 SELECT COUNT(*) FROM ui_translations WHERE key_name IN ('mpb_posting_closed','mpb_rate_limited') AND lang='en'; -- 2
 ```
 
-## Крок 4. Тека для файлів пропозицій — ПОЗА webroot
-Файли (pdf, md, zip…) віддає лише `get.php` залогованим. Тека **не має** бути доступна за URL.
+## Крок 4. Тека для файлів пропозицій і фото — ПОЗА webroot
+Файли (pdf, md, zip…) віддає лише `get.php` залогованим, фото оголошень — лише `mp-photo.php` (з перевіркою прав). Тека **не має** бути доступна за URL.
 1. Корінь проєкту = тека, де лежать `app/`, `config/`, `public/`. Якщо домен дивиться на `public/`, корінь уже поза веб-коренем; створіть поряд теку `marketplace-files`. Якщо проєкт лежить усередині веб-кореня — створіть її **поруч із** веб-коренем, не в ньому.
 2. Права **750/755**, PHP має вміти писати й читати.
 3. Запишіть **абсолютний шлях** (вгорі файлового менеджера, `/home/<акаунт>/…`) — він піде в конфіг (крок 6).
 4. Перевірка: `https://ваш-домен/marketplace-files/` → **404/403**.
+5. Фото лягають у підтеку `photos/` цієї ж теки (`photo_dir` у конфігу, крок 6). PHP створить її сам при першому завантаженні; можна створити й вручну (ті самі права).
 
 ## Крок 5. Код — `code/deploy-mp.zip`
 Розпакуйте в корінь проєкту **з перезаписом** (не в `public/`), потім Ctrl+F5 (сервіс-воркер).
-- Додається: `docs/` (правила + `.htaccess`), `public/uploads/marketplace/.htaccess`, `config/marketplace.dist.php` (шаблон), `app/…`, `public/mp-*.php`, `public/marketplace*.php`, `public/offer.php`, `public/get.php`.
+- Додається: `docs/` (правила + `.htaccess`), `config/marketplace.dist.php` (шаблон), `app/…`, `public/mp-*.php` (зокрема `mp-photo.php` — видача фото), `public/marketplace*.php`, `public/offer.php`, `public/get.php`.
 - **Не** входять і **не** перезаписуються: `config/database.php`, `config/marketplace.php` (створюєте самі), `config/marketplace.local.php`, `storage/`, `scripts/`, `marketplace-seed/`.
 - Крім Marketplace, архів містить актуальні **виправлення безпеки сайту**: лист відновлення пароля будує посилання з `site_url` (не з `Host`), кукі сесії `HttpOnly`+`SameSite=Lax`, захист заголовків листів. Тому робіть копію з кроку 1.
 
 ## Крок 6. Конфіг `config/marketplace.php`
-1. Локальний `hosting-upload/marketplace.config.HOSTING.php` → заповніть **два** місця: `file_storage_dir` (шлях з кроку 4) і `site_url` (адреса сайту точно як відкривається, `https://…`, без слеша; з `www` чи без).
+1. Локальний `hosting-upload/marketplace.config.HOSTING.php` → заповніть **три** місця: `file_storage_dir` (шлях з кроку 4), `photo_dir` (той самий шлях + `/photos`) і `site_url` (адреса сайту точно як відкривається, `https://…`, без слеша; з `www` чи без).
 2. Завантажте як **`config/marketplace.php`** (не `.dist`). На цьому етапі: **`'public_enabled' => false`, `'posting_enabled' => false`**.
 3. `rate_limit_salt` уже згенерована — не міняйте її після запуску. `trusted_proxy_header` лишайте порожнім (якщо сайт не за проксі; за Cloudflare — `CF-Connecting-IP`).
 4. Ключі, яких немає у файлі, беруться зі значень за замовчуванням у коді. `config/marketplace.dist.php` після цього можна видалити.
 
-## Крок 7. Перевірка заборони виконання PHP і закритих тек
-1. У `public/uploads/marketplace/` створіть `probe.php` з `<?php echo 'X';` → відкрийте `https://ваш-домен/uploads/marketplace/probe.php` → має бути **403** (не «X» і не 200) → **видаліть `probe.php`**.
-2. Якщо «X» або 200 — хостинг ігнорує `.htaccess` (`AllowOverride None`): **публікацію вмикати не можна**, поки не закрито виконання PHP у цій теці (зверніться до підтримки).
-3. `https://ваш-домен/docs/marketplace_rules_uk.md` → **404/403**. `https://ваш-домен/storage/` → 404/403.
-4. Тека `public/uploads/marketplace/` доступна PHP на запис (755/775).
+## Крок 7. Фото оголошень і закриті теки
+Фото лежать **поза webroot** (`photo_dir`) і віддаються через `https://ваш-домен/mp-photo.php?f=<ім'я>`: скрипт пропускає лише імена `<32 символи 0-9a-f>[_t].jpg|png|webp`, записані в базі, і показує фото живого оголошення всім, а неопублікованого — лише власнику та employee/admin. Теки `public/uploads/marketplace/` більше немає: заборону виконання PHP у публічній теці adm.tools через `.htaccess` не дозволяє (`Require`/`Order`/`Deny`, `Options`, `php_flag`, `RemoveHandler` дають 500), а надійність інших варіантів залежить від налаштувань хостингу.
+1. **Перенесення старих фото (якщо тека є на сервері):** файловим менеджером перемістіть усі файли `*.jpg`, `*.png`, `*.webp` з `public/uploads/marketplace/` у `photo_dir` (напр. `/home/<акаунт>/marketplace-files/photos/`), потім **видаліть теку `public/uploads/marketplace/` повністю** (разом із `.htaccess` і `probe.php`). Порожню `public/uploads/`, якщо в ній більше нічого немає, теж видаліть.
+2. **Фото відкриваються:** увійдіть як employee/admin, відкрийте будь-яке оголошення з фото (`offer.php?id=N`) → фото й мініатюри видно; адреса картинки (ПКМ → «Відкрити зображення в новій вкладці») має вигляд `/mp-photo.php?f=…`. Нове фото, додане через `mp-post.php`, з'являється у `photo_dir`.
+3. **Чужі імена не віддаються:** `https://ваш-домен/mp-photo.php?f=0123456789abcdef0123456789abcdef.jpg` → **404**; `https://ваш-домен/mp-photo.php?f=../config/database.php` → **404**.
+4. `https://ваш-домен/docs/marketplace_rules_uk.md` → **404/403**. `https://ваш-домен/storage/` → 404/403. `https://ваш-домен/marketplace-files/photos/` → 404/403.
+5. Тека `photo_dir` доступна PHP на запис (755/775).
 
 ## Крок 8. Cron
 adm.tools → Хостинг → **Cron**, раз на годину:
@@ -141,6 +144,7 @@ adm.tools → Хостинг → **Cron**, раз на годину:
 | `public_enabled` | `false` | публічна частина (вітрини, оголошення, меню) |
 | `posting_enabled` | `false` | подача/редагування оголошень для всіх (інакше лише employee/admin) |
 | `file_storage_dir` | `<проєкт>/storage/marketplace/files` | файли пропозицій **поза webroot** |
+| `photo_dir` | `<проєкт>/storage/marketplace/photos` | фото оголошень **поза webroot** (віддає `mp-photo.php`) |
 | `site_url` | `''` | адреса сайту для посилань у листах (обов'язково) |
 | `mail_transport` | `mail` | `mail` (PHP `mail()`) або `log` (лише розробка) |
 | `rules_version` | дата | дата редакції Правил (показ на сторінці) |
@@ -155,7 +159,7 @@ adm.tools → Хостинг → **Cron**, раз на годину:
 | `stop_words`, `max_links_in_desc` | `[]`, 2 | антиспам |
 
 ### Безпека (коротко)
-CSRF на всіх POST; prepared statements; екранування виводу; роль employee/admin перевіряється в БД на кожному запиті; контактів немає в HTML до кліку; фото перекодовуються GD, PHP у `uploads/` заборонено; ліміти захищені від паралельних запитів; IP лише як `sha256(IP+сіль)`; токен підтвердження email — 32 байти, у БД лише sha256, одноразовий, підтвердження POST-ом.
+CSRF на всіх POST; prepared statements; екранування виводу; роль employee/admin перевіряється в БД на кожному запиті; контактів немає в HTML до кліку; фото перекодовуються GD, лежать поза webroot і віддаються лише через `mp-photo.php` (ім'я за шаблоном + запис у БД + права на оголошення); ліміти захищені від паралельних запитів; IP лише як `sha256(IP+сіль)`; токен підтвердження email — 32 байти, у БД лише sha256, одноразовий, підтвердження POST-ом.
 
 ### Що НЕ заливати
 `config/marketplace.local.php`, `config/database.php` (на сервері свій), `storage/`, `marketplace-seed/` і `scripts/` (крім одноразового імпорту кроку 10), тестові дані.
