@@ -525,11 +525,20 @@ require_once __DIR__ . '/../app/translations.php';
                 position: relative;
                 z-index: 0;
                 flex: 0 0 auto;
-                height: 150px;
-                height: clamp(110px, 20dvh, 170px);
+                height: 200px;
+                height: clamp(180px, 25dvh, 220px);
                 width: auto;
                 margin: 12px 16px 0;
                 border-radius: 16px;
+            }
+
+            /* Ролик вертикальний (1088×1904), банер — горизонтальний: cover
+               заповнює всю ширину картки без порожніх полів по боках, а
+               object-position тримає в кадрі верхню частину (голова/плечі
+               Елі) — обрізається низ кадру, не обличчя. */
+            .eli-stage__video {
+                object-fit: cover;
+                object-position: center 22%;
             }
 
             /* На мобільному Еля — це повноекранний чат-режим; підвал ховаємо. */
