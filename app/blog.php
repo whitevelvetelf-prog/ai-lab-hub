@@ -25,6 +25,7 @@ const BLOG_CONTENT_DIR = __DIR__ . '/../content/blog';
 const BLOG_ARTICLES = [
     'ai-for-design-and-images' => [
         'uk' => 'ai-dlya-dyzainu-ta-zobrazhen-ua.md',
+        'en' => 'ai-for-design-and-image-generation-en.md',
     ],
     'ai-for-language-learning' => [
         'uk' => 'ai-dlya-vyvchennya-mov-ua.md',
