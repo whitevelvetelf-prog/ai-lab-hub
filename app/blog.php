@@ -23,6 +23,9 @@ const BLOG_CONTENT_DIR = __DIR__ . '/../content/blog';
  * Один запис тут = одна стаття, синхронізована по мовах.
  */
 const BLOG_ARTICLES = [
+    'ai-for-design-and-images' => [
+        'uk' => 'ai-dlya-dyzainu-ta-zobrazhen-ua.md',
+    ],
     'ai-for-language-learning' => [
         'uk' => 'ai-dlya-vyvchennya-mov-ua.md',
         'en' => 'ai-for-language-learning-en.md',

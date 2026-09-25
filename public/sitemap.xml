@@ -10,6 +10,11 @@
     <loc>https://ailabhub-directory.com/blog.php</loc>
   </url>
   <url>
+    <loc>https://ailabhub-directory.com/blog-post.php?slug=ai-for-design-and-images</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-design-and-images"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-design-and-images"/>
+  </url>
+  <url>
     <loc>https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning</loc>
     <xhtml:link rel="alternate" hreflang="uk" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning"/>
     <xhtml:link rel="alternate" hreflang="en" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning&amp;hl=en"/>
