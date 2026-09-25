@@ -147,4 +147,4 @@ SET @new = ROW_COUNT();
 SET @pid = (SELECT `id` FROM `products` WHERE LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/us/app/planbead/id6741919764' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, c.`id` FROM `categories` c WHERE c.`slug` = 'my-home';
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, s.`id` FROM `subcategories` s JOIN `categories` c ON c.`id` = s.`category_id` WHERE c.`slug` = 'my-home' AND s.`slug` = 'beading';
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `price`, `period`, `description`) SELECT @pid, 'Free', 0.00, 'free', 'Безкоштовно' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `price`, `period`, `description`) SELECT @pid, 'Free', 0.00, 'free', 'Базові можливості безкоштовно; ціну платного тарифу не підтверджено' FROM DUAL WHERE @new = 1;
