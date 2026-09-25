@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  AI LAB HUB — sitemap блогу. Статичний файл: при додаванні статті чи її
+  мовної версії (реєстр BLOG_ARTICLES в app/blog.php) дописати сюди URL
+  і xhtml:link-пари. Версія мовою оригіналу (uk) — без &hl=, решта — з &hl=<код>.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://ailabhub-directory.com/blog.php</loc>
+  </url>
+  <url>
+    <loc>https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning&amp;hl=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning"/>
+  </url>
+  <url>
+    <loc>https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning&amp;hl=en</loc>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning"/>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning&amp;hl=en"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ailabhub-directory.com/blog-post.php?slug=ai-for-language-learning"/>
+  </url>
+</urlset>

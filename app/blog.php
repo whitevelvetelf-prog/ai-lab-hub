@@ -29,6 +29,47 @@ const BLOG_ARTICLES = [
     ],
 ];
 
+/**
+ * Мова оригіналу статей: її версія живе на URL без параметра hl і є
+ * x-default для hreflang. Інші мови — той самий URL з &hl=<код>.
+ *
+ * Мова статті задається саме URL (а не сесією, як решта сайту), щоб
+ * кожна мовна версія мала власну адресу для пошуковиків і hreflang.
+ * Параметр названо hl, бо ?lang= глобально перемикає мову сесії й
+ * одразу редіректить на URL без себе (app/translations.php).
+ */
+const BLOG_DEFAULT_LANG = 'uk';
+
+/** Канонічний домен для абсолютних URL у hreflang/canonical (і public/sitemap.xml). */
+const BLOG_SITE_URL = 'https://ailabhub-directory.com';
+
+/** Підпис перемикача на мовну пару: [мова сторінки][мова, на яку веде посилання]. */
+const BLOG_LANG_SWITCH_LABELS = [
+    'uk' => ['en' => 'Читати англійською'],
+    'en' => ['uk' => 'Read in Ukrainian'],
+];
+
+/** Мови, для яких у статті є файл (порядок — як у реєстрі). @return list<string> */
+function blog_article_langs(string $slug): array
+{
+    return array_keys(BLOG_ARTICLES[$slug] ?? []);
+}
+
+/** Мова, якою показати статтю: запитана, якщо для неї є файл, інакше мова оригіналу. */
+function blog_article_lang(string $slug, string $requested): string
+{
+    return in_array($requested, blog_article_langs($slug), true) ? $requested : BLOG_DEFAULT_LANG;
+}
+
+/** URL мовної версії статті (відносний або абсолютний на канонічному домені). */
+function blog_article_url(string $slug, string $lang, bool $absolute = false): string
+{
+    $url = 'blog-post.php?slug=' . rawurlencode($slug)
+        . ($lang !== BLOG_DEFAULT_LANG ? '&hl=' . rawurlencode($lang) : '');
+
+    return $absolute ? BLOG_SITE_URL . '/' . $url : $url;
+}
+
 /** @return array{title: string, description: string, body: string}|null */
 function blog_read_file(string $filename): ?array
 {

@@ -147,7 +147,7 @@ $articles = blog_list_articles(current_lang());
         <?php else: ?>
             <div class="blog-list">
                 <?php foreach ($articles as $article): ?>
-                    <a class="blog-card" href="blog-post.php?slug=<?= urlencode($article['slug']) ?>">
+                    <a class="blog-card" href="<?= htmlspecialchars(blog_article_url($article['slug'], blog_article_lang($article['slug'], current_lang())), ENT_QUOTES) ?>">
                         <h2 class="blog-card__title"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h2>
                         <p class="blog-card__text"><?= htmlspecialchars($article['description'], ENT_QUOTES) ?></p>
                     </a>

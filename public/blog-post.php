@@ -11,17 +11,32 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 
 $slug = (string) ($_GET['slug'] ?? '');
-$article = $slug !== '' ? blog_load_article($slug, current_lang()) : null;
+
+// Мова статті — з URL (&hl=), не із сесії: кожна мовна версія має власну адресу.
+$articleLang = blog_article_lang($slug, (string) ($_GET['hl'] ?? BLOG_DEFAULT_LANG));
+$article = $slug !== '' ? blog_load_article($slug, $articleLang) : null;
+
+$pageLang = current_lang();
+if ($article !== null) {
+    // Інтерфейс сайту (шапка, підвал, «До блогу») — тією ж мовою, що й стаття.
+    set_lang($articleLang);
+    $pageLang = $articleLang;
+}
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars($pageLang, ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php if ($article !== null): ?>
         <title><?= htmlspecialchars($article['title'], ENT_QUOTES) ?> — AI LAB HUB</title>
         <meta name="description" content="<?= htmlspecialchars($article['description'], ENT_QUOTES) ?>">
+        <link rel="canonical" href="<?= htmlspecialchars(blog_article_url($slug, $articleLang, true), ENT_QUOTES) ?>">
+        <?php foreach (blog_article_langs($slug) as $altLang): ?>
+            <link rel="alternate" hreflang="<?= htmlspecialchars($altLang, ENT_QUOTES) ?>" href="<?= htmlspecialchars(blog_article_url($slug, $altLang, true), ENT_QUOTES) ?>">
+        <?php endforeach; ?>
+        <link rel="alternate" hreflang="x-default" href="<?= htmlspecialchars(blog_article_url($slug, BLOG_DEFAULT_LANG, true), ENT_QUOTES) ?>">
     <?php else: ?>
         <title><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?> — AI LAB HUB</title>
     <?php endif; ?>
@@ -98,6 +113,23 @@ $article = $slug !== '' ? blog_load_article($slug, current_lang()) : null;
 
         .back-link:hover {
             color: #ffffff;
+        }
+
+        .lang-switch {
+            display: inline-block;
+            margin: 0 0 20px 16px;
+            padding: 4px 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #bcd0ff;
+            text-decoration: none;
+            border: 1px solid var(--card-border);
+            border-radius: 999px;
+        }
+
+        .lang-switch:hover {
+            color: #ffffff;
+            border-color: #bcd0ff;
         }
 
         .stub__title {
@@ -195,6 +227,11 @@ $article = $slug !== '' ? blog_load_article($slug, current_lang()) : null;
             <h1 class="stub__title"><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?></h1>
             <p class="blog-not-found"><?= htmlspecialchars(t('blog_not_found_text'), ENT_QUOTES) ?></p>
         <?php else: ?>
+            <?php foreach (BLOG_LANG_SWITCH_LABELS[$articleLang] ?? [] as $targetLang => $label): ?>
+                <?php if (in_array($targetLang, blog_article_langs($slug), true)): ?>
+                    <a class="lang-switch" href="<?= htmlspecialchars(blog_article_url($slug, $targetLang), ENT_QUOTES) ?>" hreflang="<?= htmlspecialchars($targetLang, ENT_QUOTES) ?>" lang="<?= htmlspecialchars($targetLang, ENT_QUOTES) ?>"><?= htmlspecialchars($label, ENT_QUOTES) ?></a>
+                <?php endif; ?>
+            <?php endforeach; ?>
             <h1 class="stub__title"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h1>
             <div class="article"><?= $article['html'] ?></div>
         <?php endif; ?>
