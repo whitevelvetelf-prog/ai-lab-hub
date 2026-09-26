@@ -325,6 +325,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'category_not_found'           => 'Категорію не знайдено',
     'category_not_found_text'      => 'Напрямок із таким ідентифікатором відсутній.',
     'category_empty'               => 'У цьому напрямку поки немає підкатегорій.',
+    'category_others'              => 'Інші категорії',
     'back_to_direction'            => '← До напряму',
     'back_to_all_directions'       => '← Усі напрямки',
     'catalog_empty'                => 'У цьому розділі поки немає опублікованих продуктів.',

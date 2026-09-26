@@ -24,6 +24,7 @@ $catStmt->execute([':id' => $categoryId]);
 $category = $catStmt->fetch();
 
 $subcategories = [];
+$otherCategories = [];
 if ($category !== false) {
     analytics_log_view($pdo, 'category', (int) $category['id']);
 
@@ -35,6 +36,17 @@ if ($category !== false) {
     );
     $subStmt->execute([':id' => $categoryId]);
     $subcategories = $subStmt->fetchAll();
+
+    // «Інші категорії» під списком підкатегорій — щоб сторінка не
+    // закінчувалась одразу після кількох карток. Порядок — як на головній.
+    $otherStmt = $pdo->prepare(
+        "SELECT id, name, name_en, slug
+         FROM categories
+         WHERE id <> :id
+         ORDER BY id"
+    );
+    $otherStmt->execute([':id' => $categoryId]);
+    $otherCategories = $otherStmt->fetchAll();
 }
 
 /**
@@ -338,6 +350,77 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
             font-weight: 700;
         }
 
+        /* «Інші категорії» — компактні «пігулки» з іконкою, що переносяться
+           в рядки: не розтягують сторінку так, як великі картки. */
+        .other-categories {
+            margin-top: 48px;
+        }
+
+        .other-categories__title {
+            margin: 0 0 16px;
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .other-categories__list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .other-categories__link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 999px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            color: #ffffff;
+            font-size: 0.92rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: border-color 0.15s ease, background 0.15s ease;
+        }
+
+        .other-categories__link:hover {
+            border-color: rgba(91, 140, 255, 0.5);
+            background: rgba(91, 140, 255, 0.12);
+        }
+
+        .other-categories__link svg {
+            width: 16px;
+            height: 16px;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        /* Мобільний: дві рівні колонки — у ряд по одній «пігулці» (~180px
+           на 316px) блок розтягувався до ~700px. Довга назва переноситься. */
+        @media (max-width: 560px) {
+            .other-categories {
+                margin-top: 36px;
+            }
+
+            .other-categories__list {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 8px;
+            }
+
+            .other-categories__link {
+                display: flex;
+                height: 100%;
+                padding: 8px 12px;
+                border-radius: 14px;
+                font-size: 0.85rem;
+                line-height: 1.3;
+            }
+        }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -382,6 +465,22 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
                 </a>
             <?php endforeach; ?>
         </div>
+        <?php endif; ?>
+
+        <?php if ($otherCategories !== []): ?>
+        <nav class="other-categories" aria-labelledby="otherCategoriesTitle">
+            <h2 class="other-categories__title" id="otherCategoriesTitle"><?= htmlspecialchars(t('category_others'), ENT_QUOTES) ?></h2>
+            <ul class="other-categories__list">
+                <?php foreach ($otherCategories as $other): ?>
+                <li>
+                    <a class="other-categories__link" href="category.php?id=<?= (int) $other['id'] ?>">
+                        <i data-lucide="<?= htmlspecialchars($categoryIcons[$other['slug']] ?? 'shapes', ENT_QUOTES) ?>"></i>
+                        <?= htmlspecialchars(localized_name($other), ENT_QUOTES) ?>
+                    </a>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+        </nav>
         <?php endif; ?>
 <?php endif; ?>
     </div>
