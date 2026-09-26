@@ -486,10 +486,17 @@ require_once __DIR__ . '/../app/translations.php';
                 display: none;
             }
 
+            /* Чат — за висотою вмісту (flex: 0 1 auto, а не 1 1 auto): поле
+               вводу стоїть одразу під останнім повідомленням, без порожнього
+               простору між привітанням і полем. Коли розмова довша за екран,
+               чат стискається (min-height: 0) і прокручується сам.
+               overflow-x: hidden — довгі назви/посилання в картках не дають
+               горизонтального скролу. */
             .chat {
-                flex: 1 1 auto;
+                flex: 0 1 auto;
                 min-height: 0;
                 overflow-y: auto;
+                overflow-x: hidden;
                 padding: 14px 16px;
                 background: transparent;
                 border: none;
@@ -517,6 +524,11 @@ require_once __DIR__ . '/../app/translations.php';
                 flex-shrink: 0;
             }
 
+            .msg__bubble {
+                min-width: 0;
+                overflow-wrap: anywhere;
+            }
+
             /* Відео Елі — компактний банер над діалогом (не на весь екран):
                фіксована висота, у потоці над чатом, не прокручується разом
                із повідомленнями. position/z-index: 0 — нижче закріпленої
@@ -525,7 +537,7 @@ require_once __DIR__ . '/../app/translations.php';
                 position: relative;
                 z-index: 0;
                 flex: 0 0 auto;
-                height: 140px;
+                height: 120px;
                 width: auto;
                 margin: 12px 16px 0;
                 border-radius: 16px;
@@ -533,7 +545,7 @@ require_once __DIR__ . '/../app/translations.php';
 
             /* Ролик вертикальний (1088×1904), банер — горизонтальний: cover
                заповнює всю ширину картки без порожніх полів по боках. Банер
-               навмисно низький (140px), щоб шапка, банер, привітання й поле
+               навмисно низький (120px), щоб шапка, банер, привітання й поле
                вводу вміщалися в ~620–700px видимої висоти iPhone без скролу;
                object-position 44% ставить у кадр обличчя Елі й комір піджака. */
             .eli-stage__video {
