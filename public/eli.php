@@ -742,6 +742,29 @@ require_once __DIR__ . '/../app/translations.php';
             safePlay(stageVideo);
         }
 
+        // Мобільний (≤768px): відео — постійний банер-заголовок над діалогом,
+        // тож він не зникає ні після ролика «друкує», ні при відновленні
+        // розмови. На десктопі блок великий (360px) — там, як і раніше,
+        // прибирається, щоб не відсувати чат.
+        var mobileBanner = window.matchMedia
+            ? window.matchMedia('(max-width: 768px)')
+            : { matches: false };
+
+        // Нерухомий кадр ролика в банері без відтворення (відновлена
+        // розмова на мобільному). #t — щоб браузер відмалював кадр з
+        // Елею, а не порожній перший; preload — інакше iOS кадр не вантажить.
+        function showStageStill(src) {
+            clearStage();
+            stageVideo.preload = 'auto';
+            stageVideo.muted = true;
+            stageVideo.src = src + '#t=0.5';
+            stage.hidden = false;
+            stageVideo.addEventListener('error', function onStillError() {
+                stageVideo.removeEventListener('error', onStillError);
+                stage.hidden = true;
+            });
+        }
+
         function removeGreeting() {
             if (greetingGone) {
                 return;
@@ -927,7 +950,11 @@ require_once __DIR__ . '/../app/translations.php';
         // без відео привітання, бо це вже не новий діалог.
         function renderHistory(savedState) {
             removeGreeting();
-            clearStage();
+            if (mobileBanner.matches) {
+                showStageStill(GREETING_SRC);
+            } else {
+                clearStage();
+            }
             savedState.forEach(function (entry) {
                 if (entry.role === 'user') {
                     addUserMessage(entry.text);
@@ -1037,7 +1064,7 @@ require_once __DIR__ . '/../app/translations.php';
 
             playStage(TYPING_SRC, {
                 typing: true,
-                freeze: false,
+                freeze: mobileBanner.matches,
                 onEnd: function () { videoDone = true; tryRender(); }
             });
         }
