@@ -461,10 +461,16 @@ require_once __DIR__ . '/../app/translations.php';
                 flex: 0 0 auto;
             }
 
+            /* margin: 0 (а не базове 0 auto): у колонковому flex-body
+               auto-поля вимикають розтягування, і .page брала ширину
+               вмісту (поле вводу + кнопка ≈ 369px) → горизонтальний скрол
+               на 320–360px. */
             .page {
                 flex: 1 1 auto;
                 min-height: 0;
                 max-width: none;
+                width: 100%;
+                margin: 0;
                 padding: 0;
                 display: flex;
                 flex-direction: column;
@@ -493,6 +499,17 @@ require_once __DIR__ . '/../app/translations.php';
                 gap: 8px;
                 background: var(--bg-end);
                 border-top: 1px solid var(--card-border);
+            }
+
+            /* Поле вводу стискається, кнопка «Надіслати» — ні: обидва завжди
+               в межах ширини екрана (без min-width: 0 input має власну
+               мінімальну ширину й виштовхує кнопку за край на ~320px). */
+            .composer__input {
+                min-width: 0;
+            }
+
+            .composer__btn {
+                flex-shrink: 0;
             }
 
             /* Велике відео Елі: займає більшість висоти екрана. */
