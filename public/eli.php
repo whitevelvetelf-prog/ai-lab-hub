@@ -525,8 +525,8 @@ require_once __DIR__ . '/../app/translations.php';
                 position: relative;
                 z-index: 0;
                 flex: 0 0 auto;
-                height: 200px;
-                height: clamp(180px, 25dvh, 220px);
+                height: 280px;
+                height: clamp(220px, 38dvh, 320px);
                 width: auto;
                 margin: 12px 16px 0;
                 border-radius: 16px;
@@ -534,12 +534,13 @@ require_once __DIR__ . '/../app/translations.php';
 
             /* Ролик вертикальний (1088×1904), банер — горизонтальний: cover
                заповнює всю ширину картки без порожніх полів по боках, а
-               object-position 34% ставить у кадр голову й плечі Елі (у ролику
-               вони на ~25–55% висоти; зверху — порожній фон, знизу —
-               ноутбук). Обрізаються порожній верх і низ кадру, не обличчя. */
+               object-position 48% при висоті до 320px показує Елю «за роботою»:
+               голову, піджак і край ноутбука (у ролику голова на ~27%, ноутбук —
+               на ~70–95% висоти), а не лише обличчя впритул. На низьких
+               екранах (38dvh) банер нижчий, щоб лишалося місце для діалогу. */
             .eli-stage__video {
                 object-fit: cover;
-                object-position: center 34%;
+                object-position: center 48%;
             }
 
             /* На мобільному Еля — це повноекранний чат-режим; підвал ховаємо. */
