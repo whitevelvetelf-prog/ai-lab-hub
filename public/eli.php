@@ -16,8 +16,8 @@ declare(strict_types=1);
  * при кожному повідомленні користувача і зникає ПОВНІСТЮ, щойно
  * зʼявляється текстова відповідь). Текстові відповіді та картки
  * продуктів — без відео/аватарок поруч. Десктоп: відео — великий блок
- * у колонці чату (не на весь екран); мобільний (< 768px): компактний
- * банер над діалогом, прокручується лише чат.
+ * у колонці чату (не на весь екран); мобільний (< 768px): майже на
+ * весь екран.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -404,7 +404,7 @@ require_once __DIR__ . '/../app/translations.php';
 
         /* Велике відео Елі (привітання / «друкує») — один блок для всіх
            екранів. Десктоп: великий блок у колонці чату (не на весь
-           екран). Мобільний (< 768px): компактний банер над діалогом — див.
+           екран). Мобільний (< 768px): майже на весь екран — див.
            медіа-запит нижче. Видимістю та зміною ролика керує JS. */
         .eli-stage {
             display: flex;
@@ -448,34 +448,23 @@ require_once __DIR__ . '/../app/translations.php';
         }
 
         /* --- Мобільний режим Елі (< 768px) --------------------------------
-           Екран-застосунок рівно на висоту вікна: шапка → компактний банер
-           із відео Елі → чат (єдине, що прокручується) → поле вводу знизу.
-           body має фіксовану висоту (а не min-height) і overflow: hidden —
-           інакше з ростом діалогу прокручується вся сторінка, і банер
-           «їде» під напівпрозору закріплену шапку. */
+           Велике відео Елі майже на весь екран; текст і картки — у чаті під
+           ним; поле вводу — знизу. Поки грає «друкує» — видно лише відео. */
         @media (max-width: 768px) {
             body {
                 display: flex;
                 flex-direction: column;
-                height: 100vh;
-                height: 100dvh;
-                overflow: hidden;
+                min-height: 100dvh;
             }
 
             .site-header {
                 flex: 0 0 auto;
             }
 
-            /* margin: 0 (а не базове 0 auto): у колонковому flex-body
-               auto-поля вимикають розтягування, і .page брала ширину
-               вмісту (поле вводу + кнопка ≈ 369px) → горизонтальний скрол
-               на 320px. */
             .page {
                 flex: 1 1 auto;
                 min-height: 0;
                 max-width: none;
-                width: 100%;
-                margin: 0;
                 padding: 0;
                 display: flex;
                 flex-direction: column;
@@ -486,17 +475,10 @@ require_once __DIR__ . '/../app/translations.php';
                 display: none;
             }
 
-            /* Чат — за висотою вмісту (flex: 0 1 auto, а не 1 1 auto): поле
-               вводу стоїть одразу під останнім повідомленням, без порожнього
-               простору між привітанням і полем. Коли розмова довша за екран,
-               чат стискається (min-height: 0) і прокручується сам.
-               overflow-x: hidden — довгі назви/посилання в картках не дають
-               горизонтального скролу. */
             .chat {
-                flex: 0 1 auto;
+                flex: 1 1 auto;
                 min-height: 0;
                 overflow-y: auto;
-                overflow-x: hidden;
                 padding: 14px 16px;
                 background: transparent;
                 border: none;
@@ -513,44 +495,27 @@ require_once __DIR__ . '/../app/translations.php';
                 border-top: 1px solid var(--card-border);
             }
 
-            /* Поле вводу стискається, кнопка «Надіслати» — ні: обидва завжди
-               в межах ширини екрана (без min-width: 0 input має власну
-               мінімальну ширину й виштовхує кнопку за край на ~320px). */
-            .composer__input {
-                min-width: 0;
-            }
-
-            .composer__btn {
-                flex-shrink: 0;
-            }
-
-            .msg__bubble {
-                min-width: 0;
-                overflow-wrap: anywhere;
-            }
-
-            /* Відео Елі — компактний банер над діалогом (не на весь екран):
-               фіксована висота, у потоці над чатом, не прокручується разом
-               із повідомленнями. position/z-index: 0 — нижче закріпленої
-               шапки (z-index 100), тож банер ніколи не перекриває її. */
+            /* Велике відео Елі: займає більшість висоти екрана. */
             .eli-stage {
-                position: relative;
-                z-index: 0;
-                flex: 0 0 auto;
-                height: 120px;
-                width: auto;
-                margin: 12px 16px 0;
-                border-radius: 16px;
+                height: auto;
+                flex: 1 1 auto;
+                min-height: 0;
+                margin-bottom: 0;
+                border: none;
+                border-radius: 0;
             }
 
-            /* Ролик вертикальний (1088×1904), банер — горизонтальний: cover
-               заповнює всю ширину картки без порожніх полів по боках. Банер
-               навмисно низький (120px), щоб шапка, банер, привітання й поле
-               вводу вміщалися в ~620–700px видимої висоти iPhone без скролу;
-               object-position 44% ставить у кадр обличчя Елі й комір піджака. */
-            .eli-stage__video {
-                object-fit: cover;
-                object-position: center 44%;
+            /* Поки видно велике відео — чат стискається до смужки під ним
+               (там лишається текст привітання). */
+            .eli-stage:not([hidden]) ~ .chat {
+                flex: 0 0 auto;
+                max-height: 30vh;
+            }
+
+            /* Поки грає відео «друкує» — на екрані лишається тільки відео. */
+            .page.is-typing .chat,
+            .page.is-typing .composer {
+                display: none;
             }
 
             /* На мобільному Еля — це повноекранний чат-режим; підвал ховаємо. */
@@ -753,29 +718,6 @@ require_once __DIR__ . '/../app/translations.php';
             safePlay(stageVideo);
         }
 
-        // Мобільний (≤768px): відео — постійний банер-заголовок над діалогом,
-        // тож він не зникає ні після ролика «друкує», ні при відновленні
-        // розмови. На десктопі блок великий (360px) — там, як і раніше,
-        // прибирається, щоб не відсувати чат.
-        var mobileBanner = window.matchMedia
-            ? window.matchMedia('(max-width: 768px)')
-            : { matches: false };
-
-        // Нерухомий кадр ролика в банері без відтворення (відновлена
-        // розмова на мобільному). #t — щоб браузер відмалював кадр з
-        // Елею, а не порожній перший; preload — інакше iOS кадр не вантажить.
-        function showStageStill(src) {
-            clearStage();
-            stageVideo.preload = 'auto';
-            stageVideo.muted = true;
-            stageVideo.src = src + '#t=0.5';
-            stage.hidden = false;
-            stageVideo.addEventListener('error', function onStillError() {
-                stageVideo.removeEventListener('error', onStillError);
-                stage.hidden = true;
-            });
-        }
-
         function removeGreeting() {
             if (greetingGone) {
                 return;
@@ -961,11 +903,7 @@ require_once __DIR__ . '/../app/translations.php';
         // без відео привітання, бо це вже не новий діалог.
         function renderHistory(savedState) {
             removeGreeting();
-            if (mobileBanner.matches) {
-                showStageStill(GREETING_SRC);
-            } else {
-                clearStage();
-            }
+            clearStage();
             savedState.forEach(function (entry) {
                 if (entry.role === 'user') {
                     addUserMessage(entry.text);
@@ -1075,7 +1013,7 @@ require_once __DIR__ . '/../app/translations.php';
 
             playStage(TYPING_SRC, {
                 typing: true,
-                freeze: mobileBanner.matches,
+                freeze: false,
                 onEnd: function () { videoDone = true; tryRender(); }
             });
         }
