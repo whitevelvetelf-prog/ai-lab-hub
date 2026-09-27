@@ -519,14 +519,26 @@ require_once __DIR__ . '/marketplace.php';
     }
 
     /* ===== Підвал ===== */
-    /* Підвал у звичайному потоці документа — після всього контенту
-       сторінки (без fixed/sticky: закріплена смуга перекривала текст
-       посеред сторінки під час скролу). Компактна смуга; розсилка й
-       дисклеймер — у панелі .site-footer__more, що розгортається над нею. */
+    /* Закріплений підвал: завжди видимий унизу вікна, як шапка вгорі
+       (свідоме рішення; варіант «у потоці документа» скасовано). Компактна смуга;
+       розсилка й дисклеймер — у панелі .site-footer__more, що розгортається
+       вгору. Висоту смуги JS кладе в --footer-h (відступ body і позиція
+       кнопки «згорнути» в кабінеті). z-index 100 — як у шапки; вони не
+       перетинаються (шапка зверху, підвал знизу). */
+    body {
+        padding-bottom: var(--footer-h, 72px);
+    }
+
     .site-footer {
-        position: static;
-        margin-top: 40px;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        margin-top: 0;
         padding: 10px 24px;
+        max-height: 80vh;
+        overflow-y: auto;
         background: linear-gradient(160deg, #00032c 0%, #2116ad 100%);
         border-top: 1px solid rgba(255, 255, 255, 0.14);
         color: rgba(255, 255, 255, 0.75);
@@ -857,19 +869,30 @@ require_once __DIR__ . '/marketplace.php';
 </script>
 
 <script>
-    /* Кнопка підвалу розгортає панель розсилки. Підвал у потоці сторінки,
-       тож --footer-h не задаємо: плаваючі кнопки (кабінет, PWA) беруть
-       запасне 0px і стоять біля низу вікна. */
+    /* Закріплений підвал: висоту смуги пишемо в --footer-h (відступ body,
+       позиція плаваючих кнопок); кнопка розгортає панель розсилки. */
     (function () {
         var footer = document.getElementById('siteFooter');
-        var toggle = document.getElementById('siteFooterToggle');
-        if (!footer || !toggle) {
+        if (!footer) {
             return;
         }
-        toggle.addEventListener('click', function () {
-            var open = footer.classList.toggle('is-expanded');
-            toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-        });
+        var toggle = document.getElementById('siteFooterToggle');
+        function sync() {
+            document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
+        }
+        if (toggle) {
+            toggle.addEventListener('click', function () {
+                var open = footer.classList.toggle('is-expanded');
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                sync();
+            });
+        }
+        sync();
+        window.addEventListener('load', sync);
+        window.addEventListener('resize', sync);
+        if (window.ResizeObserver) {
+            new ResizeObserver(sync).observe(footer);
+        }
     })();
 
     /* Висота закріпленої шапки → --header-h (top для закріплених стрілок «назад»). */
