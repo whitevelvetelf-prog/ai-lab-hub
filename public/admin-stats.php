@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/blog.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -107,6 +108,28 @@ $topClicked = $pdo->prepare(
 );
 $topClicked->execute([':since1' => $periodSince, ':since2' => $periodSince]);
 $topClicked = $topClicked->fetchAll();
+
+/**
+ * Топ статей блогу: page_slug з міграції 2026-09-27 (усі мовні версії статті
+ * разом). Без міграції — null і підказка замість таблиці.
+ */
+$topArticles = null;
+try {
+    $stmt = $pdo->prepare(
+        "SELECT page_slug, COUNT(*) AS views
+         FROM page_views
+         WHERE page_type = 'article'
+           AND page_slug IS NOT NULL
+           AND (:since1 IS NULL OR viewed_at >= :since2)
+         GROUP BY page_slug
+         ORDER BY views DESC
+         LIMIT 10"
+    );
+    $stmt->execute([':since1' => $periodSince, ':since2' => $periodSince]);
+    $topArticles = $stmt->fetchAll();
+} catch (PDOException $e) {
+    error_log('[admin-stats] top articles: ' . $e->getMessage());
+}
 
 ?>
 <!DOCTYPE html>
@@ -441,6 +464,36 @@ $topClicked = $topClicked->fetchAll();
                                     <td class="table__num table__muted"><?= (int) $row['official_clicks'] ?></td>
                                     <td class="table__num table__muted"><?= (int) $row['affiliate_clicks'] ?></td>
                                     <td class="table__num"><?= (int) $row['total_clicks'] ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section__title">Топ-10 статей блогу за переглядами</h2>
+            <p class="stat-card__sub" style="margin-bottom: 16px;">Період: <?= e($periodLabels[$period]) ?> · усі мовні версії статті разом</p>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Стаття</th>
+                            <th>Переглядів</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($topArticles === null): ?>
+                            <tr><td class="empty-state" colspan="2">Застосуйте міграцію database/migration-2026-09-27-page-views-slug.sql.</td></tr>
+                        <?php elseif ($topArticles === []): ?>
+                            <tr><td class="empty-state" colspan="2">Переглядів статей ще немає.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($topArticles as $row): ?>
+                                <?php $article = blog_load_article((string) $row['page_slug'], BLOG_DEFAULT_LANG); ?>
+                                <tr>
+                                    <td><a class="table__name" href="<?= e(blog_article_url((string) $row['page_slug'], BLOG_DEFAULT_LANG)) ?>"><?= e($article['title'] ?? $row['page_slug']) ?></a></td>
+                                    <td class="table__num"><?= (int) $row['views'] ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

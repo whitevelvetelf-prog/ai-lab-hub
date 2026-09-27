@@ -28,10 +28,33 @@ function analytics_session_hash(): string
  * Записати перегляд сторінки. Помилки запису (напр. таблиці ще нема,
  * якщо міграцію не застосовано) не повинні ламати рендер сторінки —
  * лише лог.
+ *
+ * $pageSlug — для сторінок без запису в БД (статті блогу), замість $pageId.
+ * Колонка page_slug — з міграції 2026-09-27; без неї пишеться лише базовий
+ * рядок, щоб загальний лічильник не зупинився.
  */
-function analytics_log_view(PDO $pdo, string $pageType, ?int $pageId = null): void
+function analytics_log_view(PDO $pdo, string $pageType, ?int $pageId = null, ?string $pageSlug = null): void
 {
     try {
+        if ($pageSlug !== null) {
+            try {
+                $stmt = $pdo->prepare(
+                    'INSERT INTO page_views (page_type, page_id, page_slug, session_hash)
+                     VALUES (:type, :id, :slug, :hash)'
+                );
+                $stmt->execute([
+                    ':type' => $pageType,
+                    ':id' => $pageId,
+                    ':slug' => $pageSlug,
+                    ':hash' => analytics_session_hash(),
+                ]);
+
+                return;
+            } catch (PDOException $e) {
+                error_log('[analytics] page_slug: ' . $e->getMessage());
+            }
+        }
+
         $stmt = $pdo->prepare(
             'INSERT INTO page_views (page_type, page_id, session_hash) VALUES (:type, :id, :hash)'
         );

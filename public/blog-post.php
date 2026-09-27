@@ -20,11 +20,11 @@ $article = $slug !== '' ? blog_load_article($slug, $articleLang) : null;
 $pageLang = current_lang();
 if ($article !== null) {
     // Перегляд статті — у спільну аналітику (page_views, тип 'article').
-    // Статті живуть у файлах, а не в БД, тож page_id немає: на панелі
-    // admin-stats.php рахується загальна кількість переглядів блогу.
+    // Статті живуть у файлах, а не в БД, тож замість page_id — slug:
+    // admin-stats.php рахує загальну суму й топ статей (усі мовні версії разом).
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../config/database.php';
-    analytics_log_view($pdo, 'article');
+    analytics_log_view($pdo, 'article', null, $slug);
 
     // Інтерфейс сайту (шапка, підвал, «До блогу») — тією ж мовою, що й стаття.
     set_lang($articleLang);
