@@ -9,6 +9,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 $slug = (string) ($_GET['slug'] ?? '');
 
@@ -18,6 +19,13 @@ $article = $slug !== '' ? blog_load_article($slug, $articleLang) : null;
 
 $pageLang = current_lang();
 if ($article !== null) {
+    // Перегляд статті — у спільну аналітику (page_views, тип 'article').
+    // Статті живуть у файлах, а не в БД, тож page_id немає: на панелі
+    // admin-stats.php рахується загальна кількість переглядів блогу.
+    /** @var PDO $pdo */
+    $pdo = require __DIR__ . '/../config/database.php';
+    analytics_log_view($pdo, 'article');
+
     // Інтерфейс сайту (шапка, підвал, «До блогу») — тією ж мовою, що й стаття.
     set_lang($articleLang);
     $pageLang = $articleLang;

@@ -3,7 +3,7 @@
 --
 --   page_views  — перегляд сторінки (app/analytics.php: analytics_log_view()),
 --                 викликається з product.php / catalog.php / category.php /
---                 index.php.
+--                 index.php, blog-post.php (тип 'article', без page_id).
 --   link_clicks — клік по кнопці «Перейти на сайт» через проміжний
 --                 редirect public/go.php (analytics_log_click()).
 --

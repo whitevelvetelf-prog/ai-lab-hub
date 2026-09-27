@@ -48,6 +48,17 @@ $today = stats_period_totals($pdo, date('Y-m-d 00:00:00'));
 $last7 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-7 days')));
 $last30 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-30 days')));
 
+/** Усі акаунти, незалежно від ролі. */
+$usersTotal = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
+
+/** Перегляди статей блогу (public/blog-post.php пише їх у page_views з типом 'article'). */
+$blogViews = $pdo->query(
+    "SELECT COUNT(*) AS views,
+            SUM(viewed_at >= NOW() - INTERVAL 30 DAY) AS views_30d
+     FROM page_views
+     WHERE page_type = 'article'"
+)->fetch();
+
 /**
  * Фільтр періоду для топ-10 таблиць нижче — окремий від карток
  * сьогодні/7/30 днів вище (ті лишаються фіксованими для загальної картини).
@@ -358,6 +369,19 @@ $topClicked = $topClicked->fetchAll();
                 <p class="stat-card__label">Останні 30 днів</p>
                 <p class="stat-card__value"><?= (int) $last30['views'] ?></p>
                 <p class="stat-card__sub"><?= (int) $last30['unique_sessions'] ?> унікальних сесій</p>
+            </div>
+        </div>
+
+        <div class="stat-cards">
+            <div class="stat-card">
+                <p class="stat-card__label">Зареєстровані користувачі</p>
+                <p class="stat-card__value"><?= $usersTotal ?></p>
+                <p class="stat-card__sub">усі акаунти, незалежно від ролі</p>
+            </div>
+            <div class="stat-card">
+                <p class="stat-card__label">Перегляди статей блогу</p>
+                <p class="stat-card__value"><?= (int) $blogViews['views'] ?></p>
+                <p class="stat-card__sub"><?= (int) $blogViews['views_30d'] ?> за останні 30 днів</p>
             </div>
         </div>
 
