@@ -64,6 +64,8 @@ $categoryIcons = [
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Google Search Console: розкоментувати й вписати код підтвердження власності. -->
+    <!-- <meta name="google-site-verification" content="ЗАМІНИ_НА_КОД" /> -->
     <title><?= htmlspecialchars(t('title_home'), ENT_QUOTES) ?></title>
     <style>
         *,

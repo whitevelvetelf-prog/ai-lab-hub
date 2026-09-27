@@ -1,0 +1,9 @@
+# AI LAB HUB — лише rewrite-правила. Директиви доступу (Require/Order/Deny,
+# Options, php_flag) на хостингу adm.tools дають 500 — не додавати їх сюди.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # /sitemap.xml генерується динамічно (public/sitemap.php).
+    RewriteRule ^sitemap\.xml$ sitemap.php [L]
+</IfModule>
