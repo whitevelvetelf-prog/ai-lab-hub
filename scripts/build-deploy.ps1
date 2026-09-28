@@ -20,6 +20,9 @@
       - public/assets/css/**, public/assets/js/**, public/assets/videos/**
       - public/assets/images/** (except the deliberate exclusions below)
 
+    SAFETY CHECK (runs first): the build STOPS without creating an archive if the current branch
+    is not main or if 'git status' shows uncommitted changes in public/ or app/.
+
     DELIBERATELY EXCLUDED:
       - config/            Real config with secrets is set up on the server
                            (templates in the repo: config/database.example.php,
@@ -74,6 +77,37 @@ Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $root = Split-Path $PSScriptRoot -Parent
+
+# Clean-tree guard. The archive is built from files on disk, so uncommitted edits in public/ or app/
+# would reach the server without being in git - and the next build from a clean copy silently reverts
+# them. Likewise, building from a stale git worktree on another branch ships old file versions
+# (e.g. an old app/footer.php with an unpinned footer). So:
+#   - build only from the main branch;
+#   - if git status shows changes in public/ or app/ - STOP and build nothing.
+$prevEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$branch = (& git -C $root rev-parse --abbrev-ref HEAD 2>$null | Out-String).Trim()
+$gitExit = $LASTEXITCODE
+$dirty = @(& git -C $root status --porcelain -- public app 2>$null | Where-Object { $_ -ne '' })
+$statusExit = $LASTEXITCODE
+$ErrorActionPreference = $prevEap
+if ($gitExit -ne 0 -or $statusExit -ne 0) {
+    Write-Host "STOPPED: could not run git in $root - archive NOT built." -ForegroundColor Red
+    exit 1
+}
+if ($branch -ne 'main') {
+    Write-Host "STOPPED: building from branch '$branch' ($root), not main - archive NOT built." -ForegroundColor Red
+    Write-Host "Run the script from the main working copy on branch main." -ForegroundColor Red
+    exit 1
+}
+if ($dirty.Count -gt 0) {
+    Write-Host "STOPPED: uncommitted changes in public/ or app/ - archive NOT built:" -ForegroundColor Red
+    $dirty | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    Write-Host "Commit (or revert) these changes and run the build again." -ForegroundColor Red
+    exit 1
+}
+Write-Host "git: branch main, no uncommitted changes in public/ or app/."
+
 if ([System.IO.Path]::IsPathRooted($Output)) {
     $outPath = $Output
 } else {
