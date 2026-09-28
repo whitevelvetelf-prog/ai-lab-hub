@@ -130,6 +130,7 @@ $subcategoryIcons = [
     'mentorship'         => 'user-check',
     'library'            => 'library',
     'tests'              => 'clipboard-check',
+    'detectors'          => 'scan-search',
     // Переклад та мови
     'translation'        => 'languages',
     'dictionary'         => 'book',

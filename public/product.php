@@ -115,6 +115,10 @@ function skill_label(string $level): string
 /** HTML ціни тарифу для блоку планів (напр. '$9 <span>/ міс</span>'). */
 function plan_price(array $plan): string
 {
+    // Ціна не вказана (NULL) — «за запитом», а не «$0».
+    if ($plan['price'] === null && $plan['period'] !== 'free') {
+        return htmlspecialchars(t('price_on_request'), ENT_QUOTES);
+    }
     $amount = (float) $plan['price'];
     $price = '$' . rtrim(rtrim(number_format($amount, 2, '.', ''), '0'), '.');
     if ($plan['period'] === 'free' || $amount <= 0) {

@@ -42,7 +42,9 @@ function price_badge(array $plans): array
 {
     $paid = array_filter($plans, static fn($p) => $p['period'] !== 'free' && (float) $p['price'] > 0);
     if ($paid === []) {
-        return [t('price_free'), true];
+        // Тариф без ціни (price NULL, не 'free') — «за запитом», а не безкоштовний.
+        $onRequest = array_filter($plans, static fn($p) => $p['period'] !== 'free' && $p['price'] === null);
+        return $onRequest !== [] ? [t('price_on_request'), false] : [t('price_free'), true];
     }
     usort($paid, static fn($a, $b) => (float) $a['price'] <=> (float) $b['price']);
     $cheapest = $paid[0];
