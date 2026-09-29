@@ -147,6 +147,7 @@ $subcategoryIcons = [
     'medicine'           => 'stethoscope',
     'beauty-style'       => 'sparkles',
     'sports-fitness'     => 'dumbbell',
+    'rehabilitation-physiotherapy' => 'activity',
     // Інструменти та автоматизація
     'plugins'            => 'puzzle',
     'automation'         => 'zap',
