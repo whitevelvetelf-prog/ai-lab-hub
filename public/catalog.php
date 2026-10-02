@@ -110,6 +110,10 @@ if (auth_check()) {
 /** Бейдж ціни: [текст, чи безкоштовний]. */
 function price_badge(array $plans): array
 {
+    // Тарифів немає зовсім — ціна невідома, а не «безкоштовно».
+    if ($plans === []) {
+        return [t('price_not_specified'), false];
+    }
     $paid = array_filter($plans, static fn($p) => $p['period'] !== 'free' && (float) $p['price'] > 0);
     if ($paid === []) {
         // Тариф без ціни (price NULL, не 'free') — «за запитом», а не безкоштовний.

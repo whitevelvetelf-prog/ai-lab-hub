@@ -334,6 +334,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'price_free'                    => 'Безкоштовно',
     'price_from'                    => 'Від',
     'price_on_request'              => 'За запитом',
+    'price_not_specified'           => 'Ціна не вказана',
     'unit_week'                     => 'тиж',
     'unit_month'                    => 'міс',
     'unit_year'                     => 'рік',
