@@ -1,0 +1,42 @@
+# TAAFT leaderboard 2025 (2026-10-02), третій пакет — лише назви як підказка; офіційні сайти перевірено (200, текст є, назва збігається), на проді відсутні (api-search)
+TheLibrarian.io | https://thelibrarian.io
+Mind Map Wizard | https://mindmapwizard.com
+AgentVoice | https://agentvoice.com
+Cabina.AI | https://cabina.ai
+Mindsmith | https://www.mindsmith.ai
+Transcript LOL | https://transcript.lol
+SciSummary | https://scisummary.com
+Emergent | https://emergent.sh
+Voilà | https://www.getvoila.ai
+GenTube | https://www.gentube.app
+TheySaid | https://www.theysaid.io
+BotDojo | https://www.botdojo.com
+Postiz | https://postiz.com
+KreadoAI | https://www.kreadoai.com
+Cool Coloring Pages | https://www.coolcoloringpages.com
+Syft | https://www.syftdata.com
+PrometAI | https://prometai.app
+GlobalGPT | https://www.glbgpt.com
+myAIninja | https://www.myaininja.com
+MindMap AI | https://mindmapai.app
+OnSpace.AI | https://www.onspace.ai
+PixPal | https://pixpal.chat
+Vidu | https://www.vidu.com
+VoiceType | https://voicetype.com
+AuthorVoices | https://www.authorvoices.ai
+LoveStudy.ai | https://lovestudy.ai
+God of Prompt | https://www.godofprompt.ai
+MagicLight | https://magiclight.ai
+Kilo Code | https://kilo.ai
+Werd | https://www.werd.ai
+PDF to Video AI | https://pdftovideo.ai
+AiAssistWorks | https://www.aiassistworks.com
+VisualGPT | https://visualgpt.io
+StarterPilot | https://starterpilot.com
+2pr | https://2pr.io
+FlowPost | https://www.flowpost.ai
+FineVoice | https://finevoice.ai
+Synexa AI | https://synexa.ai
+ScanRelief | https://scanrelief.com
+AIMusicGen | https://aimusicgen.ai
+GPT-trainer | https://gpt-trainer.com
