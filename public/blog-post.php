@@ -178,6 +178,12 @@ if ($article !== null) {
             color: #ffffff;
         }
 
+        .article hr {
+            margin: 32px 0 24px;
+            border: 0;
+            border-top: 1px solid var(--card-border);
+        }
+
         .article ul {
             margin: 0 0 16px;
             padding-left: 20px;

@@ -11,8 +11,8 @@ declare(strict_types=1);
  *
  * Формат файлу: YAML-подібний frontmatter (--- title / description ---)
  * і далі Markdown-тіло. Підтримується підмножина Markdown, якої досить для
- * статей-порівнянь: заголовки #/##/###, **жирний**, [текст](url), списки
- * "- пункт", таблиці "| ... | ... |". Розширювати конвертер лише під
+ * статей-порівнянь: заголовки #/##/###, **жирний**, *курсив*, [текст](url), списки
+ * "- пункт", таблиці "| ... | ... |", роздільник "---". Розширювати конвертер лише під
  * реальну потребу нової статті — не про запас.
  */
 
@@ -30,6 +30,10 @@ const BLOG_ARTICLES = [
     'ai-for-language-learning' => [
         'uk' => 'ai-dlya-vyvchennya-mov-ua.md',
         'en' => 'ai-for-language-learning-en.md',
+    ],
+    'ai-for-psychology-and-mental-health' => [
+        'uk' => 'ai-dlya-psyhologiyi-ta-mentalnogo-zdorovya-ua.md',
+        'en' => 'ai-for-psychology-and-mental-health-en.md',
     ],
 ];
 
@@ -168,12 +172,13 @@ function blog_list_articles(string $lang): array
     return $list;
 }
 
-/** Екранує текст і застосовує inline-розмітку (**жирний**, [текст](url)). */
+/** Екранує текст і застосовує inline-розмітку (**жирний**, *курсив*, [текст](url)). */
 function blog_inline_html(string $text): string
 {
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
     $escaped = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $escaped);
+    $escaped = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $escaped);
 
     return preg_replace_callback(
         '/\[([^\]]+)\]\(([^)]+)\)/',
@@ -185,7 +190,8 @@ function blog_inline_html(string $text): string
 /**
  * Мінімальний Markdown → HTML для статей блогу.
  * Підтримує: #/##/### заголовки (перший # у тілі пропускається — дублює
- * H1 сторінки), **жирний**, [текст](url), списки "- ", таблиці "| ... |".
+ * H1 сторінки), **жирний**, *курсив*, [текст](url), списки "- ", таблиці "| ... |",
+ * роздільник "---".
  */
 function blog_markdown_to_html(string $markdown): string
 {
@@ -259,6 +265,13 @@ function blog_markdown_to_html(string $markdown): string
                 }
                 $html[] = "<h{$level}>" . blog_inline_html($m[2]) . "</h{$level}>";
             }
+            continue;
+        }
+
+        if (preg_match('/^-{3,}$/', $trimmed)) {
+            $flushList();
+            $flushTable();
+            $html[] = '<hr>';
             continue;
         }
 
