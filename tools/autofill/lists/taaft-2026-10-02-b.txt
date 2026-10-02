@@ -1,0 +1,27 @@
+# TAAFT leaderboard 2026-10-02, другий пакет — лише назви як підказка; офіційні сайти перевірено (200, назва збігається), на проді відсутні (api-search)
+Jason AI | https://reply.io/jason-ai/
+Norton Neo | https://neobrowser.ai
+EchoWrite | https://echo-write.com
+Format Magic | https://formatmagic.ai
+MOVA Guide | https://www.movaguide.com
+Hashvix | https://hashvix.com
+Whacka | https://whacka.app
+SureThing | https://surething.io
+AI Aware | https://aiaware.io
+Clever AI Detector | https://cleveraidetector.com
+PrompTessor | https://promptessor.com
+KikiVoice | https://kikivoice.ai
+Vidnix | https://vidnix.ai
+VidFlux | https://vidflux.ai
+HappySeeds | https://happyseeds.ai
+MojoMake | https://mojomake.com
+MiDash | https://www.midash.ai
+Make-It | https://make-it.ai
+WebsitePublisher.ai | https://www.websitepublisher.ai
+VoooAI | https://voooai.com
+Vertech Academy | https://www.vertechacademy.com
+Symphony by Wix | https://www.wix.com/symphony
+# Сайти з рендером на JS / захистом від ботів — прочитано в браузері, картки вручну
+Younet | https://younet.ai
+Serno | https://serno.ai
+freebeat | https://freebeat.ai
