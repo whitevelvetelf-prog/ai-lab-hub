@@ -1,0 +1,59 @@
+# TAAFT leaderboard 2024 (2026-10-02), четвертий пакет — лише назви як підказка; офіційні сайти перевірено (200, текст є, назва збігається), на проді відсутні (api-search)
+11x | https://www.11x.ai
+AdSpawn | https://adspawn.io
+AI Video API | https://www.aivideoapi.com
+AI/ML API | https://aimlapi.com
+Aicut | https://www.aicut.pro
+ANDRE | https://www.andre.ai
+Breadcrumb | https://www.breadcrumb.ai
+Cognition | https://cognition.com
+HeadSnap | https://headsnap.io
+Hedy | https://www.hedy.ai
+illustration.app | https://www.illustration.app
+imagetocaption.ai | https://www.imagetocaption.ai
+insMind | https://www.insmind.com
+Instafill | https://instafill.ai
+Keragon | https://www.keragon.com
+Kopage | https://www.kopage.com
+LaunchLemonade | https://launchlemonade.app
+Lingolette | https://lingolette.com
+LTX Studio | https://ltx.io/studio
+Lyrics Into Song AI | https://lyricsintosong.ai
+Magicley AI | https://magicley.com
+Mammouth AI | https://mammouth.ai
+Millis AI | https://www.millis.ai
+mixus | https://www.mixus.ai
+NEUROFIT | https://neurofit.app
+NodeLand | https://nodeland.io
+Nouswise | https://nouswise.com
+OpenHands | https://www.openhands.dev
+Paperguide | https://paperguide.ai
+PicLumen | https://www.piclumen.com
+PicTools.AI | https://pictools.ai
+PokaMind | https://pokamind.com
+Sensay | https://sensay.io
+SongGenerator.io | https://songgenerator.io
+SoundBoost | https://soundboost.ai
+Subscribr | https://subscribr.ai
+Supawork AI | https://supawork.ai
+Syllaby | https://syllaby.io
+Thesify | https://www.thesify.ai
+Vadoo AI | https://www.vadoo.tv
+VenturusAI | https://venturusai.com
+VideoToPage | https://www.videotopage.com
+Viggle AI | https://viggle.ai
+Wonders.AI | https://www.wonders.ai
+ZeroWork | https://zerowork.io
+Zivy | https://www.zivy.app
+# Сайти з рендером на JS / захистом від ботів — прочитано в браузері 2026-10-02, картки вручну
+Accio Work | https://www.accio.com
+TalkTastic | https://talktastic.com
+Voicepen | https://voicepen.ai
+StoryArtAI | https://storyartai.com
+CVGist | https://cvgist.com
+Tengr.ai | https://tengr.ai
+Athena AI | https://athenachat.bot
+Informly | https://informly.app
+Chief | https://chief.bot
+LiGo | https://ligosocial.com
+Rabbithole | https://www.rabbithole.chat
