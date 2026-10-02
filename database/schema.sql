@@ -280,6 +280,28 @@ CREATE TABLE login_tokens (
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
+-- social_accounts — прив'язки акаунтів соцмереж (OAuth) до users.
+-- Один user — кілька провайдерів; (provider, provider_user_id) унікальна.
+-- Користувачі, створені через Google, мають users.password_hash = ''.
+-- Код: app/oauth.php, public/auth-google*.php, public/account.php.
+-- ---------------------------------------------------------------------
+CREATE TABLE social_accounts (
+    id               INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id          INT UNSIGNED NOT NULL,
+    provider         ENUM('google','facebook','apple','linkedin','x','discord') NOT NULL,
+    provider_user_id VARCHAR(255) NOT NULL,
+    email            VARCHAR(255) NULL,
+    connected_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_social_provider_user (provider, provider_user_id),
+    UNIQUE KEY uq_social_user_provider (user_id, provider),
+    KEY idx_social_user (user_id),
+    CONSTRAINT fk_social_accounts_user
+        FOREIGN KEY (user_id) REFERENCES users (id)
+        ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
 -- position_applications — універсальна система заявок на посаду (заміна
 -- окремих форм apply-ceo.php/apply-exec-director.php). Власниця вписує
 -- position_title і створює посилання (public/account.php); кандидат

@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/oauth.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -24,6 +25,12 @@ function e(mixed $value): string
 
 $error = null;
 $old = ['email' => ''];
+
+// Помилка входу через соцмережу (public/auth-google-callback.php).
+if (isset($_SESSION['oauth_error'])) {
+    $error = (string) $_SESSION['oauth_error'];
+    unset($_SESSION['oauth_error']);
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
@@ -267,6 +274,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 padding: 24px;
             }
         }
+
+<?= OAUTH_BUTTONS_CSS ?>
     </style>
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
@@ -301,6 +310,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></button>
             </form>
+
+            <?= oauth_buttons_html('social_or_login') ?>
 
             <p class="auth-card__foot"><?= htmlspecialchars(t('login_no_account'), ENT_QUOTES) ?> <a href="register.php"><?= htmlspecialchars(t('action_register'), ENT_QUOTES) ?></a></p>
         </section>

@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/mailer.php';   // mail_site_url()
+require_once __DIR__ . '/../app/oauth.php';    // способи входу (соцмережі)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -107,6 +108,21 @@ $oldRequest = ['last_name' => '', 'first_name' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $user !== null) {
     $action = (string) ($_POST['action'] ?? '');
+
+    // Відв'язка соцмережі (секція «Способи входу»). Останній спосіб входу
+    // (пароль + соцмережі) відв'язати не можна — app/oauth.php → social_unlink().
+    if ($action === 'unlink_social') {
+        $provider = (string) ($_POST['provider'] ?? '');
+        if (social_csrf_valid($_POST['csrf'] ?? null) && isset(OAUTH_PROVIDERS[$provider])) {
+            if (social_unlink($pdo, (int) $user['id'], $provider)) {
+                $_SESSION['account_flash'] = sprintf(t('account_social_unlinked_flash'), oauth_provider_label($provider));
+            } else {
+                $_SESSION['oauth_error'] = t('account_social_last_method');
+            }
+        }
+        header('Location: account.php');
+        exit;
+    }
 
     // ТЕРМІНОВО вимкнено: подача заявки "Стати працівником" (і UI, і бекенд).
     // Не видалено — лише умова false, щоб легко повернути.
@@ -406,6 +422,20 @@ $flash = $_SESSION['account_flash'] ?? null;
 $flashHtml = $_SESSION['account_flash_html'] ?? null;
 unset($_SESSION['account_flash'], $_SESSION['account_flash_html']);
 
+// Способи входу: пароль + прив'язані соцмережі (social_accounts). Помилка прив'язки/відв'язки — oauth_error.
+$oauthError = $_SESSION['oauth_error'] ?? null;
+unset($_SESSION['oauth_error']);
+$socialLinked = [];
+$hasPassword = false;
+$loginMethods = 0;
+if ($user !== null) {
+    foreach (social_accounts_for_user($pdo, (int) $user['id']) as $row) {
+        $socialLinked[$row['provider']] = $row;
+    }
+    $hasPassword = social_user_has_password($pdo, (int) $user['id']);
+    $loginMethods = ($hasPassword ? 1 : 0) + count($socialLinked);
+}
+
 // Заявка «на розгляді» для поточного user; список заявок для admin.
 $pendingRequest = null;
 $pendingRequests = [];
@@ -687,6 +717,75 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
 
         .btn--ghost:hover {
             background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Способи входу (пароль + соцмережі, app/oauth.php) */
+        .login-methods {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .login-methods__item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .login-methods__item:last-child {
+            border-bottom: 0;
+        }
+
+        .login-methods__name {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .login-methods__name strong {
+            display: block;
+        }
+
+        .login-methods__meta {
+            display: block;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+            overflow-wrap: anywhere;
+        }
+
+        .login-methods__form {
+            margin: 0;
+        }
+
+        .btn--small {
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .btn[disabled] {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .login-methods__hint {
+            margin: 12px 0 0;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .social-btn__icon {
+            flex: 0 0 28px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.25);
         }
 
         /* Шапка авторизованого користувача */
@@ -1118,6 +1217,9 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             <?php elseif ($flash !== null): ?>
                 <div class="notice notice--ok"><?= e($flash) ?></div>
             <?php endif; ?>
+            <?php if ($oauthError !== null): ?>
+                <div class="notice notice--error"><?= e($oauthError) ?></div>
+            <?php endif; ?>
 
             <div class="accordion" id="acc-saved">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-saved-panel">
@@ -1136,6 +1238,59 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                             <?= htmlspecialchars(t('account_saved_empty_prefix'), ENT_QUOTES) ?> <a class="section__link" href="catalog.php"><?= htmlspecialchars(t('saved_empty_link'), ENT_QUOTES) ?></a>.
                         </div>
                         <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion" id="acc-login-methods">
+                <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-login-methods-panel">
+                    <span class="accordion__title"><?= htmlspecialchars(t('account_social_title'), ENT_QUOTES) ?></span>
+                    <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                </button>
+                <div class="accordion__panel" id="acc-login-methods-panel">
+                    <div class="accordion__panel-inner">
+                        <ul class="login-methods">
+                            <li class="login-methods__item">
+                                <span class="social-btn__icon" style="background:#ffffff;color:#00032c" aria-hidden="true">***</span>
+                                <span class="login-methods__name">
+                                    <strong><?= htmlspecialchars(t('account_social_password'), ENT_QUOTES) ?></strong>
+                                    <span class="login-methods__meta"><?= htmlspecialchars(t($hasPassword ? 'account_social_password_set' : 'account_social_password_none'), ENT_QUOTES) ?></span>
+                                </span>
+                            </li>
+                            <?php foreach (OAUTH_PROVIDERS as $providerKey => $providerInfo):
+                                $linked = $socialLinked[$providerKey] ?? null;
+                                if ($linked === null && !oauth_provider_enabled($providerKey)) {
+                                    continue; // ще не підключений на сайті й не прив'язаний — не показуємо
+                                } ?>
+                            <li class="login-methods__item">
+                                <?= oauth_icon_html($providerKey) ?>
+                                <span class="login-methods__name">
+                                    <strong><?= e($providerInfo['label']) ?></strong>
+                                    <span class="login-methods__meta">
+                                        <?php if ($linked !== null): ?>
+                                            <?= e(sprintf(t('account_social_connected'), date('d.m.Y', strtotime((string) $linked['connected_at'])))) ?><?= $linked['email'] ? ' · ' . e($linked['email']) : '' ?>
+                                        <?php else: ?>
+                                            <?= htmlspecialchars(t('account_social_not_connected'), ENT_QUOTES) ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </span>
+                                <?php if ($linked !== null): ?>
+                                    <form class="login-methods__form" method="post" action="account.php">
+                                        <input type="hidden" name="action" value="unlink_social">
+                                        <input type="hidden" name="provider" value="<?= e($providerKey) ?>">
+                                        <input type="hidden" name="csrf" value="<?= e(social_csrf_token()) ?>">
+                                        <button type="submit" class="btn btn--ghost btn--small"<?= $loginMethods <= 1 ? ' disabled title="' . e(t('account_social_last_method')) . '"' : '' ?>><?= htmlspecialchars(t('account_social_unlink'), ENT_QUOTES) ?></button>
+                                    </form>
+                                <?php else: ?>
+                                    <a class="btn btn--ghost btn--small" href="auth-<?= e($providerKey) ?>.php?mode=link"><?= htmlspecialchars(t('account_social_link'), ENT_QUOTES) ?></a>
+                                <?php endif; ?>
+                            </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <?php if ($loginMethods <= 1 && $socialLinked !== []): ?>
+                            <p class="login-methods__hint"><?= htmlspecialchars(t('account_social_last_method'), ENT_QUOTES) ?></p>
+                        <?php endif; ?>
+                        <p class="login-methods__hint"><?= htmlspecialchars(t('account_social_email_hint'), ENT_QUOTES) ?></p>
                     </div>
                 </div>
             </div>

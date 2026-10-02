@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/oauth.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -300,6 +301,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 padding: 24px;
             }
         }
+
+<?= OAUTH_BUTTONS_CSS ?>
     </style>
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
@@ -350,6 +353,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('action_register'), ENT_QUOTES) ?></button>
             </form>
+
+            <?= oauth_buttons_html('social_or_register') ?>
 
             <p class="auth-card__foot"><?= htmlspecialchars(t('register_have_account'), ENT_QUOTES) ?> <a href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a></p>
         </section>
