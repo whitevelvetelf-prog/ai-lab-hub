@@ -14,7 +14,7 @@ $articles = blog_list_articles(current_lang());
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -128,6 +128,13 @@ $articles = blog_list_articles(current_lang());
             color: var(--text-muted);
         }
 
+        .blog-card__pending {
+            margin: 10px 0 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
         .blog-empty {
             color: var(--text-muted);
         }
@@ -147,9 +154,12 @@ $articles = blog_list_articles(current_lang());
         <?php else: ?>
             <div class="blog-list">
                 <?php foreach ($articles as $article): ?>
-                    <a class="blog-card" href="<?= htmlspecialchars(blog_article_url($article['slug'], blog_article_lang($article['slug'], current_lang())), ENT_QUOTES) ?>">
-                        <h2 class="blog-card__title"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h2>
-                        <p class="blog-card__text"><?= htmlspecialchars($article['description'], ENT_QUOTES) ?></p>
+                    <a class="blog-card" href="<?= htmlspecialchars(blog_article_url($article['slug'], $article['lang']), ENT_QUOTES) ?>">
+                        <h2 class="blog-card__title" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h2>
+                        <p class="blog-card__text" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($article['description'], ENT_QUOTES) ?></p>
+                        <?php if ($article['lang'] !== current_lang()): ?>
+                            <p class="blog-card__pending"><?= htmlspecialchars(t('blog_translation_pending'), ENT_QUOTES) ?></p>
+                        <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
             </div>

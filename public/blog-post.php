@@ -13,11 +13,18 @@ require_once __DIR__ . '/../app/analytics.php';
 
 $slug = (string) ($_GET['slug'] ?? '');
 
-// Мова статті — з URL (&hl=), не із сесії: кожна мовна версія має власну адресу.
-$articleLang = blog_article_lang($slug, (string) ($_GET['hl'] ?? BLOG_DEFAULT_LANG));
-$article = $slug !== '' ? blog_load_article($slug, $articleLang) : null;
+// Мова статті = мова сайту (глобальний перемикач UA/EN у шапці).
+// &hl= — адреса мовної версії для пошуковиків (hreflang/sitemap): відкриття
+// такої адреси вмикає цю мову для всього сайту; перемикач у шапці прибирає hl.
+if (isset($_GET['hl'])) {
+    set_lang((string) $_GET['hl']);
+}
 
 $pageLang = current_lang();
+$article = $slug !== '' ? blog_load_article($slug, $pageLang) : null;
+// Перекладу цією мовою ще немає — показуємо оригінал із позначкою.
+$translationPending = $article !== null && $article['lang'] !== $pageLang;
+
 if ($article !== null) {
     // Перегляд статті — у спільну аналітику (page_views, тип 'article').
     // Статті живуть у файлах, а не в БД, тож замість page_id — slug:
@@ -25,10 +32,6 @@ if ($article !== null) {
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../config/database.php';
     analytics_log_view($pdo, 'article', null, $slug);
-
-    // Інтерфейс сайту (шапка, підвал, «До блогу») — тією ж мовою, що й стаття.
-    set_lang($articleLang);
-    $pageLang = $articleLang;
 }
 
 ?>
@@ -40,7 +43,7 @@ if ($article !== null) {
     <?php if ($article !== null): ?>
         <title><?= htmlspecialchars($article['title'], ENT_QUOTES) ?> — AI LAB HUB</title>
         <meta name="description" content="<?= htmlspecialchars($article['description'], ENT_QUOTES) ?>">
-        <link rel="canonical" href="<?= htmlspecialchars(blog_article_url($slug, $articleLang, true), ENT_QUOTES) ?>">
+        <link rel="canonical" href="<?= htmlspecialchars(blog_article_url($slug, $article['lang'], true), ENT_QUOTES) ?>">
         <?php foreach (blog_article_langs($slug) as $altLang): ?>
             <link rel="alternate" hreflang="<?= htmlspecialchars($altLang, ENT_QUOTES) ?>" href="<?= htmlspecialchars(blog_article_url($slug, $altLang, true), ENT_QUOTES) ?>">
         <?php endforeach; ?>
@@ -123,21 +126,14 @@ if ($article !== null) {
             color: #ffffff;
         }
 
-        .lang-switch {
-            display: inline-block;
-            margin: 0 0 20px 16px;
-            padding: 4px 12px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #bcd0ff;
-            text-decoration: none;
+        .translation-pending {
+            margin: 0 0 20px;
+            padding: 10px 14px;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 999px;
-        }
-
-        .lang-switch:hover {
-            color: #ffffff;
-            border-color: #bcd0ff;
+            border-radius: 10px;
         }
 
         .stub__title {
@@ -241,13 +237,11 @@ if ($article !== null) {
             <h1 class="stub__title"><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?></h1>
             <p class="blog-not-found"><?= htmlspecialchars(t('blog_not_found_text'), ENT_QUOTES) ?></p>
         <?php else: ?>
-            <?php foreach (BLOG_LANG_SWITCH_LABELS[$articleLang] ?? [] as $targetLang => $label): ?>
-                <?php if (in_array($targetLang, blog_article_langs($slug), true)): ?>
-                    <a class="lang-switch" href="<?= htmlspecialchars(blog_article_url($slug, $targetLang), ENT_QUOTES) ?>" hreflang="<?= htmlspecialchars($targetLang, ENT_QUOTES) ?>" lang="<?= htmlspecialchars($targetLang, ENT_QUOTES) ?>"><?= htmlspecialchars($label, ENT_QUOTES) ?></a>
-                <?php endif; ?>
-            <?php endforeach; ?>
-            <h1 class="stub__title"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h1>
-            <div class="article"><?= $article['html'] ?></div>
+            <?php if ($translationPending): ?>
+                <p class="translation-pending"><?= htmlspecialchars(t('blog_translation_pending'), ENT_QUOTES) ?></p>
+            <?php endif; ?>
+            <h1 class="stub__title" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h1>
+            <div class="article" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= $article['html'] ?></div>
         <?php endif; ?>
     </main>
 

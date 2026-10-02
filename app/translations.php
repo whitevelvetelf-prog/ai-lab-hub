@@ -293,6 +293,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'blog_back'           => '← До блогу',
     'blog_not_found'      => 'Статтю не знайдено',
     'blog_not_found_text' => 'Статті з такою адресою не існує або вона ще не опублікована.',
+    'blog_translation_pending' => 'Переклад цієї статті ще готується — поки що показуємо українську версію.',
 
     // --- eli.php: чат з AI-асистенткою Елею ---
     'title_eli'              => 'AI LAB HUB — Еля, AI-асистентка',
@@ -743,7 +744,9 @@ if (isset($_GET['lang'])) {
 
     if (!headers_sent()) {
         $params = $_GET;
-        unset($params['lang']);
+        // hl — адреса мовної версії статті блогу (public/blog-post.php): після
+        // перемикання в шапці вона б знову ввімкнула стару мову, тож прибираємо.
+        unset($params['lang'], $params['hl']);
 
         $path = strtok($_SERVER['REQUEST_URI'] ?? '', '?');
         $query = http_build_query($params);

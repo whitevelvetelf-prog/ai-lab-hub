@@ -38,35 +38,24 @@ const BLOG_ARTICLES = [
 ];
 
 /**
- * Мова оригіналу статей: її версія живе на URL без параметра hl і є
- * x-default для hreflang. Інші мови — той самий URL з &hl=<код>.
+ * Мова оригіналу статей: її файл є завжди, на нього падає фолбек, коли
+ * перекладу ще немає, і його URL (без параметра hl) — x-default для hreflang.
  *
- * Мова статті задається саме URL (а не сесією, як решта сайту), щоб
- * кожна мовна версія мала власну адресу для пошуковиків і hreflang.
- * Параметр названо hl, бо ?lang= глобально перемикає мову сесії й
- * одразу редіректить на URL без себе (app/translations.php).
+ * Якою мовою показати статтю, вирішує глобальний перемикач UA/EN у шапці
+ * ($_SESSION['lang'], current_lang()) — окремого перемикача в блозі немає.
+ * URL з &hl=<код> лишається лише адресою мовної версії для пошуковиків
+ * (hreflang, sitemap): відкриття такої адреси вмикає цю мову для всього
+ * сайту, а перемикач у шапці прибирає hl з адреси (app/translations.php).
  */
 const BLOG_DEFAULT_LANG = 'uk';
 
 /** Канонічний домен для абсолютних URL у hreflang/canonical (і public/sitemap.xml). */
 const BLOG_SITE_URL = 'https://ailabhub-directory.com';
 
-/** Підпис перемикача на мовну пару: [мова сторінки][мова, на яку веде посилання]. */
-const BLOG_LANG_SWITCH_LABELS = [
-    'uk' => ['en' => 'Читати англійською'],
-    'en' => ['uk' => 'Read in Ukrainian'],
-];
-
 /** Мови, для яких у статті є файл (порядок — як у реєстрі). @return list<string> */
 function blog_article_langs(string $slug): array
 {
     return array_keys(BLOG_ARTICLES[$slug] ?? []);
-}
-
-/** Мова, якою показати статтю: запитана, якщо для неї є файл, інакше мова оригіналу. */
-function blog_article_lang(string $slug, string $requested): string
-{
-    return in_array($requested, blog_article_langs($slug), true) ? $requested : BLOG_DEFAULT_LANG;
 }
 
 /** URL мовної версії статті (відносний або абсолютний на канонічному домені). */
@@ -112,10 +101,20 @@ function blog_read_file(string $filename): ?array
 }
 
 /**
- * Дані статті поточною мовою (з фолбеком на uk, якщо файл цієї мови
- * відсутній) — заголовок, мета-опис і готовий HTML.
+ * Мова файлу, з якого показати статтю: запитана, якщо переклад уже є,
+ * інакше мова оригіналу (переклади додаються поступово).
+ */
+function blog_file_lang(array $files, string $lang): string
+{
+    return isset($files[$lang]) ? $lang : BLOG_DEFAULT_LANG;
+}
+
+/**
+ * Дані статті мовою $lang (з фолбеком на мову оригіналу, якщо перекладу
+ * ще немає) — заголовок, мета-опис, готовий HTML і мова файлу, з якого
+ * їх узято (lang ≠ $lang означає «переклад ще готується»).
  *
- * @return array{title: string, description: string, html: string}|null
+ * @return array{title: string, description: string, html: string, lang: string}|null
  */
 function blog_load_article(string $slug, string $lang): ?array
 {
@@ -124,7 +123,8 @@ function blog_load_article(string $slug, string $lang): ?array
         return null;
     }
 
-    $filename = $files[$lang] ?? $files['uk'] ?? null;
+    $fileLang = blog_file_lang($files, $lang);
+    $filename = $files[$fileLang] ?? null;
     if ($filename === null) {
         return null;
     }
@@ -138,21 +138,23 @@ function blog_load_article(string $slug, string $lang): ?array
         'title' => $article['title'],
         'description' => $article['description'],
         'html' => blog_markdown_to_html($article['body']),
+        'lang' => $fileLang,
     ];
 }
 
 /**
- * Список усіх статей для сторінки блогу: slug, заголовок і опис поточною
- * мовою (без конвертації в HTML — на списку показуємо лише анонс).
+ * Список усіх статей для сторінки блогу: slug, заголовок і опис мовою
+ * $lang з тим самим фолбеком (без конвертації в HTML — на списку лише анонс).
  *
- * @return list<array{slug: string, title: string, description: string}>
+ * @return list<array{slug: string, title: string, description: string, lang: string}>
  */
 function blog_list_articles(string $lang): array
 {
     $list = [];
 
     foreach (BLOG_ARTICLES as $slug => $files) {
-        $filename = $files[$lang] ?? $files['uk'] ?? null;
+        $fileLang = blog_file_lang($files, $lang);
+        $filename = $files[$fileLang] ?? null;
         if ($filename === null) {
             continue;
         }
@@ -166,6 +168,7 @@ function blog_list_articles(string $lang): array
             'slug' => $slug,
             'title' => $article['title'],
             'description' => $article['description'],
+            'lang' => $fileLang,
         ];
     }
 
