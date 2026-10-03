@@ -1,0 +1,46 @@
+# Спорт (2026-10-03) — кандидати зі знань + приклади користувача; сайти перевірено (відповідають, назва на сторінці), на проді відсутні (api-search)
+# Спорт › Аналітика, скаутинг та суддівство
+STATSports | https://statsports.com
+FST.ai | https://fst.ai
+Stats Perform | https://www.statsperform.com
+Wyscout | https://www.hudl.com/products/wyscout
+StatsBomb | https://statsbomb.com
+SkillCorner | https://skillcorner.com
+Hawk-Eye | https://www.hawkeyeinnovations.com
+Sportradar | https://sportradar.com
+Genius Sports | https://www.geniussports.com
+SciSports | https://www.scisports.com
+TransferRoom | https://www.transferroom.com
+aiScout | https://aiscout.io
+Track160 | https://www.track160.com
+Sportlogiq | https://www.sportlogiq.com
+PFF | https://www.pff.com
+Metrica Sports | https://www.metrica-sports.com
+TRACAB | https://tracab.com
+Foxtenn | https://foxtenn.com
+CricViz | https://cricviz.com
+NCSA | https://www.ncsasports.org
+FieldLevel | https://www.fieldlevel.com
+SportsRecruits | https://sportsrecruits.com
+Eyeball | https://www.eyeball.club
+ShotTracker | https://shottracker.com
+Twenty First Group | https://www.twentyfirstgroup.com
+Zelus Analytics | https://www.zelusanalytics.com
+Sportscode | https://www.hudl.com/products/sportscode
+Nacsport | https://www.nacsport.com
+LongoMatch | https://longomatch.com
+Ballogy | https://www.ballogy.com
+KlipDraw | https://www.klipdraw.com
+Football Radar | https://www.footballradar.com
+StatMuse | https://www.statmuse.com
+Analytics FC | https://analyticsfc.co.uk
+Driblab | https://www.driblab.com
+Scoutastic | https://scoutastic.com
+Bolt6 | https://www.bolt6.ai
+Sportmonks | https://www.sportmonks.com
+ReSpo.Vision | https://respo.vision
+REFSIX | https://refsix.com
+Wingfield | https://www.wingfield.io
+Baseline Vision | https://www.baselinevision.com
+zone14 | https://zone14.ai
+SportsDataIO | https://sportsdata.io

@@ -1,0 +1,19 @@
+# Спорт (2026-10-03) — кандидати зі знань + приклади користувача; сайти перевірено (відповідають, назва на сторінці), на проді відсутні (api-search)
+# Спорт › Масовий фітнес і тренування (доповнення)
+Future | https://www.future.co
+Ladder | https://www.joinladder.com
+Runna | https://www.runna.com
+Peloton | https://www.onepeloton.com
+Strava | https://www.strava.com
+Zwift | https://www.zwift.com
+Tonal | https://www.tonal.com
+Centr | https://centr.com
+Sweat | https://sweat.com
+FitnessAI | https://www.fitnessai.com
+Planfit | https://planfit.ai
+Arvo | https://arvo.guru
+Gravl | https://www.gravl.ai
+FORM | https://www.formswim.com
+Aaptiv | https://aaptiv.com
+Alpha Progression | https://alphaprogression.com
+Coachify | https://coachify.ai

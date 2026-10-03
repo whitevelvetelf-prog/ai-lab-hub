@@ -1,0 +1,33 @@
+# Спорт (2026-10-03) — кандидати зі знань + приклади користувача; сайти перевірено (відповідають, назва на сторінці), на проді відсутні (api-search)
+# Спорт › Для тренерів
+Hudl | https://www.hudl.com
+PlaySight | https://playsight.com
+TeamSnap | https://www.teamsnap.com
+CoachNow | https://coachnow.com
+TrainHeroic | https://www.trainheroic.com
+TeamBuildr | https://www.teambuildr.com
+Trainerize | https://www.trainerize.com
+TrueCoach | https://truecoach.co
+Everfit | https://everfit.io
+My PT Hub | https://www.mypthub.net
+Exercise.com | https://www.exercise.com
+Volt Athletics | https://voltathletics.com
+BridgeAthletic | https://www.bridgeathletic.com
+Sideline Sports | https://sidelinesports.com
+Veo | https://www.veo.com
+Trace | https://traceup.com
+Pixellot | https://www.pixellot.tv
+Spiideo | https://www.spiideo.com
+TacticalPad | https://www.tacticalpad.com
+360Player | https://www.360player.com
+Spond | https://www.spond.com
+TrainingPeaks | https://www.trainingpeaks.com
+Final Surge | https://www.finalsurge.com
+CoachMePlus | https://coachmeplus.com
+Teamworks | https://teamworks.com
+SportsEngine | https://www.sportsengine.com
+GameChanger | https://gc.com
+Coach Catalyst | https://coachcatalyst.com
+PT Distinction | https://www.ptdistinction.com
+Kahunas | https://kahunas.io
+Harbiz | https://www.harbiz.io

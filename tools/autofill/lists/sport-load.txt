@@ -1,0 +1,32 @@
+# Спорт (2026-10-03) — кандидати зі знань + приклади користувача; сайти перевірено (відповідають, назва на сторінці), на проді відсутні (api-search)
+# Спорт › Моніторинг навантаження та відновлення
+Catapult | https://www.catapult.com
+Zone7 | https://zone7.ai
+Kitman Labs | https://www.kitmanlabs.com
+Polar | https://www.polar.com
+COROS | https://coros.com
+HRV4Training | https://www.hrv4training.com
+Elite HRV | https://elitehrv.com
+Athlytic | https://www.athlyticapp.com
+Bevel | https://www.bevel.health
+KINEXON | https://kinexon-sports.com
+Firstbeat | https://www.firstbeat.com
+HumanGO | https://humango.ai
+Athletica | https://athletica.ai
+TriDot | https://www.tridot.com
+Intervals.icu | https://intervals.icu
+Hexis | https://www.hexis.live
+Welltory | https://welltory.com
+Ultrahuman | https://www.ultrahuman.com
+Xert | https://www.xertonline.com
+FitrWoman | https://www.fitrwoman.com
+Stryd | https://www.stryd.com
+Garmin Connect | https://connect.garmin.com
+Amazfit | https://www.amazfit.com
+Suunto | https://www.suunto.com
+SYSTM | https://www.wahoofitness.com/systm
+TrainerRoad | https://www.trainerroad.com
+JOIN | https://join.cc
+enduco | https://enduco.app
+Training Today | https://trainingtodayapp.com
+Morpheus | https://morpheus.me
