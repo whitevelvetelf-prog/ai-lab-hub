@@ -67,6 +67,7 @@ $categoryIcons = [
     'finance-legal'         => 'scale',
     'health-beauty'         => 'heart-pulse',
     'tools-automation'      => 'settings',
+    'sports'                => 'trophy',
 ];
 
 $subcategoryIcons = [
@@ -146,8 +147,13 @@ $subcategoryIcons = [
     // Здоровʼя та краса
     'medicine'           => 'stethoscope',
     'beauty-style'       => 'sparkles',
-    'sports-fitness'     => 'dumbbell',
     'rehabilitation-physiotherapy' => 'activity',
+    // Спорт
+    'sports-fitness'     => 'dumbbell',
+    'coaching-tools'     => 'notebook-pen',
+    'technique-biomechanics'   => 'person-standing',
+    'load-recovery-monitoring' => 'gauge',
+    'sports-analytics-scouting' => 'binoculars',
     // Інструменти та автоматизація
     'plugins'            => 'puzzle',
     'automation'         => 'zap',

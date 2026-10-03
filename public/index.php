@@ -56,6 +56,7 @@ $categoryIcons = [
     'finance-legal'         => 'scale',
     'health-beauty'         => 'heart-pulse',
     'tools-automation'      => 'settings',
+    'sports'                => 'trophy',
 ];
 
 ?>
