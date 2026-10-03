@@ -23,6 +23,18 @@ if (!oauth_provider_enabled('google')) {
     exit;
 }
 
+// state і PKCE-verifier живуть у сесії, а кукі сесії прив'язана до хоста. Якщо вхід почали на іншому
+// хості, ніж redirect_uri (www. проти без www.), колбек не знайде state — тож спершу переходимо на хост колбеку.
+$callbackParts = parse_url((string) (oauth_config('google')['redirect_uri'] ?? ''));
+$callbackHost = strtolower((string) ($callbackParts['host'] ?? ''));
+$requestHost = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
+if ($callbackHost !== '' && $requestHost !== '' && $callbackHost !== $requestHost) {
+    $port = isset($callbackParts['port']) ? ':' . (int) $callbackParts['port'] : '';
+    header('Location: ' . ($callbackParts['scheme'] ?? 'https') . '://' . $callbackHost . $port
+        . '/auth-google.php' . ($mode === 'link' ? '?mode=link' : ''));
+    exit;
+}
+
 // Прив'язка має сенс лише з відкритою сесією; вхід — лише без неї.
 if ($mode === 'link' && !auth_check()) {
     $mode = 'login';

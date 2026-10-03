@@ -25,7 +25,7 @@ return [
     'google' => [
         'client_id'     => '',
         'client_secret' => '',
-        'redirect_uri'  => 'https://ailabhub-directory.com/auth-google-callback.php',
+        'redirect_uri'  => 'https://www.ailabhub-directory.com/auth-google-callback.php', // саме з www — так зареєстровано в Google Cloud Console
     ],
     'facebook' => [
         'client_id'     => '',
