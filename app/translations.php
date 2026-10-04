@@ -51,7 +51,16 @@ $GLOBALS['TRANSLATIONS'] = [
     // Короткий підпис кнопки асистента для вузьких екранів (додається через CSS ::after).
     'nav_assistant_short' => 'Спитати Елю',
     'nav_menu'      => 'Меню',
+    // Видимий підпис кнопки-перемикача мобільного меню (замість іконки «три риски»).
+    'nav_menu_toggle' => 'Вхід',
     'lang_switch'   => 'Мова інтерфейсу',
+
+    // --- Кнопка «Додаток» (встановлення PWA, assets/js/pwa-install.js) ---
+    'pwa_app_button' => 'Додаток',
+    'pwa_app_aria'   => 'Встановити застосунок AI LAB HUB',
+    'pwa_ios_hint'   => 'Щоб встановити AI LAB HUB як застосунок: у Safari натисніть «Поділитися», потім «На початковий екран».',
+    'pwa_ios_ok'     => 'Зрозуміло',
+    'pwa_close'      => 'Закрити',
 
     // --- Marketplace (публічна частина: marketplace.php, offer.php, get.php) ---
     'nav_marketplace'            => 'Marketplace',

@@ -113,25 +113,27 @@ require_once __DIR__ . '/marketplace.php';
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
+    /* Перемикач мобільного меню — текстова кнопка «Вхід» (t('nav_menu_toggle'))
+       замість іконки з трьох рисок; розгортає/згортає той самий #siteNav. */
     .site-nav__toggle {
         display: none;
-        width: 44px;
+        align-items: center;
+        justify-content: center;
         height: 44px;
-        padding: 11px;
-        flex-direction: column;
-        justify-content: space-between;
+        padding: 0 14px;
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.35);
         border-radius: 10px;
+        color: #ffffff;
+        font: inherit;
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
         cursor: pointer;
     }
 
-    .site-nav__toggle span {
-        display: block;
-        width: 100%;
-        height: 2px;
-        background: #ffffff;
-        border-radius: 2px;
+    .site-nav__toggle[aria-expanded="true"] {
+        background: rgba(255, 255, 255, 0.12);
     }
 
     /* Мобільна шапка (< 768px): «Головна / Кабінет / Увійти» — у гамбургер.
@@ -279,9 +281,8 @@ require_once __DIR__ . '/marketplace.php';
         }
 
         .site-nav__toggle {
-            width: 40px;
             height: 40px;
-            padding: 10px;
+            padding: 0 10px;
         }
     }
 
@@ -313,6 +314,19 @@ require_once __DIR__ . '/marketplace.php';
         .site-header .share-btn {
             order: 3;
             margin: 10px 0 0 auto;
+        }
+
+        /* Кнопка «Додаток» (pwa-install.js) — у тому ж другому рядку, стало
+           праворуч перед «Поділитися», щоб не розсувати верхню смугу. */
+        .site-header .site-header__app-cta {
+            order: 3;
+            margin: 10px 0 0 auto;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+        }
+
+        .site-header:has(.site-header__app-cta:not([hidden])) .share-btn {
+            margin-left: 8px;
         }
 
         .site-header .site-nav.is-open,
@@ -1020,6 +1034,15 @@ require_once __DIR__ . '/marketplace.php';
     }
 </script>
 
+<script>
+    window.PWA_I18N = {
+        button: <?= json_encode(t('pwa_app_button'), JSON_UNESCAPED_UNICODE) ?>,
+        aria: <?= json_encode(t('pwa_app_aria'), JSON_UNESCAPED_UNICODE) ?>,
+        iosHint: <?= json_encode(t('pwa_ios_hint'), JSON_UNESCAPED_UNICODE) ?>,
+        iosOk: <?= json_encode(t('pwa_ios_ok'), JSON_UNESCAPED_UNICODE) ?>,
+        close: <?= json_encode(t('pwa_close'), JSON_UNESCAPED_UNICODE) ?>
+    };
+</script>
 <script src="/assets/js/pwa-install.js" defer></script>
 
 <?php /* ===== «Моя добірка»: іконка-лапка, кнопка «зберегти», пункт меню ===== */ ?>

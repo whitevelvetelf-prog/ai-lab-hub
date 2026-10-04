@@ -1,38 +1,38 @@
-/* AI LAB HUB — встановлення застосунку (PWA).
+/* AI LAB HUB — кнопка «Додаток» (встановлення PWA).
  *
- * Дає користувачу два шляхи встановити застосунок:
- *  1) автобанер знизу екрана — з'являється сам через SHOW_DELAY_MS;
- *  2) постійна кнопка «Додаток» у шапці сайту (вставляється JS-ін'єкцією,
- *     як перемикач мов) — працює без очікування банера.
+ * Лише ЯВНА дія користувача: жодних автоматичних банерів чи спливань.
+ * Кнопка «Додаток» вставляється JS-ін'єкцією в кожну .site-header (як
+ * перемикач мов) на стале місце — перед кнопкою «Викликати Асистента».
+ * Тексти — з window.PWA_I18N (app/footer.php, через t()), тож кнопка
+ * перекладається разом з рештою інтерфейсу.
  *
- * Обидва шляхи використовують одну логіку — triggerInstall():
- *  - Android / Desktop (Chrome, Edge): ловимо 'beforeinstallprompt', зберігаємо
- *    подію, по дії викликаємо нативний deferredPrompt.prompt().
- *  - iOS (Safari та будь-який браузер на iOS): 'beforeinstallprompt' не існує —
- *    показуємо банер-інструкцію «Поділитися → На початковий екран».
- *  - Якщо сайт уже відкрито як встановлений застосунок (standalone) — нічого.
+ * Поведінка за кліком на «Додаток»:
+ *  - Android / Desktop (Chrome, Edge): системний діалог встановлення через
+ *    збережену подію 'beforeinstallprompt' (deferredPrompt.prompt()).
+ *  - iOS (Safari та будь-який браузер на iOS): API нема — показуємо текстову
+ *    інструкцію «Поділитися → На початковий екран» (лише після кліку).
  *
- * Видимість кнопки «Додаток» у шапці:
- *  - standalone            → ховаємо завжди;
- *  - iOS                   → показуємо одразу при завантаженні;
- *  - Android / Desktop     → ховаємо, поки не прийшла подія 'beforeinstallprompt'.
- *
- * Автобанер додатково: закриття хрестиком запам'ятовується в localStorage на
- * DISMISS_DAYS днів. На кнопку «Додаток» це обмеження не діє — вона явна дія.
+ * Видимість кнопки:
+ *  - сайт уже відкрито як встановлений застосунок (display-mode: standalone
+ *    або navigator.standalone на iOS) — кнопку НЕ створюємо взагалі;
+ *  - iOS — показуємо одразу;
+ *  - Android / Desktop — показуємо, щойно браузер дав 'beforeinstallprompt'
+ *    (якщо застосунок уже встановлено, браузер цієї події не дає — кнопки нема);
+ *  - після 'appinstalled' — ховаємо.
  */
 (function () {
     'use strict';
 
-    var SHOW_DELAY_MS = 9000;          // затримка перед показом автобанера (7–10 с)
-    var DISMISS_DAYS = 14;             // не показувати автобанер після закриття хрестиком
-    var STORAGE_KEY = 'ailabhub_pwa_banner_dismissed_at';
+    var i18n = window.PWA_I18N || {};
 
-    var isStandalone =
-        (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
-        window.navigator.standalone === true;
+    var standaloneQuery = window.matchMedia ? window.matchMedia('(display-mode: standalone)') : null;
 
-    // Уже встановлений застосунок — ні банера, ні кнопки, ні обробників.
-    if (isStandalone) {
+    function isStandalone() {
+        return (standaloneQuery && standaloneQuery.matches) || window.navigator.standalone === true;
+    }
+
+    // Уже встановлений застосунок — ні кнопки, ні обробників.
+    if (isStandalone()) {
         return;
     }
 
@@ -41,135 +41,88 @@
         (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
 
     var deferredPrompt = null;
-    var bannerEl = null;
+    var hintEl = null;
     var appBtn = null;
-    var timerFired = false;
-
-    function recentlyDismissed() {
-        try {
-            var ts = parseInt(window.localStorage.getItem(STORAGE_KEY), 10);
-            if (!ts) {
-                return false;
-            }
-            return (Date.now() - ts) < DISMISS_DAYS * 24 * 60 * 60 * 1000;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    function rememberDismiss() {
-        try {
-            window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
-        } catch (e) {}
-    }
 
     window.addEventListener('beforeinstallprompt', function (e) {
+        // Забороняємо браузеру власний міні-банер — встановлення лише з кнопки.
         e.preventDefault();
         deferredPrompt = e;
         updateAppButton();
-        // Якщо затримка вже минула, а банер ще не показаний — показуємо тепер.
-        if (timerFired && !bannerEl) {
-            showBanner('android');
-        }
     });
 
     window.addEventListener('appinstalled', function () {
         deferredPrompt = null;
-        removeBanner();
-        rememberDismiss();
+        removeHint();
         updateAppButton();
     });
 
-    function removeBanner() {
-        if (bannerEl && bannerEl.parentNode) {
-            bannerEl.parentNode.removeChild(bannerEl);
+    function removeHint() {
+        if (hintEl && hintEl.parentNode) {
+            hintEl.parentNode.removeChild(hintEl);
         }
-        bannerEl = null;
+        hintEl = null;
     }
 
-    /* Єдина точка запуску встановлення — і для автобанера, і для кнопки в шапці.
-     * force === true (кнопка «Додаток») ігнорує 14-денне «закрито хрестиком». */
-    function triggerInstall(force) {
-        if (isStandalone) {
+    function onAppClick() {
+        if (isStandalone()) {
             return;
         }
         if (deferredPrompt) {
             deferredPrompt.prompt();
             deferredPrompt.userChoice.then(function () {
                 deferredPrompt = null;
-                removeBanner();
                 updateAppButton();
             });
             return;
         }
         if (isIOS) {
-            showBanner('ios', force === true);
+            if (hintEl) {
+                removeHint();
+            } else {
+                showIOSHint();
+            }
         }
     }
 
-    // Публічний виклик для кнопки «Додаток» у шапці (див. injectAppButton).
-    window.aiLabHubInstall = function () {
-        triggerInstall(true);
-    };
-
-    function showBanner(mode, force) {
-        if (bannerEl || isStandalone || (!force && recentlyDismissed())) {
-            return;
-        }
-
-        bannerEl = document.createElement('div');
-        bannerEl.className = 'pwa-install-banner';
-        bannerEl.setAttribute('role', 'dialog');
-        bannerEl.setAttribute('aria-live', 'polite');
+    /* Інструкція для iPhone/iPad — показується ЛИШЕ після кліку на «Додаток». */
+    function showIOSHint() {
+        hintEl = document.createElement('div');
+        hintEl.className = 'pwa-install-banner';
+        hintEl.setAttribute('role', 'dialog');
+        hintEl.setAttribute('aria-live', 'polite');
 
         var icon = document.createElement('img');
         icon.className = 'pwa-install-banner__icon';
         icon.src = '/icons/icon-72.png';
         icon.alt = '';
-        bannerEl.appendChild(icon);
+        hintEl.appendChild(icon);
 
         var text = document.createElement('div');
         text.className = 'pwa-install-banner__text';
+        text.textContent = i18n.iosHint || '';
+        hintEl.appendChild(text);
 
-        var action = document.createElement('button');
-        action.type = 'button';
-        action.className = 'pwa-install-banner__action';
-
-        if (mode === 'ios') {
-            text.textContent =
-                'Встановіть AI LAB HUB як застосунок: Поділитися → На початковий екран';
-            action.textContent = 'Зрозуміло';
-            action.addEventListener('click', function () {
-                removeBanner();
-            });
-        } else {
-            text.textContent = 'Встановіть AI LAB HUB як застосунок на свій пристрій';
-            action.textContent = 'Встановити';
-            action.addEventListener('click', function () {
-                triggerInstall(false);
-            });
-        }
-
-        bannerEl.appendChild(text);
-        bannerEl.appendChild(action);
+        var ok = document.createElement('button');
+        ok.type = 'button';
+        ok.className = 'pwa-install-banner__action';
+        ok.textContent = i18n.iosOk || 'OK';
+        ok.addEventListener('click', removeHint);
+        hintEl.appendChild(ok);
 
         var close = document.createElement('button');
         close.type = 'button';
         close.className = 'pwa-install-banner__close';
-        close.setAttribute('aria-label', 'Закрити');
+        close.setAttribute('aria-label', i18n.close || '×');
         close.textContent = '×';
-        close.addEventListener('click', function () {
-            rememberDismiss();
-            removeBanner();
-        });
-        bannerEl.appendChild(close);
+        close.addEventListener('click', removeHint);
+        hintEl.appendChild(close);
 
-        document.body.appendChild(bannerEl);
-        // Вмикаємо анімацію виїзду наступного кадру; setTimeout — запасний
-        // варіант, якщо requestAnimationFrame «спить» (вкладка у фоні).
+        document.body.appendChild(hintEl);
+        // Анімація виїзду наступного кадру; setTimeout — запас, якщо rAF «спить».
         var reveal = function () {
-            if (bannerEl) {
-                bannerEl.classList.add('is-visible');
+            if (hintEl) {
+                hintEl.classList.add('is-visible');
             }
         };
         window.requestAnimationFrame(function () {
@@ -178,13 +131,7 @@
         window.setTimeout(reveal, 60);
     }
 
-    /* Кнопка «Додаток» у шапці. Вставляємо JS-ін'єкцією в кожну .site-header
-     * (як перемикач мов), перед кнопкою «Викликати Асистента» — щоб не правити
-     * розмітку десятків сторінок. */
     function injectAppButton() {
-        if (isStandalone) {
-            return;
-        }
         var header = document.querySelector('.site-header');
         if (!header || header.querySelector('.site-header__app-cta')) {
             return;
@@ -193,16 +140,16 @@
         appBtn = document.createElement('button');
         appBtn.type = 'button';
         appBtn.className = 'site-nav__link site-header__app-cta';
-        appBtn.setAttribute('aria-label', 'Встановити застосунок AI LAB HUB');
+        appBtn.setAttribute('aria-label', i18n.aria || '');
         appBtn.innerHTML =
             '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" ' +
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
-            'stroke-linejoin="round"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/>' +
-            '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>' +
-            '<span>Додаток</span>';
-        appBtn.addEventListener('click', function () {
-            triggerInstall(true);
-        });
+            'stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/>' +
+            '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
+        var label = document.createElement('span');
+        label.textContent = i18n.button || '';
+        appBtn.appendChild(label);
+        appBtn.addEventListener('click', onAppClick);
 
         var cta = header.querySelector('.site-header__cta');
         if (cta) {
@@ -218,7 +165,15 @@
         if (!appBtn) {
             return;
         }
-        appBtn.hidden = isStandalone || !(isIOS || deferredPrompt);
+        appBtn.hidden = isStandalone() || !(isIOS || deferredPrompt);
+    }
+
+    // Якщо сторінку перевели в standalone (рідко, але можливо) — ховаємо кнопку.
+    if (standaloneQuery && standaloneQuery.addEventListener) {
+        standaloneQuery.addEventListener('change', function () {
+            removeHint();
+            updateAppButton();
+        });
     }
 
     if (document.readyState === 'loading') {
@@ -226,14 +181,4 @@
     } else {
         injectAppButton();
     }
-
-    window.setTimeout(function () {
-        timerFired = true;
-        if (deferredPrompt) {
-            showBanner('android');
-        } else if (isIOS) {
-            showBanner('ios');
-        }
-        // Інакше чекаємо на можливий 'beforeinstallprompt' (обробник вище).
-    }, SHOW_DELAY_MS);
 })();
