@@ -7,7 +7,7 @@
 | **1 (цей випуск)** | `true` (після перевірок) | **`false`** | «Готові рішення» й дошка відкриті всім; **створювати/редагувати оголошення можуть лише employee/admin**. Звичайний користувач бачить «Подача оголошень відкриється згодом»; кнопки «Подати оголошення» і сторінки Правил для публіки немає. Вибране, перегляд, розкриття контактів (з підтвердженим email) і скарги працюють. |
 | 2 (пізніше) | `true` | `true` | Подача відкрита всім. Див. розділ «Як відкрити подачу для всіх». |
 
-> **Архів (Marketplace уже на проді).** Локальний пакет для заливки видалено 2026-10-06. Джерела файлів у репозиторії: SQL `04`–`14` і `16` → `database/migration-2026-09-2*-marketplace-*.sql` (`15-marketplace-listing-ads.sql` — разове перенесення одного оголошення, уже виконане, у репозиторії його немає); код (`deploy-mp.zip`) збирає `scripts/build-deploy.ps1 -IncludeMarketplace`; шаблон конфігу — `config/marketplace.dist.php` в архіві коду; стартові матеріали — `scripts/mp-import-seed.php` і тека `marketplace-seed/` (видалена з репозиторію 2026-10-06; відновити: `git checkout 8577b05 -- marketplace-seed`).
+> **Архів (Marketplace уже на проді).** Локальний пакет для заливки видалено 2026-10-06. Джерела файлів у репозиторії: SQL `04`–`14` і `16` → `database/migration-2026-09-2*-marketplace-*.sql` (`15-marketplace-listing-ads.sql` — разове перенесення одного оголошення, уже виконане, у репозиторії його немає); код (`deploy-mp.zip`) збирає `scripts/build-deploy.ps1 -IncludeMarketplace`; шаблон конфігу — `config/marketplace.dist.php` в архіві коду; стартові матеріали — `scripts/mp-import-seed.php` і тека `marketplace-seed/` (обидва видалені з репозиторію 2026-10-06; відновити: `git checkout 8577b05 -- marketplace-seed scripts/mp-import-seed.php`).
 **Виконуйте кроки строго по порядку.** SQL — **до** коду; `public_enabled` вмикається **останнім**.
 
 ---
@@ -100,7 +100,7 @@ adm.tools → Хостинг → **Cron**, раз на годину:
    Якщо `mail()` на хостингу не працює або листи в спамі й DNS правильні — потрібен SMTP (окрема робота в `app/mailer.php`), **вмикати подачу/контакти до цього не варто**.
 
 ## Крок 10. Імпорт 7 стартових матеріалів (чернетки)
-1. Відновіть теку локально (`git checkout 8577b05 -- marketplace-seed`) і залийте в **корінь проєкту** `scripts/mp-import-seed.php` і `marketplace-seed/`.
+1. Відновіть їх локально (`git checkout 8577b05 -- marketplace-seed scripts/mp-import-seed.php`) і залийте в **корінь проєкту** `scripts/mp-import-seed.php` і `marketplace-seed/`.
 2. Консоль/SSH або одноразовий cron: `php scripts/mp-import-seed.php` (пробний запуск: 7 × «СТВОРИТИ (draft)»), потім `php scripts/mp-import-seed.php --apply`. Повтор безпечний.
 3. **Видаліть `scripts/mp-import-seed.php` і `marketplace-seed/` з сервера.**
 4. Перегляньте й опублікуйте в CRM `mp-list.php` (admin/employee). Локальні правки в тексті матеріалів на сервер не переносяться (це нові чернетки з manifest).

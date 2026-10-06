@@ -351,7 +351,7 @@ function mp_inspect_offer_file(?array $file, array &$errors): ?array
 /**
  * Перевірка вмісту й типу файлу за шляхом (розмір, розширення з білого списку, реальний MIME за finfo,
  * відсутність нульових байтів у текстових форматах, sha256). Спільна для CRM-форми (після перевірки
- * завантаження) і CLI-імпорту стартових матеріалів (scripts/mp-import-seed.php).
+ * завантаження) і CLI-імпорту стартових матеріалів (scripts/mp-import-seed.php — видалений 2026-10-06, є в історії git).
  *
  * @return array{tmp:string,name:string,ext:string,mime:string,size:int,sha256:string}|null null → помилка додана в $errors
  */
