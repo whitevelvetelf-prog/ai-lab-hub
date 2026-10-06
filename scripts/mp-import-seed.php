@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 /**
  * AI LAB HUB — Marketplace: імпорт стартових безкоштовних матеріалів із marketplace-seed/.
+ *   Тека marketplace-seed/ видалена з репозиторію 2026-10-06; відновити: git checkout 8577b05 -- marketplace-seed
  *
  * ТІЛЬКИ CLI (лежить у scripts/, поза public/ і поза збіркою; з вебу недоступний, при виклику не з CLI — вихід).
  *
