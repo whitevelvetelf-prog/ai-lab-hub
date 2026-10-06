@@ -653,8 +653,23 @@ function mp_public_listing(PDO $pdo, int $id, string $lang): ?array
         return null;
     }
     $row = mp_auto_translate($pdo, [$row], $lang, MP_SOLUTION_TEXT_FIELDS)[0];
+    $row['platform'] = mp_translate_platform($pdo, (string) ($row['platform'] ?? ''), $lang);
 
     return mp_attach_categories($pdo, [$row], $lang)[0];
+}
+
+/**
+ * Поле «Платформа» (mp_listings.platform — коротка фраза, у CRM пишеться українською) мовою інтерфейсу.
+ * Окремого стовпця в mp_listing_translations для нього немає, тож переклад кешується в ui_translations
+ * під ключем 'mp_platform_' . md5(текст): змінений у CRM текст отримає новий ключ і перекладеться заново.
+ */
+function mp_translate_platform(PDO $pdo, string $platform, string $lang): string
+{
+    if (trim($platform) === '' || !function_exists('cached_translation')) {
+        return $platform;
+    }
+
+    return cached_translation($pdo, 'ui_translations', ['key_name' => 'mp_platform_' . md5($platform)], $lang, $platform);
 }
 
 /** Текстові поля «Готових рішень», які перекладаються автоматично (стовпці mp_listing_translations). */
