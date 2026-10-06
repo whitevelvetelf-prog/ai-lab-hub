@@ -7,7 +7,7 @@
 | **1 (цей випуск)** | `true` (після перевірок) | **`false`** | «Готові рішення» й дошка відкриті всім; **створювати/редагувати оголошення можуть лише employee/admin**. Звичайний користувач бачить «Подача оголошень відкриється згодом»; кнопки «Подати оголошення» і сторінки Правил для публіки немає. Вибране, перегляд, розкриття контактів (з підтвердженим email) і скарги працюють. |
 | 2 (пізніше) | `true` | `true` | Подача відкрита всім. Див. розділ «Як відкрити подачу для всіх». |
 
-Пакет: `hosting-upload/` (ігнорується git). Найкоротший маршрут — `hosting-upload/00-START-HERE.md`; тут — повний порядок і пояснення.
+> **Архів (Marketplace уже на проді).** Локальний пакет для заливки видалено 2026-10-06. Джерела файлів у репозиторії: SQL `04`–`14` і `16` → `database/migration-2026-09-2*-marketplace-*.sql` (`15-marketplace-listing-ads.sql` — разове перенесення одного оголошення, уже виконане, у репозиторії його немає); код (`deploy-mp.zip`) збирає `scripts/build-deploy.ps1 -IncludeMarketplace`; шаблон конфігу — `config/marketplace.dist.php` в архіві коду; стартові матеріали — `marketplace-seed/` і `scripts/mp-import-seed.php`.
 **Виконуйте кроки строго по порядку.** SQL — **до** коду; `public_enabled` вмикається **останнім**.
 
 ---
@@ -18,10 +18,7 @@
 3. Запишіть, де лежить `config/database.php` — його заливка **не чіпає**.
 
 ## Крок 2. Перевірка середовища (версії, розширення)
-Найзручніше — файл `hosting-upload/_check-env.php`:
-1. Завантажте його в **`public/`** (веб-корінь сайту).
-2. Відкрийте `https://ваш-домен/_check-env.php?run=1`. Файл **сам видаляється** після показу (перевірте, що його немає, і за потреби видаліть вручну).
-3. Що має бути:
+adm.tools → Хостинг → PHP (версія й розширення) і phpMyAdmin. Що має бути:
    - **PHP ≥ 8.1** (код використовує тип `never`). Змінити: adm.tools → Хостинг → PHP.
    - розширення **`fileinfo`**, **`gd` з підтримкою WebP**, `mbstring`, `pdo_mysql` (`exif` — бажано);
    - **`upload_max_filesize` ≥ 6M, `post_max_size` ≥ 48M, `max_file_uploads` ≥ 8, `memory_limit` ≥ 128M, `display_errors` = Off** (змініть у налаштуваннях PHP хостингу);
@@ -72,9 +69,9 @@ SELECT COUNT(*) FROM ui_translations WHERE key_name IN ('mpb_posting_closed','mp
 - Крім Marketplace, архів містить актуальні **виправлення безпеки сайту**: лист відновлення пароля будує посилання з `site_url` (не з `Host`), кукі сесії `HttpOnly`+`SameSite=Lax`, захист заголовків листів. Тому робіть копію з кроку 1.
 
 ## Крок 6. Конфіг `config/marketplace.php`
-1. Локальний `hosting-upload/marketplace.config.HOSTING.php` → заповніть **три** місця: `file_storage_dir` (шлях з кроку 4), `photo_dir` (той самий шлях + `/photos`) і `site_url` (адреса сайту точно як відкривається, `https://…`, без слеша; з `www` чи без).
+1. Шаблон `config/marketplace.dist.php` (з архіву коду) → заповніть **три** місця: `file_storage_dir` (шлях з кроку 4), `photo_dir` (той самий шлях + `/photos`) і `site_url` (адреса сайту точно як відкривається, `https://…`, без слеша; з `www` чи без).
 2. Завантажте як **`config/marketplace.php`** (не `.dist`). На цьому етапі: **`'public_enabled' => false`, `'posting_enabled' => false`**.
-3. `rate_limit_salt` уже згенерована — не міняйте її після запуску. `trusted_proxy_header` лишайте порожнім (якщо сайт не за проксі; за Cloudflare — `CF-Connecting-IP`).
+3. `rate_limit_salt` — задайте випадковий рядок (на проді вже задана в `www/config/marketplace.php`) і не міняйте її після запуску. `trusted_proxy_header` лишайте порожнім (якщо сайт не за проксі; за Cloudflare — `CF-Connecting-IP`).
 4. Ключі, яких немає у файлі, беруться зі значень за замовчуванням у коді. `config/marketplace.dist.php` після цього можна видалити.
 
 ## Крок 7. Фото оголошень і закриті теки
@@ -103,7 +100,7 @@ adm.tools → Хостинг → **Cron**, раз на годину:
    Якщо `mail()` на хостингу не працює або листи в спамі й DNS правильні — потрібен SMTP (окрема робота в `app/mailer.php`), **вмикати подачу/контакти до цього не варто**.
 
 ## Крок 10. Імпорт 7 стартових матеріалів (чернетки)
-1. Залийте вміст `hosting-upload/seed-import/` у **корінь проєкту** (`scripts/mp-import-seed.php`, `marketplace-seed/`).
+1. Залийте з репозиторію в **корінь проєкту** `scripts/mp-import-seed.php` і теку `marketplace-seed/`.
 2. Консоль/SSH або одноразовий cron: `php scripts/mp-import-seed.php` (пробний запуск: 7 × «СТВОРИТИ (draft)»), потім `php scripts/mp-import-seed.php --apply`. Повтор безпечний.
 3. **Видаліть `scripts/mp-import-seed.php` і `marketplace-seed/` з сервера.**
 4. Перегляньте й опублікуйте в CRM `mp-list.php` (admin/employee). Локальні правки в тексті матеріалів на сервер не переносяться (це нові чернетки з manifest).

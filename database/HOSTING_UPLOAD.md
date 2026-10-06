@@ -1,6 +1,8 @@
 # Заливка на хостинг — 2026-09-21
 
-База хостингу: `gu621051_ailabhublive`. Пакет готовий у теці `hosting-upload/` (локально, у git не потрапляє):
+> **Архів (виконано 2026-09-21).** Локальний пакет для заливки видалено 2026-10-06. Джерела файлів у репозиторії: `01` → `database/migration-2026-09-20-ad-server.sql`; `02`/`03` — партії з `database/batches/`; логотипи — `public/assets/images/logos/`; архів коду збирає `scripts/build-deploy.ps1`.
+
+База хостингу: `gu621051_ailabhublive`. Склад пакета:
 
 | Файл | Що це | Куди |
 |---|---|---|
@@ -46,7 +48,7 @@ WHERE c.name = 'Мультимедіа' AND s.name = 'Генерація зоб�
 2. **`02-products-manual-batches.sql`**.
 3. **`03-products-autofill-imagen.sql`**.
 4. **Логотипи:** скопіювати 6 файлів із `logos/` у `public/assets/images/logos/` на хостингу (теку створити, якщо немає): `getimg-ai.webp`, `mage-space.webp`, `pixlr-com.webp`, `scenario-com.webp`, `seaart-ai.webp`, `starryai-com.webp`. Логотипи мають лише ці 6 продуктів; в інших (`NULL`) логотипа немає.
-5. **Код:** розпакувати `code/deploy-mp.zip` у корінь сайту з перезаписом. `config/database.php` в архіві немає — конфіги на сервері лишаться; `config/marketplace.php` в архіві немає під цією назвою (лише як `config/marketplace.dist.php`, шаблон) — не заливати, доки не готові до Marketplace (окремо, `hosting-upload/MARKETPLACE_HOSTING.md`). Після цього відкрити сайт з Ctrl+F5 (сервіс-воркер може віддавати стару копію).
+5. **Код:** розпакувати `code/deploy-mp.zip` у корінь сайту з перезаписом. `config/database.php` в архіві немає — конфіги на сервері лишаться; `config/marketplace.php` в архіві немає під цією назвою (лише як `config/marketplace.dist.php`, шаблон) — не заливати, доки не готові до Marketplace (окремо, `database/MARKETPLACE_HOSTING.md`). Після цього відкрити сайт з Ctrl+F5 (сервіс-воркер може віддавати стару копію).
 
 ## 3. Перевірка після заливки
 Нових продуктів без підкатегорії має бути **0**:

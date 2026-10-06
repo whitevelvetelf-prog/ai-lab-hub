@@ -50,7 +50,7 @@
         the build STOPS if the rules file still has [placeholders], the word DRAFT (in Ukrainian) or the line
         'Edition from: [date]', or if 'rules_version' is empty / not YYYY-MM-DD.
           public/assets/css/mp-*.css,
-          database/migration-*-marketplace-*.sql (also in hosting-upload/, applied by hand),
+          database/migration-*-marketplace-*.sql (applied by hand via phpMyAdmin),
           config/marketplace.php.
         Shared code that the switch keeps dormant (public_enabled = false by default) IS always
         shipped: app/marketplace.php, app/mp-card.php, app/site-header.php, app/footer.php,
