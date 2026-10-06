@@ -1060,6 +1060,8 @@ require_once __DIR__ . '/marketplace.php';
         button: <?= json_encode(t('pwa_app_button'), JSON_UNESCAPED_UNICODE) ?>,
         aria: <?= json_encode(t('pwa_app_aria'), JSON_UNESCAPED_UNICODE) ?>,
         iosHint: <?= json_encode(t('pwa_ios_hint'), JSON_UNESCAPED_UNICODE) ?>,
+        menuLabel: <?= json_encode(t('pwa_menu_label'), JSON_UNESCAPED_UNICODE) ?>,
+        otherHint: <?= json_encode(t('pwa_other_hint'), JSON_UNESCAPED_UNICODE) ?>,
         iosOk: <?= json_encode(t('pwa_ios_ok'), JSON_UNESCAPED_UNICODE) ?>,
         close: <?= json_encode(t('pwa_close'), JSON_UNESCAPED_UNICODE) ?>
     };

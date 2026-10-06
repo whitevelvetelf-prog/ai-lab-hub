@@ -12,10 +12,13 @@
  *    збережену подію 'beforeinstallprompt' (deferredPrompt.prompt()).
  *  - iOS (Safari та будь-який браузер на iOS): API нема — показуємо текстову
  *    інструкцію «Поділитися → На початковий екран» (лише після кліку).
+ *  - інші браузери без 'beforeinstallprompt' — інструкція «меню браузера →
+ *    Встановити застосунок / Додати на головний екран».
  *
  * Видимість кнопки:
  *  - сайт уже відкрито як встановлений застосунок (display-mode: standalone
  *    або navigator.standalone на iOS) — кнопку НЕ створюємо взагалі;
+ *  - у мобільному меню («Встановити додаток») — завжди;
  *  - iOS — показуємо одразу;
  *  - Android / Desktop — показуємо, щойно браузер дав 'beforeinstallprompt'
  *    (якщо застосунок уже встановлено, браузер цієї події не дає — кнопки нема);
@@ -46,6 +49,7 @@
     var deferredPrompt = null;
     var hintEl = null;
     var appBtn = null;
+    var label = null;
 
     window.addEventListener('beforeinstallprompt', function (e) {
         // Забороняємо браузеру власний міні-банер — встановлення лише з кнопки.
@@ -79,17 +83,17 @@
             });
             return;
         }
-        if (isIOS) {
-            if (hintEl) {
-                removeHint();
-            } else {
-                showIOSHint();
-            }
+        // Системного діалогу немає (iOS, Samsung Internet, Firefox, вбудовані
+        // браузери соцмереж, Chrome до виконання умов встановлення) — інструкція.
+        if (hintEl) {
+            removeHint();
+        } else {
+            showHint(isIOS ? i18n.iosHint : i18n.otherHint);
         }
     }
 
-    /* Інструкція для iPhone/iPad — показується ЛИШЕ після кліку на «Додаток». */
-    function showIOSHint() {
+    /* Інструкція встановлення — показується ЛИШЕ після кліку на «Додаток». */
+    function showHint(message) {
         hintEl = document.createElement('div');
         hintEl.className = 'pwa-install-banner';
         hintEl.setAttribute('role', 'dialog');
@@ -103,7 +107,7 @@
 
         var text = document.createElement('div');
         text.className = 'pwa-install-banner__text';
-        text.textContent = i18n.iosHint || '';
+        text.textContent = message || '';
         hintEl.appendChild(text);
 
         var ok = document.createElement('button');
@@ -149,8 +153,7 @@
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
             'stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m8 11 4 4 4-4"/>' +
             '<path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
-        var label = document.createElement('span');
-        label.textContent = i18n.button || '';
+        label = document.createElement('span');
         appBtn.appendChild(label);
         appBtn.addEventListener('click', onAppClick);
 
@@ -173,6 +176,7 @@
         var nav = header.querySelector('#siteNav');
         if (nav && mobileQuery && mobileQuery.matches) {
             nav.appendChild(appBtn);
+            updateAppButton();
             return;
         }
         var cta = header.querySelector('.site-header__cta');
@@ -181,13 +185,18 @@
         } else {
             header.appendChild(appBtn);
         }
+        updateAppButton();
     }
 
     function updateAppButton() {
         if (!appBtn) {
             return;
         }
-        appBtn.hidden = isStandalone() || !(isIOS || deferredPrompt);
+        var inMenu = !!(mobileQuery && mobileQuery.matches);
+        label.textContent = (inMenu ? i18n.menuLabel : i18n.button) || i18n.button || '';
+        // У мобільному меню пункт видно завжди (по кліку — діалог або інструкція);
+        // у шапці на ширших екранах — лише коли є чим встановити.
+        appBtn.hidden = isStandalone() || !(inMenu || isIOS || deferredPrompt);
     }
 
     // Якщо сторінку перевели в standalone (рідко, але можливо) — ховаємо кнопку.
