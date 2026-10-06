@@ -154,6 +154,7 @@ $subcategoryIcons = [
     'technique-biomechanics'   => 'person-standing',
     'load-recovery-monitoring' => 'gauge',
     'sports-analytics-scouting' => 'binoculars',
+    'esports'            => 'gamepad-2',
     // Інструменти та автоматизація
     'plugins'            => 'puzzle',
     'automation'         => 'zap',
