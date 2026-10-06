@@ -40,7 +40,6 @@ $offers = mp_public_listings($pdo, $lang, ['q' => $q, 'limit' => 60]);
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <div class="mp-page">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
         <h1 class="mp-title"><?= mp_e(t('mpb_solutions_title')) ?></h1>
         <p class="mp-subtitle"><?= mp_e(t('mp_subtitle')) ?></p>
 

@@ -33,8 +33,6 @@ $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): str
 mpb_open((string) $board['title'], !$isLive);
 ?>
     <div class="mp-page mp-page--narrow">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
-
         <?= mpb_flash_html() ?>
 
         <?php if (!$isLive): ?>
@@ -49,6 +47,8 @@ mpb_open((string) $board['title'], !$isLive);
 
         <?php if ($fallbackLang !== null): ?>
             <p class="mp-note"><?= mp_e(sprintf(t('mp_original_lang'), $langNames[$fallbackLang] ?? strtoupper($fallbackLang))) ?></p>
+        <?php elseif ((int) ($board['text_is_auto'] ?? 0) === 1): ?>
+            <p class="mp-note"><?= mp_e(t('mp_auto_translated')) ?></p>
         <?php endif; ?>
 
         <?php // Поля — у порядку форми подачі (mp-post.php); усе, крім заголовка, одним стилем (.mp-info). ?>

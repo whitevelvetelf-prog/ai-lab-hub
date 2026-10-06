@@ -26,7 +26,7 @@ $stmt = $pdo->prepare(
      LIMIT 100'
 );
 $stmt->execute([':lang' => $lang, ':u1' => $userId, ':u2' => $userId]);
-$rows = mp_attach_categories($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang);
+$rows = mp_attach_categories($pdo, mpb_auto_translate($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang), $lang);
 
 mpb_open(t('mpb_fav_title'));
 ?>

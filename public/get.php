@@ -81,7 +81,6 @@ $render = static function (int $status, string $title, string $bodyHtml) use ($o
 <body class="mp-body">
     <?php include __DIR__ . '/../app/site-header.php'; ?>
     <div class="mp-page mp-page--narrow">
-        <a class="mp-back" href="offer.php?id=<?= (int) $offer['id'] ?>"><?= mp_e(t('mp_back')) ?></a>
         <section class="mp-panel">
             <h1 class="mp-panel__title"><?= mp_e($title) ?></h1>
             <?= $bodyHtml ?>

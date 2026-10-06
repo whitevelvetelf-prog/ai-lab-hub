@@ -31,7 +31,6 @@ $title = $rules['title'] !== '' ? $rules['title'] : t('mpb_f_rules_link');
 mpb_open($title, false);
 ?>
     <div class="mp-page mp-page--narrow">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
         <h1 class="mp-title"><?= mp_e($title) ?></h1>
         <?php if (current_lang() !== 'uk'): ?>
             <p class="mp-note"><?= mp_e(t('mpb_rules_uk_only')) ?></p>

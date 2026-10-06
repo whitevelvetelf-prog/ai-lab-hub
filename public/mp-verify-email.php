@@ -42,7 +42,6 @@ $email = (string) $u->fetchColumn();
 mpb_open(t('mpv_title'));
 ?>
     <div class="mp-page mp-page--narrow">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
         <h1 class="mp-title"><?= mp_e(t('mpv_title')) ?></h1>
         <?= mpb_flash_html() ?>
         <section class="mp-panel">

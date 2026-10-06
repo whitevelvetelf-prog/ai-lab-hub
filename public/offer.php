@@ -80,8 +80,6 @@ $blocks = [
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <div class="mp-page mp-page--narrow">
-        <a class="mp-back" href="marketplace.php"><?= mp_e(t('mp_back')) ?></a>
-
         <h1 class="mp-title"><?= mp_e($offer['title']) ?></h1>
 
         <?php if ($fallbackLang !== null): ?>
