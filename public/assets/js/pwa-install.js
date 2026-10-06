@@ -18,10 +18,9 @@
  * Видимість кнопки:
  *  - сайт уже відкрито як встановлений застосунок (display-mode: standalone
  *    або navigator.standalone на iOS) — кнопку НЕ створюємо взагалі;
- *  - у мобільному меню («Встановити додаток») — завжди;
- *  - iOS — показуємо одразу;
- *  - Android / Desktop — показуємо, щойно браузер дав 'beforeinstallprompt'
- *    (якщо застосунок уже встановлено, браузер цієї події не дає — кнопки нема);
+ *  - в усіх інших випадках — завжди: у мобільному меню («Встановити додаток»)
+ *    і в шапці на ширших екранах («Додаток»). Без 'beforeinstallprompt'
+ *    (браузер не дав системного діалогу) клік показує інструкцію;
  *  - після 'appinstalled' — ховаємо.
  */
 (function () {
@@ -49,6 +48,7 @@
     var deferredPrompt = null;
     var hintEl = null;
     var appBtn = null;
+    var installed = false;
     var label = null;
 
     window.addEventListener('beforeinstallprompt', function (e) {
@@ -60,6 +60,7 @@
 
     window.addEventListener('appinstalled', function () {
         deferredPrompt = null;
+        installed = true;
         removeHint();
         updateAppButton();
     });
@@ -194,9 +195,9 @@
         }
         var inMenu = !!(mobileQuery && mobileQuery.matches);
         label.textContent = (inMenu ? i18n.menuLabel : i18n.button) || i18n.button || '';
-        // У мобільному меню пункт видно завжди (по кліку — діалог або інструкція);
-        // у шапці на ширших екранах — лише коли є чим встановити.
-        appBtn.hidden = isStandalone() || !(inMenu || isIOS || deferredPrompt);
+        // Видно завжди, крім уже встановленого застосунку: по кліку — системний
+        // діалог, якщо браузер його дав, інакше інструкція.
+        appBtn.hidden = isStandalone() || installed;
     }
 
     // Якщо сторінку перевели в standalone (рідко, але можливо) — ховаємо кнопку.
