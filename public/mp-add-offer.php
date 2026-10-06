@@ -287,6 +287,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':features' => $v['features'] !== '' ? $v['features'] : null,
                     ':for_whom' => $v['for_whom'] !== '' ? $v['for_whom'] : null,
                 ]);
+                // Текст змінено — старі автопереклади видаляємо; при наступному перегляді перекладуться заново.
+                $pdo->prepare("DELETE FROM mp_listing_translations WHERE listing_id = :id AND lang <> 'uk' AND is_auto = 1")
+                    ->execute([':id' => $savedId]);
 
                 // Категорії: додаємо нові, прибираємо зняті
                 $toAdd = array_diff($v['categories'], $existingCats);

@@ -602,7 +602,8 @@ function mp_public_select(): string
                    COALESCE(NULLIF(tc.full_desc, ''), ts.full_desc)   AS full_desc,
                    COALESCE(NULLIF(tc.features, ''), ts.features)     AS features,
                    COALESCE(NULLIF(tc.for_whom, ''), ts.for_whom)     AS for_whom,
-                   IF(tc.title IS NULL OR tc.title = '', l.source_lang, tc.lang) AS text_lang
+                   IF(tc.title IS NULL OR tc.title = '', l.source_lang, tc.lang) AS text_lang,
+                   IF(tc.title IS NULL OR tc.title = '', 0, tc.is_auto)          AS text_is_auto
             FROM mp_listings l
             LEFT JOIN mp_sellers s ON s.id = l.seller_id
             LEFT JOIN mp_listing_translations tc ON tc.listing_id = l.id AND tc.lang = :lang
@@ -639,7 +640,7 @@ function mp_public_listings(PDO $pdo, string $lang, array $opts = []): array
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
 
-    return mp_attach_categories($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang);
+    return mp_attach_categories($pdo, mp_auto_translate($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang, MP_SOLUTION_TEXT_FIELDS), $lang);
 }
 
 /** Одна опублікована пропозиція за id або null (чернетки/архів/невідомий id → null). */
@@ -651,8 +652,87 @@ function mp_public_listing(PDO $pdo, int $id, string $lang): ?array
     if ($row === false) {
         return null;
     }
+    $row = mp_auto_translate($pdo, [$row], $lang, MP_SOLUTION_TEXT_FIELDS)[0];
 
     return mp_attach_categories($pdo, [$row], $lang)[0];
+}
+
+/** Текстові поля «Готових рішень», які перекладаються автоматично (стовпці mp_listing_translations). */
+const MP_SOLUTION_TEXT_FIELDS = ['title', 'short_desc', 'full_desc', 'features', 'for_whom'];
+
+/**
+ * Автопереклад пропозицій / оголошень мовою інтерфейсу (Google Translate, app/translation-cache.php).
+ * Рядки, де тексту мовою $lang ще немає (text_lang ≠ $lang), перекладаються одним запитом
+ * на кожну мову оригіналу; переклад зберігається в mp_listing_translations з is_auto = 1
+ * (наступні перегляди — з бази) і підставляється в рядки ($fields, text_lang, text_is_auto).
+ * Не вдалося (немає ключа, мережа) — рядки лишаються мовою оригіналу.
+ *
+ * @param list<array<string,mixed>> $rows   рядки з text_lang, id і полями $fields
+ * @param list<string>              $fields стовпці mp_listing_translations; перший — 'title'
+ * @return list<array<string,mixed>>
+ */
+function mp_auto_translate(PDO $pdo, array $rows, string $lang, array $fields): array
+{
+    $fields = array_values(array_intersect($fields, MP_SOLUTION_TEXT_FIELDS));
+    if ($rows === [] || ($fields[0] ?? '') !== 'title' || !function_exists('google_translate_batch')
+        || !in_array($lang, active_lang_codes(), true)) {
+        return $rows;
+    }
+
+    $bySource = [];
+    foreach ($rows as $i => $r) {
+        $src = (string) ($r['text_lang'] ?? '');
+        if ($src === '' || $src === $lang || trim((string) ($r['title'] ?? '')) === '') {
+            continue;
+        }
+        $bySource[$src][] = $i;
+    }
+    if ($bySource === []) {
+        return $rows;
+    }
+
+    $cols = implode(', ', $fields);
+    $marks = implode(', ', array_map(static fn(string $f): string => ':' . $f, $fields));
+    $ins = $pdo->prepare(
+        "INSERT IGNORE INTO mp_listing_translations (listing_id, lang, $cols, is_auto) VALUES (:id, :lang, $marks, 1)"
+    );
+    $per = count($fields);
+    foreach ($bySource as $src => $indexes) {
+        $texts = [];
+        foreach ($indexes as $i) {
+            foreach ($fields as $field) {
+                $texts[] = (string) ($rows[$i][$field] ?? '');
+            }
+        }
+        // Порожні поля в API не надсилаємо, але зберігаємо їхні позиції.
+        $send = array_values(array_filter($texts, static fn(string $t): bool => trim($t) !== ''));
+        $translated = google_translate_batch($send, $lang, $src);
+        if ($translated === null) {
+            continue;
+        }
+        $k = 0;
+        $out = [];
+        foreach ($texts as $t) {
+            $out[] = trim($t) !== '' ? (string) $translated[$k++] : '';
+        }
+
+        foreach ($indexes as $n => $i) {
+            $values = array_combine($fields, array_slice($out, $n * $per, $per));
+            if (trim($values['title']) === '') {
+                continue;
+            }
+            $params = [':id' => (int) $rows[$i]['id'], ':lang' => $lang];
+            foreach ($values as $field => $text) {
+                $params[':' . $field] = $field === 'title' ? mb_substr($text, 0, 200) : ($text !== '' ? $text : null);
+                $rows[$i][$field] = $text;
+            }
+            $ins->execute($params);
+            $rows[$i]['text_lang'] = $lang;
+            $rows[$i]['text_is_auto'] = 1;
+        }
+    }
+
+    return $rows;
 }
 
 /**

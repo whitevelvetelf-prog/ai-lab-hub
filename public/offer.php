@@ -84,6 +84,8 @@ $blocks = [
 
         <?php if ($fallbackLang !== null): ?>
             <p class="mp-note"><?= mp_e(sprintf(t('mp_original_lang'), $langNames[$fallbackLang] ?? strtoupper($fallbackLang))) ?></p>
+        <?php elseif ((int) ($offer['text_is_auto'] ?? 0) === 1): ?>
+            <p class="mp-note"><?= mp_e(t('mp_solution_auto_translated')) ?></p>
         <?php endif; ?>
 
         <?php if ($cover !== null): ?>

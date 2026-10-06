@@ -498,72 +498,10 @@ function mpb_categories(PDO $pdo, string $lang): array
     );
 }
 
-/**
- * Автопереклад оголошень дошки мовою інтерфейсу (Google Translate, app/translation-cache.php).
- * Рядки, де тексту мовою $lang ще немає (text_lang ≠ $lang), перекладаються одним запитом
- * на кожну мову оригіналу; переклад зберігається в mp_listing_translations з is_auto = 1
- * (наступні перегляди — з бази) і підставляється в рядки (title, short_desc, full_desc,
- * text_lang, text_is_auto). Не вдалося (немає ключа, мережа) — рядки лишаються мовою оригіналу.
- *
- * @param list<array<string,mixed>> $rows рядки з mpb_select_sql()
- * @return list<array<string,mixed>>
- */
+/** Автопереклад оголошень дошки (заголовок і описи) — див. mp_auto_translate() в app/marketplace.php. */
 function mpb_auto_translate(PDO $pdo, array $rows, string $lang): array
 {
-    if ($rows === [] || !function_exists('google_translate_batch') || !in_array($lang, active_lang_codes(), true)) {
-        return $rows;
-    }
-
-    $bySource = [];
-    foreach ($rows as $i => $r) {
-        $src = (string) ($r['text_lang'] ?? '');
-        if ($src === '' || $src === $lang || trim((string) ($r['title'] ?? '')) === '') {
-            continue;
-        }
-        $bySource[$src][] = $i;
-    }
-
-    $ins = $pdo->prepare(
-        'INSERT IGNORE INTO mp_listing_translations (listing_id, lang, title, short_desc, full_desc, is_auto)
-         VALUES (:id, :lang, :t, :s, :f, 1)'
-    );
-    foreach ($bySource as $src => $indexes) {
-        $texts = [];
-        foreach ($indexes as $i) {
-            foreach (['title', 'short_desc', 'full_desc'] as $field) {
-                $texts[] = (string) ($rows[$i][$field] ?? '');
-            }
-        }
-        // Порожні поля в API не надсилаємо, але зберігаємо їхні позиції.
-        $send = array_values(array_filter($texts, static fn(string $t): bool => trim($t) !== ''));
-        $translated = google_translate_batch($send, $lang, $src);
-        if ($translated === null) {
-            continue;
-        }
-        $k = 0;
-        $out = [];
-        foreach ($texts as $t) {
-            $out[] = trim($t) !== '' ? (string) $translated[$k++] : '';
-        }
-
-        foreach ($indexes as $n => $i) {
-            [$title, $short, $full] = array_slice($out, $n * 3, 3);
-            if (trim($title) === '') {
-                continue;
-            }
-            $ins->execute([
-                ':id' => (int) $rows[$i]['id'], ':lang' => $lang, ':t' => mb_substr($title, 0, 200),
-                ':s' => $short !== '' ? $short : null, ':f' => $full !== '' ? $full : null,
-            ]);
-            $rows[$i]['title'] = $title;
-            $rows[$i]['short_desc'] = $short;
-            $rows[$i]['full_desc'] = $full;
-            $rows[$i]['text_lang'] = $lang;
-            $rows[$i]['text_is_auto'] = 1;
-        }
-    }
-
-    return $rows;
+    return mp_auto_translate($pdo, $rows, $lang, ['title', 'short_desc', 'full_desc']);
 }
 
 /** Оголошення за id з текстами (без контактів) — будь-який статус; видимість перевіряє викликач. */
