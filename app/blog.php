@@ -35,6 +35,10 @@ const BLOG_ARTICLES = [
         'uk' => 'ai-dlya-psyhologiyi-ta-mentalnogo-zdorovya-ua.md',
         'en' => 'ai-for-psychology-and-mental-health-en.md',
     ],
+    'ai-for-programming-and-development' => [
+        'uk' => 'ai-dlya-programuvannya-ta-rozrobky-ua.md',
+        'en' => 'ai-for-programming-and-development-en.md',
+    ],
 ];
 
 /**
