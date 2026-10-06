@@ -1066,7 +1066,8 @@ require_once __DIR__ . '/marketplace.php';
         close: <?= json_encode(t('pwa_close'), JSON_UNESCAPED_UNICODE) ?>
     };
 </script>
-<script src="/assets/js/pwa-install.js" defer></script>
+<?php /* ?v=mtime — щоб браузери не тримали в кеші стару версію з автобанером. */ ?>
+<script src="/assets/js/pwa-install.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/pwa-install.js') ?>" defer></script>
 
 <?php /* ===== «Моя добірка»: іконка-лапка, кнопка «зберегти», пункт меню ===== */ ?>
 <?= paw_icon_sprite() ?>
