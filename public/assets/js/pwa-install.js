@@ -2,7 +2,8 @@
  *
  * Лише ЯВНА дія користувача: жодних автоматичних банерів чи спливань.
  * Кнопка «Додаток» вставляється JS-ін'єкцією в кожну .site-header (як
- * перемикач мов) на стале місце — перед кнопкою «Викликати Асистента».
+ * перемикач мов): на мобільному — у меню (#siteNav, кнопка «Меню»), на
+ * ширших екранах — перед кнопкою «Викликати Асистента».
  * Тексти — з window.PWA_I18N (app/footer.php, через t()), тож кнопка
  * перекладається разом з рештою інтерфейсу.
  *
@@ -26,6 +27,8 @@
     var i18n = window.PWA_I18N || {};
 
     var standaloneQuery = window.matchMedia ? window.matchMedia('(display-mode: standalone)') : null;
+    // Межа мобільної шапки — та сама, що в app/footer.php (@media max-width: 768px).
+    var mobileQuery = window.matchMedia ? window.matchMedia('(max-width: 768px)') : null;
 
     function isStandalone() {
         return (standaloneQuery && standaloneQuery.matches) || window.navigator.standalone === true;
@@ -151,14 +154,33 @@
         appBtn.appendChild(label);
         appBtn.addEventListener('click', onAppClick);
 
+        placeAppButton();
+        if (mobileQuery && mobileQuery.addEventListener) {
+            mobileQuery.addEventListener('change', placeAppButton);
+        }
+
+        updateAppButton();
+    }
+
+    /* Місце кнопки: на мобільному (≤ 768px, де #siteNav згорнуто під кнопку
+     * «Меню») — останнім пунктом меню; на ширших екранах — у шапці перед
+     * кнопкою «Викликати Асистента». */
+    function placeAppButton() {
+        var header = appBtn && appBtn.ownerDocument.querySelector('.site-header');
+        if (!header) {
+            return;
+        }
+        var nav = header.querySelector('#siteNav');
+        if (nav && mobileQuery && mobileQuery.matches) {
+            nav.appendChild(appBtn);
+            return;
+        }
         var cta = header.querySelector('.site-header__cta');
         if (cta) {
             header.insertBefore(appBtn, cta);
         } else {
             header.appendChild(appBtn);
         }
-
-        updateAppButton();
     }
 
     function updateAppButton() {

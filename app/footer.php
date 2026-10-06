@@ -113,8 +113,9 @@ require_once __DIR__ . '/marketplace.php';
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    /* Перемикач мобільного меню — текстова кнопка «Вхід» (t('nav_menu_toggle'))
-       замість іконки з трьох рисок; розгортає/згортає той самий #siteNav. */
+    /* Перемикач мобільного меню — текстова кнопка «Меню» (t('nav_menu_toggle'))
+       замість іконки з трьох рисок; розгортає/згортає той самий #siteNav
+       (на мобільному там же й кнопка «Додаток», див. pwa-install.js). */
     .site-nav__toggle {
         display: none;
         align-items: center;
@@ -314,19 +315,6 @@ require_once __DIR__ . '/marketplace.php';
         .site-header .share-btn {
             order: 3;
             margin: 10px 0 0 auto;
-        }
-
-        /* Кнопка «Додаток» (pwa-install.js) — у тому ж другому рядку, стало
-           праворуч перед «Поділитися», щоб не розсувати верхню смугу. */
-        .site-header .site-header__app-cta {
-            order: 3;
-            margin: 10px 0 0 auto;
-            padding: 8px 12px;
-            font-size: 0.82rem;
-        }
-
-        .site-header:has(.site-header__app-cta:not([hidden])) .share-btn {
-            margin-left: 8px;
         }
 
         .site-header .site-nav.is-open,
@@ -663,6 +651,14 @@ require_once __DIR__ . '/marketplace.php';
         display: block;
     }
 
+    /* Поки на телефоні відкрита екранна клавіатура (фокус у полі вводу поза
+       підвалом — напр. Email/Пароль на сторінці входу), підвал ховаємо:
+       інакше браузер піднімає закріплену смугу над клавіатурою і вона
+       «їздить» поверх форми. Після виходу з поля підвал на місці. */
+    .site-footer.is-kb-hidden {
+        display: none;
+    }
+
     @media (max-width: 640px) {
         .site-footer {
             padding: 8px 12px;
@@ -907,6 +903,31 @@ require_once __DIR__ . '/marketplace.php';
         if (window.ResizeObserver) {
             new ResizeObserver(sync).observe(footer);
         }
+    })();
+
+    /* Екранна клавіатура на сенсорних пристроях: фокус у полі вводу (не в
+       самому підвалі) → підвал ховається, щоб не підніматися над клавіатурою. */
+    (function () {
+        var footer = document.getElementById('siteFooter');
+        if (!footer || !window.matchMedia || !window.matchMedia('(pointer: coarse)').matches) {
+            return;
+        }
+        var TYPING = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=reset]):not([type=file]):not([type=range]):not([type=color]),textarea,select,[contenteditable="true"]';
+        function typing(el) {
+            return el && el.matches && el.matches(TYPING) && !footer.contains(el);
+        }
+        document.addEventListener('focusin', function (e) {
+            if (typing(e.target)) {
+                footer.classList.add('is-kb-hidden');
+            }
+        });
+        document.addEventListener('focusout', function () {
+            window.setTimeout(function () {
+                if (!typing(document.activeElement)) {
+                    footer.classList.remove('is-kb-hidden');
+                }
+            }, 50);
+        });
     })();
 
     /* Висота закріпленої шапки → --header-h (top для закріплених стрілок «назад»). */

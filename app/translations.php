@@ -52,7 +52,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'nav_assistant_short' => 'Спитати Елю',
     'nav_menu'      => 'Меню',
     // Видимий підпис кнопки-перемикача мобільного меню (замість іконки «три риски»).
-    'nav_menu_toggle' => 'Вхід',
+    'nav_menu_toggle' => 'Меню',
     'lang_switch'   => 'Мова інтерфейсу',
 
     // --- Кнопка «Додаток» (встановлення PWA, assets/js/pwa-install.js) ---
