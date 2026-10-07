@@ -39,6 +39,10 @@ const BLOG_ARTICLES = [
         'uk' => 'ai-dlya-programuvannya-ta-rozrobky-ua.md',
         'en' => 'ai-for-programming-and-development-en.md',
     ],
+    'ai-for-gamers-2026' => [
+        'uk' => 'ai-dlya-geimeriv-ua.md',
+        'en' => 'ai-for-gamers-en.md',
+    ],
 ];
 
 /**
