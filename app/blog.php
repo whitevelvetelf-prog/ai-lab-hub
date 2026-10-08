@@ -186,7 +186,11 @@ function blog_list_articles(string $lang): array
     return $list;
 }
 
-/** Екранує текст і застосовує inline-розмітку (**жирний**, *курсив*, [текст](url)). */
+/**
+ * Екранує текст і застосовує inline-розмітку (**жирний**, *курсив*, [текст](url)).
+ * Посилання на інші сайти відкриваються в новій вкладці (rel="noopener noreferrer");
+ * відносні й на власний домен — у тій самій.
+ */
 function blog_inline_html(string $text): string
 {
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -196,7 +200,14 @@ function blog_inline_html(string $text): string
 
     return preg_replace_callback(
         '/\[([^\]]+)\]\(([^)]+)\)/',
-        static fn (array $m): string => '<a href="' . $m[2] . '">' . $m[1] . '</a>',
+        static function (array $m): string {
+            $host = strtolower((string) parse_url(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8'), PHP_URL_HOST));
+            $external = $host !== '' && !in_array(preg_replace('/^www\./', '', $host), ['ailabhub-directory.com'], true);
+
+            return '<a href="' . $m[2] . '"'
+                . ($external ? ' target="_blank" rel="noopener noreferrer"' : '')
+                . '>' . $m[1] . '</a>';
+        },
         $escaped
     );
 }
