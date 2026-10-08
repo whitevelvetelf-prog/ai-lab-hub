@@ -21,6 +21,8 @@ const BLOG_CONTENT_DIR = __DIR__ . '/../content/blog';
 /**
  * Реєстр статей: slug (у URL) => файл Markdown на кожну мову.
  * Один запис тут = одна стаття, синхронізована по мовах.
+ * Порядок — за датою додавання: нову статтю дописувати в КІНЕЦЬ
+ * (сторінка блогу показує їх у зворотному порядку — найновіші першими).
  */
 const BLOG_ARTICLES = [
     'ai-for-design-and-images' => [
@@ -153,6 +155,7 @@ function blog_load_article(string $slug, string $lang): ?array
 /**
  * Список усіх статей для сторінки блогу: slug, заголовок і опис мовою
  * $lang з тим самим фолбеком (без конвертації в HTML — на списку лише анонс).
+ * Найновіші першими (реєстр ведеться від старих до нових).
  *
  * @return list<array{slug: string, title: string, description: string, lang: string}>
  */
@@ -160,7 +163,7 @@ function blog_list_articles(string $lang): array
 {
     $list = [];
 
-    foreach (BLOG_ARTICLES as $slug => $files) {
+    foreach (array_reverse(BLOG_ARTICLES, true) as $slug => $files) {
         $fileLang = blog_file_lang($files, $lang);
         $filename = $files[$fileLang] ?? null;
         if ($filename === null) {
