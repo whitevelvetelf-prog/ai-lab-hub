@@ -37,7 +37,7 @@ const BLOG_ARTICLES = [
     ],
     'ai-for-programming-and-development' => [
         'uk' => 'ai-dlya-programuvannya-ta-rozrobky-ua.md',
-        'en' => 'ai-for-programming-and-development-en.md',
+        'en' => 'ai-for-coding-and-development-en.md',
     ],
     'ai-for-gamers-2026' => [
         'uk' => 'ai-dlya-geimeriv-ua.md',
