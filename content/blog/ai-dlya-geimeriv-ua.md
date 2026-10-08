@@ -1,26 +1,27 @@
 ---
 title: "AI для геймерів у 2026: напарники, що говорять, світи на вимогу й тренери, які бачать ваші помилки"
-description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, світи Project Genie, DLSS 4, тренери Mobalytics і Aimlabs: що AI вміє в іграх у 2026 і де це спробувати."
+description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, світи Project Genie, DLSS 4, тренери Mobalytics і Aimlabs та екіпіровка геймера з AI: що працює у 2026."
 ---
 
 # AI для геймерів у 2026: напарники, що говорять, світи на вимогу й тренери, які бачать ваші помилки
 
-Уявіть: ви запускаєте PUBG соло, а у вашому загоні напарник, який чує ваш голос, шукає лут і сам сідає за кермо. Або заходите в [Skyrim](https://store.steampowered.com/app/489830/) і вмовляєте стражника звичайними словами, а він відповідає й запам'ятовує розмову. Або вводите кілька слів і ходите світом, якого ще хвилину тому не існувало. Звучить як фантастика, але все це вже є у 2026 році, хоча й з різним ступенем готовності. Розповідаємо, що можна спробувати сьогодні, що поки лише в бета-тесті, а де AI уже встиг наробити скандалів.
+Уявіть: ви запускаєте PUBG соло, а у вашому загоні напарник, який чує ваш голос, шукає лут і сам сідає за кермо. Або заходите в Skyrim і вмовляєте стражника звичайними словами, а він відповідає й запам'ятовує розмову. Або вводите кілька слів і ходите світом, якого ще хвилину тому не існувало. Звучить як фантастика, але все це вже є у 2026 році, хоча й з різним ступенем готовності. Розповідаємо, що можна спробувати сьогодні, що поки лише в бета-тесті, а де AI уже встиг наробити скандалів. А наприкінці зберемо вашу AI-екіпіровку: що поставити, щоб чисто чути, красиво стрімити й швидше розбиратися в налаштуваннях.
 
-## Коротко: 8 способів, якими AI уже змінює ігри
+## Коротко: 9 способів, якими AI уже змінює ігри
 
 - **Плавна картинка:** DLSS 4 і FSR 4 дорисовують кадри нейромережею.
 - **Напарники:** PUBG Ally говорить, збирає лут і водить машину.
 - **Живі NPC:** з персонажами можна розмовляти вільним текстом чи голосом.
-- **Моди:** Mantella оживляє NPC у Skyrim і [Fallout 4](https://store.steampowered.com/app/377160/).
-- **Нескінченні історії:** [AI Dungeon](https://aidungeon.com) веде пригоду, яка не закінчується.
+- **Моди:** [Mantella](https://ailabhub-directory.com/product.php?id=3019) оживляє NPC у Skyrim і Fallout 4.
+- **Нескінченні історії:** [AI Dungeon](https://ailabhub-directory.com/product.php?id=2915) веде пригоду, яка не закінчується.
 - **Світи на вимогу:** Project Genie генерує світ, поки ви в ньому ходите.
-- **Тренери:** Mobalytics і Aimlabs шукають ваші слабкі місця.
+- **Тренери:** [Mobalytics](https://ailabhub-directory.com/product.php?id=1662) і [Aimlabs](https://ailabhub-directory.com/product.php?id=1623) шукають ваші слабкі місця.
 - **Чистий голосовий чат:** AI-модерація, яка шукає токсичність у голосі.
+- **Ваша екіпіровка:** інструменти для голосу, стріму й налаштувань.
 
 ## AI, який ви вже використовуєте, навіть не помітивши
 
-Найпоширеніший AI в іграх це апскейлінг і генерація кадрів. За даними NVIDIA на CES 2026, [DLSS 4 з Multi Frame Generation](https://www.nvidia.com/en-us/geforce/news/dlss-4-rtx-path-tracing-game-announcements-ces-2026/) підтримують понад 250 ігор і застосунків. Серед найпопулярніших ігор 2025 року в цьому списку [ARC Raiders](https://store.steampowered.com/app/1808500/), [Battlefield 6](https://store.steampowered.com/app/2807960/), [Clair Obscur: Expedition 33](https://store.steampowered.com/app/1903340/) і [Where Winds Meet](https://store.steampowered.com/app/3564740/). Технологія працює також у [Cyberpunk 2077](https://store.steampowered.com/app/1091500/), [Alan Wake 2](https://www.alanwake.com) і [Hogwarts Legacy](https://store.steampowered.com/app/990080/).
+Найпоширеніший AI в іграх це апскейлінг і генерація кадрів. За даними NVIDIA на CES 2026, [DLSS 4 з Multi Frame Generation](https://www.nvidia.com/en-us/geforce/news/dlss-4-rtx-path-tracing-game-announcements-ces-2026/) підтримують понад 250 ігор і застосунків. Серед найпопулярніших ігор 2025 року в цьому списку ARC Raiders, Battlefield 6, Clair Obscur: Expedition 33 і Where Winds Meet. Технологія працює також у Cyberpunk 2077, Alan Wake 2 і Hogwarts Legacy.
 
 Суть проста: відеокарта малює частину кадрів, а нейромережа дорисовує решту, тож гра йде плавніше навіть із трасуванням променів. На CES 2026 NVIDIA показала DLSS 4.5 з новою моделлю Super Resolution і режимом 6X Dynamic Multi Frame Generation.
 
@@ -34,37 +35,35 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 
 ## Напарник, який не виходить із голосового чату: PUBG Ally
 
-Це вже виглядає як майбутнє. Krafton разом з NVIDIA зробила для [PUBG: Battlegrounds](https://store.steampowered.com/app/578080/) напарника [PUBG Ally](https://developer.nvidia.com/blog/how-krafton-built-pubg-ally-a-co-playable-character-powered-by-nvidia-ace/). Це «Co-Playable Character», тобто не звичайний бот, а персонаж, який розуміє ваш голос, оцінює ситуацію в грі й відповідає словами та діями. Він може радити стратегію, ділитися лутом, водити машину й воювати проти інших гравців.
+Це вже виглядає як майбутнє. Krafton разом з NVIDIA зробила для PUBG: Battlegrounds напарника [PUBG Ally](https://developer.nvidia.com/blog/how-krafton-built-pubg-ally-a-co-playable-character-powered-by-nvidia-ace/). Це «Co-Playable Character», тобто не звичайний бот, а персонаж, який розуміє ваш голос, оцінює ситуацію в грі й відповідає словами та діями. Він може радити стратегію, ділитися лутом, водити машину й воювати проти інших гравців.
 
 На CES 2026 Krafton показала Ally з довготривалою пам'яттю, а з 17 червня по 1 липня 2026 року провела бета-тест режиму Duo на мапі Sanhok. Чи стане Ally постійною функцією гри, наразі невідомо, тож стежте за оновленнями PUBG.
 
-Інші ігри йдуть тим самим шляхом. [NARAKA: Bladepoint](https://store.steampowered.com/app/1203220/) отримала [AI-напарника, який працює локально на вашому ПК](https://www.nvidia.com/en-us/geforce/news/nvidia-ace-autonomous-ai-companions-pubg-naraka-bladepoint/), а MIR5 планує босів, які підлаштовуються під вашу тактику.
+Інші ігри йдуть тим самим шляхом. NARAKA: Bladepoint отримала [AI-напарника, який працює локально на вашому ПК](https://www.nvidia.com/en-us/geforce/news/nvidia-ace-autonomous-ai-companions-pubg-naraka-bladepoint/), а MIR5 планує босів, які підлаштовуються під вашу тактику.
 
 ## inZOI: місто, де в мешканців є власні цілі
 
-[inZOI](https://store.steampowered.com/app/2456740/) це лайф-сим у дусі The Sims від Krafton, який стартував у Steam 28 березня 2025 року. У ньому є експериментальна функція [Smart Zoi](https://www.nvidia.com/en-gb/geforce/news/nvidia-ace-naraka-bladepoint-inzoi-launch-this-month): мешканці міста отримують життєві цілі, а їхні думки й вчинки визначає мала мовна модель NVIDIA ACE, що працює прямо на вашому ПК. Щоб увімкнути її, потрібна відеокарта GeForce RTX. За словами NVIDIA, це робить повсякденне життя ваших персонажів цікавішим і ближчим до реального.
+inZOI це лайф-сим у дусі The Sims від Krafton, який стартував у Steam 28 березня 2025 року. У ньому є експериментальна функція [Smart Zoi](https://www.nvidia.com/en-gb/geforce/news/nvidia-ace-naraka-bladepoint-inzoi-launch-this-month): мешканці міста отримують життєві цілі, а їхні думки й вчинки визначає мала мовна модель NVIDIA ACE, що працює прямо на вашому ПК. Щоб увімкнути її, потрібна відеокарта GeForce RTX. За словами NVIDIA, це робить повсякденне життя ваших персонажів цікавішим і ближчим до реального.
 
 ## Ігри, де з NPC можна просто поговорити
 
 Забудьте про меню з трьома варіантами відповіді. [У цих іграх персонажі відповідають на вільний текст або голос](https://arcanumrpgs.com/blog/games-with-ai-npcs/):
 
 - **Where Winds Meet** найбільша за масштабом гра в цьому списку, де частина персонажів спілкується з вами вільною мовою.
-- **[Suck Up!](https://store.steampowered.com/app/2726370/)** комедія, де ви граєте за вампіра й голосом умовляєте AI-мешканців міста впустити вас у дім.
-- **[Vaudeville](https://store.steampowered.com/app/2240920/)** детектив у стилі «хто вбивця», де діалоги кожного містянина генеруються наживо. Допитувати можна текстом або голосом.
-- **[Verbal Verdict](https://store.steampowered.com/app/2778780/)** детектив у декораціях 1950-х (у ранньому доступі), побудований на допитах підозрюваних, якими керує AI.
+- **Suck Up!** комедія, де ви граєте за вампіра й голосом умовляєте AI-мешканців міста впустити вас у дім.
+- **Vaudeville** детектив у стилі «хто вбивця», де діалоги кожного містянина генеруються наживо. Допитувати можна текстом або голосом.
+- **Verbal Verdict** детектив у декораціях 1950-х (у ранньому доступі), побудований на допитах підозрюваних, якими керує AI.
 - **Whispers from the Star** і **AI Roguelite** ще дві вже випущені гри, де NPC відповідають на вільний текст чи голос.
 
 ## Дарт Вейдер, якого змусили лаятися: урок Fortnite
 
-У 2025 році Epic Games додала у [Fortnite](https://www.fortnite.com) Дарта Вейдера, з яким можна розмовляти. Репліки генерувала модель Gemini 2.0 Flash, а [голос Джеймса Ерла Джонса відтворила ElevenLabs з дозволу його родини](https://www.techradar.com/computing/artificial-intelligence/forget-the-force-ai-brings-the-late-james-earl-jones-iconic-darth-vader-voice-to-fortnite). Щоб поговорити, треба ввімкнути в налаштуваннях функцію Conversational AI і завербувати Вейдера. Гравці до 13 років без дозволу батьків з ним спілкуватись не можуть.
+У 2025 році Epic Games додала у Fortnite Дарта Вейдера, з яким можна розмовляти. Репліки генерувала модель Gemini 2.0 Flash, а [голос Джеймса Ерла Джонса відтворила ElevenLabs з дозволу його родини](https://www.techradar.com/computing/artificial-intelligence/forget-the-force-ai-brings-the-late-james-earl-jones-iconic-darth-vader-voice-to-fortnite). Щоб поговорити, треба ввімкнути в налаштуваннях функцію Conversational AI і завербувати Вейдера. Гравці до 13 років без дозволу батьків з ним спілкуватись не можуть.
 
 Результат був передбачуваний: майже одразу [гравці змусили AI-Вейдера вилаятись](https://www.pcgamer.com/games/battle-royale/fortnite-added-an-ai-powered-darth-vader-and-surprise-players-immediately-tricked-him-into-saying-slurs/), і Epic випустила хотфікс. Профспілка акторів SAG-AFTRA розкритикувала саму практику, бо вона забирає роботу в акторів, які могли б озвучувати персонажа.
 
-А в 2026 році Epic пішла далі: [36 персонажів Fortnite отримали постійні AI-голоси й персони](https://www.videogameschronicle.com/news/fortnite-has-started-adding-ai-voices-to-its-npcs-for-an-upcoming-conversations-feature/) для використання в іграх на островах UEFN. За словами Epic, голоси створені за виступами незалежних професійних акторів, які на це погодились. Функція «conversations» дозволяє перетворити NPC на AI-персонажа з неписаними діалогами, наприклад квестодавця чи оповідача. Тож якщо ви робите власні карти, це вже інструмент, а не експеримент.
-
 ## Skyrim, який нарешті відповідає: Mantella
 
-Якщо ви досі граєте в Skyrim чи Fallout 4, ось ваш головний AI-мод: [Mantella](https://ailabhub-directory.com/product.php?id=3019). Ви говорите в мікрофон, мод розпізнає мову, звертається до мовної моделі й озвучує відповідь голосом NPC. За даними сторінки проєкту, можна розмовляти з понад 3000 NPC, у кожного своя передісторія. Вони пам'ятають попередні розмови, знають про події в грі й навіть бачать те, що бачите ви.
+Якщо ви досі граєте в Skyrim чи Fallout 4, ось ваш головний AI-мод: Mantella. Ви говорите в мікрофон, мод розпізнає мову, звертається до мовної моделі й озвучує відповідь голосом NPC. За даними сторінки проєкту, можна розмовляти з понад 3000 NPC, у кожного своя передісторія. Вони пам'ятають попередні розмови, знають про події в грі й навіть бачать те, що бачите ви.
 
 Мод безкоштовний і має відкритий код. Усе можна запустити локально на власному ПК або підключити OpenAI, OpenRouter чи будь-який сумісний API. Сторінка проєкту повідомляє про понад 350 тисяч завантажень. Для Minecraft існують схожі спільнотні моди, наприклад Player2 AI NPC.
 
@@ -84,13 +83,15 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 
 Для тих, хто грає в змагальні ігри, AI працює як тренер:
 
-- **[Mobalytics](https://ailabhub-directory.com/product.php?id=1662)** аналізує ваші матчі й показує слабкі місця. Охоплює [League of Legends](https://www.leagueoflegends.com), [Valorant](https://playvalorant.com), TFT, [Marvel Rivals](https://store.steampowered.com/app/2767030/) та інші ігри з одного акаунта. Є безкоштовний рівень і платна підписка.
-- **[Aimlabs](https://ailabhub-directory.com/product.php?id=1623)** AI-тренер для стрільби. За даними сайту, ним користуються понад 40 мільйонів гравців, є понад 50 тисяч завдань і профілі для 500 FPS-ігор, а Valorant і [Rainbow Six Siege](https://store.steampowered.com/app/359550/) офіційні партнери. AI визначає слабкі місця й складає персональні тренування.
+- **Mobalytics** аналізує ваші матчі й показує слабкі місця. Охоплює League of Legends, Valorant, TFT, Marvel Rivals та інші ігри з одного акаунта. Є безкоштовний рівень і платна підписка.
+- **Aimlabs** AI-тренер для стрільби. За даними сайту, ним користуються понад 40 мільйонів гравців, є понад 50 тисяч завдань і профілі для 500 FPS-ігор, а Valorant і Rainbow Six Siege офіційні партнери. AI визначає слабкі місця й складає персональні тренування.
 - **[Blitz.gg](https://ailabhub-directory.com/product.php?id=1627)** показує підказки прямо під час матчу, а **[iTero.gg](https://ailabhub-directory.com/product.php?id=1654)** розрахований на гравців League of Legends.
 
 ## Чат без токсичності: AI на варті голосу
 
-Не весь AI в іграх це розвага. Activision разом з компанією Modulate підключила до [Call of Duty](https://www.callofduty.com) [систему ToxMod](https://gamesbeat.com/how-toxmods-ai-impacted-toxicity-in-call-of-duty-voice-chat-case-study/), яка слухає голосовий чат, виокремлює найімовірніші порушення правил і передає їх на розгляд людям-модераторам. За даними компаній, вплив токсичності в голосовому чаті знизився на 50% у Modern Warfare II та Warzone у Північній Америці. А в Modern Warfare III (у світі, крім Азії) Activision вжила заходів щодо двох мільйонів акаунтів, які порушували правила в голосовому чаті.
+Не весь AI в іграх це розвага. Activision разом з компанією Modulate підключила до Call of Duty [систему ToxMod](https://gamesbeat.com/how-toxmods-ai-impacted-toxicity-in-call-of-duty-voice-chat-case-study/), яка слухає голосовий чат, виокремлює найімовірніші порушення правил і передає їх на розгляд людям-модераторам. За даними компаній, вплив токсичності в голосовому чаті знизився на 50% у Modern Warfare II та Warzone у Північній Америці. А в Modern Warfare III (у світі, крім Азії) Activision вжила заходів щодо двох мільйонів акаунтів, які порушували правила в голосовому чаті.
+
+Захистити власний голос від шуму можна й самостійно: [Krisp](https://ailabhub-directory.com/product.php?id=165) прибирає фоновий шум під час розмов у реальному часі, а [Voicemod](https://ailabhub-directory.com/product.php?id=183) змінює голос на льоту для стримів та ігор.
 
 ## Підказки без alt-tab: Gaming Copilot і G-Assist
 
@@ -98,9 +99,27 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 
 [NVIDIA G-Assist](https://ailabhub-directory.com/product.php?id=2919) це локальний AI-асистент, що працює прямо на відеокартах GeForce RTX, допомагає оптимізувати налаштування й дає підказки.
 
-## Власна гра за вечір
+## Ваша екіпіровка: AI-арсенал геймера
 
-Можна не лише грати, а й створювати. У [Rosebud AI](https://ailabhub-directory.com/product.php?id=2921) достатньо описати ідею гри звичайними словами, і платформа створить ігровий прототип прямо в браузері. За даними оглядів, на ній уже зроблено понад 1,9 мільйона ігор. А ті, хто робить моди й ігри, використовують [Scenario](https://ailabhub-directory.com/product.php?id=701) для 2D-графіки в єдиному стилі та [Meshy AI](https://ailabhub-directory.com/product.php?id=1186) для 3D-моделей за текстом чи зображенням.
+Збираємо білд. У кожного слота один-два інструменти з нашого каталогу:
+
+- **Шолом (голос):** Krisp прибирає шум клавіатури й кімнати, а Voicemod міняє голос для стрімів та ігор.
+- **Броня (налаштування):** NVIDIA G-Assist допомагає підібрати налаштування під вашу відеокарту RTX.
+- **Зброя (контент):** [OBS Studio](https://ailabhub-directory.com/product.php?id=847) записує екран і веде трансляції, а [CapCut](https://ailabhub-directory.com/product.php?id=212) чи [DaVinci Resolve](https://ailabhub-directory.com/product.php?id=848) допоможуть нарізати найкращі моменти.
+- **Артефакт (історії):** Latitude з AI Dungeon веде нескінченні текстові пригоди, а [Character.AI](https://ailabhub-directory.com/product.php?id=82) дає змогу розмовляти з AI-персонажами.
+- **Аватар (арт):** [Midjourney](https://ailabhub-directory.com/product.php?id=5) і [Leonardo AI](https://ailabhub-directory.com/product.php?id=8) малюють аватарки, банери й шпалери за текстовим описом.
+- **Саундтрек:** [Soundraw](https://ailabhub-directory.com/product.php?id=170) чи [Suno](https://ailabhub-directory.com/product.php?id=81) створюють музику під настрій. Умови ліцензії перевіряйте на сайті кожного сервісу, особливо якщо стрімите.
+- **Перекладач (міжнародні загони):** [Google Translate](https://ailabhub-directory.com/product.php?id=35) допоможе порозумітися з напарниками, що говорять іншою мовою.
+- **Мудрець (поради):** [Perplexity](https://ailabhub-directory.com/product.php?id=65) і [ChatGPT](https://ailabhub-directory.com/product.php?id=4) швидко знайдуть гайд, порівняють білди чи підкажуть, як пройти складний момент.
+- **Відновлення HP:** після важкого рейду заспокоїтись допоможе [Calm](https://ailabhub-directory.com/product.php?id=71).
+
+Не хочете збирати білд самі? Запитайте Елю, ось три запити, які можна вставити як є:
+
+- «Потрібен AI, який прибирає шум клавіатури в голосовому чаті, бажано безкоштовний»
+- «Хочу стрімити й нарізати найкращі моменти, що для цього обрати?»
+- «Порадь AI для нескінченних текстових пригод»
+
+Еля відповість покроково й підбере інструменти з нашого каталогу.
 
 ## Чесно про мінуси
 
@@ -118,9 +137,9 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 - Фанат Skyrim чи Fallout 4? Ставте Mantella.
 - Граєте в змагальні ігри? Mobalytics чи Aimlabs.
 - Любите історії? Suck Up!, Vaudeville або AI Dungeon.
+- Стрімите? OBS Studio плюс Krisp.
 - Хочете заглянути в майбутнє? Project Genie (потрібна підписка Google AI Ultra).
-- Хочете створити свою гру? Rosebud AI.
 
 ## Де знайти більше
 
-Частину згаданих інструментів уже можна знайти в нашому каталозі, у підкатегорії «Розробка ігор». Не знаєте, що саме вам підійде? Запитайте Елю: опишіть задачу й бюджет, і вона підбере варіанти.
+Інструменти з розділу «Ваша екіпіровка» ви знайдете в нашому каталозі. Не знаєте, що саме вам підійде? Запитайте Елю: опишіть задачу й бюджет, і вона підбере варіанти.
