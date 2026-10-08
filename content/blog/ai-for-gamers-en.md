@@ -64,7 +64,7 @@ In 2026 Epic went further: [36 Fortnite characters received permanent AI voices 
 
 ## Skyrim that finally answers back: Mantella
 
-If you still play Skyrim or Fallout 4, here is your main AI mod: [Mantella](https://art-from-the-machine.github.io/Mantella/). You speak into a microphone, the mod recognizes your speech, asks a language model and voices the reply in the NPC's voice. According to the project page, you can talk to more than 3,000 NPCs, each with their own backstory. They remember previous conversations, know about events in the game and can even see what you see.
+If you still play Skyrim or Fallout 4, here is your main AI mod: [Mantella](https://ailabhub-directory.com/product.php?id=3019). You speak into a microphone, the mod recognizes your speech, asks a language model and voices the reply in the NPC's voice. According to the project page, you can talk to more than 3,000 NPCs, each with their own backstory. They remember previous conversations, know about events in the game and can even see what you see.
 
 The mod is free and open source. You can run everything locally on your own PC or connect OpenAI, OpenRouter or any compatible API. The project page reports more than 350 thousand downloads. For Minecraft there are similar community mods, such as Player2 AI NPC.
 
@@ -84,9 +84,9 @@ It sounds like the future of games, but that future is still far away. Access is
 
 For competitive players, AI works as a coach:
 
-- **Mobalytics** analyzes your matches and shows your weak spots. It covers [League of Legends](https://www.leagueoflegends.com), [Valorant](https://playvalorant.com), TFT, [Marvel Rivals](https://store.steampowered.com/app/2767030/) and other games from one account. There is a free tier and a paid subscription.
-- **[Aimlabs](https://aimlabs.com/)** is an AI aim coach. According to its website, more than 40 million players use it, it has more than 50 thousand tasks and profiles for 500 FPS games, and Valorant and [Rainbow Six Siege](https://store.steampowered.com/app/359550/) are official partners. The AI finds your weak spots and builds personal training routines.
-- **Blitz.gg** shows hints right during a match, and **iTero.gg** is built for League of Legends players.
+- **[Mobalytics](https://ailabhub-directory.com/product.php?id=1662)** analyzes your matches and shows your weak spots. It covers [League of Legends](https://www.leagueoflegends.com), [Valorant](https://playvalorant.com), TFT, [Marvel Rivals](https://store.steampowered.com/app/2767030/) and other games from one account. There is a free tier and a paid subscription.
+- **[Aimlabs](https://ailabhub-directory.com/product.php?id=1623)** is an AI aim coach. According to its website, more than 40 million players use it, it has more than 50 thousand tasks and profiles for 500 FPS games, and Valorant and [Rainbow Six Siege](https://store.steampowered.com/app/359550/) are official partners. The AI finds your weak spots and builds personal training routines.
+- **[Blitz.gg](https://ailabhub-directory.com/product.php?id=1627)** shows hints right during a match, and **[iTero.gg](https://ailabhub-directory.com/product.php?id=1654)** is built for League of Legends players.
 
 ## Chat without toxicity: AI guarding the voice
 

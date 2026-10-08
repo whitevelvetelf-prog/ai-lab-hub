@@ -64,7 +64,7 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 
 ## Skyrim, який нарешті відповідає: Mantella
 
-Якщо ви досі граєте в Skyrim чи Fallout 4, ось ваш головний AI-мод: [Mantella](https://art-from-the-machine.github.io/Mantella/). Ви говорите в мікрофон, мод розпізнає мову, звертається до мовної моделі й озвучує відповідь голосом NPC. За даними сторінки проєкту, можна розмовляти з понад 3000 NPC, у кожного своя передісторія. Вони пам'ятають попередні розмови, знають про події в грі й навіть бачать те, що бачите ви.
+Якщо ви досі граєте в Skyrim чи Fallout 4, ось ваш головний AI-мод: [Mantella](https://ailabhub-directory.com/product.php?id=3019). Ви говорите в мікрофон, мод розпізнає мову, звертається до мовної моделі й озвучує відповідь голосом NPC. За даними сторінки проєкту, можна розмовляти з понад 3000 NPC, у кожного своя передісторія. Вони пам'ятають попередні розмови, знають про події в грі й навіть бачать те, що бачите ви.
 
 Мод безкоштовний і має відкритий код. Усе можна запустити локально на власному ПК або підключити OpenAI, OpenRouter чи будь-який сумісний API. Сторінка проєкту повідомляє про понад 350 тисяч завантажень. Для Minecraft існують схожі спільнотні моди, наприклад Player2 AI NPC.
 
@@ -84,9 +84,9 @@ description: "AI-напарник PUBG Ally, розмови з NPC у Skyrim, с
 
 Для тих, хто грає в змагальні ігри, AI працює як тренер:
 
-- **Mobalytics** аналізує ваші матчі й показує слабкі місця. Охоплює [League of Legends](https://www.leagueoflegends.com), [Valorant](https://playvalorant.com), TFT, [Marvel Rivals](https://store.steampowered.com/app/2767030/) та інші ігри з одного акаунта. Є безкоштовний рівень і платна підписка.
-- **[Aimlabs](https://aimlabs.com/)** AI-тренер для стрільби. За даними сайту, ним користуються понад 40 мільйонів гравців, є понад 50 тисяч завдань і профілі для 500 FPS-ігор, а Valorant і [Rainbow Six Siege](https://store.steampowered.com/app/359550/) офіційні партнери. AI визначає слабкі місця й складає персональні тренування.
-- **Blitz.gg** показує підказки прямо під час матчу, а **iTero.gg** розрахований на гравців League of Legends.
+- **[Mobalytics](https://ailabhub-directory.com/product.php?id=1662)** аналізує ваші матчі й показує слабкі місця. Охоплює [League of Legends](https://www.leagueoflegends.com), [Valorant](https://playvalorant.com), TFT, [Marvel Rivals](https://store.steampowered.com/app/2767030/) та інші ігри з одного акаунта. Є безкоштовний рівень і платна підписка.
+- **[Aimlabs](https://ailabhub-directory.com/product.php?id=1623)** AI-тренер для стрільби. За даними сайту, ним користуються понад 40 мільйонів гравців, є понад 50 тисяч завдань і профілі для 500 FPS-ігор, а Valorant і [Rainbow Six Siege](https://store.steampowered.com/app/359550/) офіційні партнери. AI визначає слабкі місця й складає персональні тренування.
+- **[Blitz.gg](https://ailabhub-directory.com/product.php?id=1627)** показує підказки прямо під час матчу, а **[iTero.gg](https://ailabhub-directory.com/product.php?id=1654)** розрахований на гравців League of Legends.
 
 ## Чат без токсичності: AI на варті голосу
 
