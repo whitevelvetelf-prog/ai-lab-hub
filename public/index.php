@@ -47,6 +47,8 @@ $categoryIcons = [
     'health-beauty'         => 'heart-pulse',
     'tools-automation'      => 'settings',
     'sports'                => 'trophy',
+    'religion'              => 'hand-heart',
+    'career'                => 'briefcase',
 ];
 
 ?>

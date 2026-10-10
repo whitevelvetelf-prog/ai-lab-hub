@@ -283,6 +283,8 @@ $GLOBALS['TRANSLATIONS'] = [
     'hero_title'        => 'AI LAB HUB',
     'hero_subtitle'     => 'Знайдіть AI-інструмент для будь-якого завдання',
     'home_free_solutions_btn' => 'Безкоштовні AI-рішення',
+    // Примітка-застереження чутливої підкатегорії (app/subcategory-note.php)
+    'subcat_note_mental_health_eating' => "Інструменти в цій підкатегорії не замінюють лікування. Якщо ви підозрюєте розлад харчової поведінки чи іншу проблему психічного здоров'я у себе або близької людини, зверніться до лікаря чи психотерапевта.",
     'hero_image_alt'    => 'Колба — AI LAB HUB',
     'directions_title'  => 'Напрямки AI',
 
@@ -303,6 +305,9 @@ $GLOBALS['TRANSLATIONS'] = [
     'blog_back'           => '← До блогу',
     'blog_not_found'      => 'Статтю не знайдено',
     'blog_not_found_text' => 'Статті з такою адресою не існує або вона ще не опублікована.',
+    'blog_topics_label'   => 'Тематика статей',
+    'blog_topic_all'      => 'Усі теми',
+    'blog_topic_all_in_category' => 'Уся категорія',
     'blog_translation_pending' => 'Переклад цієї статті ще готується — поки що показуємо українську версію.',
 
     // --- eli.php: чат з AI-асистенткою Елею ---

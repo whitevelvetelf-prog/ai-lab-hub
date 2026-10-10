@@ -23,6 +23,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/search.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/subcategory-note.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -41,7 +42,7 @@ if ($isSearch) {
     $pageHeading = sprintf(t('search_results_heading'), $searchQuery);
     $products = search_products_by_name($pdo, $searchQuery, 'id, name, short_description');
 } elseif ($subcategoryId > 0) {
-    $subStmt = $pdo->prepare("SELECT id, name, name_en, category_id FROM subcategories WHERE id = :id");
+    $subStmt = $pdo->prepare("SELECT id, name, name_en, slug, category_id FROM subcategories WHERE id = :id");
     $subStmt->execute([':id' => $subcategoryId]);
     $subcategory = $subStmt->fetch();
 
@@ -405,6 +406,10 @@ $cardColors = [
         <?php endif; ?>
 
         <h1 class="catalog__title"><?= htmlspecialchars($pageHeading, ENT_QUOTES) ?></h1>
+
+        <?php if (!$isSearch && !empty($subcategory)): ?>
+        <?= subcategory_note_html([(string) $subcategory['slug']]) ?>
+        <?php endif; ?>
 
         <?php
         // Реклама лише на сторінці підкатегорії (не пошук, не «всі продукти»).

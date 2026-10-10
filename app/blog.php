@@ -45,6 +45,41 @@ const BLOG_ARTICLES = [
         'uk' => 'ai-dlya-geimeriv-ua.md',
         'en' => 'ai-for-gamers-en.md',
     ],
+    'ai-for-driving-theory-test' => [
+        'uk' => 'ai-dlya-vyvchennya-pdr-ua.md',
+        'en' => 'ai-for-driving-theory-test-en.md',
+    ],
+    'ai-for-stock-trading' => [
+        'uk' => 'ai-dlya-torgivli-na-birzhi-ua.md',
+        'en' => 'ai-for-stock-trading-en.md',
+    ],
+    'ai-and-eating-behavior-support' => [
+        'uk' => 'ai-i-kharchova-povedinka-ua.md',
+        'en' => 'ai-and-eating-behavior-support-en.md',
+    ],
+    'ai-for-drinks' => [
+        'uk' => 'ai-dlya-napoyiv-ua.md',
+        'en' => 'ai-for-drinks-en.md',
+    ],
+];
+
+/**
+ * Тематика статей для фільтра на сторінці блогу: slug статті => теми
+ * «категорія» або «категорія/підкатегорія» (slug-и з таблиць categories і
+ * subcategories — ті самі, що в каталозі). Стаття з темою-підкатегорією
+ * потрапляє і у фільтр її категорії. Назви тем беруться з БД
+ * (blog_topic_taxonomy()); тема, slug якої в БД нема, просто не показується.
+ */
+const BLOG_ARTICLE_TOPICS = [
+    'ai-for-design-and-images' => ['design-creative/graphic-design', 'multimedia/image-generation'],
+    'ai-for-language-learning' => ['translation-languages', 'education-knowledge/tutoring'],
+    'ai-for-psychology-and-mental-health' => ['health-beauty/mental-health', 'health-beauty/psychologist-tools'],
+    'ai-for-programming-and-development' => ['development-it/code-assistants', 'development-it/code-autocomplete', 'development-it/no-code-low-code'],
+    'ai-for-gamers-2026' => ['multimedia/for-gamers', 'multimedia/gaming'],
+    'ai-for-driving-theory-test' => ['my-home/auto'],
+    'ai-for-stock-trading' => ['finance-legal/stock-trading'],
+    'ai-and-eating-behavior-support' => ['health-beauty/mental-health-eating-behavior', 'health-beauty/mental-health'],
+    'ai-for-drinks' => ['my-home/drinks'],
 ];
 
 /**
@@ -184,6 +219,88 @@ function blog_list_articles(string $lang): array
     }
 
     return $list;
+}
+
+/** Теми статті з BLOG_ARTICLE_TOPICS. @return list<array{cat: string, sub: string}> ('' — тема-категорія) */
+function blog_article_topics(string $slug): array
+{
+    $topics = [];
+    foreach (BLOG_ARTICLE_TOPICS[$slug] ?? [] as $topic) {
+        [$cat, $sub] = array_pad(explode('/', $topic, 2), 2, '');
+        $topics[] = ['cat' => $cat, 'sub' => $sub];
+    }
+
+    return $topics;
+}
+
+/** Чи належить стаття до теми: категорії $cat і, якщо $sub не порожній, її підкатегорії $sub. */
+function blog_article_has_topic(string $slug, string $cat, string $sub = ''): bool
+{
+    foreach (blog_article_topics($slug) as $topic) {
+        if ($topic['cat'] === $cat && ($sub === '' || $topic['sub'] === $sub)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Назви тем, які трапляються в BLOG_ARTICLE_TOPICS, з БД: категорії в
+ * порядку каталогу (за id) і їхні підкатегорії. Тема, slug якої в БД нема
+ * (таксономії локально й на хостингу можуть розходитися), сюди не потрапляє.
+ *
+ * @return array<string, array{row: array, subs: array<string, array>}>  slug категорії => рядок + підкатегорії за slug
+ */
+function blog_topic_taxonomy(PDO $pdo): array
+{
+    $cats = [];
+    $subs = [];
+    foreach (array_keys(BLOG_ARTICLE_TOPICS) as $slug) {
+        foreach (blog_article_topics($slug) as $topic) {
+            $cats[$topic['cat']] = true;
+            if ($topic['sub'] !== '') {
+                $subs[$topic['cat'] . '/' . $topic['sub']] = true;
+            }
+        }
+    }
+    if ($cats === []) {
+        return [];
+    }
+
+    $in = implode(', ', array_fill(0, count($cats), '?'));
+    $stmt = $pdo->prepare("SELECT id, name, name_en, slug FROM categories WHERE slug IN ($in) ORDER BY id");
+    $stmt->execute(array_keys($cats));
+
+    $taxonomy = [];
+    $catSlugById = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $taxonomy[$row['slug']] = ['row' => $row, 'subs' => []];
+        $catSlugById[(int) $row['id']] = $row['slug'];
+    }
+    if ($catSlugById === []) {
+        return [];
+    }
+
+    $in = implode(', ', array_fill(0, count($catSlugById), '?'));
+    $stmt = $pdo->prepare("SELECT id, category_id, name, name_en, slug FROM subcategories WHERE category_id IN ($in) ORDER BY id");
+    $stmt->execute(array_keys($catSlugById));
+    foreach ($stmt->fetchAll() as $row) {
+        $catSlug = $catSlugById[(int) $row['category_id']];
+        if (isset($subs[$catSlug . '/' . $row['slug']])) {
+            $taxonomy[$catSlug]['subs'][$row['slug']] = $row;
+        }
+    }
+
+    return $taxonomy;
+}
+
+/** Адреса сторінки блогу з фільтром за темою ('' — без фільтра). */
+function blog_topic_url(string $cat = '', string $sub = ''): string
+{
+    $query = array_filter(['cat' => $cat, 'sub' => $sub], static fn (string $v): bool => $v !== '');
+
+    return 'blog.php' . ($query !== [] ? '?' . http_build_query($query) : '');
 }
 
 /**

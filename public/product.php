@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/subcategory-note.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -47,7 +48,7 @@ if ($product !== false) {
     $categories = $catStmt->fetchAll();
 
     $subStmt = $pdo->prepare(
-        "SELECT s.name, s.name_en
+        "SELECT s.name, s.name_en, s.slug
          FROM product_subcategories ps
          JOIN subcategories s ON s.id = ps.subcategory_id
          WHERE ps.product_id = :id
@@ -578,6 +579,8 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
                 <span class="badge badge--accent"><?= htmlspecialchars(localized_name($subcategoryRow), ENT_QUOTES) ?></span>
             <?php endforeach; ?>
         </div>
+
+        <?= subcategory_note_html(array_column($subcategories, 'slug')) ?>
 
         <!-- 5. Основні функції -->
         <?php if ($features !== []): ?>
