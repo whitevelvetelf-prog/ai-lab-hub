@@ -24,6 +24,7 @@ const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   /
 const MPB_CURRENCIES = ['UAH' => '₴', 'USD' => '$', 'EUR' => '€'];
 const MPB_REPORT_REASONS = ['fraud', 'prohibited', 'spam', 'wrong_category', 'other'];
 const MPB_PER_PAGE = 12;
+const MPB_SOLUTIONS = 'solutions';   // значення фільтра category=… для Готових AI-рішень платформи (section='solution')
 const MPB_PHOTO_NAME_RE = '/^[a-f0-9]{32}(?:_t)?\.(?:jpg|png|webp)$/';
 
 // =========================================================================
@@ -386,6 +387,16 @@ function mpb_visible_sql(): string
     return "l.section = 'board' AND l.status = 'published' AND l.expires_at > NOW()";
 }
 
+/**
+ * Готові AI-рішення платформи (section='solution') у спільному списку marketplace.php (alias l): лише published,
+ * терміну дії в них немає. Видача — get.php (файл/посилання), а не контакти, тож сторінка рішення — окремий шаблон
+ * у marketplace-offer.php; дії дошки (вибране, скарги, контакти) і далі перевіряють mpb_visible_sql() — лише board.
+ */
+function mpb_solution_visible_sql(): string
+{
+    return "l.section = 'solution' AND l.status = 'published'";
+}
+
 /** Кількість скарг після останньої модерації (alias l). */
 function mpb_reports_sql(): string
 {
@@ -395,7 +406,7 @@ function mpb_reports_sql(): string
 /** SELECT-частина з текстами поточною мовою (запасний варіант — мова оригіналу). БЕЗ контактів. */
 function mpb_select_sql(): string
 {
-    return "SELECT l.id, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,
+    return "SELECT l.id, l.section, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,
                    l.published_at, l.expires_at, l.created_at, l.views_count, l.source_lang, l.reject_reason,
                    s.display_name AS seller_name, s.user_id AS seller_user_id,
                    COALESCE(NULLIF(tc.title, ''), ts.title)           AS title,
@@ -412,7 +423,9 @@ function mpb_select_sql(): string
 }
 
 /**
- * Пошук для marketplace.php. Фільтри: category(int), price_type, min/max (?float), city, remote(bool), q; sort: new|cheap|expensive.
+ * Пошук для marketplace.php: оголошення дошки і Готові AI-рішення платформи разом.
+ * Фільтри: category (int — категорія дошки, MPB_SOLUTIONS — лише Готові AI-рішення), sub (категорія рішень, разом
+ * із category=MPB_SOLUTIONS), price_type, min/max (?float), city, remote(bool), q; sort: new|cheap|expensive.
  * Ефективна ціна: free → 0, fixed → price_amount, решта (договірна/обмін) → NULL (у діапазон не потрапляє, у сортуванні — в кінці).
  *
  * @return array{rows:list<array<string,mixed>>,total:int,pages:int,page:int}
@@ -420,13 +433,21 @@ function mpb_select_sql(): string
 function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
 {
     $eff = "(CASE l.price_type WHEN 'free' THEN 0 WHEN 'fixed' THEN l.price_amount ELSE NULL END)";
-    $where = [mpb_visible_sql()];
     $params = [];
 
-    $cat = (int) ($f['category'] ?? 0);
-    if ($cat > 0) {
-        $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)';
-        $params[':cat'] = $cat;
+    $cat = $f['category'] ?? 0;
+    if ($cat === MPB_SOLUTIONS) {
+        $where = [mpb_solution_visible_sql()];
+        $sub = (int) ($f['sub'] ?? 0);
+        if ($sub > 0) {
+            $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :sub)';
+            $params[':sub'] = $sub;
+        }
+    } elseif ((int) $cat > 0) {
+        $where = [mpb_visible_sql(), 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)'];
+        $params[':cat'] = (int) $cat;
+    } else {
+        $where = ['((' . mpb_visible_sql() . ') OR (' . mpb_solution_visible_sql() . '))'];
     }
     $pt = (string) ($f['price_type'] ?? '');
     if (in_array($pt, MPB_PRICE_TYPES, true)) {

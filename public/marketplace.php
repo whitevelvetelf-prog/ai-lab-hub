@@ -3,12 +3,14 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — Marketplace: дошка оголошень (у стилі OLX; публікують користувачі).
+ * AI LAB HUB — Marketplace: дошка оголошень (у стилі OLX; публікують користувачі) разом із Готовими AI-рішеннями
+ * платформи (section='solution', автор — AI LAB HUB, безкоштовно).
  *
- * Показує лише status='published' І expires_at > NOW(). Фільтри: категорія, тип і діапазон ціни,
+ * Оголошення — лише status='published' І expires_at > NOW(); рішення — status='published'. Фільтри: категорія
+ * (category=solutions — лише Готові AI-рішення, тоді ще sub=<категорія рішень>), тип і діапазон ціни,
  * місто / «дистанційно», пошук за назвою; сортування: нові / дешевші / дорожчі; пагінація по 12.
  * Поки config/marketplace.php → public_enabled = false — 404. Платформа в угодах не бере участі.
- * Раніша вітрина «Готові рішення» тепер на marketplace-solutions.php.
+ * Колишні вітрини рішень marketplace-solutions.php / marketplace-category.php — 301 сюди.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -30,9 +32,13 @@ $num = static function (string $k) use ($get): ?float {
 
 $categories = mpb_categories($pdo, $lang);
 $catIds = array_column($categories, 'id');
+$isSolutions = $get('category', 20) === MPB_SOLUTIONS;
+$solutionCats = $isSolutions ? mp_public_categories($pdo, $lang) : [];
+$sub = (int) ($_GET['sub'] ?? 0);
 $filters = [
     'q'          => $get('q'),
-    'category'   => in_array((int) ($_GET['category'] ?? 0), $catIds, true) ? (int) $_GET['category'] : 0,
+    'category'   => $isSolutions ? MPB_SOLUTIONS : (in_array((int) ($_GET['category'] ?? 0), $catIds, true) ? (int) $_GET['category'] : 0),
+    'sub'        => in_array($sub, array_column($solutionCats, 'id'), true) ? $sub : 0,
     'price_type' => in_array($get('price_type', 20), MPB_PRICE_TYPES, true) ? $get('price_type', 20) : '',
     'min'        => $num('min'),
     'max'        => $num('max'),
@@ -43,13 +49,13 @@ $filters = [
 $page = max(1, (int) ($_GET['page'] ?? 1));
 $result = mpb_search($pdo, $lang, $filters, $page);
 
-$hasFilters = $filters['q'] !== '' || $filters['category'] > 0 || $filters['price_type'] !== '' || $filters['min'] !== null
+$hasFilters = $filters['q'] !== '' || $filters['category'] !== 0 || $filters['price_type'] !== '' || $filters['min'] !== null
     || $filters['max'] !== null || $filters['city'] !== '' || $filters['remote'];
 
 /** Посилання на сторінку пагінації із збереженням фільтрів. */
 $pageUrl = static function (int $p) use ($filters): string {
     $q = array_filter([
-        'q' => $filters['q'], 'category' => $filters['category'] ?: null, 'price_type' => $filters['price_type'] ?: null,
+        'q' => $filters['q'], 'category' => $filters['category'] ?: null, 'sub' => $filters['sub'] ?: null, 'price_type' => $filters['price_type'] ?: null,
         'min' => $filters['min'], 'max' => $filters['max'], 'city' => $filters['city'],
         'remote' => $filters['remote'] ? '1' : null, 'sort' => $filters['sort'] !== 'new' ? $filters['sort'] : null,
         'page' => $p > 1 ? $p : null,
@@ -61,15 +67,45 @@ $pageUrl = static function (int $p) use ($filters): string {
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $sortLabels = ['new' => t('mpb_sort_new'), 'cheap' => t('mpb_sort_cheap'), 'expensive' => t('mpb_sort_expensive')];
 
-mpb_open(t('mp_heading'), false, 'board');
+/** Посилання на категорію Готових AI-рішень ($subId = 0 — усі) зі збереженням інших фільтрів. */
+$subUrl = static function (int $subId) use ($filters): string {
+    $q = array_filter([
+        'category' => MPB_SOLUTIONS, 'sub' => $subId ?: null, 'q' => $filters['q'], 'price_type' => $filters['price_type'] ?: null,
+        'sort' => $filters['sort'] !== 'new' ? $filters['sort'] : null,
+    ], static fn($x): bool => $x !== null && $x !== '');
+
+    return 'marketplace.php?' . http_build_query($q);
+};
+
+$heading = $isSolutions ? t('mp_nav_solutions') : t('mp_heading');
+mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
 ?>
     <div class="mp-page">
-        <h1 class="mp-title"><?= mp_e(t('mp_heading')) ?></h1>
-        <p class="mp-subtitle"><?= mp_e(t('mpb_subtitle')) ?></p>
+        <h1 class="mp-title"><?= mp_e($heading) ?></h1>
+        <p class="mp-subtitle"><?= mp_e(t($isSolutions ? 'mp_subtitle' : 'mpb_subtitle')) ?></p>
+
+        <?php if ($solutionCats !== []): ?>
+            <ul class="mp-cats">
+                <li><a class="mp-chip<?= $filters['sub'] === 0 ? ' is-active' : '' ?>" href="<?= mp_e($subUrl(0)) ?>"><?= mp_e(t('mp_all_categories')) ?></a></li>
+                <?php foreach ($solutionCats as $c): ?>
+                    <?php if ($c['cnt'] > 0): ?>
+                        <li>
+                            <a class="mp-chip<?= $c['id'] === $filters['sub'] ? ' is-active' : '' ?>" href="<?= mp_e($subUrl($c['id'])) ?>">
+                                <?= mp_e($c['name']) ?>
+                                <span class="mp-chip__count"><?= (int) $c['cnt'] ?></span>
+                            </a>
+                        </li>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
 
         <?= mpb_flash_html() ?>
 
         <form class="mp-filters" method="get" action="marketplace.php" role="search">
+            <?php if ($filters['sub'] > 0): ?>
+                <input type="hidden" name="sub" value="<?= (int) $filters['sub'] ?>">
+            <?php endif; ?>
             <div class="mp-field mp-field--grow">
                 <label class="mp-label" for="f_q"><?= mp_e(t('mpb_f_search')) ?></label>
                 <input class="mp-input" type="search" id="f_q" name="q" maxlength="100" value="<?= mp_e($filters['q']) ?>" placeholder="<?= mp_e(t('mp_search_placeholder')) ?>">
@@ -78,6 +114,7 @@ mpb_open(t('mp_heading'), false, 'board');
                 <label class="mp-label" for="f_cat"><?= mp_e(t('mpb_f_category')) ?></label>
                 <select class="mp-input" id="f_cat" name="category">
                     <option value="0"><?= mp_e(t('mp_all_categories')) ?></option>
+                    <option value="<?= MPB_SOLUTIONS ?>"<?= $isSolutions ? ' selected' : '' ?>><?= mp_e(t('mp_nav_solutions')) ?></option>
                     <?php foreach ($categories as $c): ?>
                         <option value="<?= (int) $c['id'] ?>"<?= $filters['category'] === $c['id'] ? ' selected' : '' ?>><?= mp_e($c['name']) ?></option>
                     <?php endforeach; ?>

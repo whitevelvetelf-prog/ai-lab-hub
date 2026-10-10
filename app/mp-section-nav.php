@@ -19,7 +19,7 @@ function mp_section_nav(string $active): string
 {
     $tabs = [
         'board'     => ['marketplace.php', t('mp_nav_board')],
-        'solutions' => ['marketplace-solutions.php', t('mp_nav_solutions')],
+        'solutions' => ['marketplace.php?category=solutions', t('mp_nav_solutions')],
     ];
     if (auth_check()) {
         $tabs['my'] = ['marketplace-my.php', t('mpb_my_link')];

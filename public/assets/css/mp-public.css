@@ -422,34 +422,6 @@ a.mp-chip:hover {
     overflow-wrap: anywhere;
 }
 
-/* Блок на головній (під hero) */
-.mp-home {
-    width: 100%;
-    max-width: 1080px;
-    margin: 0 0 56px;
-}
-
-.mp-home__head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px 20px;
-    margin: 0 0 20px;
-}
-
-.mp-home__title {
-    margin: 0;
-    font-size: clamp(1.5rem, 4vw, 2.1rem);
-    font-weight: 800;
-    letter-spacing: 0.02em;
-}
-
-.mp-home__text {
-    margin: 4px 0 0;
-    color: var(--text-muted, rgba(255, 255, 255, 0.75));
-}
-
 /* ===== Дошка оголошень (етап 4): marketplace.php, marketplace-offer.php (board), marketplace-post.php, marketplace-my.php, marketplace-favorites.php ===== */
 
 .mp-actions {
@@ -1035,4 +1007,17 @@ textarea.mp-input {
         width: 100%;
         text-align: center;
     }
+}
+
+/* Готове AI-рішення платформи в спільному списку (app/mpb-card.php) */
+.mp-card__tag {
+    align-self: flex-start;
+    margin: 0 0 8px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #ffffff;
+    background: rgba(91, 140, 255, 0.28);
+    border: 1px solid rgba(91, 140, 255, 0.5);
 }

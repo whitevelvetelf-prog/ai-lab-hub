@@ -2,6 +2,8 @@
 
 /**
  * AI LAB HUB — картка оголошення дошки (marketplace.php, marketplace-favorites.php, «інші оголошення продавця»).
+ * Готове AI-рішення платформи (section='solution') — та сама картка: обкладинка з cover_image, позначка
+ * «Готове AI-рішення · AI LAB HUB», ціна «Безкоштовно», без локації.
  *
  * Партіал: перед підключенням задати $card — рядок із mpb_search()/mpb_seller_other() (див. app/marketplace-board.php).
  * Контактів у $card немає за побудовою. Стилі: public/assets/css/mp-public.css.
@@ -9,19 +11,25 @@
 
 $cardId = (int) $card['id'];
 $cardUrl = 'marketplace-offer.php?id=' . $cardId;
-$cardThumb = !empty($card['cover_thumb']) ? mpb_photo_url((string) $card['cover_thumb']) : null;
+$cardIsSolution = ($card['section'] ?? 'board') === 'solution';
+$cardThumb = $cardIsSolution
+    ? mp_cover_url($card['cover_image'] ?? null)
+    : (!empty($card['cover_thumb']) ? mpb_photo_url((string) $card['cover_thumb']) : null);
 $cardFallback = (string) ($card['text_lang'] ?? '') !== current_lang();
-$cardLoc = mpb_location_label($card);
+$cardLoc = $cardIsSolution ? '' : mpb_location_label($card);
 $cardPrice = mpb_price_label($card);   // '' — ціну не вказано
 $cardDate = !empty($card['published_at']) ? date('d.m.Y', (int) strtotime((string) $card['published_at'])) : '';
 ?>
-<article class="mp-card mp-card--ad">
+<article class="mp-card mp-card--ad<?= $cardIsSolution ? ' mp-card--solution' : '' ?>">
     <?php if ($cardThumb !== null): ?>
         <a href="<?= mp_e($cardUrl) ?>" tabindex="-1" aria-hidden="true"><img class="mp-card__cover" src="<?= mp_e($cardThumb) ?>" alt="" loading="lazy"></a>
     <?php else: ?>
         <a class="mp-card__cover mp-card__cover--empty" href="<?= mp_e($cardUrl) ?>" tabindex="-1" aria-hidden="true"></a>
     <?php endif; ?>
     <?php // Порядок — як у формі подачі: назва, короткий опис, ціна, місто; усе, крім назви, одним стилем (.mp-card__info). ?>
+    <?php if ($cardIsSolution): ?>
+        <p class="mp-card__tag"><?= mp_e(t('mp_solution_tag')) ?></p>
+    <?php endif; ?>
     <h3 class="mp-card__name"><a href="<?= mp_e($cardUrl) ?>"><?= mp_e($card['title']) ?></a></h3>
     <?php if (!empty($card['short_desc'])): ?>
         <p class="mp-card__desc mp-card__info"<?= $cardFallback ? ' lang="' . mp_e($card['text_lang']) . '"' : '' ?>><?= mp_e($card['short_desc']) ?></p>

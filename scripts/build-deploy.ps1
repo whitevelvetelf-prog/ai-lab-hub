@@ -53,7 +53,7 @@
           database/migration-*-marketplace-*.sql (applied by hand via phpMyAdmin),
           config/marketplace.php.
         Shared code that the switch keeps dormant (public_enabled = false by default) IS always
-        shipped: app/marketplace.php, app/mp-card.php, app/site-header.php, app/footer.php,
+        shipped: app/marketplace.php, app/mp-section-nav.php, app/mp-legacy-redirect.php, app/site-header.php, app/footer.php,
         public/index.php, app/translations.php.
         config/marketplace.php is NEVER put in the archive under its own name - even with the flag -
         so a deploy can not overwrite the server's real settings (storage path, public_enabled).
