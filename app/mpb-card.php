@@ -2,8 +2,8 @@
 
 /**
  * AI LAB HUB — картка оголошення дошки (marketplace.php, marketplace-favorites.php, «інші оголошення продавця»).
- * Готове AI-рішення платформи (section='solution') — та сама картка: обкладинка з cover_image, позначка
- * «Готове AI-рішення · AI LAB HUB», ціна «Безкоштовно», без локації.
+ * Готове AI-рішення платформи (section='solution') — та сама картка: обкладинка з cover_image (якщо її немає —
+ * без порожнього прямокутника-заглушки), позначка «Готове AI-рішення · AI LAB HUB», ціна «Безкоштовно», без локації.
  *
  * Партіал: перед підключенням задати $card — рядок із mpb_search()/mpb_seller_other() (див. app/marketplace-board.php).
  * Контактів у $card немає за побудовою. Стилі: public/assets/css/mp-public.css.
@@ -23,7 +23,7 @@ $cardDate = !empty($card['published_at']) ? date('d.m.Y', (int) strtotime((strin
 <article class="mp-card mp-card--ad<?= $cardIsSolution ? ' mp-card--solution' : '' ?>">
     <?php if ($cardThumb !== null): ?>
         <a href="<?= mp_e($cardUrl) ?>" tabindex="-1" aria-hidden="true"><img class="mp-card__cover" src="<?= mp_e($cardThumb) ?>" alt="" loading="lazy"></a>
-    <?php else: ?>
+    <?php elseif (!$cardIsSolution): ?>
         <a class="mp-card__cover mp-card__cover--empty" href="<?= mp_e($cardUrl) ?>" tabindex="-1" aria-hidden="true"></a>
     <?php endif; ?>
     <?php // Порядок — як у формі подачі: назва, короткий опис, ціна, місто; усе, крім назви, одним стилем (.mp-card__info). ?>
