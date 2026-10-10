@@ -282,6 +282,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'title_home'        => 'AI LAB HUB — Головна',
     'hero_title'        => 'AI LAB HUB',
     'hero_subtitle'     => 'Знайдіть AI-інструмент для будь-якого завдання',
+    'home_free_solutions_btn' => 'Безкоштовні AI-рішення',
     'hero_image_alt'    => 'Колба — AI LAB HUB',
     'directions_title'  => 'Напрямки AI',
 

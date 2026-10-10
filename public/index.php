@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/ads.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/marketplace.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -207,6 +208,68 @@ $categoryIcons = [
             color: var(--text-muted);
         }
 
+        /* Кнопка «Безкоштовні AI-рішення» (веде в Marketplace: Готові AI-рішення + Безкоштовно).
+           Лише кольори бренду: біла кнопка, текст #2116ad. Помітність — контраст, розмір
+           і м'яке біле/блакитне світіння, що повільно пульсує (вимикається при reduced motion). */
+        .hero__cta {
+            align-self: flex-start;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 28px;
+            padding: 16px 34px;
+            border-radius: 999px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            text-decoration: none;
+            color: #2116ad;
+            background: #ffffff;
+            box-shadow: 0 0 18px rgba(255, 255, 255, 0.45), 0 0 36px rgba(91, 140, 255, 0.35);
+            animation: hero-cta-glow 3s ease-in-out infinite;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .hero__cta svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+
+        .hero__cta:hover,
+        .hero__cta:focus-visible {
+            transform: scale(1.05);
+            box-shadow: 0 0 26px rgba(255, 255, 255, 0.75), 0 0 56px rgba(91, 140, 255, 0.6);
+            animation-play-state: paused;
+        }
+
+        .hero__cta:focus-visible {
+            outline: 3px solid #ffffff;
+            outline-offset: 4px;
+        }
+
+        @keyframes hero-cta-glow {
+            0%, 100% {
+                box-shadow: 0 0 18px rgba(255, 255, 255, 0.45), 0 0 36px rgba(91, 140, 255, 0.35);
+            }
+            50% {
+                box-shadow: 0 0 28px rgba(255, 255, 255, 0.7), 0 0 60px rgba(91, 140, 255, 0.55);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .hero__cta {
+                animation: none;
+                transition: none;
+            }
+
+            .hero__cta:hover,
+            .hero__cta:focus-visible {
+                transform: none;
+            }
+        }
+
         /* Вузькі екрани (<768px): hero повертається до вертикального стеку —
            картинка згори, текст під нею. */
         @media (max-width: 768px) {
@@ -236,6 +299,15 @@ $categoryIcons = [
 
             .hero__subtitle {
                 margin: 0 auto;
+            }
+
+            .hero__cta {
+                align-self: center;
+                width: 100%;
+                max-width: 380px;
+                margin-top: 24px;
+                padding: 16px 18px;
+                font-size: 1.08rem;
             }
         }
 
@@ -346,6 +418,12 @@ $categoryIcons = [
             <div class="hero__text">
                 <h1 class="hero__title"><?= htmlspecialchars(t('hero_title'), ENT_QUOTES) ?></h1>
                 <p class="hero__subtitle"><?= htmlspecialchars(t('hero_subtitle'), ENT_QUOTES) ?></p>
+                <?php if (mp_public_nav_visible()): ?>
+                <a class="hero__cta" href="marketplace.php?category=solutions&amp;price_type=free">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .962 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.962 0z"/></svg>
+                    <?= htmlspecialchars(t('home_free_solutions_btn'), ENT_QUOTES) ?>
+                </a>
+                <?php endif; ?>
             </div>
         </section>
 
