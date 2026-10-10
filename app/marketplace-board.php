@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/mp-section-nav.php';
 
 const MPB_SECTION = 'board';
 const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   // 'none' — ціну не вказано
@@ -191,8 +192,11 @@ function mpb_flash_html(): string
     return $html;
 }
 
-/** Початок HTML-сторінки: <head>, шапка сайту. Закривати mpb_close(). */
-function mpb_open(string $title, bool $noindex = true): void
+/**
+ * Початок HTML-сторінки: <head>, шапка сайту і (якщо задано $nav) навігація розділу — app/mp-section-nav.php.
+ * Закривати mpb_close().
+ */
+function mpb_open(string $title, bool $noindex = true, ?string $nav = null): void
 {
     $lang = current_lang();
     echo "<!DOCTYPE html>\n<html lang=\"" . mp_e($lang) . "\">\n<head>\n<meta charset=\"utf-8\">\n"
@@ -203,6 +207,9 @@ function mpb_open(string $title, bool $noindex = true): void
     echo "\n<link rel=\"stylesheet\" href=\"/assets/css/site-nav.css\">\n"
         . '<link rel="stylesheet" href="' . css_asset('mp-public.css') . "\">\n</head>\n<body class=\"mp-body\">\n";
     include __DIR__ . '/site-header.php';
+    if ($nav !== null) {
+        echo mp_section_nav($nav);
+    }
 }
 
 function mpb_close(): void
@@ -215,7 +222,7 @@ function mpb_close(): void
 function mpb_message_page(int $status, string $title, string $bodyHtml, ?string $backHref = 'marketplace.php'): never
 {
     http_response_code($status);
-    mpb_open($title);
+    mpb_open($title, true, '');
     echo '<div class="mp-page mp-page--narrow">';
     echo '<section class="mp-panel"><h1 class="mp-panel__title">' . mp_e($title) . '</h1>' . $bodyHtml . '</section></div>';
     mpb_close();

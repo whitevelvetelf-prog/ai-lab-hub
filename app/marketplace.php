@@ -23,7 +23,7 @@ function mp_config(): array
             'allowed_extensions' => ['pdf', 'md', 'txt', 'json', 'csv', 'zip'],
             'file_storage_dir'   => dirname(__DIR__) . '/storage/marketplace/files',
             'cover_dir'          => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
-            // Публічна частина (marketplace.php, offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
+            // Публічна частина (marketplace.php, marketplace-offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
             'public_enabled'     => false,
             // Дошка оголошень (етап 4) — пояснення в config/marketplace.php.
             'photo_dir'          => dirname(__DIR__) . '/storage/marketplace/photos',
@@ -120,8 +120,8 @@ function mp_posting_enabled(): bool
 }
 
 /**
- * Показувати публіці посилання на Правила (підвал): лише коли подачу відкрито, а поки закрита — тільки співробітникам.
- * Суто косметика (за сесією, без запиту до БД); справжній доступ до mp-rules.php перевіряє сервер.
+ * Показувати вкладку «Правила» в навігації розділу (app/mp-section-nav.php): лише коли подачу відкрито, а поки закрита —
+ * тільки співробітникам. Суто косметика (за сесією, без запиту до БД); справжній доступ перевіряє marketplace-rules.php.
  */
 function mp_rules_link_visible(): bool
 {
@@ -507,7 +507,7 @@ function mp_user_label(?string $name, ?string $employeeNumber): string
 }
 
 // =========================================================================
-// Публічна частина (marketplace.php, marketplace-category.php, offer.php, get.php)
+// Публічна частина (marketplace.php, marketplace-category.php, marketplace-offer.php, get.php)
 // Працює лише при config 'public_enabled' => true; показує лише status='published'.
 // Публічно НІКОЛИ не віддаються delivery_url і file_id — лише get.php (єдина точка видачі).
 // =========================================================================

@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace.php';
+require_once __DIR__ . '/../app/mp-section-nav.php';
 
 mp_public_require();
 
@@ -46,6 +47,7 @@ $offers = mp_public_listings($pdo, $lang, ['category_id' => $categoryId, 'limit'
 </head>
 <body class="mp-body">
     <?php include __DIR__ . '/../app/site-header.php'; ?>
+    <?= mp_section_nav('solutions') ?>
 
     <div class="mp-page">
         <h1 class="mp-title"><?= mp_e($category['name']) ?></h1>

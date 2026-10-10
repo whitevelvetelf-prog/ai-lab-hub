@@ -41,10 +41,10 @@
       - .git/, .gitignore, README.md, deploy*.zip, scripts/
       - MARKETPLACE (until the first Marketplace release) - left out unless -IncludeMarketplace is passed:
           public/mp-*.php (CRM, author cabinet, contact/report/favorite handlers, photo delivery mp-photo.php, cron script),
-          public/marketplace.php, public/marketplace-solutions.php, public/marketplace-category.php,
-          public/offer.php, public/get.php (public part),
+          public/marketplace*.php (board, offer page, posting form, my listings, favorites, rules, solutions, category),
+          public/offer.php (301 stub), public/get.php (public part),
           app/marketplace-board.php, app/marketplace-email.php, app/mpb-*.php (classified board code),
-          docs/marketplace_rules_uk.md (text of the listing rules, rendered by mp-rules.php), docs/.htaccess (no web access),
+          docs/marketplace_rules_uk.md (text of the listing rules, rendered by marketplace-rules.php), docs/.htaccess (no web access),
         Staged launch: with 'posting_enabled' => false in config/marketplace.php (ships as marketplace.dist.php) the build
         passes with a WARNING that the rules are not finalized and submission must stay closed. With 'posting_enabled' => true
         the build STOPS if the rules file still has [placeholders], the word DRAFT (in Ukrainian) or the line
@@ -168,7 +168,7 @@ $files.AddRange([string[]] $images)
 # Marketplace: explicit exclusion unless -IncludeMarketplace (files stay on disk, only kept out of the zip).
 $marketplacePatterns = @(
     '^public/mp-[^/]+\.php$',
-    '^public/(marketplace|marketplace-solutions|marketplace-category|offer|get)\.php$',
+    '^public/(marketplace(-[a-z]+)?|offer|get)\.php$',
     '^app/(marketplace-board|marketplace-email|mpb-[^/]+)\.php$',
     '^public/assets/css/mp-[^/]+\.css$',
     '^database/migration-[^/]*-marketplace-[^/]*\.sql$',

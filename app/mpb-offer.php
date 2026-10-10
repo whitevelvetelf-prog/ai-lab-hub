@@ -1,9 +1,9 @@
 <?php
 
 /**
- * AI LAB HUB — сторінка оголошення дошки (offer.php?id=N для section='board').
+ * AI LAB HUB — сторінка оголошення дошки (marketplace-offer.php?id=N для section='board').
  *
- * Партіал: підключається з public/offer.php, який уже зробив mp_public_require(), відкрив $pdo,
+ * Партіал: підключається з public/marketplace-offer.php, який уже зробив mp_public_require(), відкрив $pdo,
  * визначив $lang та поклав у $board рядок із mpb_listing() (тексти, фото, категорії; БЕЗ контактів).
  * Контакти сюди не потрапляють: кнопка «Показати контакт» робить POST на mp-contact.php.
  * Живе оголошення бачать усі; інші статуси — лише власник і employee/admin (перегляд із банером).
@@ -30,7 +30,7 @@ $priceText = mpb_price_label($board);   // '' — ціну не вказано
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
 
-mpb_open((string) $board['title'], !$isLive);
+mpb_open((string) $board['title'], !$isLive, 'board');
 ?>
     <div class="mp-page mp-page--narrow">
         <?= mpb_flash_html() ?>
@@ -51,7 +51,7 @@ mpb_open((string) $board['title'], !$isLive);
             <p class="mp-note"><?= mp_e(t('mp_auto_translated')) ?></p>
         <?php endif; ?>
 
-        <?php // Поля — у порядку форми подачі (mp-post.php); усе, крім заголовка, одним стилем (.mp-info). ?>
+        <?php // Поля — у порядку форми подачі (marketplace-post.php); усе, крім заголовка, одним стилем (.mp-info). ?>
         <div class="mp-info">
             <?php if (!empty($board['short_desc'])): ?>
                 <p class="mp-info__row"><?= mp_e($board['short_desc']) ?></p>
@@ -119,7 +119,7 @@ mpb_open((string) $board['title'], !$isLive);
         </div>
 
         <?php if ($isOwner): ?>
-            <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="mp-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="mp-my.php"><?= mp_e(t('mpb_my_link')) ?></a></div>
+            <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="marketplace-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="marketplace-my.php"><?= mp_e(t('mpb_my_link')) ?></a></div>
         <?php endif; ?>
 
         <?php if ($isLive && !$isOwner): ?>

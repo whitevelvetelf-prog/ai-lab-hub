@@ -1,4 +1,4 @@
-/* AI LAB HUB — Marketplace, публічна частина (marketplace.php, marketplace-category.php, offer.php, get.php,
+/* AI LAB HUB — Marketplace, публічна частина (marketplace.php, marketplace-category.php, marketplace-offer.php, get.php,
    блок на головній). Бренд-кольори #00032c / #2116ad, білий текст; картки — у стилі карток продуктів
    (.product-card у catalog.php). Усі класи з префіксом mp-, база лише під body.mp-body. */
 
@@ -450,7 +450,7 @@ a.mp-chip:hover {
     color: var(--text-muted, rgba(255, 255, 255, 0.75));
 }
 
-/* ===== Дошка оголошень (етап 4): marketplace.php, offer.php (board), mp-post.php, mp-my.php, mp-favorites.php ===== */
+/* ===== Дошка оголошень (етап 4): marketplace.php, marketplace-offer.php (board), marketplace-post.php, marketplace-my.php, marketplace-favorites.php ===== */
 
 .mp-actions {
     display: flex;
@@ -921,7 +921,7 @@ textarea.mp-input {
     }
 }
 
-/* Правила розміщення оголошень (mp-rules.php) */
+/* Правила розміщення оголошень (marketplace-rules.php) */
 .mp-rules h2 {
     margin: 28px 0 10px;
     font-size: 1.25rem;
@@ -997,4 +997,42 @@ textarea.mp-input {
 .mp-card__desc.mp-card__info,
 .mp-card__price.mp-card__info {
     margin: 0 0 8px;
+}
+
+/* Єдина навігація розділу (app/mp-section-nav.php): вкладки зліва, «Подати оголошення» справа */
+.mp-section-nav {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 16px 24px 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.mp-section-nav__tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mp-section-nav .mp-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.mp-section-nav__post.is-active {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+    .mp-section-nav {
+        padding: 12px 16px 0;
+    }
+
+    .mp-section-nav__post {
+        width: 100%;
+        text-align: center;
+    }
 }

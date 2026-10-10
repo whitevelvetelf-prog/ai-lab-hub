@@ -9,7 +9,7 @@ declare(strict_types=1);
  * shared-хостинг (adm.tools) не підтримує — будь-який варіант дає 500. Тому файл віддає цей скрипт:
  *   - ім'я лише за MPB_PHOTO_NAME_RE (без шляхів і «..»), файл має бути записаний у mp_listing_photos;
  *   - права як у app/mpb-offer.php: живе оголошення — усім; інші статуси — лише власнику та employee/admin;
- *   - при public_enabled = false — лише employee/admin (як offer.php), решта → 404;
+ *   - при public_enabled = false — лише employee/admin (як marketplace-offer.php), решта → 404;
  *   - Content-Type за розширенням (вміст перекодований GD), nosniff; ETag/Last-Modified → 304.
  * Тільки GET/HEAD.
  */

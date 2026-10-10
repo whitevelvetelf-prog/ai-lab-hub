@@ -58,34 +58,14 @@ $pageUrl = static function (int $p) use ($filters): string {
     return 'marketplace.php' . ($q !== [] ? '?' . http_build_query($q) : '');
 };
 
-$hasSolutions = false;
-try {
-    $hasSolutions = $pdo->query("SELECT 1 FROM mp_listings WHERE section = 'solution' AND status = 'published' LIMIT 1")->fetchColumn() !== false;
-} catch (Throwable $e) {
-    $hasSolutions = false;
-}
-
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $sortLabels = ['new' => t('mpb_sort_new'), 'cheap' => t('mpb_sort_cheap'), 'expensive' => t('mpb_sort_expensive')];
 
-mpb_open(t('mp_heading'), false);
+mpb_open(t('mp_heading'), false, 'board');
 ?>
     <div class="mp-page">
         <h1 class="mp-title"><?= mp_e(t('mp_heading')) ?></h1>
         <p class="mp-subtitle"><?= mp_e(t('mpb_subtitle')) ?></p>
-
-        <div class="mp-actions">
-            <?php if (mpb_posting_open()): ?>
-                <a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a>
-            <?php endif; ?>
-            <?php if (auth_check()): ?>
-                <a class="mp-btn" href="mp-my.php"><?= mp_e(t('mpb_my_link')) ?></a>
-                <a class="mp-btn" href="mp-favorites.php"><?= mp_e(t('mpb_fav_title')) ?></a>
-            <?php endif; ?>
-            <?php if ($hasSolutions): ?>
-                <a class="mp-btn" href="marketplace-solutions.php"><?= mp_e(t('mpb_solutions_link')) ?></a>
-            <?php endif; ?>
-        </div>
 
         <?= mpb_flash_html() ?>
 

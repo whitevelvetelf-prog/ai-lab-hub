@@ -5,10 +5,10 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: показати контакти оголошення (POST + CSRF).
  *
- * Контактів немає в HTML offer.php до кліку. Гість → 401 з пропозицією увійти. Залогований без
+ * Контактів немає в HTML marketplace-offer.php до кліку. Гість → 401 з пропозицією увійти. Залогований без
  * підтвердженого email (крім employee/admin) → 403 verify. Далі — до reveals_per_day (30) розкриттів
  * за добу (журнал mp_contact_reveals), решта → 429.
- * Відповідь: JSON (fetch із offer.php, заголовок Accept: application/json) або проста HTML-сторінка
+ * Відповідь: JSON (fetch із marketplace-offer.php, заголовок Accept: application/json) або проста HTML-сторінка
  * (форма без JS).
  */
 
@@ -23,7 +23,7 @@ mpb_require_post($json);
 header('Cache-Control: no-store');
 
 $id = (int) ($_POST['id'] ?? 0);
-$back = 'offer.php?id=' . $id;
+$back = 'marketplace-offer.php?id=' . $id;
 
 /** Відповідь-помилка у потрібному форматі. */
 $fail = static function (int $status, string $code, string $message, bool $withLogin = false, bool $withVerify = false) use ($json, $back): never {

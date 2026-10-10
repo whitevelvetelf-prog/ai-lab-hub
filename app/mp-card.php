@@ -10,7 +10,7 @@
 
 $cardId = (int) $card['id'];
 $cardCover = mp_cover_url($card['cover_image'] ?? null);
-$cardUrl = 'offer.php?id=' . $cardId;
+$cardUrl = 'marketplace-offer.php?id=' . $cardId;
 $cardFallback = (string) $card['text_lang'] !== current_lang();
 ?>
 <article class="mp-card">

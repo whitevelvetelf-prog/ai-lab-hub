@@ -1,14 +1,14 @@
 <?php
 
 /**
- * AI LAB HUB — картка оголошення дошки (marketplace.php, mp-favorites.php, «інші оголошення продавця»).
+ * AI LAB HUB — картка оголошення дошки (marketplace.php, marketplace-favorites.php, «інші оголошення продавця»).
  *
  * Партіал: перед підключенням задати $card — рядок із mpb_search()/mpb_seller_other() (див. app/marketplace-board.php).
  * Контактів у $card немає за побудовою. Стилі: public/assets/css/mp-public.css.
  */
 
 $cardId = (int) $card['id'];
-$cardUrl = 'offer.php?id=' . $cardId;
+$cardUrl = 'marketplace-offer.php?id=' . $cardId;
 $cardThumb = !empty($card['cover_thumb']) ? mpb_photo_url((string) $card['cover_thumb']) : null;
 $cardFallback = (string) ($card['text_lang'] ?? '') !== current_lang();
 $cardLoc = mpb_location_label($card);

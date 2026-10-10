@@ -64,7 +64,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'pwa_ios_ok'     => 'Зрозуміло',
     'pwa_close'      => 'Закрити',
 
-    // --- Marketplace (публічна частина: marketplace.php, offer.php, get.php) ---
+    // --- Marketplace (публічна частина: marketplace.php, marketplace-offer.php, get.php) ---
     'nav_marketplace'            => 'Marketplace',
     'footer_marketplace'         => 'Marketplace',
     'title_marketplace'          => 'AI LAB HUB — Marketplace',
@@ -107,6 +107,11 @@ $GLOBALS['TRANSLATIONS'] = [
     'mpb_my_link'                    => 'Мої оголошення',
     'mpb_solutions_link'             => 'Безкоштовні рішення від платформи',
     'mpb_solutions_title'            => 'Готові рішення',
+    // Єдина навігація розділу (app/mp-section-nav.php)
+    'mp_nav_label'                   => 'Розділ Marketplace',
+    'mp_nav_board'                   => 'Оголошення',
+    'mp_nav_solutions'               => 'Готові AI-рішення',
+    'mp_nav_rules'                   => 'Правила',
     'mpb_found'                      => 'Знайдено оголошень: %d',
     'mpb_pages'                      => 'Сторінки',
     'mpb_disclaimer'                 => 'Платформа не бере участі в угоді між сторонами: не гарантує якість, оплату чи виконання домовленостей. Домовляйтеся напряму й перевіряйте партнера самостійно.',
@@ -279,7 +284,6 @@ $GLOBALS['TRANSLATIONS'] = [
     'mpv_confirm_text'               => 'Натисніть кнопку, щоб підтвердити email і користуватися Marketplace.',
     'mpv_confirm_btn'                => 'Підтвердити email',
     'mpb_f_rules_link'               => 'Правила розміщення оголошень',
-    'footer_mp_rules'                => 'Правила оголошень',
     'mpb_rules_uk_only'              => 'Правила доступні українською мовою.',
 
     // --- index.php: hero + напрямки ---

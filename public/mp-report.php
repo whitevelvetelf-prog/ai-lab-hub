@@ -37,4 +37,4 @@ mpb_flash($msg[0], t($msg[1]));
 // Після скарги оголошення могло піти на модерацію (публічно зникає) — тоді повертаємо в список.
 $live = $pdo->prepare('SELECT 1 FROM mp_listings l WHERE l.id = :id AND ' . mpb_visible_sql());
 $live->execute([':id' => $id]);
-mpb_redirect($live->fetchColumn() !== false ? 'offer.php?id=' . $id : 'marketplace.php');
+mpb_redirect($live->fetchColumn() !== false ? 'marketplace-offer.php?id=' . $id : 'marketplace.php');

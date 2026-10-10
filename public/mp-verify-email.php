@@ -39,7 +39,7 @@ $u = $pdo->prepare('SELECT email FROM users WHERE id = :id');
 $u->execute([':id' => $userId]);
 $email = (string) $u->fetchColumn();
 
-mpb_open(t('mpv_title'));
+mpb_open(t('mpv_title'), true, 'post');
 ?>
     <div class="mp-page mp-page--narrow">
         <h1 class="mp-title"><?= mp_e(t('mpv_title')) ?></h1>
@@ -48,7 +48,7 @@ mpb_open(t('mpv_title'));
             <?php if ($verified): ?>
                 <p class="mp-text"><?= mp_e(t('mpv_already')) ?></p>
                 <?php if (mpb_posting_open()): ?>
-                    <p class="mp-actions"><a class="mp-btn mp-btn--primary" href="mp-post.php"><?= mp_e(t('mpb_post_btn')) ?></a></p>
+                    <p class="mp-actions"><a class="mp-btn mp-btn--primary" href="marketplace-post.php"><?= mp_e(t('mpb_post_btn')) ?></a></p>
                 <?php endif; ?>
             <?php else: ?>
                 <p class="mp-text"><?= mp_e(sprintf(t('mpv_page_text'), $email)) ?></p>

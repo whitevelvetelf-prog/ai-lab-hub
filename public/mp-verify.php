@@ -54,7 +54,7 @@ if ($isPost) {
         200,
         t('mpv_ok_title'),
         '<p class="mp-text">' . mp_e(t('mpv_ok')) . '</p><p class="mp-actions">'
-        . (mpb_posting_open() ? '<a class="mp-btn mp-btn--primary" href="mp-post.php">' . mp_e(t('mpb_post_btn')) . '</a>' : '')
+        . (mpb_posting_open() ? '<a class="mp-btn mp-btn--primary" href="marketplace-post.php">' . mp_e(t('mpb_post_btn')) . '</a>' : '')
         . '<a class="mp-btn' . (mpb_posting_open() ? '' : ' mp-btn--primary') . '" href="marketplace.php">' . mp_e(t('mp_heading')) . '</a></p>',
         null
     );
