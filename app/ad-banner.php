@@ -68,6 +68,20 @@ if (!isset($campaign) || $campaign === null) {
 
 $isExternal = str_starts_with($campaign['target_url'], 'http://') || str_starts_with($campaign['target_url'], 'https://');
 
+// Текст банера — мовою інтерфейсу: ручний переклад або автопереклад з кешем у campaign_translations
+// (database/migration-2026-10-10-campaign-translations.sql). Якщо таблиці ще немає — показуємо оригінал.
+$bannerTitle = (string) $campaign['title'];
+$bannerDesc = (string) ($campaign['description'] ?? '');
+try {
+    $bannerPdo = $pdo ?? translation_pdo();
+    $bannerTitle = localized_field($bannerPdo, 'campaign_translations', 'campaign_id', $campaign, 'title');
+    if ($bannerDesc !== '') {
+        $bannerDesc = localized_field($bannerPdo, 'campaign_translations', 'campaign_id', $campaign, 'description');
+    }
+} catch (Throwable $e) {
+    error_log('[ads] campaign translation: ' . $e->getMessage());
+}
+
 ?>
 <a class="ad-banner" href="<?= htmlspecialchars($campaign['target_url'], ENT_QUOTES) ?>"<?= $isExternal ? ' target="_blank" rel="noopener sponsored"' : '' ?>>
     <span class="ad-banner__label"><?= htmlspecialchars(t('ad_label'), ENT_QUOTES) ?></span>
@@ -75,9 +89,9 @@ $isExternal = str_starts_with($campaign['target_url'], 'http://') || str_starts_
     <img class="ad-banner__image" src="<?= htmlspecialchars($campaign['image_url'], ENT_QUOTES) ?>" alt="">
     <?php endif; ?>
     <span class="ad-banner__text">
-        <span class="ad-banner__title"><?= htmlspecialchars($campaign['title'], ENT_QUOTES) ?></span>
-        <?php if ($campaign['description']): ?>
-        <span class="ad-banner__desc"><?= htmlspecialchars($campaign['description'], ENT_QUOTES) ?></span>
+        <span class="ad-banner__title"><?= htmlspecialchars($bannerTitle, ENT_QUOTES) ?></span>
+        <?php if ($bannerDesc !== ''): ?>
+        <span class="ad-banner__desc"><?= htmlspecialchars($bannerDesc, ENT_QUOTES) ?></span>
         <?php endif; ?>
     </span>
 </a>
