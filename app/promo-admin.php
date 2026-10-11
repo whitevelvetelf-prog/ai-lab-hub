@@ -31,6 +31,7 @@ const PROMO_SETTING_RULES = [
     'max_video_sec' => ['int', 1, 300],
     'frequency_cap_per_session' => ['int', 0, 50],
     'min_topup' => ['money'],
+    'payment_jar_url' => ['url'],
     'payment_instructions_uk' => ['text', 5000],
     'payment_instructions_en' => ['text', 5000],
     'prohibited_categories_text_uk' => ['text', 5000],
@@ -62,6 +63,15 @@ function promo_admin_save_settings(PDO $pdo, array $in): array
                     continue 2;
                 }
                 $values[$key] = (string) (int) $raw;
+                break;
+            case 'url':
+                $p = parse_url($raw);
+                if ($raw !== '' && (mb_strlen($raw) > 500 || !is_array($p) || strtolower((string) ($p['scheme'] ?? '')) !== 'https'
+                    || empty($p['host']) || isset($p['user']) || preg_match('/[\s<>"\']/', $raw))) {
+                    $errors[] = 'Посилання на банку для оплати реклами: повна адреса, що починається з https://, або порожньо.';
+                    continue 2;
+                }
+                $values[$key] = $raw;
                 break;
             case 'money':
                 if ($raw === '') {

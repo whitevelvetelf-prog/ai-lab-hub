@@ -872,6 +872,14 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             font-size: 0.95rem;
         }
 
+        .promo-crm p {
+            margin: 4px 0;
+        }
+
+        .promo-crm {
+            overflow-wrap: anywhere;
+        }
+
         .staff-note a {
             color: #bbf7d0;
             font-weight: 600;
@@ -1581,6 +1589,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
                                 · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
+                            <?php if (auth_role() === 'admin' && promo_is_admin($pdo, (int) $user['id'])) { echo promo_crm_overview_html($pdo); } ?>
                         </div>
                     </div>
                 </div>

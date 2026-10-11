@@ -15,6 +15,47 @@ declare(strict_types=1);
 require_once __DIR__ . '/promo-admin.php';
 require_once __DIR__ . '/promo-cabinet.php';
 
+/**
+ * Блок «Реклама» для CRM: стан системи, що чекає на дію, і переходи до всіх
+ * рекламних розділів (вкладки адмінки, CRM банерів, власна реклама, правила,
+ * посилання на банку для оплати). Лише для admin; без міграції — порожньо.
+ */
+function promo_crm_overview_html(PDO $pdo): string
+{
+    try {
+        $enabled = promo_enabled($pdo);
+        $count = static fn(string $sql): int => (int) $pdo->query($sql)->fetchColumn();
+        $pending = $count("SELECT COUNT(*) FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id WHERE cr.status = 'pending' AND c.status = 'pending_review'");
+        $topups = $count("SELECT COUNT(*) FROM ad_transactions WHERE type = 'topup' AND status = 'pending'");
+        $reports = $count("SELECT COUNT(*) FROM ad_reports WHERE status = 'new'");
+        $active = $count("SELECT COUNT(*) FROM ad_campaigns WHERE format = 'video' AND status = 'active'");
+        $banners = $count("SELECT COUNT(*) FROM ad_campaigns WHERE format = 'banner' AND status = 'active'");
+        $rates = $count('SELECT COUNT(*) FROM ad_rate_card WHERE active = 1');
+    } catch (Throwable $e) {
+        return '';
+    }
+    $jar = promo_payment_jar_url($pdo);
+    $e = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+    $tab = static fn(string $t, string $label, int $n = 0): string => '<a href="account.php?padm_tab=' . $t . '#acc-promo-admin">' . $e($label) . '</a>' . ($n > 0 ? ' <strong>(' . $n . ')</strong>' : '');
+
+    return '<div class="staff-note promo-crm">'
+        . '<p><strong>Реклама:</strong> ' . ($enabled ? 'увімкнена' : '<strong>вимкнена</strong> (на сайті немає жодної реклами, зокрема банерів)')
+        . ' · активних відеокампаній: ' . $active . ' · активних банерних кампаній: ' . $banners
+        . ' · цін у прайсі: ' . $rates . ($rates === 0 ? ' (платну рекламу не можна надіслати)' : '') . '</p>'
+        . '<p>Відеореклама: ' . $tab('moderation', 'Модерація', $pending)
+        . ' · ' . $tab('campaigns', 'Кампанії')
+        . ' · ' . $tab('payments', 'Платежі', $topups)
+        . ' · ' . $tab('rates', 'Прайс-лист')
+        . ' · ' . $tab('settings', 'Налаштування')
+        . ' · ' . $tab('reports', 'Звіти й скарги', $reports)
+        . ' · ' . $tab('house', 'Власна реклама') . '</p>'
+        . '<p>Банери: <a href="crm-ads-list.php">CRM банерів</a> · <a href="crm-add-campaign.php">+ банерна кампанія</a>'
+        . ' · Рекламодавцям: <a href="account.php?promo_tab=campaigns#acc-promo">кабінет рекламодавця</a>'
+        . ' · <a href="promo-rules.php" target="_blank" rel="noopener">правила реклами</a>'
+        . ($jar !== '' ? ' · <a href="' . $e($jar) . '" target="_blank" rel="noopener noreferrer">банка для оплати реклами</a>' : ' · банку для оплати реклами не задано (' . $tab('settings', 'Налаштування') . ')')
+        . '</p></div>';
+}
+
 function promo_admin_cabinet_render(PDO $pdo, array $user): void
 {
     if (!promo_is_admin($pdo, (int) $user['id'])) {
@@ -343,7 +384,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <label class="pc-field"><span>Мін. поповнення, грн (порожньо — без мінімуму)</span><input type="text" inputmode="decimal" name="min_topup" value="<?= pc_e($settings['min_topup'] ?? '') ?>"></label>
                                     <label class="pc-field"><span>Ліміт показів кампанії одному сеансу на добу (0 — без ліміту)</span><input type="text" inputmode="numeric" name="frequency_cap_per_session" value="<?= pc_e($settings['frequency_cap_per_session'] ?? '3') ?>"></label>
                                 </div>
-                                <label class="pc-field"><span>Реквізити й інструкція з оплати (UA). Порожньо — поповнення недоступне.</span>
+                                <label class="pc-field"><span>Посилання на банку (monobank) для оплати реклами — окреме від донатів. Лише https://; порожньо — кнопки оплати немає.</span>
+                                    <input type="text" name="payment_jar_url" value="<?= pc_e($settings['payment_jar_url'] ?? '') ?>" placeholder="https://send.monobank.ua/jar/…" autocomplete="off" spellcheck="false"></label>
+                                <label class="pc-field"><span>Реквізити й інструкція з оплати (UA). Якщо порожньо й немає посилання на банку — поповнення недоступне.</span>
                                     <textarea name="payment_instructions_uk" rows="5" maxlength="5000"><?= pc_e($settings['payment_instructions_uk'] ?? '') ?></textarea></label>
                                 <label class="pc-field"><span>Реквізити й інструкція з оплати (EN). Порожньо — показується UA.</span>
                                     <textarea name="payment_instructions_en" rows="5" maxlength="5000"><?= pc_e($settings['payment_instructions_en'] ?? '') ?></textarea></label>

@@ -483,3 +483,27 @@ optgroup {
         padding: 20px;
     }
 }
+
+/* Зведення реклами (app/promo-admin-cabinet.php → promo_crm_overview_html) */
+.promo-crm {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(52, 211, 153, 0.5);
+    background: rgba(52, 211, 153, 0.12);
+    font-size: 0.92rem;
+    overflow-wrap: anywhere;
+}
+
+.promo-crm p {
+    margin: 4px 0;
+}
+
+.promo-crm a {
+    color: #bbf7d0;
+    font-weight: 600;
+}
+
+.promo-crm a:hover {
+    color: #ffffff;
+}

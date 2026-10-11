@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/crm-ads.php';
+require_once __DIR__ . '/../app/promo-admin-cabinet.php'; // зведення відеореклами (promo_crm_overview_html)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -74,6 +75,8 @@ foreach ($campaigns as $row) {
 
         <h1 class="page__title">CRM — реклама</h1>
         <p class="page__subtitle">Рекламні кампанії ad server: платні мають пріоритет над внутрішніми.</p>
+
+        <?= promo_crm_overview_html($pdo) ?>
 
         <div class="toolbar">
             <a class="btn btn--primary btn--sm" href="crm-add-campaign.php">+ Додати кампанію</a>

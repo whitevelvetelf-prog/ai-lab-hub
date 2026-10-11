@@ -114,6 +114,8 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $maxSec = (int) promo_setting($pdo, 'max_video_sec', '30');
     $minTopup = promo_parse_money(promo_setting($pdo, 'min_topup', ''));
     $instructions = promo_payment_instructions($pdo);
+    $jarUrl = promo_payment_jar_url($pdo);
+    $canTopup = $instructions !== '' || $jarUrl !== '';
     $prohibited = trim(promo_setting($pdo, 'prohibited_categories_text_' . $lang, '')) ?: trim(promo_setting($pdo, 'prohibited_categories_text_uk', ''));
 
     $txSt = $pdo->prepare('SELECT * FROM ad_transactions WHERE user_id = :u ORDER BY id DESC LIMIT 100');
@@ -489,16 +491,22 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                         <section class="pc-panel" data-pc-panel="balance"<?= $tab === 'balance' ? '' : ' hidden' ?>>
                             <p class="pc-balance"><?= pc_e(promo_tr('balance_current')) ?> <strong><?= pc_e(promo_money($balance)) ?></strong></p>
 
-                            <?php if (is_array($flash) && !empty($flash['topup']) && $instructions !== ''): $req = $flash['topup']; ?>
+                            <?php if (is_array($flash) && !empty($flash['topup']) && $canTopup): $req = $flash['topup']; ?>
                             <div class="pc-box pc-box--accent">
                                 <p><strong><?= pc_e(promo_tr('topup_created', (int) $req['id'], promo_money($req['amount']))) ?></strong></p>
                                 <p><?= pc_e(promo_tr('payment_purpose')) ?> <code><?= pc_e($req['reference']) ?></code></p>
+                                <?php if ($jarUrl !== ''): ?>
+                                <p><a class="pc-btn pc-btn--primary" href="<?= pc_e($jarUrl) ?>" target="_blank" rel="noopener noreferrer"><?= pc_e(promo_tr('pay_jar_btn')) ?></a></p>
+                                <p class="pc-muted"><?= pc_e(promo_tr('pay_jar_hint', promo_money($req['amount']), $req['reference'])) ?></p>
+                                <?php endif; ?>
+                                <?php if ($instructions !== ''): ?>
                                 <div class="pc-instructions"><?= nl2br(pc_e($instructions)) ?></div>
+                                <?php endif; ?>
                             </div>
                             <?php endif; ?>
 
                             <h3 class="pc-h3"><?= pc_e(promo_tr('topup_title')) ?></h3>
-                            <?php if ($instructions === ''): ?>
+                            <?php if (!$canTopup): ?>
                             <p class="pc-note"><?= pc_e(promo_tr('topup_unavailable')) ?></p>
                             <?php else: ?>
                             <form method="post" action="promo-action.php" class="pc-topup">
@@ -519,6 +527,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                     <li><?= pc_e(promo_tr('topup_howto_3')) ?></li>
                                     <li><?= pc_e(promo_tr('topup_howto_4')) ?></li>
                                 </ol>
+                                <?php if ($jarUrl !== ''): ?>
+                                <p><a href="<?= pc_e($jarUrl) ?>" target="_blank" rel="noopener noreferrer"><?= pc_e(promo_tr('pay_jar_btn')) ?></a></p>
+                                <?php endif; ?>
                                 <?php if ($instructions !== ''): ?>
                                 <div class="pc-instructions"><?= nl2br(pc_e($instructions)) ?></div>
                                 <?php endif; ?>

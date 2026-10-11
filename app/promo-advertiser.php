@@ -800,8 +800,7 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
 /** Заявка на поповнення. Повертає [ok, ключ, дані заявки]. */
 function promo_request_topup(PDO $pdo, int $userId, mixed $amountInput): array
 {
-    $instructions = promo_payment_instructions($pdo);
-    if ($instructions === '') {
+    if (promo_payment_instructions($pdo) === '' && promo_payment_jar_url($pdo) === '') {
         return [false, 'err_topup_unavailable', null];
     }
     $amount = promo_parse_money($amountInput);
@@ -819,6 +818,17 @@ function promo_request_topup(PDO $pdo, int $userId, mixed $amountInput): array
     promo_rate_hit($pdo, $userId, 'topup_request');
 
     return [true, 'ok_topup_created', $request + ['amount' => $amount]];
+}
+
+/**
+ * Посилання на банку (monobank) для оплати реклами — окреме від банки донатів.
+ * Значення лише в ad_settings (вводить адмін), не в коді.
+ */
+function promo_payment_jar_url(PDO $pdo): string
+{
+    $url = trim(promo_setting($pdo, 'payment_jar_url', ''));
+
+    return preg_match('~^https://[^\s<>"\']+$~i', $url) ? $url : '';
 }
 
 /** Текст реквізитів мовою інтерфейсу (з запасним українським). */
