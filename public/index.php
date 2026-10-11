@@ -49,6 +49,7 @@ $categoryIcons = [
     'sports'                => 'trophy',
     'religion'              => 'hand-heart',
     'career'                => 'briefcase',
+    'cybersecurity'         => 'shield',
 ];
 
 ?>

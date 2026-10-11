@@ -70,6 +70,7 @@ $categoryIcons = [
     'sports'                => 'trophy',
     'religion'              => 'hand-heart',
     'career'                => 'briefcase',
+    'cybersecurity'         => 'shield',
 ];
 
 $subcategoryIcons = [
@@ -165,6 +166,13 @@ $subcategoryIcons = [
     'job-search'         => 'search',
     'freelance'          => 'laptop',
     'career-growth'      => 'trending-up',
+    // Кібербезпека
+    'password-managers'   => 'key-round',
+    'vpn-privacy'         => 'lock',
+    'device-protection'   => 'shield-check',
+    'identity-protection' => 'user-lock',
+    'business-security'   => 'building-2',
+    'appsec'              => 'bug',
     'mental-health-eating-behavior' => 'heart-handshake',
     // Релігія
     'christianity'       => 'church',
