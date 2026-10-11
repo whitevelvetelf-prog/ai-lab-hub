@@ -306,3 +306,26 @@ CREATE TABLE IF NOT EXISTS ad_reports (
     UNIQUE KEY uniq_ad_report_session (creative_id, session_hash),
     KEY idx_ad_reports_status (status, created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- 11) EN-написи картки відеореклами (готовий переклад, source='manual').
+--     Українські — у app/translations.php.
+-- ---------------------------------------------------------------------
+INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VALUES
+('promo_label', 'en', 'Sponsored', 'manual'),
+('promo_sound_on', 'en', 'Unmute', 'manual'),
+('promo_sound_off', 'en', 'Mute', 'manual'),
+('promo_play', 'en', 'Play video', 'manual'),
+('promo_report', 'en', 'Report this ad', 'manual'),
+('promo_report_send', 'en', 'Send report', 'manual'),
+('promo_report_cancel', 'en', 'Cancel', 'manual'),
+('promo_report_thanks', 'en', 'Thank you, your report has been sent.', 'manual'),
+('promo_reason_misleading', 'en', 'Misleading or false', 'manual'),
+('promo_reason_inappropriate', 'en', 'Inappropriate content', 'manual'),
+('promo_reason_scam', 'en', 'Scam', 'manual'),
+('promo_reason_irrelevant', 'en', 'Not relevant', 'manual'),
+('promo_reason_other', 'en', 'Other', 'manual'),
+('promo_cta_learn_more', 'en', 'Learn more', 'manual'),
+('promo_cta_try', 'en', 'Try it', 'manual'),
+('promo_cta_go', 'en', 'Go', 'manual'),
+('promo_cta_download', 'en', 'Download', 'manual');

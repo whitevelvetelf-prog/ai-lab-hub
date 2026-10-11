@@ -10,6 +10,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/promo.php';
 
 $slug = (string) ($_GET['slug'] ?? '');
 
@@ -32,6 +33,45 @@ if ($article !== null) {
     /** @var PDO $pdo */
     $pdo = require __DIR__ . '/../config/database.php';
     analytics_log_view($pdo, 'article', null, $slug);
+
+    // Відеореклама (blog_inline): перед другим розділом статті (другим <h2>),
+    // таргетинг — за темами статті (BLOG_ARTICLE_TOPICS → id категорій/підкатегорій).
+    // Немає другого розділу або реклами — стаття без змін.
+    $promoCats = [];
+    $promoSubs = [];
+    try {
+        foreach (blog_article_topics($slug) as $topic) {
+            $q = $pdo->prepare('SELECT id FROM categories WHERE slug = :s');
+            $q->execute([':s' => $topic['cat']]);
+            $catId = (int) $q->fetchColumn();
+            if ($catId <= 0) {
+                continue;
+            }
+            $promoCats[] = $catId;
+            if ($topic['sub'] !== '') {
+                $q = $pdo->prepare('SELECT id FROM subcategories WHERE slug = :s AND category_id = :c');
+                $q->execute([':s' => $topic['sub'], ':c' => $catId]);
+                $subId = (int) $q->fetchColumn();
+                if ($subId > 0) {
+                    $promoSubs[] = $subId;
+                }
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('[promo] blog topics: ' . $e->getMessage());
+    }
+    $promoSlotHtml = promo_slot($pdo, 'blog_inline', $promoCats, $promoSubs);
+    if ($promoSlotHtml !== '') {
+        $h2At = [];
+        $offset = 0;
+        while (($pos = stripos($article['html'], '<h2', $offset)) !== false) {
+            $h2At[] = $pos;
+            $offset = $pos + 3;
+        }
+        if (count($h2At) >= 2) {
+            $article['html'] = substr($article['html'], 0, $h2At[1]) . $promoSlotHtml . substr($article['html'], $h2At[1]);
+        }
+    }
 }
 
 ?>

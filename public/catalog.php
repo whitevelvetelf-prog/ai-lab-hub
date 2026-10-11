@@ -21,6 +21,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
+require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/search.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
@@ -430,8 +431,23 @@ $cardColors = [
         <?php elseif ($products === []): ?>
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
+        <?php
+        // Відеореклама (catalog_card): одна картка на сторінку, третьою позицією
+        // (або в кінці, якщо продуктів менше). Без реклами слот прихований.
+        $promoCats = [];
+        $promoSubs = [];
+        if (!$isSearch && !empty($subcategory)) {
+            $promoCats = [(int) $subcategory['category_id']];
+            $promoSubs = [(int) $subcategory['id']];
+        } elseif (!$isSearch && !empty($category)) {
+            $promoCats = [(int) $category['id']];
+        }
+        $promoSlotHtml = promo_slot($pdo, 'catalog_card', $promoCats, $promoSubs);
+        $promoSlotAt = min(2, count($products));
+        ?>
         <div class="catalog-grid">
             <?php foreach ($products as $i => $product): ?>
+                <?php if ($i === $promoSlotAt) { echo $promoSlotHtml; } ?>
                 <?php
                 $pid = (int) $product['id'];
                 [$priceText, $isFree] = price_badge($plansByProduct[$pid] ?? []);
@@ -458,6 +474,7 @@ $cardColors = [
                     </div>
                 </article>
             <?php endforeach; ?>
+            <?php if ($promoSlotAt === count($products)) { echo $promoSlotHtml; } ?>
         </div>
         <?php endif; ?>
     </div>

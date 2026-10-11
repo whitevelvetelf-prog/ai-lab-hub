@@ -14,6 +14,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
 require_once __DIR__ . '/../app/paw-icon.php';
+require_once __DIR__ . '/../app/promo.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -47,7 +48,7 @@ if ($product !== false) {
 
 
     $catStmt = $pdo->prepare(
-        "SELECT c.name, c.name_en
+        "SELECT c.id, c.name, c.name_en
          FROM product_categories pc
          JOIN categories c ON c.id = pc.category_id
          WHERE pc.product_id = :id
@@ -57,7 +58,7 @@ if ($product !== false) {
     $categories = $catStmt->fetchAll();
 
     $subStmt = $pdo->prepare(
-        "SELECT s.name, s.name_en, s.slug
+        "SELECT s.id, s.name, s.name_en, s.slug
          FROM product_subcategories ps
          JOIN subcategories s ON s.id = ps.subcategory_id
          WHERE ps.product_id = :id
@@ -611,6 +612,9 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         </div>
 
         <?= subcategory_note_html(array_column($subcategories, 'slug')) ?>
+
+        <!-- Відеореклама (product_page): під описом; без реклами нічого не видно -->
+        <?= promo_slot($pdo, 'product_page', array_map('intval', array_column($categories, 'id')), array_map('intval', array_column($subcategories, 'id'))) ?>
 
         <!-- 5. Основні функції -->
         <?php if ($features !== []): ?>

@@ -39,3 +39,10 @@
 # (забороняє виконання PHP у теці); саму теку створює код, якщо її немає.
 /public/uploads/marketplace/*
 !/public/uploads/marketplace/.htaccess
+
+# Секрети відеореклами (HMAC токенів, ключ cron) — шаблон config/promo.example.php.
+/config/promo.php
+
+# Відео й постери рекламодавців — користувацький контент (у git лише index.html, що закриває лістинг).
+/public/uploads/promo/*
+!/public/uploads/promo/index.html

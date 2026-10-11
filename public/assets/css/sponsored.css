@@ -1,0 +1,216 @@
+/* AI LAB HUB — картка відеореклами (.sponsored-card), спільна для всіх розміщень
+   (catalog_card, product_page, blog_inline). Заповнює sponsored.js.
+   Слот прихований (hidden), доки немає реклами — порожнього місця не лишається.
+   Світлі посилання й наведення на темному фоні сайту; без горизонтальної прокрутки. */
+
+.sponsored-slot[hidden] {
+    display: none !important;
+}
+
+.sponsored-slot--product_page,
+.sponsored-slot--blog_inline {
+    margin: 28px 0;
+}
+
+.sponsored-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    overflow: hidden;
+}
+
+.sponsored-slot--product_page .sponsored-card,
+.sponsored-slot--blog_inline .sponsored-card {
+    max-width: 640px;
+}
+
+.sponsored-card__label {
+    align-self: flex-start;
+    margin-bottom: 10px;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #e6ecff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.sponsored-card__media {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #0b0f2e;
+}
+
+.sponsored-card__media video,
+.sponsored-card__media iframe,
+.sponsored-card__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    object-fit: cover;
+}
+
+.sponsored-card__play,
+.sponsored-card__sound {
+    position: absolute;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    cursor: pointer;
+    color: #ffffff;
+    background: rgba(10, 14, 50, 0.72);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.sponsored-card__play {
+    inset: 50% auto auto 50%;
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+    border-radius: 50%;
+    font-size: 1.6rem;
+}
+
+.sponsored-card__sound {
+    right: 10px;
+    bottom: 10px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.sponsored-card__play:hover,
+.sponsored-card__sound:hover {
+    background: rgba(91, 140, 255, 0.85);
+}
+
+.sponsored-card__play:focus-visible,
+.sponsored-card__sound:focus-visible,
+.sponsored-card__cta:focus-visible,
+.sponsored-card__report:focus-visible {
+    outline: 2px solid #9fb8ff;
+    outline-offset: 2px;
+}
+
+.sponsored-card__title {
+    margin: 14px 0 6px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.sponsored-card__desc {
+    margin: 0 0 14px;
+    font-size: 0.92rem;
+    color: #c9d3f2;
+    overflow-wrap: anywhere;
+}
+
+.sponsored-card__footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.sponsored-card__cta {
+    display: inline-block;
+    padding: 9px 18px;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: #0b0f2e;
+    background: #ffffff;
+    transition: background 0.15s ease;
+}
+
+.sponsored-card__cta:hover {
+    color: #0b0f2e;
+    background: #dbe5ff;
+}
+
+.sponsored-card__report {
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    font-size: 0.78rem;
+    color: #bcd0ff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.sponsored-card__report:hover {
+    color: #ffffff;
+}
+
+.sponsored-card__report-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.sponsored-card__report-form select {
+    flex: 1 1 180px;
+    min-width: 0;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: #11163f;
+    color: #ffffff;
+}
+
+.sponsored-card__report-form button {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+.sponsored-card__report-form button:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.sponsored-card__note {
+    margin-top: 10px;
+    font-size: 0.8rem;
+    color: #c9d3f2;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sponsored-card__cta {
+        transition: none;
+    }
+}
+
+/* Розміщення catalog_card: слот — звичайна клітинка сітки каталогу, картка заповнює її на всю висоту. */
+.sponsored-slot--catalog_card {
+    display: flex;
+    min-width: 0;
+}
+
+.sponsored-slot--catalog_card .sponsored-card {
+    flex: 1 1 auto;
+}

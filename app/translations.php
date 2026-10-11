@@ -587,6 +587,25 @@ $GLOBALS['TRANSLATIONS'] = [
     // --- Внутрішня реклама (app/ads.php, app/ad-banner.php) ---
     'ad_label' => 'Реклама',
 
+    // --- Відеореклама (app/promo.php, public/promo-serve.php → public/assets/js/sponsored.js) ---
+    'promo_label'            => 'Реклама',
+    'promo_sound_on'         => 'Увімкнути звук',
+    'promo_sound_off'        => 'Вимкнути звук',
+    'promo_play'             => 'Відтворити відео',
+    'promo_report'           => 'Поскаржитись на рекламу',
+    'promo_report_send'      => 'Надіслати скаргу',
+    'promo_report_cancel'    => 'Скасувати',
+    'promo_report_thanks'    => 'Дякуємо, скаргу надіслано.',
+    'promo_reason_misleading'    => 'Оманлива або неправдива',
+    'promo_reason_inappropriate' => 'Неприйнятний вміст',
+    'promo_reason_scam'          => 'Шахрайство',
+    'promo_reason_irrelevant'    => 'Не стосується теми',
+    'promo_reason_other'         => 'Інше',
+    'promo_cta_learn_more'   => 'Дізнатись більше',
+    'promo_cta_try'          => 'Спробувати',
+    'promo_cta_go'           => 'Перейти',
+    'promo_cta_download'     => 'Завантажити',
+
     // --- Статистика сайту для admin (public/admin-stats.php, посилання в account.php) ---
     'account_site_stats_link' => 'Статистика сайту →',
 

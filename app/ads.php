@@ -11,7 +11,12 @@ declare(strict_types=1);
  *
  * Підключати перед app/ad-banner.php:
  *   require_once __DIR__ . '/../app/ads.php';
+ *
+ * Глобальний перемикач ad_settings.enabled (app/promo.php → promo_enabled)
+ * вимикає всю рекламу сайту, зокрема ці банери.
  */
+
+require_once __DIR__ . '/promo.php';
 
 /**
  * Кампанія для показу в заданому слоті: активна платна (у межах
@@ -21,6 +26,11 @@ declare(strict_types=1);
  */
 function ads_pick_campaign(PDO $pdo, string $placement): ?array
 {
+    // Глобальний перемикач реклами (ad_settings.enabled) вимикає й старі банери.
+    if (!promo_enabled($pdo)) {
+        return null;
+    }
+
     $paidStmt = $pdo->prepare(
         "SELECT * FROM campaigns
          WHERE placement = :placement
@@ -66,6 +76,10 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
 function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId = null, ?PDO $pdo = null): ?array
 {
     $pdo ??= require __DIR__ . '/../config/database.php';
+
+    if (!promo_enabled($pdo)) {
+        return null;
+    }
 
     $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext
             FROM ads a
