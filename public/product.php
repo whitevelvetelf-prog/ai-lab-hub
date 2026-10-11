@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
+require_once __DIR__ . '/../app/paw-icon.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -35,6 +36,14 @@ $plans = [];
 
 if ($product !== false) {
     analytics_log_view($pdo, 'product', (int) $product['id']);
+
+    // Чи продукт уже в добірці поточного користувача — для стану кнопки-лапки.
+    $isSaved = false;
+    if (auth_check()) {
+        $savedStmt = $pdo->prepare('SELECT 1 FROM saved_products WHERE user_id = :uid AND product_id = :pid LIMIT 1');
+        $savedStmt->execute([':uid' => auth_user_id(), ':pid' => $productId]);
+        $isSaved = (bool) $savedStmt->fetchColumn();
+    }
 
 
     $catStmt = $pdo->prepare(
@@ -271,6 +280,19 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             font-size: clamp(1.8rem, 5vw, 2.6rem);
             font-weight: 800;
             letter-spacing: 0.02em;
+        }
+
+        /* Лапка «зберегти в добірку» поряд із назвою — трохи більша, ніж у картці. */
+        .product-head .save-btn {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+        }
+
+        .product-head .save-btn .paw-icon,
+        .product-head .save-btn svg {
+            width: 28px;
+            height: 28px;
         }
 
         /* Кнопки */
@@ -551,6 +573,14 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         <div class="product-head">
             <div class="product-head__logo"><?= htmlspecialchars(product_initials($product['name']), ENT_QUOTES) ?></div>
             <h1 class="product-head__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h1>
+            <?php $saveLabel = $isSaved ? t('saved_btn_unsave') : t('saved_btn_save'); ?>
+            <button type="button"
+                    class="save-btn<?= $isSaved ? ' is-saved' : '' ?>"
+                    data-product-id="<?= (int) $product['id'] ?>"
+                    data-saved="<?= $isSaved ? '1' : '0' ?>"
+                    aria-pressed="<?= $isSaved ? 'true' : 'false' ?>"
+                    aria-label="<?= htmlspecialchars($saveLabel, ENT_QUOTES) ?>"
+                    title="<?= htmlspecialchars($saveLabel, ENT_QUOTES) ?>"><?= paw_icon_use() ?></button>
         </div>
 
         <!-- 2. Кнопка переходу на сайт -->
