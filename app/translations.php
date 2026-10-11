@@ -587,6 +587,31 @@ $GLOBALS['TRANSLATIONS'] = [
     // --- Внутрішня реклама (app/ads.php, app/ad-banner.php) ---
     'ad_label' => 'Реклама',
 
+    // --- Сторінка донатів (public/donate.php, реквізити — site_settings, app/donations.php) ---
+    'donate_page_title'    => 'Підтримати AI LAB HUB',
+    'donate_intro'         => 'AI LAB HUB — незалежний каталог AI-інструментів. Якщо він вам корисний, ви можете підтримати проєкт добровільним внеском: це допомагає розвивати й наповнювати каталог.',
+    'donate_thanks'        => 'Дякуємо за будь-яку підтримку!',
+    'donate_soon'          => 'Скоро тут з’являться способи підтримати проєкт. Дякуємо, що зазирнули!',
+    'donate_ua_title'      => 'Для донатів з України',
+    'donate_intl_title'    => 'Для міжнародних переказів',
+    'donate_jar_btn'       => 'Відкрити банку для донату',
+    'donate_qr_hint'       => 'Або відскануйте QR-код камерою телефона',
+    'donate_card'          => 'Номер картки',
+    'donate_recipient'     => 'Отримувач',
+    'donate_iban_uah'      => 'IBAN (гривня)',
+    'donate_iban_usd'      => 'IBAN (долар США)',
+    'donate_iban_eur'      => 'IBAN (євро)',
+    'donate_swift'         => 'SWIFT / BIC',
+    'donate_bank'          => 'Банк',
+    'donate_purpose'       => 'Призначення платежу',
+    'donate_purpose_default' => 'Добровільний внесок на розвиток AI LAB HUB',
+    'donate_intl_note'     => 'Міжнародні перекази зазвичай надходять за кілька робочих днів, а банки-посередники можуть утримувати комісію.',
+    'donate_copy'          => 'Скопіювати',
+    'donate_copied'        => 'Скопійовано',
+    'donate_copy_failed'   => 'Не вдалося скопіювати — виділіть текст і скопіюйте вручну',
+    'donate_legal_note'    => 'Донат добровільний, не є оплатою послуг і поверненню не підлягає.',
+    'donate_terms_link'    => 'Умови використання',
+
     // --- Відеореклама (app/promo.php, public/promo-serve.php → public/assets/js/sponsored.js) ---
     'promo_label'            => 'Реклама',
     'promo_sound_on'         => 'Увімкнути звук',

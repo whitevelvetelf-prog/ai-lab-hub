@@ -15,6 +15,7 @@ require_once __DIR__ . '/../app/mailer.php';   // mail_site_url()
 require_once __DIR__ . '/../app/oauth.php';    // способи входу (соцмережі)
 require_once __DIR__ . '/../app/promo-cabinet.php'; // розділ «Реклама» (кабінет рекламодавця)
 require_once __DIR__ . '/../app/promo-admin-cabinet.php'; // розділ «Реклама: адмін»
+require_once __DIR__ . '/../app/donations-admin.php'; // розділ «Донати» (реквізити, лише admin)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -1299,6 +1300,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
 
             <?php if (promo_cabinet_visible($pdo, $user)) { promo_cabinet_render($pdo, $user); } ?>
             <?php if ($user['role'] === 'admin' && promo_cabinet_visible($pdo, $user)) { promo_admin_cabinet_render($pdo, $user); } ?>
+            <?php if ($user['role'] === 'admin') { donations_admin_render($pdo, $user); } ?>
 
             <?php // ТЕРМІНОВО приховано: подача заявки "Стати працівником" для user.
             // Секцію не видалено — лише вимкнено умовою, щоб легко повернути.
