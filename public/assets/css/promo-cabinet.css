@@ -163,6 +163,26 @@
     display: none;
 }
 
+/* Кнопки, що питають підтвердження (form[data-pc-confirm]), завжди підсвічені:
+   жовтий контур, світіння й позначка ⚠ — нові такі форми підхоплюються автоматично. */
+.pc form[data-pc-confirm] .pc-btn {
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35), 0 0 14px rgba(251, 191, 36, 0.45);
+}
+
+.pc form[data-pc-confirm] .pc-btn::before {
+    content: "A0";
+    color: #fbbf24;
+}
+
+.pc form[data-pc-confirm] .pc-btn--primary::before {
+    color: #fff3c4;
+}
+
+.pc form[data-pc-confirm] .pc-btn:hover {
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.6), 0 0 18px rgba(251, 191, 36, 0.6);
+}
+
 .pc-inline-form {
     display: inline;
     margin: 0;

@@ -219,7 +219,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <input type="hidden" name="decision" value="approve">
                                         <button type="submit" class="pc-btn pc-btn--primary">Схвалити</button>
                                     </form>
-                                    <form method="post" action="promo-admin-action.php" class="pc-reject">
+                                    <form method="post" action="promo-admin-action.php" class="pc-reject"
+                                          data-pc-confirm="Відхилити креатив #<?= (int) $q['id'] ?>? Рекламодавець побачить причину відмови.">
                                         <?= $csrf ?>
                                         <input type="hidden" name="action" value="moderate">
                                         <input type="hidden" name="creative_id" value="<?= (int) $q['id'] ?>">
@@ -298,7 +299,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                                 <input type="hidden" name="decision" value="confirm">
                                                 <button type="submit" class="pc-btn pc-btn--small pc-btn--primary">Підтвердити</button>
                                             </form>
-                                            <form method="post" action="promo-admin-action.php" class="pc-reject pc-reject--inline">
+                                            <form method="post" action="promo-admin-action.php" class="pc-reject pc-reject--inline"
+                                                  data-pc-confirm="Відхилити заявку №<?= (int) $tx['id'] ?> на <?= pc_e(promo_money($tx['amount'])) ?>?">
                                                 <?= $csrf ?>
                                                 <input type="hidden" name="action" value="topup_decide">
                                                 <input type="hidden" name="tx_id" value="<?= (int) $tx['id'] ?>">
@@ -315,7 +317,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <?php endif; ?>
 
                             <h3 class="pc-h3">Ручне коригування балансу</h3>
-                            <form method="post" action="promo-admin-action.php" class="pc-filter">
+                            <form method="post" action="promo-admin-action.php" class="pc-filter"
+                                  data-pc-confirm="Змінити баланс рекламодавця на вказану суму? Запис потрапить у журнал.">
                                 <?= $csrf ?>
                                 <input type="hidden" name="action" value="adjust">
                                 <label class="pc-field"><span>Email або ID користувача</span><input type="text" name="who" required></label>
@@ -517,7 +520,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                                 $c['status'] === 'paused' ? 'resume' : null,
                                                 $c['status'] !== 'completed' ? 'complete' : null,
                                             ]) as $op): ?>
-                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form">
+                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form"<?= $op === 'complete' ? ' data-pc-confirm="Завершити власну рекламу #' . $cid . '?"' : '' ?>>
                                                 <?= $csrf ?>
                                                 <input type="hidden" name="action" value="campaign_status">
                                                 <input type="hidden" name="campaign_id" value="<?= $cid ?>">
