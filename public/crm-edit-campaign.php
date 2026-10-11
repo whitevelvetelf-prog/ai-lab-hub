@@ -24,7 +24,7 @@ crm_ads_require_admin();
 
 $campaignId = (int) ($_GET['id'] ?? 0);
 
-$campStmt = $pdo->prepare('SELECT * FROM ad_campaigns WHERE id = :id');
+$campStmt = $pdo->prepare("SELECT * FROM ad_campaigns WHERE id = :id AND format = 'banner'");
 $campStmt->execute([':id' => $campaignId]);
 $campaign = $campStmt->fetch();
 

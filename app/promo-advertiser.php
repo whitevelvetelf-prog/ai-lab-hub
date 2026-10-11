@@ -420,7 +420,7 @@ function promo_taxonomy(PDO $pdo): array
  *
  * @return array{saved:bool,id:?int,errors:list<string>,submitted:bool}
  */
-function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, bool $submit): array
+function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, bool $submit, bool $house = false): array
 {
     $errors = [];
     $campaignId = (int) ($in['campaign_id'] ?? 0);
@@ -428,14 +428,14 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     $creative = null;
     if ($campaignId > 0) {
         $campaign = promo_owned_campaign($pdo, $userId, $campaignId);
-        if ($campaign === null) {
+        if ($campaign === null || ($campaign['campaign_type'] === 'internal') !== $house) {
             return ['saved' => false, 'id' => null, 'errors' => ['err_not_found'], 'submitted' => false];
         }
         if (!in_array($campaign['status'], PROMO_EDITABLE, true)) {
             return ['saved' => false, 'id' => null, 'errors' => ['err_not_editable'], 'submitted' => false];
         }
         $creative = promo_campaign_creative($pdo, $campaignId);
-    } elseif (!promo_rate_ok($pdo, $userId, 'campaign_create')) {
+    } elseif (!$house && !promo_rate_ok($pdo, $userId, 'campaign_create')) {
         return ['saved' => false, 'id' => null, 'errors' => ['err_rate_campaigns'], 'submitted' => false];
     }
 
@@ -515,7 +515,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     $poster = [];
     $newVideo = $videoType === 'upload' && isset($files['video']) && ($files['video']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE;
     if ($errors === [] && $newVideo) {
-        if (!promo_rate_ok($pdo, $userId, 'video_upload')) {
+        if (!$house && !promo_rate_ok($pdo, $userId, 'video_upload')) {
             $errors[] = 'err_rate_uploads';
         } else {
             $clientDuration = isset($in['duration_client']) && is_numeric($in['duration_client']) ? (int) ceil((float) $in['duration_client']) : null;
@@ -550,7 +550,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         if ($name === '') {
             $missing[] = 'err_name_required';
         }
-        if ($model === null) {
+        if ($model === null && !$house) {
             $missing[] = 'err_objective_required';
         }
         if ($videoType === 'upload' && !$videoPath) {
@@ -571,7 +571,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         if (!$allCats && $cats === [] && $subs === []) {
             $missing[] = 'err_audience_required';
         }
-        if ($total === null) {
+        if ($total === null && !$house) {
             $missing[] = 'err_total_budget';
         }
         if ($startDate === null) {
@@ -579,10 +579,10 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         } elseif ($startDate < date('Y-m-d')) {
             $missing[] = 'err_start_past';
         }
-        if (empty($in['agree'])) {
+        if (empty($in['agree']) && !$house) {
             $missing[] = 'err_agree_required';
         }
-        if ($model !== null) {
+        if ($model !== null && !$house) {
             $card = promo_rate_card($pdo);
             foreach ($placements as $pl) {
                 if (empty($card[$pl][$model])) {
@@ -593,7 +593,11 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             }
         }
     }
+    // Власна реклама сайту (is_house = campaign_type 'internal'): без білінгу, адмін
+    // запускає її сам — «надіслати» одразу робить кампанію активною, креатив схваленим.
     $doSubmit = $submit && $missing === [];
+    $campaignStatus = $doSubmit ? ($house ? 'active' : 'pending_review') : 'draft';
+    $creativeStatus = $doSubmit ? ($house ? 'approved' : 'pending') : 'draft';
     if ($name === '') {
         $name = promo_tr('default_campaign_name', date('d.m.Y'));
     }
@@ -613,17 +617,18 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':total' => $total,
             ':start' => $startDate,
             ':end' => $endDate,
-            ':status' => $doSubmit ? 'pending_review' : 'draft',
+            ':status' => $campaignStatus,
         ];
         if ($campaign === null) {
             $pdo->prepare(
                 "INSERT INTO ad_campaigns (campaign_type, format, user_id, name, advertiser_name, contact_email, objective,
                      pricing_model, unit_price, daily_budget, total_budget, start_date, end_date, status, submitted_at, rules_accepted_at)
-                 VALUES ('paid', 'video', :uid, :name, :adv, :email, :objective, :model, :unit, :daily, :total, :start, :end,
+                 VALUES (:ctype, 'video', :uid, :name, :adv, :email, :objective, :model, :unit, :daily, :total, :start, :end,
                      :status, :sub_at, :rules_at)"
             )->execute($fields + [
+                ':ctype' => $house ? 'internal' : 'paid',
                 ':uid' => $userId,
-                ':adv' => mb_substr((string) $owner['name'], 0, 255) ?: ('user #' . $userId),
+                ':adv' => $house ? 'AI LAB HUB' : (mb_substr((string) $owner['name'], 0, 255) ?: ('user #' . $userId)),
                 ':email' => $owner['email'],
                 ':sub_at' => $doSubmit ? date('Y-m-d H:i:s') : null,
                 ':rules_at' => $doSubmit ? date('Y-m-d H:i:s') : null,
@@ -653,20 +658,22 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':dur' => $videoType === 'upload' ? $videoDuration : null,
             ':size' => $videoType === 'upload' ? $videoSize : null,
             ':mime' => $videoType === 'upload' ? $videoMime : null,
-            ':status' => $doSubmit ? 'pending' : 'draft',
+            ':status' => $creativeStatus,
+            ':rby' => $doSubmit && $house ? $userId : null,
+            ':rat' => $doSubmit && $house ? date('Y-m-d H:i:s') : null,
         ];
         if ($creative === null) {
             $pdo->prepare(
                 'INSERT INTO ad_creatives (campaign_id, title, description, cta_key, destination_url, video_type, video_path,
-                     video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status)
-                 VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status)'
+                     video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status, reviewed_by, reviewed_at)
+                 VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status, :rby, :rat)'
             )->execute($crFields + [':cid' => $campaignId]);
         } else {
             $pdo->prepare(
                 'UPDATE ad_creatives SET title = :title, description = :desc, cta_key = :cta, destination_url = :dest,
                      video_type = :vtype, video_path = :vpath, video_url = :vurl, youtube_id = :yt, poster_path = :poster,
                      duration_sec = :dur, size_bytes = :size, mime = :mime, status = :status,
-                     rejection_reason = NULL, reviewed_by = NULL, reviewed_at = NULL
+                     rejection_reason = NULL, reviewed_by = :rby, reviewed_at = :rat
                  WHERE id = :id'
             )->execute($crFields + [':id' => (int) $creative['id']]);
         }
@@ -733,7 +740,7 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
             if ($c['stop_reason'] === 'budget' || ($c['total_budget'] !== null && (int) $c['spent'] >= (int) $c['total_budget'])) {
                 return [false, 'err_budget_spent', null];
             }
-            if (promo_balance($pdo, $userId) <= 0) {
+            if ($c['campaign_type'] !== 'internal' && promo_balance($pdo, $userId) <= 0) {
                 return [false, 'err_balance_empty', null];
             }
             $pdo->prepare("UPDATE ad_campaigns SET status = 'active', stop_reason = NULL WHERE id = :id")->execute([':id' => $campaignId]);
@@ -757,7 +764,7 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
                 $pdo->prepare(
                     "INSERT INTO ad_campaigns (campaign_type, format, user_id, name, advertiser_name, contact_email, objective,
                          pricing_model, daily_budget, total_budget, status)
-                     SELECT 'paid', 'video', user_id, LEFT(CONCAT(COALESCE(name, ''), :suffix), 120), advertiser_name, contact_email,
+                     SELECT campaign_type, 'video', user_id, LEFT(CONCAT(COALESCE(name, ''), :suffix), 120), advertiser_name, contact_email,
                          objective, pricing_model, daily_budget, total_budget, 'draft'
                      FROM ad_campaigns WHERE id = :id AND user_id = :u"
                 )->execute([':suffix' => ' ' . promo_tr('copy_suffix'), ':id' => $campaignId, ':u' => $userId]);
@@ -831,7 +838,7 @@ function promo_campaign_totals(PDO $pdo, int $userId): array
     $st = $pdo->prepare(
         "SELECT s.campaign_id, SUM(s.impressions) impressions, SUM(s.views) views, SUM(s.clicks) clicks, SUM(s.spend) spend
          FROM ad_stats_daily s JOIN ad_campaigns c ON c.id = s.campaign_id
-         WHERE c.user_id = :u AND c.format = 'video'
+         WHERE c.user_id = :u AND c.format = 'video' AND c.campaign_type = 'paid'
          GROUP BY s.campaign_id"
     );
     $st->execute([':u' => $userId]);

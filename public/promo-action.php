@@ -6,7 +6,8 @@ declare(strict_types=1);
  * AI LAB HUB — обробник дій кабінету рекламодавця (розділ «Реклама» в account.php).
  *
  * POST (CSRF обов'язковий, лише власні кампанії):
- *   action=save_draft | submit            — майстер кампанії (multipart: video, poster)
+ *   action=save_draft | submit            — майстер кампанії (multipart: video, poster);
+ *                                           house=1 — власна реклама сайту (лише admin)
  *   action=pause | resume | complete | duplicate  campaign_id=N
  *   action=topup  amount=123.45           — заявка на поповнення (ручний переказ)
  * GET:
@@ -18,7 +19,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/promo-advertiser.php';
+require_once __DIR__ . '/../app/promo-admin.php';
 
 $userId = auth_user_id();
 if ($userId === null) {
@@ -87,8 +88,18 @@ if (!promo_csrf_verify()) {
 switch ($action) {
     case 'save_draft':
     case 'submit':
-        $result = promo_save_campaign($pdo, $userId, $_POST, $_FILES, $action === 'submit');
+        // Власна реклама сайту (без білінгу) — лише для admin (перевірка за БД).
+        $house = !empty($_POST['house']) && promo_is_admin($pdo, $userId);
+        $result = promo_save_campaign($pdo, $userId, $_POST, $_FILES, $action === 'submit', $house);
         $edit = $result['id'] !== null ? ['promo_edit' => $result['id']] : [];
+        if ($house) {
+            $edit['promo_house'] = 1;
+        }
+        if ($house && $result['submitted']) {
+            $_SESSION['padm_flash'] = ['ok' => true, 'msgs' => ['Власну рекламу запущено.']];
+            header('Location: account.php?padm_tab=house#acc-promo-admin', true, 303);
+            exit;
+        }
         if (!$result['saved']) {
             // Нічого не збережено — повертаємо введене (файли треба вибрати знову).
             $_SESSION['promo_old'] = array_diff_key($_POST, ['csrf' => 1, 'poster_data' => 1, 'action' => 1]);

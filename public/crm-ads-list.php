@@ -39,6 +39,7 @@ $campaigns = $pdo->query(
            JOIN ads a ON a.id = k.ad_id
           WHERE a.campaign_id = c.id) AS clicks
      FROM ad_campaigns c
+     WHERE c.format = 'banner'   -- відеокампанії (format='video') керуються в кабінеті: «Реклама: адмін»
      ORDER BY c.id DESC"
 )->fetchAll();
 

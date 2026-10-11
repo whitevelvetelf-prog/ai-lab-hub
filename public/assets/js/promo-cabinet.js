@@ -10,44 +10,50 @@
 (function () {
     'use strict';
 
-    var root = document.querySelector('.pc');
-    if (!root) {
+    var roots = Array.prototype.slice.call(document.querySelectorAll('.pc'));
+    if (roots.length === 0) {
         return;
     }
-    root.classList.add('pc-js');
 
-    // --- Вкладки ---------------------------------------------------------
-    function showTab(name) {
-        root.querySelectorAll('[data-pc-panel]').forEach(function (p) {
-            p.hidden = p.getAttribute('data-pc-panel') !== name;
-        });
-        root.querySelectorAll('.pc-tab').forEach(function (t) {
-            var on = t.getAttribute('data-pc-tab') === name;
-            t.classList.toggle('is-active', on);
-            t.setAttribute('aria-selected', on ? 'true' : 'false');
-        });
-        try {
-            var url = new URL(window.location.href);
-            url.searchParams.set('promo_tab', name);
-            url.hash = 'acc-promo';
-            window.history.replaceState(null, '', url.toString());
-        } catch (e) { /* старий браузер — не критично */ }
-    }
-    root.addEventListener('click', function (e) {
-        var link = e.target.closest('[data-pc-tab]');
-        if (link && root.contains(link)) {
-            e.preventDefault();
-            showTab(link.getAttribute('data-pc-tab'));
+    // --- Вкладки (кабінет рекламодавця й адмінка: data-pc-param — параметр URL) ---
+    roots.forEach(function (box) {
+        box.classList.add('pc-js');
+        var param = box.getAttribute('data-pc-param') || 'promo_tab';
+        var hash = box.getAttribute('data-pc-hash') || 'acc-promo';
+
+        function showTab(name) {
+            box.querySelectorAll('[data-pc-panel]').forEach(function (p) {
+                p.hidden = p.getAttribute('data-pc-panel') !== name;
+            });
+            box.querySelectorAll('.pc-tab').forEach(function (t) {
+                var on = t.getAttribute('data-pc-tab') === name;
+                t.classList.toggle('is-active', on);
+                t.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            try {
+                var url = new URL(window.location.href);
+                url.searchParams.set(param, name);
+                url.hash = hash;
+                window.history.replaceState(null, '', url.toString());
+            } catch (e) { /* старий браузер — не критично */ }
         }
-    });
-
-    root.querySelectorAll('form[data-pc-confirm]').forEach(function (form) {
-        form.addEventListener('submit', function (e) {
-            if (!window.confirm(form.getAttribute('data-pc-confirm'))) {
+        box.addEventListener('click', function (e) {
+            var link = e.target.closest('[data-pc-tab]');
+            if (link && box.contains(link) && box.querySelector('[data-pc-panel="' + link.getAttribute('data-pc-tab') + '"]')) {
                 e.preventDefault();
+                showTab(link.getAttribute('data-pc-tab'));
             }
         });
+
+        box.querySelectorAll('form[data-pc-confirm]').forEach(function (form) {
+            form.addEventListener('submit', function (e) {
+                if (!window.confirm(form.getAttribute('data-pc-confirm'))) {
+                    e.preventDefault();
+                }
+            });
+        });
     });
+    var root = document.querySelector('.pc[data-pc-param="promo_tab"]') || roots[0];
 
     // --- Майстер ---------------------------------------------------------
     var form = document.getElementById('pcWizard');
@@ -306,6 +312,9 @@
     }
 
     function updatePrices() {
+        if (!pricesBox || !forecastBox) {
+            return; // власна реклама сайту — без прайсу й прогнозу
+        }
         var m = model();
         var placements = checkedValues('placements[]');
         pricesBox.textContent = '';
@@ -386,7 +395,9 @@
         row(labelOf(form.elements.start_date), val('start_date') + (val('end_date') ? ' — ' + val('end_date') : ''));
 
         var need = parseMoney(val('daily_budget')) || parseMoney(val('total_budget')) || 1;
-        balanceWarn.hidden = balance >= need;
+        if (balanceWarn) {
+            balanceWarn.hidden = balance >= need;
+        }
     }
 
     previewText();

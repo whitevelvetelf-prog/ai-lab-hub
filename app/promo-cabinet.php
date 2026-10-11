@@ -47,7 +47,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $tab = in_array($_GET['promo_tab'] ?? '', ['campaigns', 'create', 'balance', 'stats'], true) ? $_GET['promo_tab'] : 'campaigns';
     $lang = promo_lang();
 
-    $campaignsSt = $pdo->prepare("SELECT * FROM ad_campaigns WHERE user_id = :u AND format = 'video' ORDER BY id DESC");
+    $campaignsSt = $pdo->prepare("SELECT * FROM ad_campaigns WHERE user_id = :u AND format = 'video' AND campaign_type = 'paid' ORDER BY id DESC");
     $campaignsSt->execute([':u' => $userId]);
     $campaigns = $campaignsSt->fetchAll();
     $totals = promo_campaign_totals($pdo, $userId);
@@ -61,6 +61,15 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $editing = $editId > 0 ? promo_owned_campaign($pdo, $userId, $editId) : null;
     if ($editing !== null && !in_array($editing['status'], PROMO_EDITABLE, true)) {
         $editing = null;
+    }
+    // Режим «власна реклама сайту» (лише admin): без оплати, запуск одразу (етап D6).
+    $isAdmin = ($user['role'] ?? '') === 'admin';
+    if ($editing !== null && $editing['campaign_type'] === 'internal' && !$isAdmin) {
+        $editing = null;
+    }
+    $house = $isAdmin && (!empty($_GET['promo_house']) || ($editing !== null && $editing['campaign_type'] === 'internal'));
+    if ($house && $editing !== null && $editing['campaign_type'] !== 'internal') {
+        $house = false;
     }
     $creative = $editing ? promo_campaign_creative($pdo, (int) $editing['id']) : null;
     $targeting = $editing ? promo_campaign_targeting($pdo, (int) $editing['id']) : ['placements' => [], 'cats' => [], 'subs' => [], 'language' => 'all', 'device' => 'all'];
@@ -137,7 +146,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                     <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
                 </button>
                 <div class="accordion__panel" id="acc-promo-panel">
-                    <div class="accordion__panel-inner pc">
+                    <div class="accordion__panel-inner pc" data-pc-param="promo_tab" data-pc-hash="acc-promo">
                         <?php if (!$enabled): ?>
                         <p class="pc-note pc-note--warn"><?= pc_e(promo_tr('system_off_admin')) ?></p>
                         <?php endif; ?>
@@ -239,6 +248,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ Створити кампанію ============ -->
                         <section class="pc-panel" data-pc-panel="create"<?= $tab === 'create' ? '' : ' hidden' ?>>
+                            <?php if ($house): ?>
+                            <p class="pc-note pc-note--warn">Власна реклама сайту: без оплати й прайсу, без модерації — після «Запустити» показується одразу (якщо систему ввімкнено). Платні кампанії мають пріоритет; власна заповнює вільні слоти.</p>
+                            <?php endif; ?>
                             <?php if ($editing !== null): ?>
                             <p class="pc-note"><?= pc_e(promo_tr('editing_campaign', $editing['name'] ?: ('#' . $editing['id']))) ?>
                                 <?php if ($editing['status'] !== 'draft'): ?> <?= pc_e(promo_tr('edit_needs_review')) ?><?php endif; ?>
@@ -257,6 +269,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                   data-i18n="<?= pc_e((string) json_encode(promo_tr_many(['js_video_too_big', 'js_video_too_long', 'js_video_type', 'forecast_cpm', 'forecast_cpc', 'forecast_note', 'no_price_for', 'price_cpm', 'price_cpc', 'balance_warning', 'summary_empty', 'yes', 'no', 'all_label', 'currency_uah', 'poster_captured', 'placement_catalog_card', 'placement_product_page', 'placement_blog_inline', 'categories_all', 'categories_selected'], $lang), JSON_UNESCAPED_UNICODE)) ?>">
                                 <?= promo_csrf_field() ?>
                                 <input type="hidden" name="campaign_id" value="<?= $editing ? (int) $editing['id'] : 0 ?>">
+                                <?php if ($house): ?><input type="hidden" name="house" value="1"><?php endif; ?>
                                 <input type="hidden" name="duration_client" value="">
                                 <input type="hidden" name="poster_data" value="">
 
@@ -433,18 +446,21 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             <input type="date" name="end_date" value="<?= pc_e($f['end_date']) ?>" min="<?= date('Y-m-d') ?>">
                                         </label>
                                     </div>
+                                    <?php if (!$house): ?>
                                     <div class="pc-box" data-pc-prices>
                                         <?php if ($rates === []): ?>
                                         <p><?= pc_e(promo_tr('no_rates_yet')) ?></p>
                                         <?php endif; ?>
                                     </div>
                                     <div class="pc-box" data-pc-forecast></div>
+                                    <?php endif; ?>
                                 </fieldset>
 
                                 <!-- 5. Підтвердження -->
                                 <fieldset class="pc-step" data-pc-step="5">
                                     <legend><?= pc_e(promo_tr('step5_title')) ?></legend>
                                     <dl class="pc-summary" data-pc-summary></dl>
+                                    <?php if (!$house): ?>
                                     <p class="pc-note pc-note--warn" data-pc-balance-warning hidden>
                                         <?= pc_e(promo_tr('balance_warning_static', promo_money($balance))) ?>
                                         <a href="account.php?promo_tab=balance#acc-promo" data-pc-tab="balance"><?= pc_e(promo_tr('topup_link')) ?></a>
@@ -457,13 +473,14 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         <span><?= pc_e(promo_tr('agree_prefix')) ?> <a href="promo-rules.php" target="_blank" rel="noopener"><?= pc_e(promo_tr('rules_link')) ?></a></span>
                                     </label>
                                     <p class="pc-muted"><?= pc_e(promo_tr('moderation_note')) ?></p>
+                                    <?php endif; ?>
                                 </fieldset>
 
                                 <div class="pc-wizard__nav">
                                     <button type="button" class="pc-btn" data-pc-prev hidden><?= pc_e(promo_tr('btn_back')) ?></button>
                                     <button type="submit" name="action" value="save_draft" class="pc-btn" formnovalidate><?= pc_e(promo_tr('btn_save_draft')) ?></button>
                                     <button type="button" class="pc-btn pc-btn--primary" data-pc-next hidden><?= pc_e(promo_tr('btn_next')) ?></button>
-                                    <button type="submit" name="action" value="submit" class="pc-btn pc-btn--primary" data-pc-submit><?= pc_e(promo_tr('btn_submit')) ?></button>
+                                    <button type="submit" name="action" value="submit" class="pc-btn pc-btn--primary" data-pc-submit><?= $house ? 'Запустити' : pc_e(promo_tr('btn_submit')) ?></button>
                                 </div>
                             </form>
                         </section>
@@ -621,8 +638,21 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                     </div>
                 </div>
             </div>
-            <link rel="stylesheet" href="/assets/css/sponsored.css?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/css/sponsored.css') ?>">
-            <link rel="stylesheet" href="/assets/css/promo-cabinet.css?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/css/promo-cabinet.css') ?>">
-            <script src="/assets/js/promo-cabinet.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/promo-cabinet.js') ?>" defer></script>
+            <?= promo_cabinet_assets() ?>
     <?php
+}
+
+/** Стилі й скрипт кабінету — один раз на сторінку (рекламодавець і адмінка спільні). */
+function promo_cabinet_assets(): string
+{
+    static $printed = false;
+    if ($printed) {
+        return '';
+    }
+    $printed = true;
+    $v = static fn(string $f): int => (int) @filemtime(__DIR__ . '/../public/assets/' . $f);
+
+    return '<link rel="stylesheet" href="/assets/css/sponsored.css?v=' . $v('css/sponsored.css') . '">'
+        . '<link rel="stylesheet" href="/assets/css/promo-cabinet.css?v=' . $v('css/promo-cabinet.css') . '">'
+        . '<script src="/assets/js/promo-cabinet.js?v=' . $v('js/promo-cabinet.js') . '" defer></script>';
 }
