@@ -1286,7 +1286,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                     </span>
                                 </span>
                                 <?php if ($linked !== null): ?>
-                                    <form class="login-methods__form" method="post" action="account.php">
+                                    <form class="login-methods__form" method="post" action="account.php" data-confirm="">
                                         <input type="hidden" name="action" value="unlink_social">
                                         <input type="hidden" name="provider" value="<?= e($providerKey) ?>">
                                         <input type="hidden" name="csrf" value="<?= e(social_csrf_token()) ?>">
@@ -1444,7 +1444,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                                 </span>
                                             </div>
                                             <?php if ($req['kind'] === 'employee'): ?>
-                                                <form method="post" action="account.php">
+                                                <form method="post" action="account.php" data-confirm="">
                                                     <input type="hidden" name="action" value="approve_request">
                                                     <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
                                                     <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
@@ -1452,7 +1452,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                             <?php elseif ($req['can_decide']): ?>
                                                 <div class="btn-row">
                                                     <?php if (!$req['slots_full']): ?>
-                                                        <form method="post" action="account.php">
+                                                        <form method="post" action="account.php" data-confirm="">
                                                             <input type="hidden" name="action" value="approve_admin_request">
                                                             <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
                                                             <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_approve'), ENT_QUOTES) ?></button>
@@ -1460,7 +1460,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                                     <?php else: ?>
                                                         <span class="request-card__meta"><?= htmlspecialchars(t('account_admin_position_full_note'), ENT_QUOTES) ?></span>
                                                     <?php endif; ?>
-                                                    <form method="post" action="account.php">
+                                                    <form method="post" action="account.php" data-confirm="">
                                                         <input type="hidden" name="action" value="reject_admin_request">
                                                         <input type="hidden" name="request_id" value="<?= (int) $req['request_id'] ?>">
                                                         <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t('action_reject'), ENT_QUOTES) ?></button>
@@ -1531,7 +1531,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                                 </span>
                                             </div>
                                             <?php if ($app['status'] === 'submitted'): ?>
-                                                <form method="post" action="account.php">
+                                                <form method="post" action="account.php" data-confirm="">
                                                     <input type="hidden" name="action" value="confirm_position_application">
                                                     <input type="hidden" name="application_id" value="<?= (int) $app['id'] ?>">
                                                     <button type="submit" class="btn btn--approve"><?= htmlspecialchars(t('action_confirm_application'), ENT_QUOTES) ?></button>
@@ -1563,7 +1563,7 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                             · подано <?= e(date('d.m.Y', (int) strtotime((string) $req['created_at']))) ?>
                                         </span>
                                     </div>
-                                    <form method="post" action="account.php">
+                                    <form method="post" action="account.php" data-confirm="Схвалити заявку працівника?">
                                         <input type="hidden" name="action" value="approve_request">
                                         <input type="hidden" name="request_id" value="<?= (int) $req['id'] ?>">
                                         <button type="submit" class="btn btn--approve">Схвалити</button>

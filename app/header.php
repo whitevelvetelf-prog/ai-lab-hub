@@ -10,7 +10,8 @@
  * стилі банера встановлення (pwa-install.css), кнопки «зберегти в
  * добірку» (saved-products.css), кнопки «Поділитися» (share-button.css),
  * кнопки «Назад» на картці продукту (back-button.css) та рекламного
- * банера (ad-banner.css, app/ad-banner.php).
+ * банера (ad-banner.css, app/ad-banner.php), підтвердження дій
+ * (confirm-actions.css/.js: data-confirm на формі чи кнопці).
  * Файли фізично лежать у public/ (веб-корінь), тому шляхи абсолютні від /.
  */
 
@@ -41,3 +42,6 @@ if (!function_exists('css_asset')) {
 <link rel="stylesheet" href="<?= css_asset('share-button.css') ?>">
 <link rel="stylesheet" href="<?= css_asset('back-button.css') ?>">
 <link rel="stylesheet" href="<?= css_asset('ad-banner.css') ?>">
+<link rel="stylesheet" href="<?= css_asset('confirm-actions.css') ?>">
+<?php $confirmJs = __DIR__ . '/../public/assets/js/confirm-actions.js'; ?>
+<script src="/assets/js/confirm-actions.js?v=<?= is_file($confirmJs) ? (int) filemtime($confirmJs) : 0 ?>" defer></script>

@@ -301,7 +301,7 @@ $flashAdAdded = isset($_GET['ad_added']);
                                 <td class="table__num"><?= number_format((int) $ad['impressions'], 0, '', ' ') ?></td>
                                 <td class="table__num"><?= number_format((int) $ad['clicks'], 0, '', ' ') ?></td>
                                 <td class="table__nowrap">
-                                    <form method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>" style="margin:0;">
+                                    <form method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>" style="margin:0;" data-confirm="<?= $ad['status'] === 'active' ? 'Вимкнути цей банер?' : 'Увімкнути цей банер?' ?>">
                                         <input type="hidden" name="action" value="toggle_ad">
                                         <input type="hidden" name="ad_id" value="<?= (int) $ad['id'] ?>">
                                         <button type="submit" class="btn btn--ghost btn--sm"><?= $ad['status'] === 'active' ? 'Вимкнути' : 'Увімкнути' ?></button>

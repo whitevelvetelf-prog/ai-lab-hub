@@ -225,18 +225,18 @@ unset($_SESSION['mpb_flash']);
                 <?php if (in_array($st, ['pending', 'published'], true)): ?>
                 <div class="mod-actions">
                     <?php if ($st === 'pending'): ?>
-                        <form method="post" action="<?= mp_e($back) ?>">
+                        <form method="post" action="<?= mp_e($back) ?>" data-confirm="Схвалити й опублікувати оголошення #<?= $rid ?>?">
                             <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="approve">
                             <button class="btn btn--primary btn--sm" type="submit">Схвалити</button>
                         </form>
                     <?php endif; ?>
                     <?php if ((int) $r['reports_count'] > 0): ?>
-                        <form method="post" action="<?= mp_e($back) ?>">
+                        <form method="post" action="<?= mp_e($back) ?>" data-confirm="Визнати скарги безпідставними й залишити оголошення #<?= $rid ?>?">
                             <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="dismiss">
                             <button class="btn btn--ghost btn--sm" type="submit">Скарги безпідставні — залишити</button>
                         </form>
                     <?php endif; ?>
-                    <form method="post" action="<?= mp_e($back) ?>">
+                    <form method="post" action="<?= mp_e($back) ?>" data-confirm="Відхилити оголошення #<?= $rid ?>? Автор побачить причину.">
                         <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="reject">
                         <textarea class="textarea" name="reason" rows="2" maxlength="500" required placeholder="Причина відхилення (обов'язково; її побачить автор)"></textarea>
                         <button class="btn btn--ghost btn--sm" type="submit">Відхилити</button>

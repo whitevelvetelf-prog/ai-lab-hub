@@ -1,0 +1,25 @@
+/*
+ * Кнопки, що питають підтвердження (data-confirm, app/header.php →
+ * confirm-actions.js), завжди підсвічені: жовтий контур, світіння й ⚠.
+ * Той самий вигляд, що й у рекламних кабінетах (promo-cabinet.css).
+ */
+form[data-confirm] button[type="submit"],
+form[data-confirm] button:not([type]),
+button[data-confirm] {
+    border-color: #fbbf24 !important;
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.35), 0 0 14px rgba(251, 191, 36, 0.45);
+}
+
+form[data-confirm] button[type="submit"]::before,
+form[data-confirm] button:not([type])::before,
+button[data-confirm]::before {
+    content: "\26A0";
+    margin-right: 6px;
+    color: #fbbf24;
+}
+
+form[data-confirm] button[type="submit"]:hover,
+form[data-confirm] button:not([type]):hover,
+button[data-confirm]:hover {
+    box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.6), 0 0 18px rgba(251, 191, 36, 0.6);
+}

@@ -515,7 +515,7 @@ $maxMb = round(((int) $cfg['max_upload_bytes']) / 1048576, 1);
             <div class="form-actions">
                 <button type="submit" class="btn btn--primary"><?= $isEdit ? 'Зберегти зміни' : 'Створити пропозицію' ?></button>
                 <?php if ($similar !== []): ?>
-                    <button type="submit" class="btn btn--ghost" name="force_save" value="1">Зберегти все одно</button>
+                    <button type="submit" class="btn btn--ghost" name="force_save" value="1" data-confirm="Зберегти попри попередження?">Зберегти все одно</button>
                 <?php endif; ?>
                 <a class="btn btn--ghost" href="mp-list.php">До списку</a>
             </div>

@@ -125,7 +125,7 @@ mpb_open(t('mpb_my_title'), true, 'my');
                                     </form>
                                 <?php endif; ?>
                                 <?php if ($st !== 'archived'): ?>
-                                    <form method="post" action="marketplace-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form">
+                                    <form method="post" action="marketplace-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form" data-confirm="">
                                         <?= mp_csrf_field() ?><input type="hidden" name="action" value="archive"><input type="hidden" name="id" value="<?= $rid ?>">
                                         <button class="mp-btn" type="submit"><?= mp_e(t('mpb_archive_btn')) ?></button>
                                     </form>

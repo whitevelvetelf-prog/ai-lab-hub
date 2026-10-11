@@ -1483,7 +1483,7 @@ $displayPlans = $plans !== []
             <div class="actions">
                 <button type="submit" class="btn btn--primary" name="action" value="save">Зберегти продукт</button>
                 <?php if ($noticeDuplicate): ?>
-                    <button type="submit" class="btn btn--ghost" name="action" value="force">Зберегти все одно</button>
+                    <button type="submit" class="btn btn--ghost" name="action" value="force" data-confirm="Зберегти попри попередження про можливий дублікат?">Зберегти все одно</button>
                 <?php endif; ?>
                 <a class="btn btn--ghost" href="index.php">Скасувати</a>
             </div>
