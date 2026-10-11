@@ -173,6 +173,12 @@ $subcategoryIcons = [
     'identity-protection' => 'user-lock',
     'business-security'   => 'building-2',
     'appsec'              => 'bug',
+    // Розробка та IT: LLM-інструменти
+    'local-llm'          => 'cpu',
+    'llm-inference'      => 'server',
+    'llm-frameworks'     => 'blocks',
+    'llmops'             => 'activity',
+    'vector-databases'   => 'database-zap',
     'mental-health-eating-behavior' => 'heart-handshake',
     // Релігія
     'christianity'       => 'church',
