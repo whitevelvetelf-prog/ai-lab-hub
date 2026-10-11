@@ -431,7 +431,7 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
          VALUES (:cr, :c, :type, :pl, :sh)'
     )->execute([':cr' => $creativeId, ':c' => $campaignId, ':type' => $type, ':pl' => $placement, ':sh' => $sessionHash]);
 
-    $charged = promo_charge($pdo, $campaignId, $type);
+    $charged = promo_charge($pdo, $campaignId, $type, $placement);
 
     $col = ['impression' => 'impressions', 'view' => 'views', 'click' => 'clicks'][$type];
     $pdo->prepare(
@@ -456,8 +456,11 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
  *
  * Журнал: один агрегований рядок ad_transactions (type=spend) на кампанію на
  * день, reference = spend:<id>:<дата>; amount — від'ємна сума за день.
+ *
+ * Ціна — знімок для розміщення події (ad_targets.unit_price), інакше
+ * ad_campaigns.unit_price.
  */
-function promo_charge(PDO $pdo, int $campaignId, string $type): int
+function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placement = null): int
 {
     $ownTx = !$pdo->inTransaction();
     if ($ownTx) {
@@ -484,13 +487,23 @@ function promo_charge(PDO $pdo, int $campaignId, string $type): int
             return 0;
         }
 
+        $price = (int) $c['unit_price'];
+        if ($placement !== null) {
+            $pp = $pdo->prepare('SELECT MAX(unit_price) FROM ad_targets WHERE campaign_id = :c AND placement = :pl');
+            $pp->execute([':c' => $campaignId, ':pl' => $placement]);
+            $placementPrice = (int) ($pp->fetchColumn() ?: 0);
+            if ($placementPrice > 0) {
+                $price = $placementPrice;
+            }
+        }
+
         $accrual = (int) $c['cpm_accrual'];
         if ($isCpm) {
-            $acc = $accrual + (int) $c['unit_price'];
+            $acc = $accrual + $price;
             $amount = intdiv($acc, 1000);
             $accrual = $acc % 1000;
         } else {
-            $amount = (int) $c['unit_price'];
+            $amount = $price;
         }
 
         $bal = $pdo->prepare('SELECT balance FROM ad_balances WHERE user_id = :u FOR UPDATE');

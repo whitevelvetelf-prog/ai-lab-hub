@@ -1,0 +1,597 @@
+/* AI LAB HUB — кабінет рекламодавця (розділ «Реклама» в account.php).
+   Темний фон сайту: текст і посилання світлі, наведення — ще світліше.
+   Широкі таблиці прокручуються всередині обгортки, а на вузьких екранах
+   перетворюються на картки — сторінка ніколи не прокручується горизонтально. */
+
+.pc {
+    min-width: 0;
+    color: #ffffff;
+}
+
+/* Атрибут hidden сильніший за display з класів (.pc-field, .pc-btn тощо). */
+.pc [hidden] {
+    display: none !important;
+}
+
+.pc a {
+    color: #bcd0ff;
+}
+
+.pc a:hover {
+    color: #ffffff;
+}
+
+.pc-muted,
+.pc small {
+    display: block;
+    font-size: 0.82rem;
+    color: #c9d3f2;
+}
+
+.pc-note {
+    margin: 0 0 14px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #e6ecff;
+}
+
+.pc-note--warn {
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.45);
+}
+
+.pc-warn-text {
+    color: #ffd27a;
+}
+
+.pc-flash {
+    margin: 0 0 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+}
+
+.pc-flash p {
+    margin: 4px 0;
+}
+
+.pc-flash--ok {
+    background: rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.5);
+}
+
+.pc-flash--error {
+    background: rgba(248, 113, 113, 0.15);
+    border: 1px solid rgba(248, 113, 113, 0.55);
+}
+
+/* Вкладки */
+.pc-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.pc .pc-tab {
+    padding: 9px 14px;
+    border-radius: 10px 10px 0 0;
+    font-weight: 600;
+    text-decoration: none;
+    color: #c9d3f2;
+}
+
+.pc .pc-tab:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.pc .pc-tab.is-active {
+    color: #ffffff;
+    background: rgba(91, 140, 255, 0.25);
+}
+
+.pc-panel[hidden] {
+    display: none;
+}
+
+.pc-empty {
+    color: #c9d3f2;
+}
+
+.pc-h3 {
+    margin: 22px 0 10px;
+    font-size: 1.05rem;
+}
+
+/* Кнопки */
+.pc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.pc a.pc-btn {
+    color: #ffffff;
+}
+
+.pc-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.pc-btn--primary {
+    border-color: transparent;
+    background: #5b8cff;
+}
+
+.pc-btn--primary:hover {
+    background: #7aa2ff;
+}
+
+.pc-btn--danger {
+    border-color: rgba(248, 113, 113, 0.6);
+}
+
+.pc-btn--danger:hover {
+    background: rgba(248, 113, 113, 0.2);
+}
+
+.pc-btn--small {
+    padding: 5px 11px;
+    font-size: 0.8rem;
+}
+
+.pc-btn:focus-visible,
+.pc .pc-tab:focus-visible {
+    outline: 2px solid #9fb8ff;
+    outline-offset: 2px;
+}
+
+.pc-btn[hidden] {
+    display: none;
+}
+
+.pc-inline-form {
+    display: inline;
+    margin: 0;
+}
+
+.pc-actions {
+    white-space: normal;
+}
+
+.pc-actions > * {
+    margin: 2px 0;
+}
+
+/* Бейджі статусів */
+.pc-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    white-space: nowrap;
+}
+
+.pc-badge--active,
+.pc-badge--tx-confirmed {
+    background: rgba(52, 211, 153, 0.25);
+}
+
+.pc-badge--pending_review,
+.pc-badge--tx-pending {
+    background: rgba(255, 193, 7, 0.25);
+}
+
+.pc-badge--paused {
+    background: rgba(91, 140, 255, 0.3);
+}
+
+.pc-badge--rejected,
+.pc-badge--tx-rejected {
+    background: rgba(248, 113, 113, 0.3);
+}
+
+.pc-badge--completed,
+.pc-badge--expired {
+    background: rgba(255, 255, 255, 0.08);
+    color: #c9d3f2;
+}
+
+.pc-reason {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: #ffd27a;
+}
+
+/* Таблиці */
+.pc-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.pc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.pc-table th,
+.pc-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: left;
+    vertical-align: top;
+}
+
+.pc-table th {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #c9d3f2;
+}
+
+.pc-bar {
+    display: block;
+    width: var(--w, 0%);
+    min-width: 2px;
+    height: 6px;
+    margin-bottom: 4px;
+    border-radius: 3px;
+    background: #5b8cff;
+}
+
+.pc code {
+    padding: 1px 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+    overflow-wrap: anywhere;
+}
+
+/* Майстер */
+.pc-steps {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.pc-steps__item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    color: #c9d3f2;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+}
+
+.pc-steps__item span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    font-weight: 700;
+}
+
+.pc-steps__item.is-current {
+    color: #ffffff;
+    background: rgba(91, 140, 255, 0.3);
+}
+
+.pc-steps__item.is-done span {
+    background: rgba(52, 211, 153, 0.5);
+}
+
+.pc-step {
+    min-width: 0;
+    margin: 0 0 16px;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+}
+
+.pc-step legend {
+    padding: 0 6px;
+    font-weight: 700;
+}
+
+.pc-js .pc-step {
+    display: none;
+}
+
+.pc-js .pc-step.is-current {
+    display: block;
+}
+
+.pc-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.pc-field {
+    display: block;
+    margin: 0 0 14px;
+}
+
+.pc-field > span {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.pc-field > span small {
+    display: inline;
+    font-weight: 400;
+}
+
+.pc input[type="text"],
+.pc input[type="url"],
+.pc input[type="date"],
+.pc input[type="file"],
+.pc select,
+.pc textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+    padding: 9px 11px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: #11163f;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.92rem;
+}
+
+.pc input:focus,
+.pc select:focus,
+.pc textarea:focus {
+    outline: 2px solid #5b8cff;
+    outline-offset: 0;
+}
+
+.pc input[type="date"] {
+    color-scheme: dark;
+}
+
+.pc-choice-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 14px;
+}
+
+.pc-choice {
+    flex: 1 1 220px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.pc-choice--compact {
+    flex: 0 1 auto;
+    padding: 8px 12px;
+}
+
+.pc-choice:hover {
+    border-color: rgba(159, 184, 255, 0.7);
+}
+
+.pc-choice strong {
+    display: block;
+}
+
+.pc-check {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin: 6px 0;
+    cursor: pointer;
+}
+
+.pc-check input {
+    margin-top: 3px;
+}
+
+.pc-cats {
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 6px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+}
+
+.pc-cats.is-disabled {
+    opacity: 0.45;
+}
+
+.pc-cat summary {
+    list-style-position: outside;
+    margin-left: 14px;
+    cursor: pointer;
+}
+
+.pc-cat summary .pc-check {
+    display: inline-flex;
+}
+
+.pc-subs {
+    padding: 0 0 6px 34px;
+    columns: 2 220px;
+}
+
+.pc-box {
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.pc-box p {
+    margin: 4px 0;
+}
+
+.pc-box[hidden] {
+    display: none;
+}
+
+.pc-box--accent {
+    border: 1px solid rgba(91, 140, 255, 0.6);
+    background: rgba(91, 140, 255, 0.12);
+}
+
+.pc-instructions {
+    margin-top: 10px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.pc-summary {
+    display: grid;
+    grid-template-columns: minmax(120px, 34%) minmax(0, 1fr);
+    gap: 6px 14px;
+    margin: 0 0 14px;
+}
+
+.pc-summary dt {
+    color: #c9d3f2;
+}
+
+.pc-summary dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.pc-preview-title {
+    margin: 0 0 8px;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.pc-preview {
+    max-width: 420px;
+}
+
+.pc-wizard__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.pc-topup,
+.pc-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+    margin: 0 0 16px;
+}
+
+.pc-topup .pc-field,
+.pc-filter .pc-field {
+    flex: 1 1 160px;
+    margin: 0;
+}
+
+.pc-balance {
+    font-size: 1.1rem;
+}
+
+.pc-howto {
+    margin: 10px 0 0;
+    padding-left: 20px;
+}
+
+@media (max-width: 640px) {
+    .pc-grid-2 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pc-summary {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .pc-subs {
+        columns: 1;
+        padding-left: 20px;
+    }
+
+    /* Таблиці → картки: кожен рядок окремим блоком із підписами колонок. */
+    .pc-table thead {
+        display: none;
+    }
+
+    .pc-table,
+    .pc-table tbody,
+    .pc-table tr,
+    .pc-table td {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .pc-table tr {
+        margin: 0 0 10px;
+        padding: 8px 10px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+    }
+
+    .pc-table td {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 5px 0;
+        border: 0;
+        text-align: right;
+    }
+
+    .pc-table td::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        color: #c9d3f2;
+        text-align: left;
+    }
+
+    .pc-table td.pc-actions {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .pc-table td.pc-actions::before {
+        flex-basis: 100%;
+    }
+}

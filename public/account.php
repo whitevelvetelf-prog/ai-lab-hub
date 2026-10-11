@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/mailer.php';   // mail_site_url()
 require_once __DIR__ . '/../app/oauth.php';    // способи входу (соцмережі)
+require_once __DIR__ . '/../app/promo-cabinet.php'; // розділ «Реклама» (кабінет рекламодавця)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -1294,6 +1295,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                     </div>
                 </div>
             </div>
+
+            <?php if (promo_cabinet_visible($pdo, $user)) { promo_cabinet_render($pdo, $user); } ?>
 
             <?php // ТЕРМІНОВО приховано: подача заявки "Стати працівником" для user.
             // Секцію не видалено — лише вимкнено умовою, щоб легко повернути.

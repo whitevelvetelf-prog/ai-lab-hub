@@ -171,6 +171,7 @@ CREATE TABLE IF NOT EXISTS ad_targets (
     subcategory_id INT UNSIGNED NULL,
     language       ENUM('uk', 'en') NULL,
     device         ENUM('mobile', 'desktop') NULL,
+    unit_price     INT UNSIGNED NULL,
     PRIMARY KEY (id),
     KEY idx_ad_targets_campaign (campaign_id),
     KEY idx_ad_targets_match (placement, category_id, subcategory_id),
@@ -178,6 +179,13 @@ CREATE TABLE IF NOT EXISTS ad_targets (
         FOREIGN KEY (campaign_id) REFERENCES ad_campaigns (id)
         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- unit_price — знімок ціни з ad_rate_card для цього розміщення на момент надсилання
+-- на модерацію (копійки). Різні розміщення однієї кампанії можуть мати різну ціну;
+-- ad_campaigns.unit_price — найвища з них (для відображення й перевірок).
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='ad_targets' AND COLUMN_NAME='unit_price')=0,
+  'ALTER TABLE ad_targets ADD COLUMN unit_price INT UNSIGNED NULL AFTER device','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
 
 -- ---------------------------------------------------------------------
 -- 4) ad_events — сирі події (зберігаються 30 днів, потім агрегуються в
@@ -305,6 +313,19 @@ CREATE TABLE IF NOT EXISTS ad_reports (
     PRIMARY KEY (id),
     UNIQUE KEY uniq_ad_report_session (creative_id, session_hash),
     KEY idx_ad_reports_status (status, created_at)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- ---------------------------------------------------------------------
+-- 10a) ad_rate_limits — журнал дій рекламодавця для обмеження частоти
+--      (створення кампаній, завантаження відео, заявки на поповнення).
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS ad_rate_limits (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id    INT UNSIGNED NOT NULL,
+    action     VARCHAR(30) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    KEY idx_ad_rate_limits (user_id, action, created_at)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 -- ---------------------------------------------------------------------
