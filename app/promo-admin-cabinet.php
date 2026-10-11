@@ -351,6 +351,10 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <textarea name="prohibited_categories_text_uk" rows="4" maxlength="5000"><?= pc_e($settings['prohibited_categories_text_uk'] ?? '') ?></textarea></label>
                                 <label class="pc-field"><span>Заборонені категорії реклами (EN)</span>
                                     <textarea name="prohibited_categories_text_en" rows="4" maxlength="5000"><?= pc_e($settings['prohibited_categories_text_en'] ?? '') ?></textarea></label>
+                                <label class="pc-field"><span>Правила розміщення реклами (UA) для <a href="promo-rules.php" target="_blank" rel="noopener">promo-rules.php</a>. Порожньо — показується вбудована чернетка (потребує перевірки юристом).</span>
+                                    <textarea name="rules_text_uk" rows="8" maxlength="20000"><?= pc_e($settings['rules_text_uk'] ?? '') ?></textarea></label>
+                                <label class="pc-field"><span>Правила розміщення реклами (EN). Порожньо — вбудована англійська чернетка.</span>
+                                    <textarea name="rules_text_en" rows="8" maxlength="20000"><?= pc_e($settings['rules_text_en'] ?? '') ?></textarea></label>
                                 <button type="submit" class="pc-btn pc-btn--primary">Зберегти налаштування</button>
                             </form>
                         </section>

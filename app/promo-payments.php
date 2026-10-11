@@ -78,6 +78,83 @@ final class ManualBankTransfer implements PaymentProvider
     }
 }
 
+/**
+ * Базова заглушка онлайн-провайдера. Реальної інтеграції НЕМАЄ: для оплати
+ * карткою потрібен мерчант-акаунт, якого поки немає. Будь-який виклик кидає
+ * виняток, тож випадково увімкнути «оплату», яка не працює, неможливо.
+ *
+ * Як додати провайдера, коли з'явиться мерчант:
+ *   1. Ключі — у config/promo.php (не в git), напр. 'wayforpay' => ['merchant' => …, 'secret' => …].
+ *   2. createTopup(): створити ad_transactions (topup / pending / method='provider',
+ *      provider=code()), сформувати рахунок у провайдера, повернути redirect_url
+ *      на його сторінку оплати. Картку вводить покупець на сторінці провайдера —
+ *      сайт номерів карток НЕ отримує й не зберігає.
+ *   3. handleCallback(): перевірити підпис провайдера, знайти заявку за reference,
+ *      ідемпотентно підтвердити її (status='confirmed', confirmed_at) і зарахувати
+ *      суму на баланс — тією ж транзакцією, що й ручне підтвердження в адмінці
+ *      (promo_admin_balance_add у app/promo-admin.php).
+ *   4. Публічний endpoint зворотного виклику (напр. public/promo-pay-callback.php)
+ *      і перемикання promo_payment_provider() на нового провайдера.
+ * Кабінет і баланс переробляти не треба: вони працюють лише через PaymentProvider.
+ */
+abstract class PromoProviderStub implements PaymentProvider
+{
+    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency): array
+    {
+        throw new LogicException(static::class . ': онлайн-оплата не підключена (немає мерчант-акаунта).');
+    }
+
+    public function status(PDO $pdo, int $transactionId): string
+    {
+        throw new LogicException(static::class . ': онлайн-оплата не підключена.');
+    }
+
+    public function handleCallback(PDO $pdo, array $request): ?int
+    {
+        throw new LogicException(static::class . ': онлайн-оплата не підключена.');
+    }
+}
+
+/**
+ * WayForPay (Україна). Потрібно: merchantAccount, merchantSecretKey, merchantDomainName;
+ * підпис запитів і відповіді — HMAC-MD5 за полями з документації; serviceUrl для callback;
+ * відповідь на callback — підписаний JSON «accept».
+ */
+final class WayForPayProvider extends PromoProviderStub
+{
+    public function code(): string
+    {
+        return 'wayforpay';
+    }
+}
+
+/**
+ * LiqPay (ПриватБанк). Потрібно: public_key, private_key; data (base64 JSON) і
+ * signature = base64(sha1(private_key . data . private_key)); server_url для callback,
+ * перевірка підпису callback тим самим способом; action=pay, currency=UAH.
+ */
+final class LiqPayProvider extends PromoProviderStub
+{
+    public function code(): string
+    {
+        return 'liqpay';
+    }
+}
+
+/**
+ * Stripe (міжнародні картки). Потрібно: secret key (sk_live_…), webhook signing
+ * secret (whsec_…); Checkout Session з success_url / cancel_url; webhook
+ * checkout.session.completed з перевіркою заголовка Stripe-Signature.
+ * Підтримку валюти UAH і країни мерчанта треба перевірити окремо.
+ */
+final class StripeProvider extends PromoProviderStub
+{
+    public function code(): string
+    {
+        return 'stripe';
+    }
+}
+
 /** Унікальне призначення платежу для заявки (містить ID заявки). */
 function promo_payment_reference(int $transactionId): string
 {

@@ -35,6 +35,8 @@ const PROMO_SETTING_RULES = [
     'payment_instructions_en' => ['text', 5000],
     'prohibited_categories_text_uk' => ['text', 5000],
     'prohibited_categories_text_en' => ['text', 5000],
+    'rules_text_uk' => ['text', 20000],
+    'rules_text_en' => ['text', 20000],
 ];
 
 function promo_admin_set_setting(PDO $pdo, string $key, string $value): void

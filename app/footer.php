@@ -810,6 +810,7 @@ require_once __DIR__ . '/marketplace.php';
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
             <li><a href="terms.php"><?= htmlspecialchars(t('footer_terms'), ENT_QUOTES) ?></a></li>
             <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
+            <li><a href="promo-rules.php"><?= htmlspecialchars(t('footer_promo_rules'), ENT_QUOTES) ?></a></li>
         </ul>
 
         <a class="site-footer__support" href="/donate.php">

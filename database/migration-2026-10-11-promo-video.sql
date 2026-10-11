@@ -297,7 +297,9 @@ INSERT IGNORE INTO ad_settings (setting_key, setting_value) VALUES
 ('payment_instructions_uk', ''),
 ('payment_instructions_en', ''),
 ('prohibited_categories_text_uk', ''),
-('prohibited_categories_text_en', '');
+('prohibited_categories_text_en', ''),
+('rules_text_uk', ''),
+('rules_text_en', '');
 
 -- ---------------------------------------------------------------------
 -- 10) ad_reports — скарги відвідувачів (одна скарга на креатив від сеансу).
@@ -349,4 +351,5 @@ INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VAL
 ('promo_cta_learn_more', 'en', 'Learn more', 'manual'),
 ('promo_cta_try', 'en', 'Try it', 'manual'),
 ('promo_cta_go', 'en', 'Go', 'manual'),
-('promo_cta_download', 'en', 'Download', 'manual');
+('promo_cta_download', 'en', 'Download', 'manual'),
+('footer_promo_rules', 'en', 'Advertising rules', 'manual');

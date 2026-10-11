@@ -294,6 +294,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'footer_contacts' => 'Контакти',
     'footer_terms'    => 'Умови використання',
     'footer_privacy'  => 'Політика конфіденційності',
+    'footer_promo_rules' => 'Правила реклами',
     'footer_support'  => 'Підтримати проєкт',
     'footer_social'   => 'Соцмережі',
 
