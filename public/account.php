@@ -444,6 +444,7 @@ $pendingRequest = null;
 $pendingRequests = [];
 // Статистика користувачів за ролями — лише для admin.
 $userStats = ['total' => 0, 'users' => 0, 'employees' => 0, 'admins' => 0];
+$pvMini = null;
 $staffEmployees = [];
 $staffAdmins = [];
 // Заявки на роль Адміністратора (приватна система, окремо від employee_requests).
@@ -483,6 +484,10 @@ if ($user !== null && $user['role'] === 'user') {
         'employees' => (int) ($statsRow['employees'] ?? 0),
         'admins'    => (int) ($statsRow['admins'] ?? 0),
     ];
+
+    // Перегляди сайту одним рядком (повний блок — admin-stats.php).
+    require_once __DIR__ . '/../app/site-stats.php';
+    $pvMini = site_stats_try_sync($pdo) ? site_stats_summary($pdo, false) : null;
 
     // Працівники: номер, ПІБ, email, дата отримання ролі (reviewed_at
     // останньої схваленої заявки).
@@ -917,6 +922,37 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
 
         .summary a {
             color: #bcd0ff;
+        }
+
+        /* Перегляди сайту одним рядком (акордеон «Статистика сайту») */
+        .pv-mini {
+            align-items: baseline;
+        }
+
+        .pv-mini__title {
+            flex-basis: 100%;
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .pv-mini__date {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .summary a.pv-mini__more {
+            margin-left: auto;
+            font-weight: 700;
+            color: #bcd0ff;
+            text-decoration: none;
+        }
+
+        .summary a.pv-mini__more:hover {
+            color: #ffffff;
+            text-decoration: underline;
         }
 
         .field {
@@ -1360,7 +1396,18 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                     </button>
                     <div class="accordion__panel" id="acc-stats-panel">
                         <div class="accordion__panel-inner">
-                            <p><a class="section__link" href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
+                            <?php if ($pvMini !== null): ?>
+                                <div class="summary pv-mini">
+                                    <span class="pv-mini__title"><?= htmlspecialchars(t('pv_block_title'), ENT_QUOTES) ?></span>
+                                    <span><?= htmlspecialchars(t('pv_account_today'), ENT_QUOTES) ?>: <strong><?= site_stats_num($pvMini['today']['views']) ?></strong></span>
+                                    <span><?= htmlspecialchars(t('pv_account_7d'), ENT_QUOTES) ?>: <strong><?= site_stats_num($pvMini['week']['views']) ?></strong></span>
+                                    <span><?= htmlspecialchars(t('pv_account_30d'), ENT_QUOTES) ?>: <strong><?= site_stats_num($pvMini['month']['views']) ?></strong></span>
+                                    <span><?= htmlspecialchars(t('pv_account_record'), ENT_QUOTES) ?>: <strong><?= site_stats_num($pvMini['record_day']['views'] ?? 0) ?></strong><?php if ($pvMini['record_day'] !== null): ?> <span class="pv-mini__date">(<?= e(site_stats_date($pvMini['record_day']['day'])) ?>)</span><?php endif; ?></span>
+                                    <a class="pv-mini__more" href="admin-stats.php"><?= htmlspecialchars(t('pv_account_more'), ENT_QUOTES) ?> →</a>
+                                </div>
+                            <?php else: ?>
+                                <p><a class="section__link" href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
+                            <?php endif; ?>
                             <div class="summary">
                                 <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>
                                 <span><?= htmlspecialchars(t('stats_users_label'), ENT_QUOTES) ?> (user): <strong><?= (int) $userStats['users'] ?></strong></span>

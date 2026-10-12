@@ -1,0 +1,382 @@
+/* AI LAB HUB — блок «Перегляди сайту» (app/site-stats-block.php на public/admin-stats.php). */
+
+.pv {
+    --pv-accent: #ffd36b;
+    --pv-accent-soft: rgba(255, 211, 107, 0.16);
+    --pv-up: #8ef0b4;
+    --pv-down: #ffb3b3;
+    --pv-bar: rgba(165, 192, 255, 0.55);
+}
+
+.pv__note {
+    margin: 0 0 18px;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.pv-empty {
+    padding: 20px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: var(--card-bg);
+    color: var(--text-muted);
+}
+
+.pv-icon {
+    width: 1em;
+    height: 1em;
+    flex: none;
+    vertical-align: -0.12em;
+}
+
+/* Рекорди за весь час */
+.pv-record {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+    padding: 20px 22px;
+    border: 1px solid rgba(255, 211, 107, 0.55);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 211, 107, 0.14), rgba(255, 255, 255, 0.04));
+}
+
+.pv-record__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: none;
+    border-radius: 14px;
+    background: var(--pv-accent-soft);
+    color: var(--pv-accent);
+    font-size: 28px;
+}
+
+.pv-record__body {
+    flex: 1;
+    min-width: 0;
+}
+
+.pv-record__title {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--pv-accent);
+}
+
+.pv-record__items {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.pv-record__label,
+.pv-card__label {
+    margin: 0;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.pv-record__value {
+    margin: 2px 0 0;
+    font-size: 1.9rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: #ffffff;
+}
+
+.pv-record__value--none {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.pv-record__meta {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #e3ebff;
+}
+
+.pv-few {
+    display: inline-block;
+    margin: 6px 0 0;
+    padding: 1px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Картки сьогодні / тиждень / місяць */
+.pv-cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 16px;
+}
+
+.pv-card {
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+}
+
+.pv-card--record {
+    border-color: rgba(255, 211, 107, 0.6);
+    box-shadow: 0 0 0 1px rgba(255, 211, 107, 0.25) inset;
+}
+
+.pv-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.pv-badge {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: var(--pv-accent);
+    color: #1b1400;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.pv-card__period {
+    margin: 2px 0 10px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.pv-card__value {
+    margin: 0;
+    font-size: 2.1rem;
+    font-weight: 800;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+}
+
+.pv-card__unit {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.pv-card__sessions {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #e3ebff;
+    font-variant-numeric: tabular-nums;
+}
+
+.pv-card__compare {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.pv-card__compare--none {
+    font-size: 0.8rem;
+}
+
+.pv-card__compare-line {
+    display: block;
+}
+
+.pv-card__vs {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+}
+
+.pv-delta {
+    display: inline-flex;
+    gap: 3px;
+    align-items: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.pv-delta--up { color: var(--pv-up); }
+.pv-delta--down { color: var(--pv-down); }
+.pv-delta--flat { color: #e3ebff; }
+
+.pv-progress {
+    height: 5px;
+    margin: 12px 0 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.pv-progress__bar {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #5b8cff, var(--pv-accent));
+}
+
+.pv-card__share {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Мініграфік за 30 днів */
+.pv-chart {
+    margin-bottom: 16px;
+    padding: 18px 20px 14px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: var(--card-bg);
+}
+
+.pv-chart__title {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.pv-chart__legend {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.pv-chart__swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    background: var(--pv-accent);
+}
+
+.pv-chart__svg {
+    display: block;
+    width: 100%;
+    height: 120px;
+}
+
+.pv-chart__bar {
+    fill: var(--pv-bar);
+}
+
+.pv-chart__bar:hover {
+    fill: #bcd0ff;
+}
+
+.pv-chart__bar--record {
+    fill: var(--pv-accent);
+}
+
+.pv-chart__axis {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Налаштування */
+.pv-settings {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+    align-items: center;
+    padding: 14px 18px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    background: var(--card-bg);
+}
+
+.pv-settings__title {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.pv-settings__toggle {
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pv-settings__toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: #5b8cff;
+}
+
+.pv-settings__hint {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.pv-settings__btn {
+    padding: 7px 18px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #5b8cff, #a5c0ff);
+    color: #00032c;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pv-settings__btn:hover {
+    filter: brightness(1.08);
+}
+
+.pv-settings__flash {
+    font-size: 0.85rem;
+    color: var(--pv-up);
+}
+
+.pv-settings__flash--error {
+    color: var(--pv-down);
+}
+
+@media (max-width: 860px) {
+    .pv-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .pv-record {
+        flex-direction: column;
+        padding: 18px;
+    }
+
+    .pv-record__items {
+        grid-template-columns: 1fr;
+    }
+
+    .pv-chart {
+        padding: 14px 14px 10px;
+    }
+}

@@ -13,7 +13,12 @@ declare(strict_types=1);
  * Підключати після app/auth.php (потрібна активна сесія для session_id()):
  *   require_once __DIR__ . '/../app/auth.php';
  *   require_once __DIR__ . '/../app/analytics.php';
+ *
+ * Перегляди адмінів і працівників не пишуться, поки в admin-stats.php увімкнено
+ * «Не рахувати перегляди адмінів» (site_settings.stats_exclude_staff, типово 1).
  */
+
+require_once __DIR__ . '/site-stats.php';
 
 /** Анонімний хеш поточної сесії — не персональні дані, IP у явному вигляді не зберігається. */
 function analytics_session_hash(): string
@@ -54,6 +59,9 @@ function analytics_device_class(): string
  */
 function analytics_log_view(PDO $pdo, string $pageType, ?int $pageId = null, ?string $pageSlug = null): void
 {
+    if (site_stats_skip_view($pdo)) {
+        return;
+    }
     $lang = function_exists('current_lang') ? substr(current_lang(), 0, 5) : null;
     try {
         $stmt = $pdo->prepare(

@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
+require_once __DIR__ . '/../app/site-stats.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -22,32 +23,38 @@ if (auth_role() !== 'admin') {
     exit;
 }
 
+if (empty($_SESSION['stats_csrf']) || !is_string($_SESSION['stats_csrf'])) {
+    $_SESSION['stats_csrf'] = bin2hex(random_bytes(32));
+}
+
+/** Перемикач «Не рахувати перегляди адмінів» (site_settings.stats_exclude_staff). */
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+    $ok = false;
+    $sent = $_POST['csrf'] ?? '';
+    if (is_string($sent) && hash_equals($_SESSION['stats_csrf'], $sent)) {
+        try {
+            site_settings_save($pdo, ['stats_exclude_staff' => isset($_POST['exclude_staff']) ? '1' : '0']);
+            $ok = true;
+        } catch (Throwable $e) {
+            error_log('[admin-stats] settings: ' . $e->getMessage());
+        }
+    }
+    $_SESSION['stats_flash'] = $ok;
+    header('Location: admin-stats.php#pv-settings', true, 303);
+    exit;
+}
+$statsFlash = $_SESSION['stats_flash'] ?? null;
+unset($_SESSION['stats_flash']);
+$excludeStaff = site_setting($pdo, 'stats_exclude_staff', '1') === '1';
+
+/** Блок «Перегляди сайту»: спершу дорахувати незакриті дні в page_views_daily. */
+$pv = site_stats_try_sync($pdo) ? site_stats_summary($pdo) : null;
+
 /** Екранування для HTML. */
 function e(mixed $value): string
 {
     return htmlspecialchars((string) $value, ENT_QUOTES);
 }
-
-/** Перегляди й унікальні сесії за період (від $since до тепер). */
-function stats_period_totals(PDO $pdo, string $since): array
-{
-    $stmt = $pdo->prepare(
-        'SELECT COUNT(*) AS views, COUNT(DISTINCT session_hash) AS unique_sessions
-         FROM page_views
-         WHERE viewed_at >= :since'
-    );
-    $stmt->execute([':since' => $since]);
-    $row = $stmt->fetch();
-
-    return [
-        'views' => (int) ($row['views'] ?? 0),
-        'unique_sessions' => (int) ($row['unique_sessions'] ?? 0),
-    ];
-}
-
-$today = stats_period_totals($pdo, date('Y-m-d 00:00:00'));
-$last7 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-7 days')));
-$last30 = stats_period_totals($pdo, date('Y-m-d H:i:s', strtotime('-30 days')));
 
 /** Усі акаунти, незалежно від ролі. */
 $usersTotal = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
@@ -61,8 +68,8 @@ $blogViews = $pdo->query(
 )->fetch();
 
 /**
- * Фільтр періоду для топ-10 таблиць нижче — окремий від карток
- * сьогодні/7/30 днів вище (ті лишаються фіксованими для загальної картини).
+ * Фільтр періоду для топ-10 таблиць нижче — окремий від блоку «Перегляди сайту»
+ * вище (ті картки фіксовані: київська доба, 7 і 30 днів).
  */
 $periodLabels = [
     'today' => 'Сьогодні',
@@ -133,7 +140,7 @@ try {
 
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= e(current_lang()) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -362,6 +369,7 @@ try {
             color: var(--text-muted);
         }
     </style>
+    <link rel="stylesheet" href="assets/css/site-stats.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/site-stats.css') ?>">
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
@@ -377,23 +385,7 @@ try {
         <h1 class="page__title">Статистика сайту</h1>
         <p class="page__subtitle">Власна аналітика: перегляди сторінок і кліки на «Перейти на сайт». Без персональних даних — лише анонімні сесії.</p>
 
-        <div class="stat-cards">
-            <div class="stat-card">
-                <p class="stat-card__label">Сьогодні</p>
-                <p class="stat-card__value"><?= (int) $today['views'] ?></p>
-                <p class="stat-card__sub"><?= (int) $today['unique_sessions'] ?> унікальних сесій</p>
-            </div>
-            <div class="stat-card">
-                <p class="stat-card__label">Останні 7 днів</p>
-                <p class="stat-card__value"><?= (int) $last7['views'] ?></p>
-                <p class="stat-card__sub"><?= (int) $last7['unique_sessions'] ?> унікальних сесій</p>
-            </div>
-            <div class="stat-card">
-                <p class="stat-card__label">Останні 30 днів</p>
-                <p class="stat-card__value"><?= (int) $last30['views'] ?></p>
-                <p class="stat-card__sub"><?= (int) $last30['unique_sessions'] ?> унікальних сесій</p>
-            </div>
-        </div>
+        <?php include __DIR__ . '/../app/site-stats-block.php'; ?>
 
         <div class="stat-cards">
             <div class="stat-card">
