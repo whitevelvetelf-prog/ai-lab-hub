@@ -46,6 +46,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
 
     $tab = in_array($_GET['promo_tab'] ?? '', ['campaigns', 'create', 'balance', 'stats'], true) ? $_GET['promo_tab'] : 'campaigns';
     $lang = promo_lang();
+    require_once __DIR__ . '/promo-mail.php';
+    promo_notify_remember_lang($pdo, $userId, $lang);
+    $notifyPrefs = promo_notify_prefs($pdo, $userId);
 
     $campaignsSt = $pdo->prepare("SELECT * FROM ad_campaigns WHERE user_id = :u AND format = 'video' AND campaign_type = 'paid' ORDER BY id DESC");
     $campaignsSt->execute([':u' => $userId]);
@@ -549,6 +552,17 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                 <div class="pc-instructions"><?= nl2br(pc_e($instructions)) ?></div>
                                 <?php endif; ?>
                             </details>
+
+                            <form method="post" action="promo-action.php" class="pc-box pc-notify">
+                                <?= promo_csrf_field() ?>
+                                <input type="hidden" name="action" value="notify_prefs">
+                                <label class="pc-check">
+                                    <input type="checkbox" name="low_balance" value="1"<?= $notifyPrefs['low_balance'] ? ' checked' : '' ?>>
+                                    <span><?= pc_e(promo_tr('notify_low_balance')) ?></span>
+                                </label>
+                                <p class="pc-muted"><?= pc_e(promo_tr('notify_note')) ?></p>
+                                <button type="submit" class="pc-btn pc-btn--small"><?= pc_e(promo_tr('notify_save')) ?></button>
+                            </form>
 
                             <h3 class="pc-h3"><?= pc_e(promo_tr('history_title')) ?></h3>
                             <?php if ($transactions === []): ?>

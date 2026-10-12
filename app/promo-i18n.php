@@ -228,6 +228,12 @@ const PROMO_I18N = [
     'err_topup_unavailable' => ['Поповнення поки недоступне.', 'Top-ups are not available yet.'],
     'err_topup_amount' => ['Вкажіть коректну суму.', 'Enter a valid amount.'],
     'err_topup_min' => ['Сума менша за мінімальну.', 'The amount is below the minimum.'],
+    // Листи (блок I)
+    'notify_low_balance' => ['Надсилати листи про низький баланс', 'Email me when my balance is low'],
+    'notify_note' => ['Листи про модерацію, старт, зупинку й поповнення надсилаються завжди. Мова листів — мова інтерфейсу кабінету.', 'Emails about review, start, stops and top-ups are always sent. Emails use your account interface language.'],
+    'notify_save' => ['Зберегти', 'Save'],
+    'ok_notify_saved' => ['Налаштування листів збережено.', 'Email settings saved.'],
+
     // Категорія реклами (блок H)
     'field_advertiser_category' => ['Категорія реклами', 'Ad category'],
     'choose' => ['— оберіть —', '— choose —'],

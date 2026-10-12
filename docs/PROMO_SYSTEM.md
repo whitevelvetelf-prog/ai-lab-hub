@@ -85,6 +85,21 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
   завершує кампанії з минулою датою й чистить сирі події старші 30 днів.
 - `upload_max_filesize` / `post_max_size` мають бути ≥ `max_video_mb` (адмінка показує попередження).
 
+## Блоки F–I (2026-10-12)
+
+- **F. Медіакіт** `public/advertise.php` (+ `app/promo-audience.php`, кеш `promo_audience_stats`,
+  анонімні `page_views.device_class` / `lang`).
+- **G. Перевірка посилань** `app/promo-linkcheck.php` (SSRF-захист, Safe Browsing / Web Risk,
+  `ad_link_checks`, `ad_domain_blocklist`, `promo_event_log`, автопауза → повторна модерація).
+- **H. Виключення** `app/promo-exclusions.php` (`no_promo`, `promo_blog_flags`,
+  `ad_campaigns.advertiser_category`, `promo_category_rules`, «перевірити сторінку»).
+- **I. Пошта й cron** `app/promo-mail.php` (PHPMailer у `app/lib/phpmailer`, `mail_queue`,
+  `promo_notify_prefs`), `cron/*.php` (`cron_runs`), вкладка «Стан».
+- Час у БД — UTC (`promo_db_utc` в ендпоінтах реклами й cron), «доба» — Europe/Kyiv
+  (`promo_today`); денний бюджет рахується з `ad_stats_daily` за київську добу.
+- Міграція: `database/migration-2026-10-12-promo-operations.sql`. Експлуатація:
+  `docs/PROMO_OPERATIONS.md`.
+
 ## Юридичне
 
 `promo-rules.php` (вбудована чернетка UA/EN, адмін може замінити текстом у налаштуваннях),

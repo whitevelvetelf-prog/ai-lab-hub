@@ -74,6 +74,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         'house' => 'Власна реклама',
         'links' => 'Перевірка посилань',
         'exclusions' => 'Виключення реклами',
+        'status' => 'Стан',
     ];
     $tab = isset($tabs[$_GET['padm_tab'] ?? '']) ? $_GET['padm_tab'] : 'moderation';
 
@@ -134,6 +135,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         array_filter(explode(',', $flags))
     ));
 
+    $sys = promo_admin_system_status($pdo);
+    $sysAlarm = array_filter($sys['jobs'], static fn($j) => $j['stale']) !== [] || $sys['mail_failed'] > 0;
+    $failedMails = $tab === 'status' ? promo_admin_failed_mails($pdo) : [];
     $noPromo = promo_no_promo_list($pdo);
     $catRules = promo_rules_list($pdo);
     $taxonomyAll = promo_taxonomy($pdo);
@@ -173,6 +177,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             </form>
                             <?php if (!$secretOk): ?>
                             <p class="pc-warn-text">Немає config/promo.php із секретом (secret ≥ 32 символи) — відеореклама не показується. Шаблон: config/promo.example.php.</p>
+                            <?php endif; ?>
+                            <?php if ($sysAlarm): ?>
+                            <p class="pc-warn-text"><strong>Стан: є проблеми з cron або поштою</strong> — <a href="account.php?padm_tab=status#acc-promo-admin">вкладка «Стан»</a>.</p>
                             <?php endif; ?>
                             <?php if ($rates === []): ?>
                             <p class="pc-warn-text">Прайс порожній — платні кампанії неможливо надіслати на модерацію.</p>
@@ -647,6 +654,55 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="Подія"><?= pc_e($ev['event']) ?><?= $ev['user_id'] ? '<span class="pc-muted">користувач #' . (int) $ev['user_id'] . '</span>' : '' ?></td>
                                         <td data-label="Кампанія"><?= $ev['campaign_id'] ? '#' . (int) $ev['campaign_id'] : '' ?><?= $ev['creative_id'] ? ' / #' . (int) $ev['creative_id'] : '' ?></td>
                                         <td data-label="Деталі"><?= pc_e($ev['details'] ?? '') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+
+                        <!-- ============ I4. Стан ============ -->
+                        <section class="pc-panel" data-pc-panel="status"<?= $tab === 'status' ? '' : ' hidden' ?>>
+                            <?php foreach ($sys['jobs'] as $job => $j): if ($j['stale']): ?>
+                            <div class="pc-box pc-box--danger"><strong><?= pc_e($job) ?></strong>: <?= $j['last_ok'] === null ? 'жодного успішного запуску' : 'не запускалось довше за очікуване (останній успішний — ' . pc_e(promo_local_time($j['last_ok'])) . ')' ?>. Перевірте розклад у панелі хостингу (docs/PROMO_OPERATIONS.md).</div>
+                            <?php endif; endforeach; ?>
+                            <?php if ($sys['mail_failed'] > 0): ?>
+                            <div class="pc-box pc-box--danger">Листів із помилкою відправки: <strong><?= (int) $sys['mail_failed'] ?></strong> — див. нижче й налаштування config/mail.php.</div>
+                            <?php endif; ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Завдання</th><th>Останній запуск (Київ)</th><th>Результат</th><th>Останній успішний</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($sys['jobs'] as $job => $j): $last = $j['last']; ?>
+                                    <tr>
+                                        <td data-label="Завдання"><code>cron/<?= pc_e($job) ?>.php</code><span class="pc-muted"><?= pc_e($j['label']) ?></span></td>
+                                        <td data-label="Запуск"><?= $last ? pc_e(promo_local_time($last['started_at'])) : '—' ?></td>
+                                        <td data-label="Результат"><?php if ($last): ?><span class="<?= $last['status'] === 'error' ? 'pc-warn-text' : '' ?>"><?= pc_e($last['status']) ?></span><span class="pc-muted"><?= pc_e($last['message'] ?? '') ?></span><?php else: ?>—<?php endif; ?></td>
+                                        <td data-label="Успішний"><?= $j['last_ok'] ? pc_e(promo_local_time($j['last_ok'])) : '—' ?><?= $j['stale'] ? ' <strong class="pc-warn-text">!</strong>' : '' ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <dl class="pc-summary">
+                                <dt>Пошта</dt><dd>транспорт: <strong><?= pc_e($sys['mail_transport']) ?></strong><?= $sys['mail_transport'] === 'log' ? ' (тестовий режим — листи НЕ відправляються)' : ($sys['mail_transport'] === 'mail' ? ' (PHP mail(); SMTP не налаштовано)' : '') ?></dd>
+                                <dt>Черга листів</dt><dd><?= (int) $sys['mail_pending'] ?> в очікуванні<?= $sys['mail_oldest_pending'] ? ' (найстаріший — ' . pc_e(promo_local_time($sys['mail_oldest_pending'])) . ')' : '' ?> · з помилкою: <?= (int) $sys['mail_failed'] ?></dd>
+                                <dt>Остання успішна перевірка посилань</dt><dd><?= $sys['last_link_check'] ? pc_e(promo_local_time($sys['last_link_check'])) : '—' ?></dd>
+                                <dt>Часовий пояс</dt><dd>час у БД — UTC; тут показано за Києвом; «доба» реклами — київська (сьогодні <?= pc_e(promo_today()) ?>)</dd>
+                            </dl>
+                            <?php if ($failedMails !== []): ?>
+                            <h3 class="pc-h3">Листи з помилкою</h3>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Кому</th><th>Тема</th><th>Спроб</th><th>Помилка</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($failedMails as $fm): ?>
+                                    <tr>
+                                        <td data-label="Кому"><?= pc_e($fm['to_email']) ?><span class="pc-muted"><?= pc_e(promo_local_time($fm['created_at'])) ?></span></td>
+                                        <td data-label="Тема"><?= pc_e($fm['subject']) ?></td>
+                                        <td data-label="Спроб"><?= (int) $fm['attempts'] ?></td>
+                                        <td data-label="Помилка"><?= pc_e($fm['last_error'] ?? '') ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                     </tbody>

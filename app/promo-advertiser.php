@@ -720,6 +720,10 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         return ['saved' => false, 'id' => $campaign !== null ? $campaignId : null, 'errors' => ['err_generic'], 'submitted' => false];
     }
 
+    if ($doSubmit && !$house) {
+        promo_event_notify($pdo, 'creative_pending', ['campaign_id' => $campaignId]);
+    }
+
     // Перевірка адреси переходу (блок G): при надсиланні на модерацію й при кожній зміні адреси.
     $urlChanged = $destination !== '' && $destination !== (string) ($creative['destination_url'] ?? '');
     if ($creativeId > 0 && $destination !== '' && ($doSubmit || $urlChanged)) {
@@ -837,6 +841,7 @@ function promo_request_topup(PDO $pdo, int $userId, mixed $amountInput): array
     }
     $request = promo_payment_provider()->createTopup($pdo, $userId, $amount, 'UAH');
     promo_rate_hit($pdo, $userId, 'topup_request');
+    promo_event_notify($pdo, 'topup_requested', ['user_id' => $userId, 'tx_id' => (int) ($request['id'] ?? 0), 'amount' => $amount]);
 
     return [true, 'ok_topup_created', $request + ['amount' => $amount]];
 }

@@ -46,3 +46,6 @@
 # Відео й постери рекламодавців — користувацький контент (у git лише index.html, що закриває лістинг).
 /public/uploads/promo/*
 !/public/uploads/promo/index.html
+
+# Пошта (SMTP-пароль) — шаблон config/mail.example.php.
+/config/mail.php

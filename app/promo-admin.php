@@ -225,10 +225,69 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
     }
 
     promo_log_event($pdo, $approve ? 'approved' : 'rejected', $creativeId, (int) $row['campaign_id'], $approve ? '' : $reason, $adminId);
+    promo_event_notify($pdo, $approve ? 'creative_approved' : 'creative_rejected', ['campaign_id' => (int) $row['campaign_id'], 'reason' => $reason]);
 
     return [true, $approve
         ? 'Креатив схвалено, кампанія активна (показ почнеться з дати старту за наявності коштів на балансі).'
         : 'Креатив відхилено, рекламодавець бачить причину в кабінеті.'];
+}
+
+// --- Стан системи (cron, пошта) ---------------------------------------------
+
+/** Завдання cron: назва → [опис, очікуваний інтервал у хвилинах, запас до тривоги]. */
+const PROMO_CRON_JOBS = [
+    'promo-mail' => ['Відправка листів (кожні 5 хв)', 5, 30],
+    'promo-hourly' => ['Щогодинні дії', 60, 180],
+    'promo-daily' => ['Щоденне обслуговування (03:10 Київ)', 1440, 1560],
+    'promo-weekly' => ['Щотижневі перевірки', 10080, 11520],
+];
+
+/**
+ * Стан: останній запуск кожного завдання, черга пошти, остання перевірка посилань.
+ *
+ * @return array{jobs:array<string,array>,mail_pending:int,mail_failed:int,mail_oldest_pending:?string,last_link_check:?string,mail_transport:string}
+ */
+function promo_admin_system_status(PDO $pdo): array
+{
+    $out = ['jobs' => [], 'mail_pending' => 0, 'mail_failed' => 0, 'mail_oldest_pending' => null, 'last_link_check' => null, 'mail_transport' => '?'];
+    $now = time();
+    foreach (PROMO_CRON_JOBS as $job => [$label, $every, $alarm]) {
+        $row = ['label' => $label, 'last' => null, 'last_ok' => null, 'stale' => true];
+        try {
+            $st = $pdo->prepare('SELECT * FROM cron_runs WHERE job = :j ORDER BY id DESC LIMIT 1');
+            $st->execute([':j' => $job]);
+            $row['last'] = $st->fetch() ?: null;
+            $st = $pdo->prepare("SELECT MAX(finished_at) FROM cron_runs WHERE job = :j AND status IN ('ok', 'skipped')");
+            $st->execute([':j' => $job]);
+            $row['last_ok'] = $st->fetchColumn() ?: null;
+        } catch (Throwable $e) {
+            error_log('[promo] status: ' . $e->getMessage());
+        }
+        $row['stale'] = $row['last_ok'] === null || ($now - strtotime($row['last_ok'] . ' UTC')) > $alarm * 60;
+        $out['jobs'][$job] = $row;
+    }
+    try {
+        $out['mail_pending'] = (int) $pdo->query("SELECT COUNT(*) FROM mail_queue WHERE status = 'pending'")->fetchColumn();
+        $out['mail_failed'] = (int) $pdo->query("SELECT COUNT(*) FROM mail_queue WHERE status = 'failed'")->fetchColumn();
+        $out['mail_oldest_pending'] = $pdo->query("SELECT MIN(created_at) FROM mail_queue WHERE status = 'pending'")->fetchColumn() ?: null;
+        $out['last_link_check'] = $pdo->query('SELECT MAX(checked_at) FROM ad_link_checks WHERE http_status IS NOT NULL')->fetchColumn() ?: null;
+    } catch (Throwable $e) {
+        error_log('[promo] status: ' . $e->getMessage());
+    }
+    require_once __DIR__ . '/promo-mail.php';
+    $out['mail_transport'] = promo_mail_config()['transport'];
+
+    return $out;
+}
+
+/** Останні листи з помилкою (для розбору). */
+function promo_admin_failed_mails(PDO $pdo): array
+{
+    try {
+        return $pdo->query("SELECT id, to_email, subject, attempts, last_error, created_at FROM mail_queue WHERE status = 'failed' ORDER BY id DESC LIMIT 20")->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
 }
 
 // --- Перевірка посилань: чорний список і скорочувачі -----------------------
@@ -315,6 +374,9 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
 
         return [false, 'Не вдалося обробити заявку.'];
     }
+
+    promo_event_notify($pdo, $confirm ? 'topup_confirmed' : 'topup_rejected',
+        ['user_id' => (int) $tx['user_id'], 'tx_id' => $txId, 'amount' => (int) $tx['amount'], 'reason' => $reason]);
 
     return [true, $confirm
         ? 'Поповнення підтверджено, суму зараховано на баланс ' . promo_money($tx['amount']) . '.'

@@ -722,9 +722,7 @@ function promo_link_autopause(PDO $pdo, int $creativeId, int $campaignId, string
         return false;
     }
     promo_log_event($pdo, 'link_autopause', $creativeId, $campaignId, $reason);
-    if (function_exists('promo_notify')) {
-        promo_notify($pdo, 'link_autopause', ['campaign_id' => $campaignId, 'creative_id' => $creativeId, 'reason' => $reason]);
-    }
+    promo_event_notify($pdo, 'link_autopause', ['campaign_id' => $campaignId, 'creative_id' => $creativeId, 'reason' => $reason]);
 
     return true;
 }

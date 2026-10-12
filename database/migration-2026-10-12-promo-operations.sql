@@ -213,3 +213,57 @@ INSERT INTO promo_category_rules (scope_type, scope_id, advertiser_category, rul
 SELECT 'category', @cat_health, 'food_nutrition', 'block', 'Реклама їжі й харчування не показується на сторінках здоров''я', UTC_TIMESTAMP() FROM DUAL
 WHERE @cat_health IS NOT NULL
   AND NOT EXISTS (SELECT 1 FROM promo_category_rules WHERE scope_type = 'category' AND scope_id = @cat_health AND advertiser_category = 'food_nutrition');
+
+-- =====================================================================
+-- I) E-mail і cron.
+-- =====================================================================
+
+-- I1) Черга листів: сайт лише додає, відправляє cron/promo-mail.php. Час — UTC.
+CREATE TABLE IF NOT EXISTS mail_queue (
+    id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    to_email   VARCHAR(255) NOT NULL,
+    to_name    VARCHAR(190) NOT NULL DEFAULT '',
+    subject    VARCHAR(255) NOT NULL,
+    body_text  MEDIUMTEXT NOT NULL,
+    body_html  MEDIUMTEXT NOT NULL,
+    lang       CHAR(2) NOT NULL DEFAULT 'uk',
+    status     ENUM('pending', 'sent', 'failed') NOT NULL DEFAULT 'pending',
+    attempts   TINYINT UNSIGNED NOT NULL DEFAULT 0,
+    last_error VARCHAR(500) NULL,
+    send_after DATETIME NOT NULL,
+    created_at DATETIME NOT NULL,
+    sent_at    DATETIME NULL,
+    PRIMARY KEY (id),
+    KEY idx_mail_queue_pending (status, send_after)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- I2) Налаштування сповіщень рекламодавця: мова листів і «низький баланс» (можна вимкнути).
+CREATE TABLE IF NOT EXISTS promo_notify_prefs (
+    user_id     INT UNSIGNED NOT NULL,
+    lang        CHAR(2) NOT NULL DEFAULT 'uk',
+    low_balance TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (user_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- I3) Журнал запусків cron-завдань (адмінка → «Стан»).
+CREATE TABLE IF NOT EXISTS cron_runs (
+    id          INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    job         VARCHAR(40) NOT NULL,
+    started_at  DATETIME NOT NULL,
+    finished_at DATETIME NULL,
+    status      ENUM('running', 'ok', 'error', 'skipped') NOT NULL DEFAULT 'running',
+    message     VARCHAR(1000) NULL,
+    PRIMARY KEY (id),
+    KEY idx_cron_runs_job (job, id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- I4) Коли рекламодавцю надіслано лист «кампанія стартувала».
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='ad_campaigns' AND COLUMN_NAME='started_notified_at')=0,
+  'ALTER TABLE ad_campaigns ADD COLUMN started_notified_at DATETIME NULL','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- Кампанії, що вже йдуть на момент міграції, листа «стартувала» не отримують (лише раз).
+SET @i4 := (SELECT COUNT(*) FROM ad_settings WHERE setting_key = 'started_notified_init_2026_10_12');
+UPDATE ad_campaigns SET started_notified_at = UTC_TIMESTAMP()
+WHERE @i4 = 0 AND format = 'video' AND status IN ('active', 'paused', 'completed') AND started_notified_at IS NULL;
+INSERT IGNORE INTO ad_settings (setting_key, setting_value) VALUES ('started_notified_init_2026_10_12', '1');

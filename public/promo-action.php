@@ -10,6 +10,7 @@ declare(strict_types=1);
  *                                           house=1 — власна реклама сайту (лише admin)
  *   action=pause | resume | complete | duplicate  campaign_id=N
  *   action=topup  amount=123.45           — заявка на поповнення (ручний переказ)
+ *   action=notify_prefs  low_balance=1    — листи про низький баланс (решта обов'язкові)
  * GET:
  *   action=export  campaign=N|0  from=Y-m-d  to=Y-m-d   — CSV статистики
  *
@@ -124,6 +125,11 @@ switch ($action) {
             $back('create', ['ok' => true, 'msgs' => [$msg]], ['promo_edit' => $id]);
         }
         $back('campaigns', ['ok' => $ok, 'msgs' => [$msg]]);
+
+    case 'notify_prefs':
+        require_once __DIR__ . '/../app/promo-mail.php';
+        promo_notify_set_low_balance($pdo, $userId, !empty($_POST['low_balance']));
+        $back('balance', ['ok' => true, 'msgs' => ['ok_notify_saved']]);
 
     case 'topup':
         [$ok, $msg, $request] = promo_request_topup($pdo, $userId, $_POST['amount'] ?? '');

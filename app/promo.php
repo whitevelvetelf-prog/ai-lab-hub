@@ -169,6 +169,20 @@ function promo_db_utc(PDO $pdo): void
     }
 }
 
+/**
+ * Подія реклами → листи в чергу (app/promo-mail.php підключається лише тоді, коли
+ * подія справді сталася). Помилки не ламають основну дію.
+ */
+function promo_event_notify(PDO $pdo, string $event, array $data): void
+{
+    try {
+        require_once __DIR__ . '/promo-mail.php';
+        promo_notify($pdo, $event, $data);
+    } catch (Throwable $e) {
+        error_log('[promo] notify: ' . $e->getMessage());
+    }
+}
+
 // --- Токени (HMAC) ---------------------------------------------------------
 
 function promo_b64u_encode(string $bin): string
@@ -676,6 +690,11 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
         if ($ownTx) {
             $pdo->commit();
         }
+        // Система зупинила кампанію (кошти чи бюджет) — лист рекламодавцю.
+        if ($ownTx && $status !== 'active') {
+            promo_event_notify($pdo, $status === 'completed' ? 'campaign_completed' : 'campaign_paused_system',
+                ['campaign_id' => $campaignId, 'reason_key' => (string) $stopReason]);
+        }
 
         return $amount;
     } catch (Throwable $e) {
@@ -699,15 +718,24 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
  */
 function promo_maintenance(PDO $pdo): array
 {
-    $st = $pdo->prepare(
-        "UPDATE ad_campaigns SET status = 'completed', stop_reason = 'end_date'
+    $ids = $pdo->prepare(
+        "SELECT id FROM ad_campaigns
          WHERE format = 'video' AND status IN ('active', 'paused') AND end_date IS NOT NULL AND end_date < :today"
     );
-    $st->execute([':today' => promo_today()]);
+    $ids->execute([':today' => promo_today()]);
+    $completed = 0;
+    foreach ($ids->fetchAll(PDO::FETCH_COLUMN) as $id) {
+        $st = $pdo->prepare("UPDATE ad_campaigns SET status = 'completed', stop_reason = 'end_date' WHERE id = :id AND status IN ('active', 'paused')");
+        $st->execute([':id' => $id]);
+        if ($st->rowCount() > 0) {
+            $completed++;
+            promo_event_notify($pdo, 'campaign_completed', ['campaign_id' => (int) $id, 'reason_key' => 'end_date']);
+        }
+    }
     $purge = $pdo->prepare('DELETE FROM ad_events WHERE created_at < :before');
     $purge->execute([':before' => gmdate('Y-m-d H:i:s', time() - PROMO_EVENTS_KEEP_DAYS * 86400)]);
 
-    return ['completed' => $st->rowCount(), 'purged' => $purge->rowCount()];
+    return ['completed' => $completed, 'purged' => $purge->rowCount()];
 }
 
 // --- Розмітка слота --------------------------------------------------------

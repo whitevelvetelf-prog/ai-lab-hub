@@ -25,10 +25,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $data !== null && $data['ow
     try {
         /** @var PDO $pdo */
         $pdo = require __DIR__ . '/../config/database.php';
-        $pdo->prepare(
+        $ins = $pdo->prepare(
             'INSERT IGNORE INTO ad_reports (creative_id, session_hash, reason) VALUES (:c, :sh, :r)'
-        )->execute([':c' => $data['c'], ':sh' => analytics_session_hash(), ':r' => $reason]);
+        );
+        $ins->execute([':c' => $data['c'], ':sh' => analytics_session_hash(), ':r' => $reason]);
         $ok = true;
+        if ($ins->rowCount() > 0) {
+            promo_event_notify($pdo, 'report_new', ['creative_id' => (int) $data['c'], 'reason' => $reason]);
+        }
     } catch (Throwable $e) {
         error_log('[promo] report: ' . $e->getMessage());
     }
