@@ -576,7 +576,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         }
         if ($startDate === null) {
             $missing[] = 'err_start_required';
-        } elseif ($startDate < date('Y-m-d')) {
+        } elseif ($startDate < promo_today()) {
             $missing[] = 'err_start_past';
         }
         if (empty($in['agree']) && !$house) {
@@ -630,8 +630,8 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
                 ':uid' => $userId,
                 ':adv' => $house ? 'AI LAB HUB' : (mb_substr((string) $owner['name'], 0, 255) ?: ('user #' . $userId)),
                 ':email' => $owner['email'],
-                ':sub_at' => $doSubmit ? date('Y-m-d H:i:s') : null,
-                ':rules_at' => $doSubmit ? date('Y-m-d H:i:s') : null,
+                ':sub_at' => $doSubmit ? promo_utc_now() : null,
+                ':rules_at' => $doSubmit ? promo_utc_now() : null,
             ]);
             $campaignId = (int) $pdo->lastInsertId();
             promo_rate_hit($pdo, $userId, 'campaign_create');
@@ -660,7 +660,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':mime' => $videoType === 'upload' ? $videoMime : null,
             ':status' => $creativeStatus,
             ':rby' => $doSubmit && $house ? $userId : null,
-            ':rat' => $doSubmit && $house ? date('Y-m-d H:i:s') : null,
+            ':rat' => $doSubmit && $house ? promo_utc_now() : null,
         ];
         if ($creative === null) {
             $pdo->prepare(

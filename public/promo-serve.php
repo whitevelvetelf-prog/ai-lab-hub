@@ -42,6 +42,7 @@ if (promo_is_bot() || !in_array($placement, PROMO_PLACEMENTS, true)) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 $creative = promo_pick(
     $pdo,

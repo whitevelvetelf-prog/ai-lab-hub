@@ -34,6 +34,7 @@ if ($data === null) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 $stmt = $pdo->prepare('SELECT destination_url FROM ad_creatives WHERE id = :id AND campaign_id = :c');
 $stmt->execute([':id' => $data['c'], ':c' => $data['k']]);

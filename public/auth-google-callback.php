@@ -81,5 +81,5 @@ if (is_string($result)) {
 
 auth_login($result);
 
-header('Location: account.php');
+header('Location: ' . auth_after_login_url());
 exit;

@@ -24,6 +24,7 @@ require_once __DIR__ . '/../app/promo-admin.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 $adminId = auth_user_id();
 if (!promo_is_admin($pdo, $adminId) || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {

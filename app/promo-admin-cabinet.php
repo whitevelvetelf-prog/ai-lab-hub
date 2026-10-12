@@ -115,8 +115,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
         return ($d !== false && $d->format('Y-m-d') === $v) ? $v : $default;
     };
-    $from = $validDate('padm_from', date('Y-m-d', strtotime('-29 days')));
-    $to = $validDate('padm_to', date('Y-m-d'));
+    $from = $validDate('padm_from', promo_today(-29));
+    $to = $validDate('padm_to', promo_today());
     $platform = promo_admin_platform_totals($pdo, $from, $to);
     $top = promo_admin_top_campaigns($pdo, $from, $to);
 
@@ -401,6 +401,10 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <textarea name="rules_text_uk" rows="8" maxlength="20000"><?= pc_e($settings['rules_text_uk'] ?? '') ?></textarea></label>
                                 <label class="pc-field"><span>Правила розміщення реклами (EN). Порожньо — вбудована англійська чернетка.</span>
                                     <textarea name="rules_text_en" rows="8" maxlength="20000"><?= pc_e($settings['rules_text_en'] ?? '') ?></textarea></label>
+                                <label class="pc-field"><span>Строк модерації для медіакіту <a href="advertise.php" target="_blank" rel="noopener">advertise.php</a> (UA). Порожньо — «фіксованого строку немає».</span>
+                                    <input type="text" name="moderation_time_text_uk" maxlength="500" value="<?= pc_e($settings['moderation_time_text_uk'] ?? '') ?>"></label>
+                                <label class="pc-field"><span>Строк модерації (EN)</span>
+                                    <input type="text" name="moderation_time_text_en" maxlength="500" value="<?= pc_e($settings['moderation_time_text_en'] ?? '') ?>"></label>
                                 <button type="submit" class="pc-btn pc-btn--primary">Зберегти налаштування</button>
                             </form>
                         </section>

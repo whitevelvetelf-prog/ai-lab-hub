@@ -77,7 +77,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             auth_login(['id' => (int) $pdo->lastInsertId(), 'role' => 'user']);
 
-            header('Location: account.php');
+            header('Location: ' . auth_after_login_url());
             exit;
         } catch (PDOException $ex) {
             $errors[] = $ex->getCode() === '23000'

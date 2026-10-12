@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($user !== false && password_verify($password, (string) $user['password_hash'])) {
         auth_login(['id' => (int) $user['id'], 'role' => $user['role']]);
 
-        header('Location: account.php');
+        header('Location: ' . auth_after_login_url());
         exit;
     }
 

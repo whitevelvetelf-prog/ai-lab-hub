@@ -27,6 +27,7 @@ if (PHP_SAPI !== 'cli') {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 $r = promo_maintenance($pdo);
 echo date('Y-m-d H:i:s') . ' completed: ' . $r['completed'] . ' events_purged: ' . $r['purged'] . "\n";

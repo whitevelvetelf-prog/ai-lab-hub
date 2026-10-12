@@ -83,6 +83,19 @@ function auth_login(array $user): void
     $_SESSION['role'] = (string) $user['role'];
 }
 
+/**
+ * Куди вести після входу/реєстрації. За замовчуванням — кабінет; якщо вхід почато
+ * з кнопки «Створити кампанію» (public/advertise.php ставить after_login=promo_create) —
+ * одразу в майстер реклами. Лише фіксовані адреси (без відкритого редиректу).
+ */
+function auth_after_login_url(): string
+{
+    $target = $_SESSION['after_login'] ?? null;
+    unset($_SESSION['after_login']);
+
+    return $target === 'promo_create' ? 'account.php?promo_tab=create#acc-promo' : 'account.php';
+}
+
 /** Повністю знищує сесію користувача. */
 function auth_logout(): void
 {

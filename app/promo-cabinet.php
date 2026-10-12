@@ -107,7 +107,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     if ($editing === null && !is_array($old)) {
         $f['cat_all'] = true;
         $f['placements'] = PROMO_PLACEMENTS;
-        $f['start_date'] = date('Y-m-d');
+        $f['start_date'] = promo_today();
     }
 
     $maxMb = (int) promo_setting($pdo, 'max_video_mb', '30');
@@ -133,8 +133,8 @@ function promo_cabinet_render(PDO $pdo, array $user): void
 
         return ($d !== false && $d->format('Y-m-d') === $v) ? $v : $default;
     };
-    $statsFrom = $validDate('promo_from', date('Y-m-d', strtotime('-29 days')));
-    $statsTo = $validDate('promo_to', date('Y-m-d'));
+    $statsFrom = $validDate('promo_from', promo_today(-29));
+    $statsTo = $validDate('promo_to', promo_today());
     $byDay = promo_stats_rows($pdo, $userId, $statsCampaign ?: null, $statsFrom, $statsTo, 'day');
     $byPlacement = promo_stats_rows($pdo, $userId, $statsCampaign ?: null, $statsFrom, $statsTo, 'placement');
     $maxImpr = max([1, ...array_map(static fn($r) => (int) $r['impressions'], $byDay)]);
@@ -160,6 +160,8 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <?php endforeach; ?>
                         </div>
                         <?php endif; ?>
+
+                        <p class="pc-muted"><a href="advertise.php" target="_blank" rel="noopener"><?= pc_e(promo_tr('adv_cabinet_link')) ?></a></p>
 
                         <div class="pc-tabs" role="tablist">
                             <?php foreach (['campaigns', 'create', 'balance', 'stats'] as $t): ?>
@@ -441,11 +443,11 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         </label>
                                         <label class="pc-field">
                                             <span><?= pc_e(promo_tr('field_start')) ?></span>
-                                            <input type="date" name="start_date" value="<?= pc_e($f['start_date']) ?>" min="<?= date('Y-m-d') ?>">
+                                            <input type="date" name="start_date" value="<?= pc_e($f['start_date']) ?>" min="<?= promo_today() ?>">
                                         </label>
                                         <label class="pc-field">
                                             <span><?= pc_e(promo_tr('field_end')) ?></span>
-                                            <input type="date" name="end_date" value="<?= pc_e($f['end_date']) ?>" min="<?= date('Y-m-d') ?>">
+                                            <input type="date" name="end_date" value="<?= pc_e($f['end_date']) ?>" min="<?= promo_today() ?>">
                                         </label>
                                     </div>
                                     <?php if (!$house): ?>

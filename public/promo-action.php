@@ -29,6 +29,7 @@ if ($userId === null) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 $back = static function (string $tab, array $flash, array $extra = []): never {
     $_SESSION['promo_flash'] = $flash + ['tab' => $tab];
@@ -52,8 +53,8 @@ if ($action === 'export' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
 
         return ($d !== false && $d->format('Y-m-d') === $v) ? $v : $default;
     };
-    $from = $date('from', date('Y-m-d', strtotime('-29 days')));
-    $to = $date('to', date('Y-m-d'));
+    $from = $date('from', promo_today(-29));
+    $to = $date('to', promo_today());
 
     header('Content-Type: text/csv; charset=utf-8');
     header('Content-Disposition: attachment; filename="promo-stats-' . $from . '_' . $to . '.csv"');

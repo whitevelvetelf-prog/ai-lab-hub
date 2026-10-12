@@ -98,6 +98,76 @@ function promo_video_ready(PDO $pdo): bool
     return promo_enabled($pdo) && strlen(promo_config()['secret']) >= 32;
 }
 
+// --- Час: UTC у БД, «доба» — за Києвом ------------------------------------
+
+/**
+ * Часовий пояс, за яким рахуються «доба» (денний бюджет, stat_date, звіти).
+ * Час подій у БД — UTC: promo-ендпоінти й cron перемикають сесію MySQL на UTC
+ * (promo_db_utc), а дати доби передаються параметром (promo_today), а не CURDATE().
+ */
+function promo_tz(): DateTimeZone
+{
+    static $tz = null;
+    if ($tz === null) {
+        try {
+            $tz = new DateTimeZone('Europe/Kyiv');
+        } catch (Throwable $e) {
+            $tz = new DateTimeZone('Europe/Kiev'); // стара база часових поясів
+        }
+    }
+
+    return $tz;
+}
+
+/** Поточна київська дата (Y-m-d) або зі зсувом у днях. */
+function promo_today(int $offsetDays = 0): string
+{
+    $d = new DateTimeImmutable('now', promo_tz());
+
+    return ($offsetDays !== 0 ? $d->modify(($offsetDays > 0 ? '+' : '') . $offsetDays . ' days') : $d)->format('Y-m-d');
+}
+
+/** Поточний час UTC для DATETIME-колонок. */
+function promo_utc_now(): string
+{
+    return gmdate('Y-m-d H:i:s');
+}
+
+/** Межі київської доби в UTC: [початок, наступна північ). */
+function promo_day_bounds_utc(string $kyivDate): array
+{
+    $start = new DateTimeImmutable($kyivDate . ' 00:00:00', promo_tz());
+    $utc = new DateTimeZone('UTC');
+
+    return [$start->setTimezone($utc)->format('Y-m-d H:i:s'), $start->modify('+1 day')->setTimezone($utc)->format('Y-m-d H:i:s')];
+}
+
+/** UTC-час з БД → київський для показу. */
+function promo_local_time(?string $utc, string $format = 'Y-m-d H:i'): string
+{
+    if ($utc === null || $utc === '') {
+        return '';
+    }
+    try {
+        return (new DateTimeImmutable($utc, new DateTimeZone('UTC')))->setTimezone(promo_tz())->format($format);
+    } catch (Throwable $e) {
+        return (string) $utc;
+    }
+}
+
+/**
+ * Перемкнути сесію MySQL на UTC (NOW(), DEFAULT CURRENT_TIMESTAMP у DATETIME).
+ * Викликають лише ендпоінти реклами й cron — інші сторінки сайту не зачіпає.
+ */
+function promo_db_utc(PDO $pdo): void
+{
+    try {
+        $pdo->exec("SET time_zone = '+00:00'");
+    } catch (Throwable $e) {
+        error_log('[promo] time_zone: ' . $e->getMessage());
+    }
+}
+
 // --- Токени (HMAC) ---------------------------------------------------------
 
 function promo_b64u_encode(string $bin): string
@@ -226,7 +296,8 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
         return null;
     }
 
-    $params = [':pl' => $placement, ':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash];
+    $params = [':pl' => $placement, ':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash,
+        ':today1' => promo_today(), ':today2' => promo_today(), ':today3' => promo_today()];
 
     $inList = static function (string $prefix, array $ids) use (&$params): string {
         $names = [];
@@ -259,16 +330,17 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
             WHERE c.format = 'video'
               AND c.status = 'active'
               AND cr.status = 'approved'
-              AND (c.start_date IS NULL OR c.start_date <= CURDATE())
-              AND (c.end_date IS NULL OR c.end_date >= CURDATE())
+              AND (c.start_date IS NULL OR c.start_date <= :today1)
+              AND (c.end_date IS NULL OR c.end_date >= :today2)
               AND (
                     c.campaign_type = 'internal'
                  OR (    c.unit_price IS NOT NULL AND c.unit_price > 0
                      AND c.pricing_model IS NOT NULL
                      AND COALESCE(b.balance, 0) > 0
                      AND (c.total_budget IS NULL OR c.spent < c.total_budget)
-                     AND (c.daily_budget IS NULL OR c.spent_today_date IS NULL
-                          OR c.spent_today_date < CURDATE() OR c.spent_today < c.daily_budget))
+                     AND (c.daily_budget IS NULL
+                          OR (SELECT COALESCE(SUM(sd.spend), 0) FROM ad_stats_daily sd
+                              WHERE sd.campaign_id = c.id AND sd.stat_date = :today3) < c.daily_budget))
               )
               AND EXISTS (
                     SELECT 1 FROM ad_targets t
@@ -298,7 +370,7 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     $paid = array_values(array_filter($rows, static fn($r) => $r['campaign_type'] !== 'internal'));
     $pool = $paid !== [] ? $paid : $rows;
 
-    $today = new DateTimeImmutable('today');
+    $today = new DateTimeImmutable(promo_today());
     $weights = [];
     foreach ($pool as $i => $r) {
         if ($r['campaign_type'] === 'internal') {
@@ -431,26 +503,21 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
          VALUES (:cr, :c, :type, :pl, :sh)'
     )->execute([':cr' => $creativeId, ':c' => $campaignId, ':type' => $type, ':pl' => $placement, ':sh' => $sessionHash]);
 
-    $charged = promo_charge($pdo, $campaignId, $type, $placement);
-
-    $col = ['impression' => 'impressions', 'view' => 'views', 'click' => 'clicks'][$type];
-    $pdo->prepare(
-        "INSERT INTO ad_stats_daily (stat_date, campaign_id, creative_id, placement, {$col}, spend)
-         VALUES (CURDATE(), :c, :cr, :pl, 1, :sp)
-         ON DUPLICATE KEY UPDATE {$col} = {$col} + 1, spend = spend + VALUES(spend)"
-    )->execute([':c' => $campaignId, ':cr' => $creativeId, ':pl' => $placement, ':sp' => $charged]);
+    promo_charge($pdo, $campaignId, $type, $placement, $creativeId);
 
     return true;
 }
 
 /**
- * Атомарне списання за подію. Повертає списану суму (копійки).
+ * Атомарне списання за подію й оновлення ad_stats_daily (у тій самій
+ * транзакції). Повертає списану суму (копійки).
  *
  * Транзакція з SELECT ... FOR UPDATE на рядку кампанії, потім балансу (завжди
  * в цьому порядку — без дедлоків): паралельні запити по одній кампанії
  * виконуються строго по черзі, тож бюджет і баланс не перевитрачаються.
  * Сума обрізається до найменшого із залишків (загальний бюджет, денний,
- * баланс). Вичерпано загальний бюджет → completed; баланс → paused
+ * баланс). Витрачене «сьогодні» рахується з ad_stats_daily за поточну
+ * київську добу (окремого «скидання» денного бюджету немає). Вичерпано загальний бюджет → completed; баланс → paused
  * (stop_reason показується рекламодавцю). Денний ліміт лише виключає
  * кампанію з показу до кінця дня (promo_pick).
  *
@@ -460,8 +527,21 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
  * Ціна — знімок для розміщення події (ad_targets.unit_price), інакше
  * ad_campaigns.unit_price.
  */
-function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placement = null): int
+function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placement = null, ?int $creativeId = null): int
 {
+    $today = promo_today();
+    $col = ['impression' => 'impressions', 'view' => 'views', 'click' => 'clicks'][$type] ?? null;
+    $addStats = static function (int $amount) use ($pdo, $today, $col, $campaignId, $creativeId, $placement): void {
+        if ($col === null || $creativeId === null || $placement === null) {
+            return;
+        }
+        $pdo->prepare(
+            "INSERT INTO ad_stats_daily (stat_date, campaign_id, creative_id, placement, {$col}, spend)
+             VALUES (:d, :c, :cr, :pl, 1, :sp)
+             ON DUPLICATE KEY UPDATE {$col} = {$col} + 1, spend = spend + VALUES(spend)"
+        )->execute([':d' => $today, ':c' => $campaignId, ':cr' => $creativeId, ':pl' => $placement, ':sp' => $amount]);
+    };
+
     $ownTx = !$pdo->inTransaction();
     if ($ownTx) {
         $pdo->beginTransaction();
@@ -480,6 +560,7 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
         $isCpm = $billable && $c['pricing_model'] === 'cpm' && $type === 'impression';
         $isCpc = $billable && $c['pricing_model'] === 'cpc' && $type === 'click';
         if (!$isCpm && !$isCpc) {
+            $addStats(0);
             if ($ownTx) {
                 $pdo->commit();
             }
@@ -510,8 +591,9 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
         $bal->execute([':u' => $c['user_id']]);
         $balance = (int) ($bal->fetchColumn() ?: 0);
 
-        $today = date('Y-m-d');
-        $spentToday = $c['spent_today_date'] === $today ? (int) $c['spent_today'] : 0;
+        $sd = $pdo->prepare('SELECT COALESCE(SUM(spend), 0) FROM ad_stats_daily WHERE campaign_id = :c AND stat_date = :d');
+        $sd->execute([':c' => $campaignId, ':d' => $today]);
+        $spentToday = (int) $sd->fetchColumn();
         $limits = [$amount, max(0, $balance)];
         if ($c['total_budget'] !== null) {
             $limits[] = max(0, (int) $c['total_budget'] - (int) $c['spent']);
@@ -548,6 +630,8 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
             ':id' => $campaignId,
         ]);
 
+        $addStats($amount);
+
         if ($amount > 0) {
             $pdo->prepare('UPDATE ad_balances SET balance = balance - :a WHERE user_id = :u')
                 ->execute([':a' => $amount, ':u' => $c['user_id']]);
@@ -561,7 +645,7 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
             if ($upd->rowCount() === 0) {
                 $pdo->prepare(
                     "INSERT INTO ad_transactions (user_id, campaign_id, type, amount, currency, status, method, reference, note, confirmed_at)
-                     VALUES (:u, :c, 'spend', :a, :cur, 'confirmed', 'manual', :ref, :note, NOW())"
+                     VALUES (:u, :c, 'spend', :a, :cur, 'confirmed', 'manual', :ref, :note, :now)"
                 )->execute([
                     ':u' => $c['user_id'],
                     ':c' => $campaignId,
@@ -569,6 +653,7 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
                     ':cur' => $c['currency'],
                     ':ref' => $ref,
                     ':note' => 'Витрати кампанії за ' . $today,
+                    ':now' => promo_utc_now(),
                 ]);
             }
         }
@@ -599,13 +684,15 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
  */
 function promo_maintenance(PDO $pdo): array
 {
-    $completed = $pdo->exec(
+    $st = $pdo->prepare(
         "UPDATE ad_campaigns SET status = 'completed', stop_reason = 'end_date'
-         WHERE format = 'video' AND status IN ('active', 'paused') AND end_date IS NOT NULL AND end_date < CURDATE()"
+         WHERE format = 'video' AND status IN ('active', 'paused') AND end_date IS NOT NULL AND end_date < :today"
     );
-    $purged = $pdo->exec('DELETE FROM ad_events WHERE created_at < NOW() - INTERVAL ' . PROMO_EVENTS_KEEP_DAYS . ' DAY');
+    $st->execute([':today' => promo_today()]);
+    $purge = $pdo->prepare('DELETE FROM ad_events WHERE created_at < :before');
+    $purge->execute([':before' => gmdate('Y-m-d H:i:s', time() - PROMO_EVENTS_KEEP_DAYS * 86400)]);
 
-    return ['completed' => (int) $completed, 'purged' => (int) $purged];
+    return ['completed' => $st->rowCount(), 'purged' => $purge->rowCount()];
 }
 
 // --- Розмітка слота --------------------------------------------------------

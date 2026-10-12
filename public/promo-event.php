@@ -34,6 +34,7 @@ if ($data === null || !$data['fresh'] || !$data['own']) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+promo_db_utc($pdo);
 
 if (!promo_video_ready($pdo)) {
     exit;
