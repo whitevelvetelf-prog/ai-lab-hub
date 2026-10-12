@@ -73,6 +73,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         'reports' => 'Звіти й скарги',
         'house' => 'Власна реклама',
         'links' => 'Перевірка посилань',
+        'exclusions' => 'Виключення реклами',
     ];
     $tab = isset($tabs[$_GET['padm_tab'] ?? '']) ? $_GET['padm_tab'] : 'moderation';
 
@@ -132,6 +133,16 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         static fn($f) => PROMO_LINK_FLAG_LABELS[$f] ?? $f,
         array_filter(explode(',', $flags))
     ));
+
+    $noPromo = promo_no_promo_list($pdo);
+    $catRules = promo_rules_list($pdo);
+    $taxonomyAll = promo_taxonomy($pdo);
+    $diagnoseUrl = is_string($_SESSION['padm_diagnose_url'] ?? null) ? $_SESSION['padm_diagnose_url'] : '';
+    $diagnose = $_SESSION['padm_diagnose'] ?? null;
+    unset($_SESSION['padm_diagnose'], $_SESSION['padm_diagnose_url']);
+    if (!function_exists('blog_article_topics')) {
+        require_once __DIR__ . '/blog.php';
+    }
 
     $plLabel = ['catalog_card' => 'Картка в каталозі', 'product_page' => 'Сторінка продукту', 'blog_inline' => 'Стаття блогу'];
     $statusUk = ['draft' => 'Чернетка', 'pending_review' => 'На модерації', 'active' => 'Активна', 'paused' => 'Пауза', 'rejected' => 'Відхилена', 'completed' => 'Завершена', 'expired' => 'Завершена'];
@@ -216,6 +227,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Відео</dt><dd><?= $q['video_type'] === 'upload'
                                             ? pc_e(($q['mime'] ?? '') . ' · ' . ($q['duration_sec'] !== null ? $q['duration_sec'] . ' с' : 'тривалість невідома') . ' · ' . round((int) $q['size_bytes'] / 1048576, 1) . ' МБ')
                                             : 'YouTube: ' . pc_e($q['video_url']) ?></dd>
+                                        <dt>Категорія реклами</dt><dd><?= pc_e(promo_advertiser_category_label($q['advertiser_category'])) ?><?php if (promo_category_blocked_everywhere($pdo, $q['advertiser_category'])): ?> <strong class="pc-warn-text">— заборонена всюди, відхиліть</strong><?php endif; ?><span class="pc-muted">Перевірте, що відео й сторінка відповідають категорії.</span></dd>
                                         <dt>Модель</dt><dd><?= $q['pricing_model'] === 'cpc' ? 'CPC (за клік)' : 'CPM (за 1000 показів)' ?></dd>
                                         <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price)) ?><br><?php endforeach; ?></dd>
                                         <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?></dd>
@@ -635,6 +647,129 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="Подія"><?= pc_e($ev['event']) ?><?= $ev['user_id'] ? '<span class="pc-muted">користувач #' . (int) $ev['user_id'] . '</span>' : '' ?></td>
                                         <td data-label="Кампанія"><?= $ev['campaign_id'] ? '#' . (int) $ev['campaign_id'] : '' ?><?= $ev['creative_id'] ? ' / #' . (int) $ev['creative_id'] : '' ?></td>
                                         <td data-label="Деталі"><?= pc_e($ev['details'] ?? '') ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+
+                        <!-- ============ H. Виключення реклами ============ -->
+                        <section class="pc-panel" data-pc-panel="exclusions"<?= $tab === 'exclusions' ? '' : ' hidden' ?>>
+                            <p class="pc-muted">«Без реклами» (no_promo): на сторінці немає жодного рекламного блоку — ні відео, ні старих банерів, ні порожнього місця. Підкатегорія успадковує прапорець категорії, продукт — прапорці своїх категорій і підкатегорій.</p>
+
+                            <h3 class="pc-h3">Перевірити сторінку</h3>
+                            <form method="post" action="promo-admin-action.php" class="pc-filter">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="diagnose_page">
+                                <label class="pc-field"><span>Адреса сторінки (product.php?id=…, catalog.php?subcategory=…, blog-post.php?slug=…)</span>
+                                    <input type="text" name="url" value="<?= pc_e($diagnoseUrl) ?>" required placeholder="https://ailabhub-directory.com/product.php?id=123"></label>
+                                <button type="submit" class="pc-btn pc-btn--primary">Перевірити</button>
+                            </form>
+                            <?php if (is_array($diagnose)): ?>
+                            <ul class="pc-diagnose">
+                                <?php foreach ($diagnose as [$okLine, $line]): ?>
+                                <li class="<?= $okLine ? '' : 'pc-warn-text' ?>"><?= $okLine ? '✓' : '✗' ?> <?= pc_e($line) ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                            <?php endif; ?>
+
+                            <h3 class="pc-h3">Сторінки «без реклами»</h3>
+                            <form method="post" action="promo-admin-action.php" class="pc-filter">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="no_promo">
+                                <input type="hidden" name="on" value="1">
+                                <label class="pc-field"><span>Тип</span>
+                                    <select name="type"><option value="category">Категорія (ID)</option><option value="subcategory">Підкатегорія (ID)</option><option value="product">Продукт (ID)</option><option value="article">Стаття блогу (slug)</option></select></label>
+                                <label class="pc-field"><span>ID або slug</span><input type="text" name="id" required></label>
+                                <button type="submit" class="pc-btn pc-btn--primary">Позначити «без реклами»</button>
+                            </form>
+                            <details class="pc-box">
+                                <summary>Довідник ID категорій і підкатегорій, slug статей</summary>
+                                <?php foreach ($taxonomyAll as $tcid => $tc): ?>
+                                <p><strong>#<?= (int) $tcid ?> <?= pc_e($tc['name']) ?></strong><br>
+                                    <span class="pc-muted"><?= pc_e(implode(' · ', array_map(static fn($ts) => '#' . $ts['id'] . ' ' . $ts['name'], $tc['subs']))) ?></span></p>
+                                <?php endforeach; ?>
+                                <p><strong>Статті:</strong> <span class="pc-muted"><?= pc_e(implode(' · ', array_keys(BLOG_ARTICLES))) ?></span></p>
+                            </details>
+                            <?php
+                            $npRows = [];
+                            foreach ($noPromo['categories'] as $r) { $npRows[] = ['category', (string) $r['id'], 'Категорія', '#' . $r['id'] . ' ' . $r['name']]; }
+                            foreach ($noPromo['subcategories'] as $r) { $npRows[] = ['subcategory', (string) $r['id'], 'Підкатегорія', '#' . $r['id'] . ' ' . $r['category'] . ' → ' . $r['name']]; }
+                            foreach ($noPromo['articles'] as $slug) { $npRows[] = ['article', (string) $slug, 'Стаття', (string) $slug]; }
+                            foreach ($noPromo['products'] as $r) { $npRows[] = ['product', (string) $r['id'], 'Продукт', '#' . $r['id'] . ' ' . $r['name']]; }
+                            ?>
+                            <?php if ($npRows === []): ?>
+                            <p class="pc-empty">Виключених сторінок немає.</p>
+                            <?php else: ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Тип</th><th>Сторінка</th><th></th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($npRows as [$npType, $npId, $npLabel, $npName]): ?>
+                                    <tr>
+                                        <td data-label="Тип"><?= pc_e($npLabel) ?></td>
+                                        <td data-label="Сторінка"><?= pc_e($npName) ?></td>
+                                        <td data-label="" class="pc-actions">
+                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form" data-pc-confirm="Дозволити рекламу: <?= pc_e($npName) ?>?">
+                                                <?= $csrf ?>
+                                                <input type="hidden" name="action" value="no_promo">
+                                                <input type="hidden" name="on" value="0">
+                                                <input type="hidden" name="type" value="<?= pc_e($npType) ?>">
+                                                <input type="hidden" name="id" value="<?= pc_e($npId) ?>">
+                                                <button type="submit" class="pc-btn pc-btn--small pc-btn--danger">Зняти прапорець</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+
+                            <h3 class="pc-h3">Правила категорій реклами</h3>
+                            <p class="pc-muted">Реклама обраної категорії не показується на сторінках області правила. Правило «усі сторінки» також забороняє схвалення такої реклами.</p>
+                            <form method="post" action="promo-admin-action.php" class="pc-filter">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="rule_add">
+                                <label class="pc-field"><span>Категорія реклами</span>
+                                    <select name="advertiser_category" required>
+                                        <?php foreach (PROMO_ADVERTISER_CATEGORIES as $k => $labels): ?><option value="<?= $k ?>"><?= pc_e($labels[0]) ?></option><?php endforeach; ?>
+                                    </select></label>
+                                <label class="pc-field"><span>Де заборонено</span>
+                                    <select name="scope">
+                                        <option value="all:0">Усі сторінки</option>
+                                        <?php foreach ($taxonomyAll as $tcid => $tc): ?>
+                                        <option value="category:<?= (int) $tcid ?>">Категорія: <?= pc_e($tc['name']) ?></option>
+                                        <?php foreach ($tc['subs'] as $tsid => $ts): ?>
+                                        <option value="subcategory:<?= (int) $tsid ?>">&nbsp;&nbsp;↳ <?= pc_e($ts['name']) ?></option>
+                                        <?php endforeach; ?>
+                                        <?php endforeach; ?>
+                                    </select></label>
+                                <label class="pc-field"><span>Примітка</span><input type="text" name="note" maxlength="255"></label>
+                                <button type="submit" class="pc-btn pc-btn--primary">Додати правило</button>
+                            </form>
+                            <?php if ($catRules === []): ?>
+                            <p class="pc-empty">Правил немає.</p>
+                            <?php else: ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Категорія реклами</th><th>Де заборонено</th><th>Примітка</th><th></th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($catRules as $rule): ?>
+                                    <tr>
+                                        <td data-label="Категорія"><?= pc_e(promo_advertiser_category_label($rule['advertiser_category'])) ?></td>
+                                        <td data-label="Де"><?= pc_e($rule['scope_name'] ?? ('#' . $rule['scope_id'])) ?></td>
+                                        <td data-label="Примітка"><?= pc_e($rule['note'] ?? '') ?></td>
+                                        <td data-label="" class="pc-actions">
+                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form" data-pc-confirm="Видалити правило?">
+                                                <?= $csrf ?>
+                                                <input type="hidden" name="action" value="rule_delete">
+                                                <input type="hidden" name="id" value="<?= (int) $rule['id'] ?>">
+                                                <button type="submit" class="pc-btn pc-btn--small pc-btn--danger">Видалити</button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     <?php endforeach; ?>
                                     </tbody>

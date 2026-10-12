@@ -18,6 +18,9 @@ declare(strict_types=1);
  *   link_recheck      creative_id — перевірити адресу переходу ще раз (блок G)
  *   blocklist_add     domain, reason;  blocklist_remove  id
  *   shorteners        shortener_domains (домен на рядок)
+ *   no_promo          type=category|subcategory|product|article, id, on=0|1 (блок H)
+ *   rule_add          advertiser_category, scope=all:0|category:N|subcategory:N, note;  rule_delete  id
+ *   diagnose_page     url — «перевірити сторінку»: чи буде реклама й чому ні
  * Після дії — редирект у кабінет (account.php?padm_tab=…#acc-promo-admin).
  */
 
@@ -66,6 +69,25 @@ switch ($action) {
     case 'blocklist_remove':
         [$ok, $msg] = promo_admin_blocklist_remove($pdo, $adminId, (int) $str('id'));
         $back('links', $ok, [$msg]);
+
+    case 'no_promo':
+        [$ok, $msg] = promo_set_no_promo($pdo, $str('type'), $str('id'), $str('on') === '1');
+        promo_log_event($pdo, 'no_promo', null, null, $str('type') . ' ' . $str('id') . ' = ' . ($str('on') === '1' ? '1' : '0'), $adminId);
+        $back('exclusions', $ok, [$msg]);
+
+    case 'rule_add':
+        [$scopeType, $scopeId] = array_pad(explode(':', $str('scope'), 2), 2, '0');
+        [$ok, $msg] = promo_rule_add($pdo, $scopeType, (int) $scopeId, $str('advertiser_category'), $str('note'));
+        $back('exclusions', $ok, [$msg]);
+
+    case 'rule_delete':
+        [$ok, $msg] = promo_rule_delete($pdo, (int) $str('id'));
+        $back('exclusions', $ok, [$msg]);
+
+    case 'diagnose_page':
+        $_SESSION['padm_diagnose_url'] = mb_substr($str('url'), 0, 500);
+        $_SESSION['padm_diagnose'] = promo_page_diagnose($pdo, $str('url'));
+        $back('exclusions', true, []);
 
     case 'shorteners':
         [$ok, $msg] = promo_admin_save_shorteners($pdo, $str('shortener_domains'));

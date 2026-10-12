@@ -228,6 +228,12 @@ const PROMO_I18N = [
     'err_topup_unavailable' => ['Поповнення поки недоступне.', 'Top-ups are not available yet.'],
     'err_topup_amount' => ['Вкажіть коректну суму.', 'Enter a valid amount.'],
     'err_topup_min' => ['Сума менша за мінімальну.', 'The amount is below the minimum.'],
+    // Категорія реклами (блок H)
+    'field_advertiser_category' => ['Категорія реклами', 'Ad category'],
+    'choose' => ['— оберіть —', '— choose —'],
+    'advertiser_category_hint' => ['Модератор перевіряє відповідність. Реклама деяких категорій не показується біля певних тем, а ставки, азартні ігри й контент для дорослих не приймаються.', 'The moderator checks that it matches. Some categories are not shown next to certain topics; betting, gambling and adult content are not accepted.'],
+    'err_advcat_required' => ['Оберіть категорію реклами.', 'Choose an ad category.'],
+
     // Медіакіт (public/advertise.php)
     'adv_title' => ['Реклама на AI LAB HUB', 'Advertise on AI LAB HUB'],
     'adv_meta' => ['Відеореклама в каталозі AI-інструментів AI LAB HUB: формати, вимоги до креативу, ціни, аудиторія за реальною аналітикою й правила.', 'Video ads in the AI LAB HUB directory of AI tools: formats, creative specs, prices, audience from real analytics and rules.'],

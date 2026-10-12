@@ -680,3 +680,13 @@
 .pc-linkcheck {
     margin: 12px 0;
 }
+
+.pc-diagnose {
+    margin: 12px 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.pc-diagnose li {
+    margin: 0 0 6px;
+}

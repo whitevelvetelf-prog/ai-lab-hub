@@ -28,6 +28,12 @@ $draft = [
         'title' => 'Правила розміщення реклами',
         'draft_note' => 'Чернетка правил. Остаточна редакція — після юридичної перевірки.',
         'prohibited_extra' => 'Додатково заборонено',
+        'sensitive_title' => 'Чутливі теми',
+        'sensitive' => [
+            'Реклама не показується на сторінках і біля матеріалів на чутливі теми (наприклад, ментальне здоров’я, харчова поведінка, теми, пов’язані з дітьми).',
+            'Реклама окремих категорій не показується біля певних тем: наприклад, реклама їжі й харчування — на сторінках про здоров’я. Ставки, азартні ігри й контент для дорослих не приймаються.',
+            'AI LAB HUB залишає за собою право виключати будь-які сторінки чи розділи сайту з показу реклами без попередження; це не є підставою для претензій щодо обсягу показів.',
+        ],
         'sections' => [
             ['1. Загальні положення', [
                 'Реклама на AI LAB HUB розміщується через кабінет рекламодавця. Кожне рекламне оголошення позначається написом «Реклама».',
@@ -69,6 +75,12 @@ $draft = [
         'title' => 'Advertising rules',
         'draft_note' => 'Draft rules. The final version will be published after legal review.',
         'prohibited_extra' => 'Also prohibited',
+        'sensitive_title' => 'Sensitive topics',
+        'sensitive' => [
+            'Ads are not shown on pages or next to content about sensitive topics (for example, mental health, eating behaviour, topics related to children).',
+            'Ads of some categories are not shown next to certain topics: for example, food and nutrition ads are not shown on health pages. Betting, gambling and adult content are not accepted.',
+            'AI LAB HUB reserves the right to exclude any pages or sections of the site from showing ads without notice; this is not grounds for claims about delivery volume.',
+        ],
         'sections' => [
             ['1. General', [
                 'Ads on AI LAB HUB are placed through the advertiser account. Every ad is labelled “Sponsored”.',
@@ -237,6 +249,13 @@ $e = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
             </ul>
             <?php endforeach; ?>
         <?php endif; ?>
+
+        <h2 class="legal-heading"><?= $e($draft['sensitive_title']) ?></h2>
+        <ul class="legal-list">
+            <?php foreach ($draft['sensitive'] as $item): ?>
+            <li><?= $e($item) ?></li>
+            <?php endforeach; ?>
+        </ul>
 
         <?php if ($prohibited !== ''): ?>
         <h2 class="legal-heading"><?= $e($draft['prohibited_extra']) ?></h2>

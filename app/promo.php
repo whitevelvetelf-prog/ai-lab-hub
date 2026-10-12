@@ -23,6 +23,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/analytics.php';
+require_once __DIR__ . '/promo-exclusions.php';
 
 const PROMO_PLACEMENTS = ['catalog_card', 'product_page', 'blog_inline'];
 const PROMO_CTA_KEYS = ['learn_more', 'try', 'go', 'download'];
@@ -283,6 +284,9 @@ function promo_lang(?string $param = null): string
  * загальний бюджет, є кошти на балансі (власна реклама сайту — без білінгу),
  * збіг таргету, не перевищено ліміт показів кампанії одному сеансу за добу.
  *
+ * Сторінка з no_promo (сама, її категорія чи підкатегорія) → null; кампанії з
+ * категорією реклами, забороненою на сторінці (promo_category_rules), не беруться.
+ *
  * Платні кампанії мають пріоритет над власною рекламою сайту. Серед платних —
  * випадковий вибір із вагою «залишок бюджету / днів до завершення»
  * (рівномірне витрачання: кампанія з більшим денним запасом показується частіше).
@@ -290,11 +294,21 @@ function promo_lang(?string $param = null): string
  * @param list<int> $categoryIds
  * @param list<int> $subcategoryIds
  */
-function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, string $sessionHash): ?array
+function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, string $sessionHash, array $page = []): ?array
 {
     if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo)) {
         return null;
     }
+    if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
+        return null;
+    }
+    if (!empty($page['product'])) {
+        // Правила категорій реклами — за справжньою таксономією продукту з БД.
+        [$pc, $ps] = promo_product_taxonomy($pdo, (int) $page['product']);
+        $categoryIds = array_values(array_unique(array_merge($categoryIds, $pc)));
+        $subcategoryIds = array_values(array_unique(array_merge($subcategoryIds, $ps)));
+    }
+    $rulesCond = promo_rules_sql($categoryIds, $subcategoryIds);
 
     $params = [':pl' => $placement, ':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash,
         ':today1' => promo_today(), ':today2' => promo_today(), ':today3' => promo_today()];
@@ -351,6 +365,7 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
                       AND (t.language IS NULL OR t.language = :lang)
                       AND (t.device IS NULL OR t.device = :dev)
               )
+              AND {$rulesCond}
               {$capCond}
             LIMIT 100";
 
@@ -700,15 +715,20 @@ function promo_maintenance(PDO $pdo): array
 /**
  * Порожній слот, який sponsored.js заповнює креативом із promo-serve.php.
  * Слот прихований (display:none) доки немає реклами — порожнього місця не лишається.
- * Нічого не виводить, якщо система вимкнена.
+ * Нічого не виводить, якщо система вимкнена або сторінку виключено (no_promo).
+ * $page: ['product' => id] або ['article' => slug] — для перевірки прапорців.
  *
  * @param list<int> $categoryIds
  * @param list<int> $subcategoryIds
  */
-function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array $subcategoryIds = []): string
+function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array $subcategoryIds = [], array $page = []): string
 {
     static $assetsPrinted = false;
     if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo)) {
+        return '';
+    }
+    // Чутлива сторінка (no_promo) — жодного слота, жодного порожнього місця.
+    if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
         return '';
     }
 
@@ -716,6 +736,8 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
         . ' data-placement="' . $placement . '"'
         . ' data-category="' . htmlspecialchars(implode(',', array_map('intval', $categoryIds)), ENT_QUOTES) . '"'
         . ' data-subcategory="' . htmlspecialchars(implode(',', array_map('intval', $subcategoryIds)), ENT_QUOTES) . '"'
+        . (!empty($page['product']) ? ' data-product="' . (int) $page['product'] . '"' : '')
+        . (!empty($page['article']) ? ' data-article="' . htmlspecialchars((string) $page['article'], ENT_QUOTES) . '"' : '')
         . ' data-lang="' . promo_lang() . '"></div>';
 
     if (!$assetsPrinted) {

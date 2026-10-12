@@ -444,6 +444,8 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     $name = mb_substr(promo_clean_text($in['name'] ?? ''), 0, 120);
     $objective = in_array($in['objective'] ?? '', ['awareness', 'clicks'], true) ? $in['objective'] : null;
     $model = $objective === 'clicks' ? 'cpc' : ($objective === 'awareness' ? 'cpm' : null);
+    $advCategory = is_string($in['advertiser_category'] ?? null) && isset(PROMO_ADVERTISER_CATEGORIES[$in['advertiser_category']])
+        ? $in['advertiser_category'] : null;
 
     // 2. Креатив
     $title = promo_clean_text($in['title'] ?? '');
@@ -554,6 +556,9 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         if ($model === null && !$house) {
             $missing[] = 'err_objective_required';
         }
+        if ($advCategory === null && !$house) {
+            $missing[] = 'err_advcat_required';
+        }
         if ($videoType === 'upload' && !$videoPath) {
             $missing[] = 'err_video_required';
         }
@@ -619,13 +624,15 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':start' => $startDate,
             ':end' => $endDate,
             ':status' => $campaignStatus,
+            ':advcat' => $advCategory,
         ];
         if ($campaign === null) {
             $pdo->prepare(
                 "INSERT INTO ad_campaigns (campaign_type, format, user_id, name, advertiser_name, contact_email, objective,
-                     pricing_model, unit_price, daily_budget, total_budget, start_date, end_date, status, submitted_at, rules_accepted_at)
+                     pricing_model, unit_price, daily_budget, total_budget, start_date, end_date, status, submitted_at, rules_accepted_at,
+                     advertiser_category)
                  VALUES (:ctype, 'video', :uid, :name, :adv, :email, :objective, :model, :unit, :daily, :total, :start, :end,
-                     :status, :sub_at, :rules_at)"
+                     :status, :sub_at, :rules_at, :advcat)"
             )->execute($fields + [
                 ':ctype' => $house ? 'internal' : 'paid',
                 ':uid' => $userId,
@@ -640,7 +647,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             $pdo->prepare(
                 'UPDATE ad_campaigns SET name = :name, objective = :objective, pricing_model = :model, unit_price = :unit,
                      daily_budget = :daily, total_budget = :total, start_date = :start, end_date = :end, status = :status,
-                     rejection_reason = NULL, stop_reason = NULL,
+                     advertiser_category = :advcat, rejection_reason = NULL, stop_reason = NULL,
                      submitted_at = IF(:sub = 1, NOW(), submitted_at), rules_accepted_at = IF(:sub2 = 1, NOW(), rules_accepted_at)
                  WHERE id = :id AND user_id = :uid'
             )->execute($fields + [':sub' => $doSubmit ? 1 : 0, ':sub2' => $doSubmit ? 1 : 0, ':id' => $campaignId, ':uid' => $userId]);
@@ -777,9 +784,9 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
             try {
                 $pdo->prepare(
                     "INSERT INTO ad_campaigns (campaign_type, format, user_id, name, advertiser_name, contact_email, objective,
-                         pricing_model, daily_budget, total_budget, status)
+                         pricing_model, daily_budget, total_budget, status, advertiser_category)
                      SELECT campaign_type, 'video', user_id, LEFT(CONCAT(COALESCE(name, ''), :suffix), 120), advertiser_name, contact_email,
-                         objective, pricing_model, daily_budget, total_budget, 'draft'
+                         objective, pricing_model, daily_budget, total_budget, 'draft', advertiser_category
                      FROM ad_campaigns WHERE id = :id AND user_id = :u"
                 )->execute([':suffix' => ' ' . promo_tr('copy_suffix'), ':id' => $campaignId, ':u' => $userId]);
                 $newId = (int) $pdo->lastInsertId();

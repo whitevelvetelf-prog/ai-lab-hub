@@ -127,3 +127,89 @@ PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
 --     перезаписує вже змінений список.
 INSERT IGNORE INTO ad_settings (setting_key, setting_value) VALUES
 ('shortener_domains', 'bit.ly\ntinyurl.com\nt.co\ngoo.gl\now.ly\nis.gd\nbuff.ly\ncutt.ly\nrebrand.ly\nshorturl.at\nt.ly\ntiny.cc\nrb.gy\nbitly.com\ns.id\nclck.ru\nv.gd\nlnkd.in\nshort.io\nqr.ae');
+
+-- =====================================================================
+-- H) Виключення чутливих сторінок і категорії рекламодавців.
+-- =====================================================================
+
+-- H1) Прапорець «без реклами» (no_promo). Сторінка без реклами, якщо прапорець має
+--     вона сама або її категорія/підкатегорія. Статті блогу — файли, тож для них
+--     окрема таблиця за slug.
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='categories' AND COLUMN_NAME='no_promo')=0,
+  'ALTER TABLE categories ADD COLUMN no_promo TINYINT(1) NOT NULL DEFAULT 0','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='subcategories' AND COLUMN_NAME='no_promo')=0,
+  'ALTER TABLE subcategories ADD COLUMN no_promo TINYINT(1) NOT NULL DEFAULT 0','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='products' AND COLUMN_NAME='no_promo')=0,
+  'ALTER TABLE products ADD COLUMN no_promo TINYINT(1) NOT NULL DEFAULT 0','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+CREATE TABLE IF NOT EXISTS promo_blog_flags (
+    slug       VARCHAR(191) NOT NULL,
+    no_promo   TINYINT(1) NOT NULL DEFAULT 0,
+    updated_at DATETIME NULL,
+    PRIMARY KEY (slug)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- H2) Значення за замовчуванням — ЛИШЕ при першому застосуванні (маркер у ad_settings),
+--     щоб повторний запуск не повертав прапорці, які адмін потім зняв.
+--     Підкатегорія «Ментальне здоров'я та харчова поведінка» (slug
+--     mental-health-eating-behavior у категорії health-beauty), усі її продукти,
+--     статті ai-and-eating-behavior-support і ai-for-psychology-and-mental-health.
+SET @h2 := (SELECT COUNT(*) FROM ad_settings WHERE setting_key = 'no_promo_defaults_2026_10_12');
+SET @sub_meb := (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id
+                 WHERE s.slug = 'mental-health-eating-behavior' AND c.slug = 'health-beauty' LIMIT 1);
+
+UPDATE subcategories SET no_promo = 1 WHERE @h2 = 0 AND id = @sub_meb;
+
+UPDATE products p JOIN product_subcategories ps ON ps.product_id = p.id
+SET p.no_promo = 1
+WHERE @h2 = 0 AND ps.subcategory_id = @sub_meb;
+
+INSERT INTO promo_blog_flags (slug, no_promo, updated_at)
+SELECT x.slug, 1, UTC_TIMESTAMP() FROM (
+    SELECT 'ai-and-eating-behavior-support' AS slug UNION ALL SELECT 'ai-for-psychology-and-mental-health'
+) x
+WHERE @h2 = 0
+ON DUPLICATE KEY UPDATE no_promo = 1;
+
+INSERT IGNORE INTO ad_settings (setting_key, setting_value) VALUES ('no_promo_defaults_2026_10_12', '1');
+
+-- H3) Категорія реклами (обирає рекламодавець у майстрі, перевіряє модератор):
+--     ai_tools, education, dev_it, business_marketing, finance, health_wellness,
+--     food_nutrition, gambling, adult, other.
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='ad_campaigns' AND COLUMN_NAME='advertiser_category')=0,
+  'ALTER TABLE ad_campaigns ADD COLUMN advertiser_category VARCHAR(30) NULL','DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- H4) Правила: яка категорія реклами заборонена де. scope_type all — всюди;
+--     category / subcategory — на сторінках цієї категорії/підкатегорії (scope_id).
+CREATE TABLE IF NOT EXISTS promo_category_rules (
+    id                  INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    scope_type          ENUM('category', 'subcategory', 'all') NOT NULL,
+    scope_id            INT UNSIGNED NULL,
+    advertiser_category VARCHAR(30) NOT NULL,
+    rule                ENUM('block') NOT NULL DEFAULT 'block',
+    note                VARCHAR(255) NULL,
+    created_at          DATETIME NOT NULL,
+    PRIMARY KEY (id),
+    KEY idx_promo_category_rules (advertiser_category, scope_type, scope_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- Початкові правила (лише якщо такого правила ще немає).
+INSERT INTO promo_category_rules (scope_type, scope_id, advertiser_category, rule, note, created_at)
+SELECT 'all', NULL, 'gambling', 'block', 'Ставки й азартні ігри заборонені всюди (модерація відхиляє)', UTC_TIMESTAMP() FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM promo_category_rules WHERE scope_type = 'all' AND advertiser_category = 'gambling');
+
+INSERT INTO promo_category_rules (scope_type, scope_id, advertiser_category, rule, note, created_at)
+SELECT 'all', NULL, 'adult', 'block', 'Контент для дорослих заборонений всюди (модерація відхиляє)', UTC_TIMESTAMP() FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM promo_category_rules WHERE scope_type = 'all' AND advertiser_category = 'adult');
+
+SET @cat_health := (SELECT id FROM categories WHERE slug = 'health-beauty' LIMIT 1);
+INSERT INTO promo_category_rules (scope_type, scope_id, advertiser_category, rule, note, created_at)
+SELECT 'category', @cat_health, 'food_nutrition', 'block', 'Реклама їжі й харчування не показується на сторінках здоров''я', UTC_TIMESTAMP() FROM DUAL
+WHERE @cat_health IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM promo_category_rules WHERE scope_type = 'category' AND scope_id = @cat_health AND advertiser_category = 'food_nutrition');

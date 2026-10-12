@@ -263,6 +263,12 @@
             lang: slot.dataset.lang || '',
             device: deviceType()
         });
+        if (slot.dataset.product) {
+            params.set('product', slot.dataset.product);
+        }
+        if (slot.dataset.article) {
+            params.set('article', slot.dataset.article);
+        }
         fetch(SERVE + '?' + params.toString(), { credentials: 'same-origin' })
             .then(function (res) {
                 return res.status === 200 ? res.json() : null;

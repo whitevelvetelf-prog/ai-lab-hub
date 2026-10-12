@@ -8,9 +8,10 @@ declare(strict_types=1);
  * GET placement=catalog_card|product_page|blog_inline
  *     category=1,2  subcategory=5  (id сторінки, через кому; порожньо — без категорії)
  *     lang=uk|en  device=mobile|desktop  (необов'язкові; інакше — мова сесії / User-Agent)
+ *     product=N | article=slug  (сторінка: перевірка no_promo і правил категорій реклами)
  *
  * 200 + JSON {creative, labels} — один креатив; 204 — реклами немає
- * (система вимкнена, немає придатних кампанії, бот). Викликає sponsored.js.
+ * (система вимкнена, сторінку виключено no_promo, немає придатних кампаній, бот). Викликає sponsored.js.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -44,6 +45,14 @@ if (promo_is_bot() || !in_array($placement, PROMO_PLACEMENTS, true)) {
 $pdo = require __DIR__ . '/../config/database.php';
 promo_db_utc($pdo);
 
+$page = [];
+if ((int) ($_GET['product'] ?? 0) > 0) {
+    $page['product'] = (int) $_GET['product'];
+}
+if (is_string($_GET['article'] ?? null) && preg_match('/^[a-z0-9-]{1,191}$/', $_GET['article'])) {
+    $page['article'] = $_GET['article'];
+}
+
 $creative = promo_pick(
     $pdo,
     $placement,
@@ -51,7 +60,8 @@ $creative = promo_pick(
     $ids('subcategory'),
     promo_lang(is_string($_GET['lang'] ?? null) ? $_GET['lang'] : null),
     promo_device(is_string($_GET['device'] ?? null) ? $_GET['device'] : null),
-    analytics_session_hash()
+    analytics_session_hash(),
+    $page
 );
 
 if ($creative === null) {

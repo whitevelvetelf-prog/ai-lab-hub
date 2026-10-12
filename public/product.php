@@ -614,7 +614,7 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         <?= subcategory_note_html(array_column($subcategories, 'slug')) ?>
 
         <!-- Відеореклама (product_page): під описом; без реклами нічого не видно -->
-        <?= promo_slot($pdo, 'product_page', array_map('intval', array_column($categories, 'id')), array_map('intval', array_column($subcategories, 'id'))) ?>
+        <?= promo_slot($pdo, 'product_page', array_map('intval', array_column($categories, 'id')), array_map('intval', array_column($subcategories, 'id')), ['product' => (int) $product['id']]) ?>
 
         <!-- 5. Основні функції -->
         <?php if ($features !== []): ?>

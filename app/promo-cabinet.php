@@ -76,6 +76,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $f = [
         'name' => $editing['name'] ?? '',
         'objective' => $editing['objective'] ?? 'awareness',
+        'advertiser_category' => $editing['advertiser_category'] ?? '',
         'video_type' => $creative['video_type'] ?? 'upload',
         'youtube_url' => $creative['video_url'] ?? '',
         'title' => $creative['title'] ?? '',
@@ -94,7 +95,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         'end_date' => $editing['end_date'] ?? '',
     ];
     if (is_array($old)) {
-        foreach (['name', 'objective', 'video_type', 'youtube_url', 'title', 'description', 'cta_key', 'destination_url', 'language', 'device', 'daily_budget', 'total_budget', 'start_date', 'end_date'] as $k) {
+        foreach (['name', 'objective', 'advertiser_category', 'video_type', 'youtube_url', 'title', 'description', 'cta_key', 'destination_url', 'language', 'device', 'daily_budget', 'total_budget', 'start_date', 'end_date'] as $k) {
             if (isset($old[$k]) && is_string($old[$k])) {
                 $f[$k] = $old[$k];
             }
@@ -292,6 +293,18 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         </label>
                                         <?php endforeach; ?>
                                     </div>
+                                    <?php if (!$house): ?>
+                                    <label class="pc-field">
+                                        <span><?= pc_e(promo_tr('field_advertiser_category')) ?> *</span>
+                                        <select name="advertiser_category" data-summary="advertiser_category">
+                                            <option value=""><?= pc_e(promo_tr('choose')) ?></option>
+                                            <?php foreach (PROMO_ADVERTISER_CATEGORIES as $k => $labels): ?>
+                                            <option value="<?= $k ?>"<?= $f['advertiser_category'] === $k ? ' selected' : '' ?>><?= pc_e($labels[$lang === 'en' ? 1 : 0]) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <small class="pc-muted"><?= pc_e(promo_tr('advertiser_category_hint')) ?></small>
+                                    </label>
+                                    <?php endif; ?>
                                 </fieldset>
 
                                 <!-- 2. Креатив -->

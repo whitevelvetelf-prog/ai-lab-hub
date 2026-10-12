@@ -80,6 +80,9 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
     if (!promo_enabled($pdo)) {
         return null;
     }
+    if (promo_page_excluded($pdo, $categoryId !== null ? [$categoryId] : [], $subcategoryId !== null ? [$subcategoryId] : []) !== null) {
+        return null; // сторінка «без реклами» (блок H)
+    }
 
     $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext
             FROM ads a

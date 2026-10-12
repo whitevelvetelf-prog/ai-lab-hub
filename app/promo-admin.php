@@ -129,7 +129,7 @@ function promo_server_upload_limit(): int
 function promo_admin_queue(PDO $pdo): array
 {
     return $pdo->query(
-        "SELECT cr.*, c.name AS campaign_name, c.objective, c.pricing_model, c.unit_price, c.daily_budget, c.total_budget,
+        "SELECT cr.*, c.name AS campaign_name, c.objective, c.advertiser_category, c.stop_reason AS campaign_stop_reason, c.pricing_model, c.unit_price, c.daily_budget, c.total_budget,
                 c.start_date, c.end_date, c.submitted_at, c.user_id, c.id AS cid,
                 u.name AS user_name, u.email AS user_email, COALESCE(b.balance, 0) AS balance
          FROM ad_creatives cr
@@ -179,7 +179,7 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
         return [false, 'Вкажіть причину відхилення — її побачить рекламодавець.'];
     }
     $st = $pdo->prepare(
-        "SELECT cr.id, cr.campaign_id, cr.link_check_status FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
+        "SELECT cr.id, cr.campaign_id, cr.link_check_status, c.advertiser_category FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
          WHERE cr.id = :id AND cr.status = 'pending' AND c.status = 'pending_review'"
     );
     $st->execute([':id' => $creativeId]);
@@ -188,6 +188,9 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
         return [false, 'Креатив не знайдено або його вже розглянуто.'];
     }
     $overrideReason = trim(promo_clean_text($overrideReason));
+    if ($approve && promo_category_blocked_everywhere($pdo, $row['advertiser_category'])) {
+        return [false, 'Категорія реклами «' . promo_advertiser_category_label($row['advertiser_category']) . '» заборонена правилами всюди — креатив треба відхилити.'];
+    }
     if ($approve && $row['link_check_status'] !== 'ok') {
         if (!$confirmFlagged || $overrideReason === '') {
             return [false, $row['link_check_status'] === 'flagged'
