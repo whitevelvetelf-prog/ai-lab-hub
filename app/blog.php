@@ -61,6 +61,18 @@ const BLOG_ARTICLES = [
         'uk' => 'ai-dlya-napoyiv-ua.md',
         'en' => 'ai-for-drinks-en.md',
     ],
+    'ai-for-parenting' => [
+        'uk' => 'ai-dlya-vykhovannya-ditey-ua.md',
+        'en' => 'ai-for-parenting-en.md',
+    ],
+    'ai-for-dog-training' => [
+        'uk' => 'ai-dlya-dresyruvannya-sobak-ua.md',
+        'en' => 'ai-for-dog-training-en.md',
+    ],
+    'ai-for-working-and-service-dogs' => [
+        'uk' => 'ai-dlya-robochykh-i-sluzhbovykh-sobak-ua.md',
+        'en' => 'ai-for-working-and-service-dogs-en.md',
+    ],
 ];
 
 /**
@@ -80,6 +92,9 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-for-stock-trading' => ['finance-legal/stock-trading'],
     'ai-and-eating-behavior-support' => ['health-beauty/mental-health-eating-behavior', 'health-beauty/mental-health'],
     'ai-for-drinks' => ['my-home/drinks'],
+    'ai-for-parenting' => ['my-home/parenting'],
+    'ai-for-dog-training' => ['my-home/dog-training', 'my-home/pets'],
+    'ai-for-working-and-service-dogs' => ['my-home/working-dogs', 'my-home/pet-grooming-vet'],
 ];
 
 /**

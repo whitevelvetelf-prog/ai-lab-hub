@@ -232,6 +232,9 @@ $subcategoryIcons = [
     'household'          => 'list-checks',
     'home-energy'        => 'battery-charging',
     'drinks'             => 'cup-soda',
+    'parenting'          => 'baby',
+    'dog-training'       => 'bone',
+    'working-dogs'       => 'shield-half',
     // Інструменти та автоматизація
     'plugins'            => 'puzzle',
     'automation'         => 'zap',

@@ -16,6 +16,9 @@ declare(strict_types=1);
 /** slug підкатегорії => ключ тексту примітки (t()). */
 const SUBCATEGORY_NOTES = [
     'mental-health-eating-behavior' => 'subcat_note_mental_health_eating',
+    'parenting' => 'subcat_note_parenting',
+    'dog-training' => 'subcat_note_dog_training',
+    'working-dogs' => 'subcat_note_working_dogs',
 ];
 
 /** HTML приміток для переданих slug-ів підкатегорій (кожна — один раз); '' — приміток немає. */
