@@ -165,15 +165,21 @@ function promo_admin_targets_text(PDO $pdo, int $campaignId): array
     ];
 }
 
-/** Схвалити або відхилити креатив. Повертає повідомлення. */
-function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $approve, string $reason): array
+/**
+ * Схвалити або відхилити креатив. Повертає повідомлення.
+ *
+ * Креатив, адреса якого має прапорці перевірки (link_check_status='flagged') або
+ * ще не перевірялась, схвалюється лише з явним підтвердженням адміна й причиною
+ * ($confirmFlagged + $overrideReason) — рішення пишеться в promo_event_log.
+ */
+function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $approve, string $reason, bool $confirmFlagged = false, string $overrideReason = ''): array
 {
     $reason = trim(promo_clean_text($reason));
     if (!$approve && $reason === '') {
         return [false, 'Вкажіть причину відхилення — її побачить рекламодавець.'];
     }
     $st = $pdo->prepare(
-        "SELECT cr.id, cr.campaign_id FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
+        "SELECT cr.id, cr.campaign_id, cr.link_check_status FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
          WHERE cr.id = :id AND cr.status = 'pending' AND c.status = 'pending_review'"
     );
     $st->execute([':id' => $creativeId]);
@@ -181,12 +187,29 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
     if ($row === false) {
         return [false, 'Креатив не знайдено або його вже розглянуто.'];
     }
+    $overrideReason = trim(promo_clean_text($overrideReason));
+    if ($approve && $row['link_check_status'] !== 'ok') {
+        if (!$confirmFlagged || $overrideReason === '') {
+            return [false, $row['link_check_status'] === 'flagged'
+                ? 'Перевірка посилання має прапорці: схвалити можна лише з підтвердженням і причиною.'
+                : 'Посилання ще не перевірено: перевірте ще раз або підтвердіть схвалення з причиною.'];
+        }
+        promo_log_event($pdo, 'approve_flagged', $creativeId, (int) $row['campaign_id'], $overrideReason, $adminId);
+    }
 
     $pdo->beginTransaction();
     try {
         $pdo->prepare(
-            'UPDATE ad_creatives SET status = :s, rejection_reason = :r, reviewed_by = :a, reviewed_at = NOW() WHERE id = :id'
+            'UPDATE ad_creatives SET status = :s, rejection_reason = :r, reviewed_by = :a, reviewed_at = NOW(), recheck_reason = NULL WHERE id = :id'
         )->execute([':s' => $approve ? 'approved' : 'rejected', ':r' => $approve ? null : mb_substr($reason, 0, 500), ':a' => $adminId, ':id' => $creativeId]);
+        if ($approve) {
+            // Схвалено → кінцевий домен останньої перевірки стає базовим для повторних перевірок.
+            $pdo->prepare(
+                'UPDATE ad_creatives SET link_fail_streak = 0,
+                     link_final_host = COALESCE((SELECT final_host FROM ad_link_checks WHERE creative_id = :c ORDER BY id DESC LIMIT 1), link_final_host)
+                 WHERE id = :id'
+            )->execute([':c' => $creativeId, ':id' => $creativeId]);
+        }
         $pdo->prepare(
             'UPDATE ad_campaigns SET status = :s, rejection_reason = :r, stop_reason = NULL WHERE id = :id'
         )->execute([':s' => $approve ? 'active' : 'rejected', ':r' => $approve ? null : mb_substr($reason, 0, 500), ':id' => (int) $row['campaign_id']]);
@@ -198,9 +221,63 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
         return [false, 'Не вдалося зберегти рішення.'];
     }
 
+    promo_log_event($pdo, $approve ? 'approved' : 'rejected', $creativeId, (int) $row['campaign_id'], $approve ? '' : $reason, $adminId);
+
     return [true, $approve
         ? 'Креатив схвалено, кампанія активна (показ почнеться з дати старту за наявності коштів на балансі).'
         : 'Креатив відхилено, рекламодавець бачить причину в кабінеті.'];
+}
+
+// --- Перевірка посилань: чорний список і скорочувачі -----------------------
+
+function promo_admin_blocklist_add(PDO $pdo, int $adminId, string $domain, string $reason): array
+{
+    $domain = promo_norm_host(trim($domain));
+    if (str_contains($domain, '://')) {
+        $domain = promo_norm_host((string) parse_url($domain, PHP_URL_HOST));
+    }
+    if (!preg_match('/^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]{2,63}$/', $domain)) {
+        return [false, 'Вкажіть домен, напр. example.com (піддомени теж блокуються).'];
+    }
+    $pdo->prepare(
+        'INSERT INTO ad_domain_blocklist (domain, reason, created_by, created_at) VALUES (:d, :r, :a, :t)
+         ON DUPLICATE KEY UPDATE reason = VALUES(reason)'
+    )->execute([':d' => $domain, ':r' => mb_substr(promo_clean_text($reason), 0, 255) ?: null, ':a' => $adminId, ':t' => promo_utc_now()]);
+    promo_log_event($pdo, 'blocklist_add', null, null, $domain, $adminId);
+
+    return [true, 'Домен ' . $domain . ' додано до чорного списку. Креативи з ним отримають прапорець під час наступної перевірки.'];
+}
+
+function promo_admin_blocklist_remove(PDO $pdo, int $adminId, int $id): array
+{
+    $st = $pdo->prepare('SELECT domain FROM ad_domain_blocklist WHERE id = :id');
+    $st->execute([':id' => $id]);
+    $domain = $st->fetchColumn();
+    if ($domain === false) {
+        return [false, 'Запис не знайдено.'];
+    }
+    $pdo->prepare('DELETE FROM ad_domain_blocklist WHERE id = :id')->execute([':id' => $id]);
+    promo_log_event($pdo, 'blocklist_remove', null, null, (string) $domain, $adminId);
+
+    return [true, 'Домен ' . $domain . ' прибрано з чорного списку.'];
+}
+
+function promo_admin_save_shorteners(PDO $pdo, string $raw): array
+{
+    $list = [];
+    foreach (preg_split('/[\r\n,]+/', $raw) ?: [] as $line) {
+        $d = promo_norm_host(trim($line));
+        if ($d === '') {
+            continue;
+        }
+        if (!preg_match('/^([a-z0-9-]+\.)+[a-z0-9-]{2,63}$/', $d)) {
+            return [false, 'Некоректний домен у списку скорочувачів: ' . $d];
+        }
+        $list[] = $d;
+    }
+    promo_admin_set_setting($pdo, 'shortener_domains', implode("\n", array_values(array_unique($list))));
+
+    return [true, 'Список скорочувачів збережено (' . count(array_unique($list)) . ').'];
 }
 
 // --- Платежі ---------------------------------------------------------------

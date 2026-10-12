@@ -204,7 +204,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             <?= promo_status_badge((string) $c['status']) ?>
                                             <?php if ($c['status'] === 'rejected' && $c['rejection_reason']): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('rejection_reason')) ?>: <?= pc_e($c['rejection_reason']) ?></span>
-                                            <?php elseif ($c['stop_reason'] && in_array($c['status'], ['paused', 'completed'], true)): ?>
+                                            <?php elseif ($c['stop_reason'] && (in_array($c['status'], ['paused', 'completed'], true) || $c['stop_reason'] === 'link_check')): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('stop_' . $c['stop_reason'])) ?></span>
                                             <?php elseif ($c['status'] === 'active' && $balance <= 0): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('stop_balance')) ?></span>

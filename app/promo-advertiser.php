@@ -19,6 +19,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/promo.php';
 require_once __DIR__ . '/promo-i18n.php';
 require_once __DIR__ . '/promo-payments.php';
+require_once __DIR__ . '/promo-linkcheck.php';
 
 const PROMO_UPLOAD_DIR = __DIR__ . '/../public/uploads/promo';
 const PROMO_UPLOAD_URL = 'uploads/promo/';
@@ -662,12 +663,14 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':rby' => $doSubmit && $house ? $userId : null,
             ':rat' => $doSubmit && $house ? promo_utc_now() : null,
         ];
+        $creativeId = $creative !== null ? (int) $creative['id'] : 0;
         if ($creative === null) {
             $pdo->prepare(
                 'INSERT INTO ad_creatives (campaign_id, title, description, cta_key, destination_url, video_type, video_path,
                      video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status, reviewed_by, reviewed_at)
                  VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status, :rby, :rat)'
             )->execute($crFields + [':cid' => $campaignId]);
+            $creativeId = (int) $pdo->lastInsertId();
         } else {
             $pdo->prepare(
                 'UPDATE ad_creatives SET title = :title, description = :desc, cta_key = :cta, destination_url = :dest,
@@ -708,6 +711,17 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         error_log('[promo] save campaign: ' . $e->getMessage());
 
         return ['saved' => false, 'id' => $campaign !== null ? $campaignId : null, 'errors' => ['err_generic'], 'submitted' => false];
+    }
+
+    // Перевірка адреси переходу (блок G): при надсиланні на модерацію й при кожній зміні адреси.
+    $urlChanged = $destination !== '' && $destination !== (string) ($creative['destination_url'] ?? '');
+    if ($creativeId > 0 && $destination !== '' && ($doSubmit || $urlChanged)) {
+        try {
+            $check = promo_linkcheck_creative($pdo, $creativeId, true);
+            promo_log_event($pdo, 'link_check', $creativeId, $campaignId, $check['status'] . ': ' . implode(', ', $check['flags']), $userId);
+        } catch (Throwable $e) {
+            error_log('[promo] link check: ' . $e->getMessage());
+        }
     }
 
     return ['saved' => true, 'id' => $campaignId, 'errors' => array_values(array_unique($missing)), 'submitted' => $doSubmit];

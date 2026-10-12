@@ -72,6 +72,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         'settings' => 'Налаштування',
         'reports' => 'Звіти й скарги',
         'house' => 'Власна реклама',
+        'links' => 'Перевірка посилань',
     ];
     $tab = isset($tabs[$_GET['padm_tab'] ?? '']) ? $_GET['padm_tab'] : 'moderation';
 
@@ -120,9 +121,21 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
     $platform = promo_admin_platform_totals($pdo, $from, $to);
     $top = promo_admin_top_campaigns($pdo, $from, $to);
 
+    $sbProvider = promo_safe_browsing_provider();
+    $sbOff = $sbProvider instanceof PromoSafeBrowsingDisabled;
+    $blocklist = $pdo->query('SELECT * FROM ad_domain_blocklist ORDER BY domain')->fetchAll();
+    $recentChecks = $pdo->query(
+        'SELECT l.*, cr.campaign_id FROM ad_link_checks l LEFT JOIN ad_creatives cr ON cr.id = l.creative_id ORDER BY l.id DESC LIMIT 50'
+    )->fetchAll();
+    $eventLog = $pdo->query('SELECT * FROM promo_event_log ORDER BY id DESC LIMIT 50')->fetchAll();
+    $flagText = static fn(string $flags): string => implode(', ', array_map(
+        static fn($f) => PROMO_LINK_FLAG_LABELS[$f] ?? $f,
+        array_filter(explode(',', $flags))
+    ));
+
     $plLabel = ['catalog_card' => 'Картка в каталозі', 'product_page' => 'Сторінка продукту', 'blog_inline' => 'Стаття блогу'];
     $statusUk = ['draft' => 'Чернетка', 'pending_review' => 'На модерації', 'active' => 'Активна', 'paused' => 'Пауза', 'rejected' => 'Відхилена', 'completed' => 'Завершена', 'expired' => 'Завершена'];
-    $stopUk = ['budget' => 'бюджет вичерпано', 'balance' => 'нема коштів', 'end_date' => 'термін минув', 'user' => 'рекламодавцем', 'admin' => 'адміном'];
+    $stopUk = ['budget' => 'бюджет вичерпано', 'balance' => 'нема коштів', 'end_date' => 'термін минув', 'user' => 'рекламодавцем', 'admin' => 'адміном', 'link_check' => 'перевірка посилання'];
     $txUk = ['topup' => 'Поповнення', 'spend' => 'Списання', 'refund' => 'Повернення', 'adjust' => 'Коригування'];
     $txsUk = ['pending' => 'Очікує', 'confirmed' => 'Підтверджено', 'rejected' => 'Відхилено'];
     $badge = static fn(string $s): string => '<span class="pc-badge pc-badge--' . pc_e($s) . '">' . pc_e($statusUk[$s] ?? $s) . '</span>';
@@ -208,15 +221,51 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?></dd>
                                         <dt>Бюджет</dt><dd>загальний <?= pc_e(promo_money($q['total_budget'])) ?><?= $q['daily_budget'] !== null ? ', денний ' . pc_e(promo_money($q['daily_budget'])) : '' ?></dd>
                                         <dt>Дати</dt><dd><?= pc_e($q['start_date']) ?><?= $q['end_date'] ? ' — ' . pc_e($q['end_date']) : ' (без кінця)' ?></dd>
-                                        <dt>Надіслано</dt><dd><?= pc_e($q['submitted_at']) ?></dd>
+                                        <dt>Надіслано</dt><dd><?= pc_e(promo_local_time($q['submitted_at'])) ?></dd>
                                     </dl>
                                 </div>
-                                <div class="pc-mod__actions">
+                                <?php $lc = promo_last_link_check($pdo, (int) $q['id']); $lcFlagged = $q['link_check_status'] !== 'ok'; ?>
+                                <div class="pc-box <?= $lcFlagged ? 'pc-box--warn' : '' ?> pc-linkcheck">
+                                    <p><strong>Перевірка посилання:</strong>
+                                        <?php if ($lc === null): ?>ще не виконувалась
+                                        <?php else: ?><?= $q['link_check_status'] === 'ok' ? 'без прапорців' : '<strong class="pc-warn-text">є прапорці</strong>' ?>
+                                        <span class="pc-muted"><?= pc_e(promo_local_time($lc['checked_at'])) ?> (Київ)</span><?php endif; ?></p>
+                                    <?php if (!empty($q['recheck_reason'])): ?>
+                                    <p class="pc-warn-text">Повторна модерація: <?= pc_e($q['recheck_reason']) ?></p>
+                                    <?php endif; ?>
+                                    <?php if ($lc !== null): ?>
+                                    <dl class="pc-summary">
+                                        <dt>Кінцевий URL</dt><dd><?= $lc['final_url'] ? pc_e($lc['final_url']) : '—' ?></dd>
+                                        <dt>Кінцевий домен</dt><dd><?= pc_e($lc['final_host'] ?? '—') ?><?= $q['link_final_host'] && $q['link_final_host'] !== $lc['final_host'] ? ' (базовий: ' . pc_e($q['link_final_host']) . ')' : '' ?></dd>
+                                        <dt>HTTP</dt><dd><?= $lc['http_status'] !== null ? (int) $lc['http_status'] : '—' ?> · переадресацій: <?= (int) $lc['redirect_count'] ?> · <?= (int) $lc['response_ms'] ?> мс</dd>
+                                        <dt>Safe Browsing</dt><dd><?= pc_e($lc['safe_browsing_status']) ?></dd>
+                                        <dt>Прапорці</dt><dd><?= $lc['flags'] !== '' ? '<strong class="pc-warn-text">' . pc_e($flagText($lc['flags'])) . '</strong>' : 'немає' ?></dd>
+                                        <?php if ($lc['notes']): ?><dt>Деталі</dt><dd><?= nl2br(pc_e($lc['notes'])) ?></dd><?php endif; ?>
+                                    </dl>
+                                    <?php endif; ?>
+                                    <?php if ($sbOff): ?>
+                                    <p class="pc-warn-text">Автоматичної перевірки на шкідливі сторінки немає (Safe Browsing / Web Risk не налаштовано в config/promo.php) — перевірте сторінку вручну.</p>
+                                    <?php endif; ?>
                                     <form method="post" action="promo-admin-action.php" class="pc-inline-form">
+                                        <?= $csrf ?>
+                                        <input type="hidden" name="action" value="link_recheck">
+                                        <input type="hidden" name="creative_id" value="<?= (int) $q['id'] ?>">
+                                        <button type="submit" class="pc-btn pc-btn--small">Перевірити посилання ще раз</button>
+                                    </form>
+                                </div>
+                                <div class="pc-mod__actions">
+                                    <form method="post" action="promo-admin-action.php" class="<?= $lcFlagged ? 'pc-reject' : 'pc-inline-form' ?>"
+                                          <?= $lcFlagged ? 'data-pc-confirm="Схвалити креатив #' . (int) $q['id'] . ' попри прапорці перевірки посилання?"' : '' ?>>
                                         <?= $csrf ?>
                                         <input type="hidden" name="action" value="moderate">
                                         <input type="hidden" name="creative_id" value="<?= (int) $q['id'] ?>">
                                         <input type="hidden" name="decision" value="approve">
+                                        <?php if ($lcFlagged): ?>
+                                        <label class="pc-check"><input type="checkbox" name="confirm_flagged" value="1" required>
+                                            <span>Я перевірив(-ла) сторінку вручну й підтверджую схвалення попри прапорці</span></label>
+                                        <label class="pc-field"><span>Причина схвалення (у журнал)</span>
+                                            <input type="text" name="override_reason" maxlength="500" required></label>
+                                        <?php endif; ?>
                                         <button type="submit" class="pc-btn pc-btn--primary">Схвалити</button>
                                     </form>
                                     <form method="post" action="promo-admin-action.php" class="pc-reject"
@@ -491,6 +540,101 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                             </form>
                                             <?php endif; ?>
                                         </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+                        </section>
+
+                        <!-- ============ G. Перевірка посилань ============ -->
+                        <section class="pc-panel" data-pc-panel="links"<?= $tab === 'links' ? '' : ' hidden' ?>>
+                            <p>Провайдер Safe Browsing: <strong><?= pc_e($sbProvider->name()) ?></strong>.
+                                <?php if ($sbOff): ?><span class="pc-warn-text">Автоматичної перевірки на шкідливі сторінки немає — ключ вписується в config/promo.php (див. docs/PROMO_OPERATIONS.md).</span><?php endif; ?></p>
+                            <p class="pc-muted">Адреса перевіряється при надсиланні на модерацію й при кожній зміні; повторно — активні креативи щодоби, решта щотижня (cron). Автопауза з поверненням на модерацію: зміна кінцевого домену, Safe Browsing/Web Risk «flagged», домен у чорному списку, <?= PROMO_LINK_FAIL_LIMIT ?> помилки поспіль.</p>
+
+                            <h3 class="pc-h3">Чорний список доменів</h3>
+                            <form method="post" action="promo-admin-action.php" class="pc-filter">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="blocklist_add">
+                                <label class="pc-field"><span>Домен (піддомени теж)</span><input type="text" name="domain" required placeholder="example.com"></label>
+                                <label class="pc-field"><span>Причина</span><input type="text" name="reason" maxlength="255"></label>
+                                <button type="submit" class="pc-btn pc-btn--primary">Додати</button>
+                            </form>
+                            <?php if ($blocklist === []): ?>
+                            <p class="pc-empty">Чорний список порожній.</p>
+                            <?php else: ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Домен</th><th>Причина</th><th>Додано</th><th></th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($blocklist as $b): ?>
+                                    <tr>
+                                        <td data-label="Домен"><?= pc_e($b['domain']) ?></td>
+                                        <td data-label="Причина"><?= pc_e($b['reason'] ?? '') ?></td>
+                                        <td data-label="Додано"><?= pc_e(promo_local_time($b['created_at'])) ?></td>
+                                        <td data-label="" class="pc-actions">
+                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form" data-pc-confirm="Прибрати <?= pc_e($b['domain']) ?> з чорного списку?">
+                                                <?= $csrf ?>
+                                                <input type="hidden" name="action" value="blocklist_remove">
+                                                <input type="hidden" name="id" value="<?= (int) $b['id'] ?>">
+                                                <button type="submit" class="pc-btn pc-btn--small pc-btn--danger">Прибрати</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+
+                            <h3 class="pc-h3">Скорочувачі посилань</h3>
+                            <form method="post" action="promo-admin-action.php">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="shorteners">
+                                <label class="pc-field"><span>Домен на рядок. Креатив із таким доменом (на будь-якому кроці переадресації) отримує прапорець.</span>
+                                    <textarea name="shortener_domains" rows="6"><?= pc_e(implode("\n", promo_shortener_list($pdo))) ?></textarea></label>
+                                <button type="submit" class="pc-btn pc-btn--primary">Зберегти список</button>
+                            </form>
+
+                            <h3 class="pc-h3">Останні перевірки</h3>
+                            <?php if ($recentChecks === []): ?>
+                            <p class="pc-empty">Перевірок ще не було.</p>
+                            <?php else: ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Час (Київ)</th><th>Креатив</th><th>Кінцевий домен</th><th>HTTP</th><th>Safe Browsing</th><th>Прапорці</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($recentChecks as $l): ?>
+                                    <tr>
+                                        <td data-label="Час"><?= pc_e(promo_local_time($l['checked_at'])) ?></td>
+                                        <td data-label="Креатив">#<?= (int) $l['creative_id'] ?><span class="pc-muted">кампанія #<?= (int) $l['campaign_id'] ?></span></td>
+                                        <td data-label="Домен"><?= pc_e($l['final_host'] ?? '—') ?></td>
+                                        <td data-label="HTTP"><?= $l['http_status'] !== null ? (int) $l['http_status'] : '—' ?></td>
+                                        <td data-label="Safe Browsing"><?= pc_e($l['safe_browsing_status']) ?></td>
+                                        <td data-label="Прапорці"><?= $l['flags'] !== '' ? '<span class="pc-warn-text">' . pc_e($flagText($l['flags'])) . '</span>' : '—' ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <?php endif; ?>
+
+                            <h3 class="pc-h3">Журнал подій реклами</h3>
+                            <?php if ($eventLog === []): ?>
+                            <p class="pc-empty">Подій ще немає.</p>
+                            <?php else: ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Час (Київ)</th><th>Подія</th><th>Кампанія / креатив</th><th>Деталі</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($eventLog as $ev): ?>
+                                    <tr>
+                                        <td data-label="Час"><?= pc_e(promo_local_time($ev['created_at'])) ?></td>
+                                        <td data-label="Подія"><?= pc_e($ev['event']) ?><?= $ev['user_id'] ? '<span class="pc-muted">користувач #' . (int) $ev['user_id'] . '</span>' : '' ?></td>
+                                        <td data-label="Кампанія"><?= $ev['campaign_id'] ? '#' . (int) $ev['campaign_id'] : '' ?><?= $ev['creative_id'] ? ' / #' . (int) $ev['creative_id'] : '' ?></td>
+                                        <td data-label="Деталі"><?= pc_e($ev['details'] ?? '') ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                     </tbody>

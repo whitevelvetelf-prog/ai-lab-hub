@@ -50,6 +50,7 @@ const PROMO_I18N = [
     'stop_end_date' => ['Термін кампанії завершився.', 'The campaign end date has passed.'],
     'stop_user' => ['Зупинено вами.', 'Stopped by you.'],
     'stop_admin' => ['Зупинено адміністратором.', 'Stopped by the administrator.'],
+    'stop_link_check' => ['Повернено на повторну модерацію після автоматичної перевірки посилання.', 'Sent back for review after an automatic link check.'],
     'act_edit' => ['Редагувати', 'Edit'],
     'act_pause' => ['Пауза', 'Pause'],
     'act_resume' => ['Відновити', 'Resume'],

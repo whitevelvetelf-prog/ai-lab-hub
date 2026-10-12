@@ -15,6 +15,9 @@ declare(strict_types=1);
  *   campaign_status   campaign_id, op=stop|resume|complete
  *   suspend_creative  creative_id, reason
  *   reports_reviewed  creative_id
+ *   link_recheck      creative_id — перевірити адресу переходу ще раз (блок G)
+ *   blocklist_add     domain, reason;  blocklist_remove  id
+ *   shorteners        shortener_domains (домен на рядок)
  * Після дії — редирект у кабінет (account.php?padm_tab=…#acc-promo-admin).
  */
 
@@ -47,8 +50,26 @@ $str = static fn(string $k): string => is_string($_POST[$k] ?? null) ? $_POST[$k
 
 switch ($action) {
     case 'moderate':
-        [$ok, $msg] = promo_admin_moderate($pdo, $adminId, (int) $str('creative_id'), $str('decision') === 'approve', $str('reason'));
+        [$ok, $msg] = promo_admin_moderate($pdo, $adminId, (int) $str('creative_id'), $str('decision') === 'approve', $str('reason'),
+            $str('confirm_flagged') === '1', $str('override_reason'));
         $back('moderation', $ok, [$msg]);
+
+    case 'link_recheck':
+        $r = promo_linkcheck_creative($pdo, (int) $str('creative_id'), true);
+        promo_log_event($pdo, 'link_check', (int) $str('creative_id'), null, ($r['status'] ?? '') . ': ' . implode(', ', $r['flags'] ?? []), $adminId);
+        $back('moderation', true, ['Посилання перевірено: ' . (($r['status'] ?? '') === 'ok' ? 'без прапорців.' : 'є прапорці — див. картку креативу.')]);
+
+    case 'blocklist_add':
+        [$ok, $msg] = promo_admin_blocklist_add($pdo, $adminId, $str('domain'), $str('reason'));
+        $back('links', $ok, [$msg]);
+
+    case 'blocklist_remove':
+        [$ok, $msg] = promo_admin_blocklist_remove($pdo, $adminId, (int) $str('id'));
+        $back('links', $ok, [$msg]);
+
+    case 'shorteners':
+        [$ok, $msg] = promo_admin_save_shorteners($pdo, $str('shortener_domains'));
+        $back('links', $ok, [$msg]);
 
     case 'topup_decide':
         [$ok, $msg] = promo_admin_topup_decide($pdo, $adminId, (int) $str('tx_id'), $str('decision') === 'confirm', $str('reason'));

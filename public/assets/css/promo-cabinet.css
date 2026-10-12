@@ -665,3 +665,18 @@
     width: 100%;
     height: 100%;
 }
+
+/* Перевірка посилання з прапорцями (черга модерації, блок G) і попередження «Стан» (блок I). */
+.pc-box--warn {
+    border: 1px solid rgba(255, 210, 122, 0.6);
+    background: rgba(255, 210, 122, 0.08);
+}
+
+.pc-box--danger {
+    border: 1px solid rgba(255, 120, 120, 0.7);
+    background: rgba(255, 90, 90, 0.12);
+}
+
+.pc-linkcheck {
+    margin: 12px 0;
+}
