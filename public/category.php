@@ -71,6 +71,7 @@ $categoryIcons = [
     'religion'              => 'hand-heart',
     'career'                => 'briefcase',
     'cybersecurity'         => 'shield',
+    'accessibility'         => 'accessibility',
 ];
 
 $subcategoryIcons = [
@@ -173,6 +174,13 @@ $subcategoryIcons = [
     'identity-protection' => 'user-lock',
     'business-security'   => 'building-2',
     'appsec'              => 'bug',
+    // Доступність
+    'blind-low-vision'       => 'eye',
+    'deaf-hard-of-hearing'   => 'ear',
+    'speech-aac'             => 'message-square-text',
+    'reading-neurodiversity' => 'book-open-text',
+    'hands-free'             => 'mouse-pointer-click',
+    'digital-accessibility'  => 'globe',
     // Розробка та IT: LLM-інструменти
     'local-llm'          => 'cpu',
     'llm-inference'      => 'server',

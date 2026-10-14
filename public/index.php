@@ -50,6 +50,7 @@ $categoryIcons = [
     'religion'              => 'hand-heart',
     'career'                => 'briefcase',
     'cybersecurity'         => 'shield',
+    'accessibility'         => 'accessibility',
 ];
 
 ?>
