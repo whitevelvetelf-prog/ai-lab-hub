@@ -498,20 +498,27 @@ function eli_http_post(string $url, array $headers, string $payload, int $timeou
  *
  * @return array{ok:bool, text:string, status:?int, error_type:string, detail:string, retry_after:?int}
  */
-function eli_provider_call(array $cfg, string $model, string $system, string $message, int $timeout, callable $transport): array
+function eli_provider_call(array $cfg, string $model, string $system, string $message, int $timeout, callable $transport, ?bool $thinkingMin = null): array
 {
+    // «Важкі» моделі Gemini 3.x за замовчуванням міркують (thinking) — для підбору зі списку це лише
+    // затримка. Просимо мінімальне міркування; якщо модель відхилить параметр (400) — повтор без нього.
+    $thinkingMin ??= $cfg['provider'] === 'gemini' && !str_contains($model, 'lite');
     if ($cfg['provider'] === 'gemini') {
         $url = 'https://generativelanguage.googleapis.com/v1beta/models/' . rawurlencode($model)
             . ':generateContent?key=' . urlencode($cfg['api_key']);
         $headers = ['Content-Type: application/json'];
+        $gen = [
+            'maxOutputTokens' => $cfg['max_tokens'],
+            'temperature' => 0.4,
+            'responseMimeType' => 'application/json',
+        ];
+        if ($thinkingMin) {
+            $gen['thinkingConfig'] = ['thinkingLevel' => 'minimal'];
+        }
         $payload = json_encode([
             'system_instruction' => ['parts' => [['text' => $system]]],
             'contents' => [['role' => 'user', 'parts' => [['text' => $message]]]],
-            'generationConfig' => [
-                'maxOutputTokens' => $cfg['max_tokens'],
-                'temperature' => 0.4,
-                'responseMimeType' => 'application/json',
-            ],
+            'generationConfig' => $gen,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     } else {
         $url = 'https://api.anthropic.com/v1/messages';
@@ -556,6 +563,9 @@ function eli_provider_call(array $cfg, string $model, string $system, string $me
             $status === 400 => 'bad_request',
             default => 'other',
         };
+        if ($res['error_type'] === 'bad_request' && $thinkingMin) {
+            return eli_provider_call($cfg, $model, $system, $message, $timeout, $transport, false);
+        }
         $retry = $r['retry_after'];
         // Gemini кладе паузу в тіло: error.details[].retryDelay = "37s"
         if ($retry === null && is_array($data)) {
@@ -827,6 +837,34 @@ function eli_rate_limited(array &$session, int $perMinute, ?int $now = null): bo
 /** Рядок журналу: лише технічні поля, без тексту запиту й відповіді. */
 function eli_log(PDO $pdo, array $row): void
 {
+    // used_fallback — відповідь запасним режимом без AI; used_fallback_model — відповіла запасна модель;
+    // fallback_empty — запасна добірка не знайшла нічого впевненого (міграція 2026-10-17).
+    try {
+        $pdo->prepare(
+            'INSERT INTO eli_api_log (created_at, provider, model, http_status, error_type, source, latency_ms, attempts, used_fallback, used_fallback_model, fallback_empty, lang, session_hash)
+             VALUES (NOW(), :provider, :model, :status, :err, :source, :lat, :att, :fb, :fbm, :fbe, :lang, :sh)'
+        )->execute([
+            ':provider' => substr((string) ($row['provider'] ?? ''), 0, 20),
+            ':model' => substr((string) ($row['model'] ?? ''), 0, 60),
+            ':status' => $row['http_status'] ?? null,
+            ':err' => substr((string) ($row['error_type'] ?? 'none'), 0, 20),
+            ':source' => (string) ($row['source'] ?? 'ai'),
+            ':lat' => (int) ($row['latency_ms'] ?? 0),
+            ':att' => (int) ($row['attempts'] ?? 0),
+            ':fb' => !empty($row['used_fallback']) ? 1 : 0,
+            ':fbm' => !empty($row['used_fallback_model']) ? 1 : 0,
+            ':fbe' => !empty($row['fallback_empty']) ? 1 : 0,
+            ':lang' => substr((string) ($row['lang'] ?? ''), 0, 5),
+            ':sh' => (string) ($row['session_hash'] ?? ''),
+        ]);
+
+        return;
+    } catch (Throwable $e) {
+        // міграцію 2026-10-17 ще не застосовано — попередній формат рядка нижче
+    }
+    if (($row['source'] ?? '') === 'diag') {
+        $row['source'] = 'fail'; // без нового значення ENUM перевірку записати не можна точніше
+    }
     try {
         $pdo->prepare(
             'INSERT INTO eli_api_log (created_at, provider, model, http_status, error_type, source, latency_ms, attempts, used_fallback, lang, session_hash)
@@ -952,7 +990,8 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
 {
     $t0 = microtime(true);
     $log = ['provider' => $cfg['provider'], 'model' => $cfg['model'], 'http_status' => null, 'error_type' => 'none', 'source' => 'ai',
-            'attempts' => 0, 'used_fallback' => false, 'lang' => $lang, 'session_hash' => $sessionHash];
+            'attempts' => 0, 'used_fallback' => false, 'used_fallback_model' => false, 'fallback_empty' => false,
+            'lang' => $lang, 'session_hash' => $sessionHash];
     $finish = static function (array $resp, array $log) use ($t0): array {
         $log['latency_ms'] = (int) round((microtime(true) - $t0) * 1000);
 
@@ -968,6 +1007,9 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
     $index = eli_index($pdo); // збій БД тут — виняток нагору
     if ($index['products'] === []) {
         $log['source'] = 'fallback';
+        $log['used_fallback'] = true;
+        $log['fallback_empty'] = true;
+        $log['error_type'] = 'catalog_empty';
 
         return $finish(['ok' => true, 'mode' => 'fallback', 'reply_text' => t('eli_catalog_empty'), 'steps' => [], 'products' => []], $log);
     }
@@ -994,7 +1036,7 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
         $res = eli_call_llm($cfg, eli_system_prompt($context, $lang), eli_system_prompt($context, $lang, true), $message,
             array_fill_keys($cand['ids'], true), $transport, $sleep);
         $log = array_merge($log, ['model' => $res['model'], 'http_status' => $res['status'], 'error_type' => $res['error_type'],
-                                  'attempts' => $res['attempts'], 'used_fallback' => $res['used_fallback']]);
+                                  'attempts' => $res['attempts'], 'used_fallback_model' => $res['used_fallback']]);
         if ($res['answer'] === null && $res['detail'] !== '') {
             error_log('[eli-chat] ' . $res['error_type'] . ' ' . $res['model'] . ': ' . $res['detail']);
         }
@@ -1024,7 +1066,12 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
 
     $fb = eli_db_fallback($index, $cand, $lang);
     $log['source'] = 'fallback';
+    $log['used_fallback'] = true;
     $ids = $fb['steps'] !== [] ? $fb['steps'][0]['product_ids'] : [];
+    $log['fallback_empty'] = $ids === [];
+    if ($log['error_type'] === 'none') {
+        $log['error_type'] = 'other'; // AI відповів, але відповідь не прийнято — запасний режим без конкретної причини
+    }
 
     return $finish(['ok' => true, 'mode' => 'fallback', 'reply_text' => $fb['reply_text'], 'steps' => $fb['steps'],
                     'products' => eli_cards($pdo, $ids, $userId), 'links' => $fb['links']], $log);
@@ -1047,7 +1094,7 @@ function eli_stats(PDO $pdo): ?array
     }
     $out = [];
     foreach (['24h' => 'd1', '7d' => 'd7', '30d' => null] as $label => $flag) {
-        $set = $flag === null ? $rows : array_filter($rows, static fn($r) => (int) $r[$flag] === 1);
+        $set = array_filter($rows, static fn($r) => $r['source'] !== 'diag' && ($flag === null || (int) $r[$flag] === 1));
         $answered = array_values(array_filter($set, static fn($r) => $r['source'] !== 'limited'));
         $n = count($answered);
         $by = ['ai' => 0, 'cache' => 0, 'fallback' => 0, 'fail' => 0];
@@ -1134,6 +1181,11 @@ function eli_stats_css(): string
 .eli-stats__table{border-collapse:collapse;width:100%;font-size:14px}
 .eli-stats__table th,.eli-stats__table td{border-bottom:1px solid rgba(255,255,255,.14);padding:6px 8px;text-align:left;vertical-align:top}
 .eli-stats__note{font-size:13px;opacity:.75;margin:8px 0 0}
+.eli-diag{margin-top:18px}.eli-diag__form{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:0 0 12px}
+.eli-diag__btn{padding:9px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:transparent;color:#e4ebff;font:inherit;cursor:pointer}
+.eli-diag__btn:hover,.eli-diag__btn:focus-visible{background:rgba(255,255,255,.14);color:#fff}
+.eli-diag__verdict{border:1px solid rgba(255,255,255,.2);border-radius:10px;padding:10px 14px;margin:0 0 12px;overflow-wrap:anywhere}
+.eli-diag__verdict p{margin:0 0 6px}.eli-diag .eli-stats__wrap{margin-bottom:12px}
 @media (max-width:640px){.eli-stats__table thead{display:none}.eli-stats__table tr{display:block;border-bottom:1px solid rgba(255,255,255,.2);padding:6px 0}
 .eli-stats__table td{display:flex;justify-content:space-between;gap:12px;border:0;padding:3px 4px;overflow-wrap:anywhere}.eli-stats__table td::before{content:attr(data-label);font-weight:600;flex-shrink:0}}
 </style>';

@@ -76,7 +76,7 @@ $run = static function (string $title, array $cfg, callable $script, string $msg
     $r['prompt_chars'] = $state['prompt_chars'];
     $r['ms'] = (int) round((microtime(true) - $t) * 1000);
     echo "\n[{$title}] mode={$r['response']['mode']} source={$r['log']['source']} err={$r['log']['error_type']} attempts={$r['log']['attempts']}"
-        . " fallback_model=" . ($r['log']['used_fallback'] ? 1 : 0) . " cards=" . count($r['response']['products'])
+        . " fallback_model=" . ($r['log']['used_fallback_model'] ? 1 : 0) . " cards=" . count($r['response']['products'])
         . " calls=" . implode(',', $r['calls']) . " {$r['ms']}ms\n";
 
     return $r;
@@ -102,13 +102,13 @@ $check('промпт компактний (< 30 000 символів)', $r['prom
 // 2. 429 на всіх моделях → запасний режим
 $r = $run('429', $base, static fn() => $http(429, '{"error":{"message":"quota"}}'), 'монтаж відео');
 $check('429: запасна добірка, без тех. помилки', $noTech($r) && $r['response']['mode'] === 'fallback' && count($r['response']['products']) > 0);
-$check('429: були повтори й запасна модель', $r['log']['attempts'] >= 3 && $r['log']['used_fallback']);
+$check('429: були повтори й запасна модель', $r['log']['attempts'] >= 3 && $r['log']['used_fallback_model']);
 
 // 2b. 429 з довгим Retry-After → одразу запасна модель (успіх)
 $r = $run('429 Retry-After 60 → fallback ok', $base, static function (int $n, string $model, string $payload) use ($http, $geminiOk, $validIdsFromPayload) {
     return $model === 'gemini-3.5-flash-lite' ? $http(429, '{}', 60) : $geminiOk($validIdsFromPayload($payload));
 }, 'переклад тексту');
-$check('Retry-After більший за ліміт часу → запасна модель відповіла', $r['response']['mode'] === 'ai' && $r['log']['used_fallback'] && $r['log']['attempts'] === 2);
+$check('Retry-After більший за ліміт часу → запасна модель відповіла', $r['response']['mode'] === 'ai' && $r['log']['used_fallback_model'] && $r['log']['attempts'] === 2);
 
 // 3. 500, потім успіх (повтор)
 $r = $run('500 → повтор ok', $base, static function (int $n, string $m, string $payload) use ($http, $geminiOk, $validIdsFromPayload) {
@@ -178,6 +178,43 @@ for ($i = 0; $i < 4; $i++) {
     $modes[] = eli_answer($pdo, 'ліміт ' . $i . $marker, 'uk', $lim, $s, 'x', null, $tr, $noSleep)['response']['mode'];
 }
 $check('ліміт: 4-й запит за хвилину → спокійна підказка', $modes[3] === 'limited' && !in_array('limited', array_slice($modes, 0, 3), true));
+
+// 13a. Важка модель: thinkingLevel=minimal; якщо 400 — повтор без нього
+$heavy = $base;
+$heavy['model'] = 'gemini-3.6-flash';
+$sentThinking = [];
+$r = $run('thinking 400 → без thinking', $heavy, static function (int $n, string $model, string $payload) use ($http, $geminiOk, $validIdsFromPayload) {
+    return str_contains($payload, 'thinkingConfig') ? $http(400, '{"error":{"message":"Request contains an invalid argument."}}') : $geminiOk($validIdsFromPayload($payload));
+}, 'монтаж відео');
+$check('важка модель: 400 на thinkingConfig → повтор без нього дав відповідь AI', $r['response']['mode'] === 'ai' && count($r['calls']) === 2);
+
+// 13b. Журнал запасного режиму: used_fallback=1, причина в error_type, fallback_empty для порожньої добірки
+$r = $run('журнал запасного режиму', $base, static fn() => $http(429), 'qqqzzzxxx wwwvvvyyy');
+$check('запасний режим: used_fallback=1, error_type=rate_limit, fallback_empty=1',
+    $r['log']['used_fallback'] && $r['log']['error_type'] === 'rate_limit' && $r['log']['fallback_empty']);
+
+// 13c. Діагностика з'єднання: ключ і схожі на ключ рядки не потрапляють у результат
+require_once __DIR__ . '/../app/eli-diagnostics.php';
+$secret = 'AIzaSyTESTSECRET0123456789abcdefghijk';
+$dcfg = $base;
+$dcfg['api_key'] = $secret;
+[$dtr] = $mock(static function (int $n, string $model) use ($http, $secret) {
+    return $model === 'gemini-3.5-flash-lite'
+        ? $http(429, json_encode(['error' => ['message' => 'Quota exceeded for key ' . $secret . ' token=abc123 on project 1234567890abcdefghijklmnopqrstuvwxyz']]), 40)
+        : ['status' => 200, 'errno' => 0, 'error' => '', 'retry_after' => null, 'body' => '{"candidates":[{"content":{"parts":[{"text":"{\"ok\":true}"}]}}]}'];
+});
+$diag = eli_diagnose($pdo, $dcfg, $dtr, static fn(string $h) => [true, true, 12]);
+$dump = json_encode($diag, JSON_UNESCAPED_UNICODE);
+$check('діагностика: основна rate_limit, запасна none', $diag['models'][0]['error_type'] === 'rate_limit' && $diag['models'][1]['error_type'] === 'none');
+$check('діагностика: ключ і довгі токени не потрапили в результат', !str_contains($dump, $secret) && !str_contains($dump, 'abc123') && !str_contains($dump, '1234567890abcdefghij'));
+$check('діагностика: висновок про ліміт', str_contains(implode(' ', $diag['verdict']), 'ліміт'));
+$noKey = $dcfg;
+$noKey['api_key'] = '';
+$diag2 = eli_diagnose($pdo, $noKey, $dtr, static fn(string $h) => [true, true, 12]);
+$check('діагностика без ключа: висновок «ключ відсутній»', str_contains($diag2['verdict'][0], 'Ключ API відсутній'));
+$diag3 = eli_diagnose($pdo, $dcfg, $dtr, static fn(string $h) => [true, false, 5000]);
+$check('діагностика без TCP 443: висновок про вихідні з’єднання', str_contains($diag3['verdict'][0], '443'));
+$pdo->exec("DELETE FROM eli_api_log WHERE source = 'diag' AND created_at >= NOW() - INTERVAL 10 MINUTE");
 
 // 14. У журналі й кеші немає тексту запитів
 $leakCache = (int) $pdo->query("SELECT COUNT(*) FROM eli_cache WHERE response_json LIKE '%{$marker}%' OR response_json LIKE '%кешований%' OR response_json LIKE '%example.com%'")->fetchColumn();

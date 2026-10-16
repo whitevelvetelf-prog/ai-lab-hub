@@ -14,7 +14,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 require_once __DIR__ . '/../app/site-stats.php';
-require_once __DIR__ . '/../app/eli.php';
+require_once __DIR__ . '/../app/eli-diagnostics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -406,6 +406,12 @@ try {
             <h2 class="section__title">Еля: надійність відповідей</h2>
             <?= eli_stats_css() ?>
             <?= eli_stats_html($pdo) ?>
+            <?php
+            $eliDiag = is_array($_SESSION['eli_diag_result'] ?? null) ? $_SESSION['eli_diag_result'] : null;
+            $eliDiagFlash = is_string($_SESSION['eli_diag_flash'] ?? null) ? $_SESSION['eli_diag_flash'] : null;
+            unset($_SESSION['eli_diag_flash']);
+            ?>
+            <?= eli_diag_html($pdo, $eliDiag, $_SESSION['stats_csrf'], $eliDiagFlash) ?>
         </section>
 
         <div class="period-switch">
