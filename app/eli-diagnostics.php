@@ -164,7 +164,9 @@ function eli_diag_log_summary(PDO $pdo): array
             $out['by_error'][$r['error_type']] = ($out['by_error'][$r['error_type']] ?? 0) + $n;
         }
         arsort($out['by_error']);
-        $out['last_ai'] = $pdo->query("SELECT MAX(created_at) FROM eli_api_log WHERE source = 'ai'")->fetchColumn() ?: null;
+        // created_at — у часовому поясі MySQL (на проді UTC+3), а показуємо UTC, як і «Перевірено».
+        $out['last_ai'] = $pdo->query("SELECT MAX(created_at) - INTERVAL TIMESTAMPDIFF(SECOND, UTC_TIMESTAMP(), NOW()) SECOND
+                                       FROM eli_api_log WHERE source = 'ai'")->fetchColumn() ?: null;
     } catch (Throwable $e) {
         $out['error'] = 'журнал недоступний (міграцію застосовано?)';
     }
