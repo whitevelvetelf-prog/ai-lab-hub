@@ -618,3 +618,67 @@ function promo_admin_top_campaigns(PDO $pdo, string $from, string $to): array
 
     return $st->fetchAll();
 }
+
+/**
+ * Що не налаштовано для реклами, поки вона ввімкнена (ad_settings.enabled = 1). Нічого не вимикає —
+ * лише список для попередження у вкладках «Стан» і «Налаштування» (app/promo-admin-cabinet.php).
+ *
+ * @param array<string,mixed>|null $sys promo_admin_system_status(), щоб не рахувати двічі
+ * @return list<array{what:string, todo:string}>
+ */
+function promo_readiness_issues(PDO $pdo, ?array $sys = null): array
+{
+    if (!promo_enabled($pdo)) {
+        return [];
+    }
+    $doc = 'docs/PROMO_OPERATIONS.md';
+    $issues = [];
+    if (promo_rate_card($pdo) === []) {
+        $issues[] = ['what' => 'Прайс-лист (ad_rate_card) порожній — платні кампанії не можна надіслати на модерацію, у медіакіті немає цін.',
+                     'todo' => 'Заповніть ціни CPM/CPC у вкладці «Прайс-лист».'];
+    }
+    $sys ??= promo_admin_system_status($pdo);
+    if (!is_file(__DIR__ . '/../config/mail.php')) {
+        $issues[] = ['what' => 'Немає config/mail.php — листи рекламодавцям ідуть через PHP mail() або не відправляються.',
+                     'todo' => 'Створіть config/mail.php за зразком config/mail.example.php (SMTP), див. ' . $doc . ', розділ 2.2.'];
+    } elseif ($sys['mail_transport'] === 'log') {
+        $issues[] = ['what' => 'Пошта в тестовому режимі (transport = log) — листи НЕ відправляються.',
+                     'todo' => 'Укажіть SMTP у config/mail.php, див. ' . $doc . ', розділ 2.2.'];
+    }
+    if ($sys['mail_failed'] > 0) {
+        $issues[] = ['what' => 'Листів зі статусом failed у черзі: ' . (int) $sys['mail_failed'] . '.',
+                     'todo' => 'Перегляньте помилки у вкладці «Стан» і налаштування SMTP, див. ' . $doc . ', розділи 2.2–2.4.'];
+    }
+    foreach ($sys['jobs'] as $job => $j) {
+        if ($j['stale']) {
+            $issues[] = ['what' => 'Cron cron/' . $job . '.php ' . ($j['last_ok'] === null ? 'жодного разу не запускався успішно' : 'не запускався довше за очікуване (останній успішний — ' . promo_local_time($j['last_ok']) . ')') . '.',
+                         'todo' => 'Перевірте розклад у панелі хостингу, див. ' . $doc . ', розділ 1.'];
+        }
+    }
+    try {
+        $approved = (int) $pdo->query("SELECT COUNT(*) FROM ad_creatives WHERE status = 'approved'")->fetchColumn();
+    } catch (Throwable $e) {
+        $approved = 0;
+    }
+    if ($approved === 0) {
+        $issues[] = ['what' => 'Немає жодного схваленого креативу — відеореклама не показується.',
+                     'todo' => 'Схваліть креатив у вкладці «Модерація» або створіть власну рекламу («Власна реклама»).'];
+    }
+
+    return $issues;
+}
+
+/** HTML-попередження про неготову рекламу (порожньо, якщо все гаразд або реклама вимкнена). */
+function promo_readiness_html(array $issues): string
+{
+    if ($issues === []) {
+        return '';
+    }
+    $h = static fn(string $v): string => htmlspecialchars($v, ENT_QUOTES);
+    $out = '<div class="pc-box pc-box--warn" role="status"><p><strong>Реклама ввімкнена, але налаштовано не все (' . count($issues) . ')</strong></p><ul class="pc-readiness">';
+    foreach ($issues as $i) {
+        $out .= '<li>' . $h($i['what']) . '<br><span class="pc-muted">Що зробити: ' . $h($i['todo']) . '</span></li>';
+    }
+
+    return $out . '</ul><p class="pc-muted">Нічого не вимикається автоматично. Інструкції — у файлі docs/PROMO_OPERATIONS.md у репозиторії.</p></div>';
+}

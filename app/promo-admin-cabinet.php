@@ -137,6 +137,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
     $sys = promo_admin_system_status($pdo);
     $sysAlarm = array_filter($sys['jobs'], static fn($j) => $j['stale']) !== [] || $sys['mail_failed'] > 0;
+    $readiness = promo_readiness_issues($pdo, $sys);
+    $readinessHtml = promo_readiness_html($readiness);
     $failedMails = $tab === 'status' ? promo_admin_failed_mails($pdo) : [];
     $noPromo = promo_no_promo_list($pdo);
     $catRules = promo_rules_list($pdo);
@@ -177,6 +179,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             </form>
                             <?php if (!$secretOk): ?>
                             <p class="pc-warn-text">Немає config/promo.php із секретом (secret ≥ 32 символи) — відеореклама не показується. Шаблон: config/promo.example.php.</p>
+                            <?php endif; ?>
+                            <?php if ($readiness !== []): ?>
+                            <p class="pc-warn-text"><strong>Реклама ввімкнена, але налаштовано не все (<?= count($readiness) ?>)</strong> — подробиці у вкладках <a href="account.php?padm_tab=status#acc-promo-admin">«Стан»</a> і <a href="account.php?padm_tab=settings#acc-promo-admin">«Налаштування»</a>.</p>
                             <?php endif; ?>
                             <?php if ($sysAlarm): ?>
                             <p class="pc-warn-text"><strong>Стан: є проблеми з cron або поштою</strong> — <a href="account.php?padm_tab=status#acc-promo-admin">вкладка «Стан»</a>.</p>
@@ -445,6 +450,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ D4. Налаштування ============ -->
                         <section class="pc-panel" data-pc-panel="settings"<?= $tab === 'settings' ? '' : ' hidden' ?>>
+                            <?= $readinessHtml ?>
                             <p class="pc-muted">Сервер: upload_max_filesize = <?= pc_e(ini_get('upload_max_filesize')) ?>, post_max_size = <?= pc_e(ini_get('post_max_size')) ?>. Перемикач усієї реклами — угорі розділу.</p>
                             <form method="post" action="promo-admin-action.php">
                                 <?= $csrf ?>
@@ -664,6 +670,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ I4. Стан ============ -->
                         <section class="pc-panel" data-pc-panel="status"<?= $tab === 'status' ? '' : ' hidden' ?>>
+                            <?= $readinessHtml ?>
                             <?php require_once __DIR__ . '/eli.php'; ?>
                             <h3 class="pc-h3">Еля</h3>
                             <?= eli_stats_css() ?>
