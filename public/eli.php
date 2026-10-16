@@ -262,9 +262,38 @@ require_once __DIR__ . '/../app/translations.php';
 
         .rec-card__name {
             flex: 1;
+            min-width: 0;
             font-size: 1rem;
             font-weight: 700;
+            overflow-wrap: anywhere;
         }
+
+        /* Лапка (saved-products.js) — перед «Докладніше», у потоці рядка, без накладання. */
+        .rec-card .save-btn {
+            order: 3;
+        }
+
+        .rec-card__btn {
+            order: 4;
+        }
+
+        /* Вузькі екрани: перший рядок — логотип, назва, лапка; «Докладніше» — окремим рядком під назвою.
+           На ширших екранах картка не вужча за 320px (.rec-step__cards .rec-card), тож місця вистачає в один рядок. */
+        @media (max-width: 520px) {
+            .rec-card {
+                flex-wrap: wrap;
+                row-gap: 10px;
+            }
+
+            .rec-card__name {
+                flex: 1 1 calc(100% - 104px); /* 42px логотип + 34px лапка + 2 × 14px проміжки */
+            }
+
+            .rec-card__btn {
+                margin-left: 56px; /* під назвою: логотип 42px + проміжок 14px */
+            }
+        }
+
 
         .rec-card__btn {
             display: inline-block;
@@ -341,7 +370,7 @@ require_once __DIR__ . '/../app/translations.php';
         /* Картка всередині кроку: компактна, кілька можуть іти в ряд */
         .rec-step__cards .rec-card {
             margin-top: 0;
-            flex: 1 1 200px;
+            flex: 1 1 320px; /* не вужче за 320px, доки є місце: інакше назва стискалась до нуля */
             min-width: 0;
         }
 

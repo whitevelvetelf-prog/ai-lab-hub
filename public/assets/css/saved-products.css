@@ -70,15 +70,12 @@
     right: 10px;
 }
 
-/* Міні-картка у видачі Елі: лапка поряд із назвою. */
-.rec-card {
-    position: relative;
-}
-
+/* Міні-картка у видачі Елі: лапка — звичайний елемент рядка між назвою й «Докладніше»
+   (не absolute: у куті вона перекривала кнопку на вузьких екранах). Розкладку для
+   мобільних (кнопка окремим рядком) задає public/eli.php. */
 .rec-card .save-btn {
-    position: absolute;
-    top: 6px;
-    right: 6px;
+    position: static;
+    flex-shrink: 0;
     width: 34px;
     height: 34px;
 }
