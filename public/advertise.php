@@ -532,6 +532,23 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
             <details><summary><?= $tr('adv_faq_q5') ?></summary><p><?= $tr('adv_faq_a5') ?></p></details>
         </div>
 
+        <h2 class="adv-h2" id="custom"><?= $tr('adv_custom_title') ?></h2>
+        <p><?= $tr('adv_custom_intro') ?></p>
+        <h3><?= $tr('adv_custom_what') ?></h3>
+        <ul class="adv-list">
+            <?php for ($i = 1; $i <= 4; $i++): ?>
+            <li><?= $tr('adv_custom_item_' . $i) ?></li>
+            <?php endfor; ?>
+        </ul>
+        <h3><?= $tr('adv_custom_how') ?></h3>
+        <ol class="adv-list">
+            <?php for ($i = 1; $i <= 4; $i++): ?>
+            <li><?= $tr('adv_custom_step_' . $i) ?></li>
+            <?php endfor; ?>
+        </ol>
+        <p class="adv-muted"><?= $tr('adv_custom_req') ?></p>
+        <p class="adv-box"><?= sprintf($tr('adv_custom_price', '%s'), $mail) ?></p>
+
         <h2 class="adv-h2"><?= $tr('adv_contact_title') ?></h2>
         <p><?= sprintf($tr('adv_contact_text', '%s'), $mail) ?></p>
     </main>

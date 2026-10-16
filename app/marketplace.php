@@ -515,7 +515,111 @@ function mp_user_label(?string $name, ?string $employeeNumber): string
 /** Чи ввімкнена публічна частина. */
 function mp_public_enabled(): bool
 {
+    return mp_public_config_enabled() && mp_public_switch_on();
+}
+
+/** Технічний перемикач config/marketplace.php → public_enabled (розділ узагалі розгорнуто на сервері). */
+function mp_public_config_enabled(): bool
+{
     return mp_config()['public_enabled'] === true;
+}
+
+/**
+ * Перемикач адміна «Показувати Marketplace відвідувачам» (site_settings.marketplace_public, типово 0):
+ * поки вітрина порожня, розділу немає в меню, підвалі, на головній, у sitemap і рекламі, а прямі адреси
+ * показують сторінку «Скоро» (mp_coming_soon()). Немає таблиці / значення — вважається 0.
+ */
+function mp_public_switch_on(): bool
+{
+    static $on = null;
+    if ($on === null) {
+        try {
+            if (!function_exists('translation_pdo')) {
+                require_once __DIR__ . '/translations.php';
+            }
+            require_once __DIR__ . '/site-settings.php';
+            $on = site_setting(translation_pdo(), 'marketplace_public', '0') === '1';
+        } catch (Throwable $e) {
+            error_log('[marketplace] switch: ' . $e->getMessage());
+            $on = false;
+        }
+    }
+
+    return $on;
+}
+
+/**
+ * Розділ розгорнуто, але прихований перемикачем: співробітники бачать усе (щоб наповнювати), сторінки не
+ * індексуються; решта — сторінка «Скоро» (GET) або 404 (POST / службові запити).
+ */
+function mp_hidden_gate(): void
+{
+    header('X-Robots-Tag: noindex, nofollow', true);
+    if (mp_is_staff()) {
+        return;
+    }
+    if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'GET') {
+        mp_not_found();
+    }
+    mp_coming_soon();
+}
+
+/** Спокійна сторінка «Скоро» (UA/EN) з контактом, без порожніх списків. */
+function mp_coming_soon(): never
+{
+    if (!function_exists('t')) {
+        require_once __DIR__ . '/translations.php';
+    }
+    http_response_code(200);
+    header('Content-Type: text/html; charset=utf-8');
+    $h = static fn(string $k): string => htmlspecialchars(t($k), ENT_QUOTES);
+    $mail = 'partners@ailabhub-directory.com';
+    $lang = htmlspecialchars(current_lang(), ENT_QUOTES);
+    ?>
+<!DOCTYPE html>
+<html lang="<?= $lang ?>">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title><?= $h('mp_soon_title') ?> — AI LAB HUB</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        :root { --bg-start: #00032c; --bg-end: #2116ad; --card-border: rgba(255, 255, 255, 0.14); --text-muted: rgba(255, 255, 255, 0.75); --accent: #5b8cff; }
+        html, body { margin: 0; padding: 0; }
+        body { min-height: 100vh; display: flex; flex-direction: column; font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+               color: #ffffff; background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 100%); background-attachment: fixed; line-height: 1.6; }
+        .site-header { display: flex; align-items: center; padding: 20px 32px; }
+        .site-header__brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: #ffffff; }
+        .site-header__logo { height: 42px; width: auto; display: block; border-radius: 10px; }
+        .mp-soon { flex: 1; width: 100%; max-width: 640px; margin: 0 auto; padding: 56px 16px 96px; text-align: center; }
+        .mp-soon__title { font-size: clamp(1.6rem, 5vw, 2.4rem); font-weight: 800; margin: 0 0 14px; }
+        .mp-soon__text { color: var(--text-muted); margin: 0 0 14px; }
+        .mp-soon a { color: #bcd0ff; overflow-wrap: anywhere; }
+        .mp-soon a:hover, .mp-soon a:focus-visible { color: #ffffff; }
+        .mp-soon__actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 24px; }
+        .mp-soon__btn { display: inline-block; padding: 10px 20px; border-radius: 999px; text-decoration: none; border: 1px solid var(--card-border); color: #e4ebff !important; }
+        .mp-soon__btn:hover, .mp-soon__btn:focus-visible { background: rgba(255, 255, 255, 0.14); color: #ffffff !important; }
+    </style>
+    <link rel="stylesheet" href="/assets/css/site-nav.css">
+    <?php include __DIR__ . '/header.php'; ?>
+</head>
+<body>
+    <?php include __DIR__ . '/site-header.php'; ?>
+    <main class="mp-soon">
+        <h1 class="mp-soon__title"><?= $h('mp_soon_title') ?></h1>
+        <p class="mp-soon__text"><?= $h('mp_soon_text') ?></p>
+        <p class="mp-soon__text"><?= $h('mp_soon_contact') ?> <a href="mailto:<?= $mail ?>"><?= $mail ?></a></p>
+        <div class="mp-soon__actions">
+            <a class="mp-soon__btn" href="catalog.php"><?= $h('mp_soon_catalog') ?></a>
+            <a class="mp-soon__btn" href="advertise.php"><?= $h('mp_soon_advertise') ?></a>
+        </div>
+    </main>
+    <?php include __DIR__ . '/footer.php'; ?>
+</body>
+</html>
+<?php
+    exit;
 }
 
 /** 404 без розкриття причини (вимкнено / чернетка / архів / немає такого id). */
@@ -535,6 +639,11 @@ function mp_not_found(): never
  */
 function mp_public_or_staff_require(): void
 {
+    if (mp_public_config_enabled() && !mp_public_switch_on()) {
+        mp_hidden_gate();
+
+        return;
+    }
     if (!mp_public_enabled() && !mp_is_staff()) {
         mp_not_found();
     }
@@ -543,6 +652,11 @@ function mp_public_or_staff_require(): void
 /** Публічні сторінки: при вимкненому перемикачі — 404. Викликати першим рядком сторінки. */
 function mp_public_require(): void
 {
+    if (mp_public_config_enabled() && !mp_public_switch_on()) {
+        mp_hidden_gate();
+
+        return;
+    }
     if (!mp_public_enabled()) {
         mp_not_found();
     }

@@ -66,6 +66,21 @@ $GLOBALS['TRANSLATIONS'] = [
 
     // --- Marketplace (публічна частина: marketplace.php, marketplace-offer.php, get.php) ---
     'nav_marketplace'            => 'Marketplace',
+    // Сторінка «Скоро», поки Marketplace приховано перемикачем (app/marketplace.php: mp_coming_soon())
+    'mp_soon_title'              => 'Marketplace скоро відкриється',
+    'mp_soon_text'               => 'Ми готуємо розділ готових AI-рішень та оголошень. Поки що скористайтеся каталогом AI-інструментів або запитайте асистентку Елю.',
+    'mp_soon_contact'            => 'Хочете розмістити своє рішення чи рекламу? Напишіть нам:',
+    'mp_soon_catalog'            => 'До каталогу',
+    'mp_soon_advertise'          => 'Реклама на сайті',
+    // Перемикач у кабінеті адміна (account.php → CRM)
+    'mp_switch_title'            => 'Marketplace для відвідувачів',
+    'mp_switch_on'               => 'показується',
+    'mp_switch_off'              => 'приховано — прямі адреси показують сторінку «Скоро»',
+    'mp_switch_show'             => 'Показати відвідувачам',
+    'mp_switch_hide'             => 'Приховати',
+    'mp_switch_note'             => 'Поки приховано: розділу немає в меню, підвалі, на головній і в рекламі, сторінки не індексуються. Співробітники бачать розділ як раніше.',
+    'mp_switch_error'            => 'Не вдалося зберегти. Спробуйте ще раз.',
+    'mp_switch_config_off'       => 'Розділ вимкнено в config/marketplace.php (public_enabled) — перемикач діятиме після його ввімкнення.',
     'footer_marketplace'         => 'Marketplace',
     'title_marketplace'          => 'AI LAB HUB — Marketplace',
     'mp_heading'                 => 'Marketplace',

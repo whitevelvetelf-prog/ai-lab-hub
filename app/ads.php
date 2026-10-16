@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/promo.php';
+require_once __DIR__ . '/marketplace.php';
 
 /**
  * Кампанія для показу в заданому слоті: активна платна (у межах
@@ -31,9 +32,12 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
         return null;
     }
 
+    // Поки Marketplace приховано (mp_public_enabled), банери з посиланням на нього не показуються.
+    $mpSql = mp_public_enabled() ? '' : " AND target_url NOT LIKE '%marketplace%'";
+
     $paidStmt = $pdo->prepare(
         "SELECT * FROM campaigns
-         WHERE placement = :placement
+         WHERE placement = :placement" . $mpSql . "
            AND campaign_type = 'paid'
            AND is_active = 1
            AND (starts_at IS NULL OR starts_at <= NOW())
@@ -49,7 +53,7 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
 
     $internalStmt = $pdo->prepare(
         "SELECT * FROM campaigns
-         WHERE placement = :placement
+         WHERE placement = :placement" . $mpSql . "
            AND campaign_type = 'internal'
            AND is_active = 1
          ORDER BY RAND()
@@ -88,7 +92,7 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
             FROM ads a
             JOIN ad_campaigns c ON c.id = a.campaign_id
             WHERE a.zone_id = :zone
-              AND a.status = 'active'
+              AND a.status = 'active'" . (mp_public_enabled() ? '' : " AND a.target_url NOT LIKE '%marketplace%'") . "
               AND c.campaign_type = :type
               AND c.status = 'active'
               AND c.start_date <= CURDATE()

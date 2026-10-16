@@ -885,6 +885,23 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             overflow-wrap: anywhere;
         }
 
+        .mp-switch {
+            margin: 0 0 24px;
+            padding: 16px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.04);
+            overflow-wrap: anywhere;
+        }
+
+        .mp-switch p {
+            margin: 0 0 8px;
+        }
+
+        .mp-switch .btn {
+            margin-right: 12px;
+        }
+
         .staff-note a {
             color: #bbf7d0;
             font-weight: 600;
@@ -1637,6 +1654,31 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
                             <?php if (auth_role() === 'admin' && promo_is_admin($pdo, (int) $user['id'])) { echo promo_crm_overview_html($pdo); } ?>
+                            <?php if (auth_role() === 'admin'):
+                                require_once __DIR__ . '/../app/marketplace.php';
+                                if (empty($_SESSION['site_settings_csrf']) || !is_string($_SESSION['site_settings_csrf'])) {
+                                    $_SESSION['site_settings_csrf'] = bin2hex(random_bytes(32));
+                                }
+                                $mpOn = mp_public_switch_on();
+                                $mpFlash = $_SESSION['site_settings_flash'] ?? null;
+                                unset($_SESSION['site_settings_flash']); ?>
+                            <form class="mp-switch" method="post" action="admin-site-settings.php">
+                                <input type="hidden" name="csrf" value="<?= e($_SESSION['site_settings_csrf']) ?>">
+                                <input type="hidden" name="key" value="marketplace_public">
+                                <input type="hidden" name="value" value="<?= $mpOn ? '0' : '1' ?>">
+                                <p><strong><?= htmlspecialchars(t('mp_switch_title'), ENT_QUOTES) ?>:</strong>
+                                    <?= htmlspecialchars(t($mpOn ? 'mp_switch_on' : 'mp_switch_off'), ENT_QUOTES) ?></p>
+                                <p class="section__hint"><?= htmlspecialchars(t('mp_switch_note'), ENT_QUOTES) ?></p>
+                                <?php if (!mp_public_config_enabled()): ?>
+                                <p class="section__hint"><?= htmlspecialchars(t('mp_switch_config_off'), ENT_QUOTES) ?></p>
+                                <?php endif; ?>
+                                <?php if ($mpFlash === false): ?>
+                                <p class="section__hint" role="status">⚠ <?= htmlspecialchars(t('mp_switch_error'), ENT_QUOTES) ?></p>
+                                <?php endif; ?>
+                                <button type="submit" class="btn btn--ghost"><?= htmlspecialchars(t($mpOn ? 'mp_switch_hide' : 'mp_switch_show'), ENT_QUOTES) ?></button>
+                                <a class="section__link" href="marketplace.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?> →</a>
+                            </form>
+                            <?php endif; ?>
                         </div>
                     </div>
                 </div>
