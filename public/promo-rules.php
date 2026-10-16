@@ -85,7 +85,7 @@ $draft = [
             ['1. General', [
                 'Ads on AI LAB HUB are placed through the advertiser account. Every ad is labelled “Sponsored”.',
                 'Ads are shown by site language, device type and the topic of the page where they appear. Visitors’ personal data is not used for targeting.',
-                'Ads are never shown inside the answers of the assistant Eli and do not affect her tool recommendations.',
+                'Ads are never shown inside the answers of the assistant Elya and do not affect her tool recommendations.',
             ]],
             ['2. Prohibited content', [
                 'Illegal goods, services or activities.',

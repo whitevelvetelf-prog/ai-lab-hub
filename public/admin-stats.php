@@ -14,6 +14,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 require_once __DIR__ . '/../app/site-stats.php';
+require_once __DIR__ . '/../app/eli.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -399,6 +400,12 @@ try {
                 <p class="stat-card__sub"><?= (int) $blogViews['views_30d'] ?> за останні 30 днів</p>
             </div>
         </div>
+
+        <section class="section" id="eli-stats">
+            <h2 class="section__title">Еля: надійність відповідей</h2>
+            <?= eli_stats_css() ?>
+            <?= eli_stats_html($pdo) ?>
+        </section>
 
         <div class="period-switch">
             <?php foreach ($periodLabels as $key => $label): ?>

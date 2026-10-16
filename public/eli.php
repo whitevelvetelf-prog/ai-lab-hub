@@ -306,6 +306,38 @@ require_once __DIR__ . '/../app/translations.php';
             gap: 10px;
         }
 
+        /* Запасний режим без збігів: посилання на популярні підкатегорії */
+        .rec-links {
+            margin-top: 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .rec-links .rec-step__title {
+            flex-basis: 100%;
+            margin-bottom: 0;
+        }
+
+        .rec-links__item {
+            display: inline-block;
+            max-width: 100%;
+            padding: 6px 14px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #dfe6ff;
+            font-size: 0.88rem;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .rec-links__item:hover,
+        .rec-links__item:focus-visible {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+        }
+
         /* Картка всередині кроку: компактна, кілька можуть іти в ряд */
         .rec-step__cards .rec-card {
             margin-top: 0;
@@ -595,7 +627,10 @@ require_once __DIR__ . '/../app/translations.php';
             details: <?= json_encode(t('btn_details'), JSON_UNESCAPED_UNICODE) ?>,
             stepLabel: <?= json_encode(t('eli_step_label'), JSON_UNESCAPED_UNICODE) ?>,
             recommend: <?= json_encode(t('eli_recommend'), JSON_UNESCAPED_UNICODE) ?>,
-            defaultReply: <?= json_encode(t('eli_default_reply'), JSON_UNESCAPED_UNICODE) ?>
+            defaultReply: <?= json_encode(t('eli_default_reply'), JSON_UNESCAPED_UNICODE) ?>,
+            clientTimeout: <?= json_encode(t('eli_client_timeout'), JSON_UNESCAPED_UNICODE) ?>,
+            clientNetwork: <?= json_encode(t('eli_client_network'), JSON_UNESCAPED_UNICODE) ?>,
+            fallbackLinks: <?= json_encode(t('eli_fallback_links'), JSON_UNESCAPED_UNICODE) ?>
         };
 
         var chat = document.getElementById('chat');
@@ -910,6 +945,28 @@ require_once __DIR__ . '/../app/translations.php';
                 }
             }
 
+            // Запасний режим без збігів: посилання на популярні розділи каталогу.
+            var links = (data && Array.isArray(data.links)) ? data.links : [];
+            if (links.length) {
+                var nav = document.createElement('div');
+                nav.className = 'rec-links';
+                var lt = document.createElement('div');
+                lt.className = 'rec-step__title';
+                lt.textContent = I18N.fallbackLinks;
+                nav.appendChild(lt);
+                links.forEach(function (l) {
+                    if (!l || !l.href || !/^catalog\.php\?/.test(String(l.href))) {
+                        return;
+                    }
+                    var a = document.createElement('a');
+                    a.className = 'rec-links__item';
+                    a.href = l.href;
+                    a.textContent = l.title;
+                    nav.appendChild(a);
+                });
+                bubble.appendChild(nav);
+            }
+
             msg.appendChild(bubble);
             chat.appendChild(msg);
             scrollIntoView(msg);
@@ -1009,24 +1066,48 @@ require_once __DIR__ . '/../app/translations.php';
                 setBusy(false);
             }
 
+            // Тайм-аут на клієнті ~30 с (сервер укладається в ~25 с разом із
+            // запасним режимом) — далі спокійне повідомлення без технічних слів.
+            var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+            var timedOut = false;
+            var timer = setTimeout(function () {
+                timedOut = true;
+                if (ctrl) {
+                    ctrl.abort();
+                }
+                if (result === null) {
+                    result = { reply_text: I18N.clientTimeout, steps: [], products: [] };
+                    tryRender();
+                }
+            }, 30000);
+
             fetch('api-eli-chat.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
                     'X-Requested-With': 'fetch'
                 },
-                body: 'message=' + encodeURIComponent(text)
+                body: 'message=' + encodeURIComponent(text),
+                signal: ctrl ? ctrl.signal : undefined
             })
                 .then(function (r) { return r.json(); })
                 .then(function (data) {
-                    result = (data && typeof data === 'object')
+                    if (result !== null) {
+                        return;
+                    }
+                    result = (data && typeof data === 'object' && typeof data.reply_text === 'string')
                         ? data
                         : { reply_text: TECH_ERROR, steps: [], products: [] };
                 })
                 .catch(function () {
-                    result = { reply_text: TECH_ERROR, steps: [], products: [] };
+                    if (result === null) {
+                        result = { reply_text: timedOut ? I18N.clientTimeout : I18N.clientNetwork, steps: [], products: [] };
+                    }
                 })
-                .then(function () { tryRender(); });
+                .then(function () {
+                    clearTimeout(timer);
+                    tryRender();
+                });
 
             playStage(TYPING_SRC, {
                 typing: true,

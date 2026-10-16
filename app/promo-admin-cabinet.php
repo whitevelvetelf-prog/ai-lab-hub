@@ -664,6 +664,11 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ I4. Стан ============ -->
                         <section class="pc-panel" data-pc-panel="status"<?= $tab === 'status' ? '' : ' hidden' ?>>
+                            <?php require_once __DIR__ . '/eli.php'; ?>
+                            <h3 class="pc-h3">Еля</h3>
+                            <?= eli_stats_css() ?>
+                            <?= eli_stats_html($pdo) ?>
+                            <h3 class="pc-h3">Cron і пошта</h3>
                             <?php foreach ($sys['jobs'] as $job => $j): if ($j['stale']): ?>
                             <div class="pc-box pc-box--danger"><strong><?= pc_e($job) ?></strong>: <?= $j['last_ok'] === null ? 'жодного успішного запуску' : 'не запускалось довше за очікуване (останній успішний — ' . pc_e(promo_local_time($j['last_ok'])) . ')' ?>. Перевірте розклад у панелі хостингу (docs/PROMO_OPERATIONS.md).</div>
                             <?php endif; endforeach; ?>
