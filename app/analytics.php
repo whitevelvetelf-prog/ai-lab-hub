@@ -115,18 +115,45 @@ function analytics_log_view(PDO $pdo, string $pageType, ?int $pageId = null, ?st
     }
 }
 
-/** Записати клік по кнопці «Перейти на сайт» (public/go.php). */
+/** Повторний клік того самого сеансу по тому самому продукту в межах стільки секунд не рахується. */
+const ANALYTICS_CLICK_DEDUP_SEC = 1800;
+
+/**
+ * Записати клік по кнопці «Перейти на сайт» (public/go.php).
+ *
+ * Не пишуться: боти (analytics_device_class), перегляди співробітників (як для page_views,
+ * site_settings.stats_exclude_staff) і повторний клік того самого сеансу по тому самому
+ * продукту протягом ANALYTICS_CLICK_DEDUP_SEC. Колонка lang — з міграції 2026-10-16
+ * (без неї пишеться попередній формат рядка).
+ */
 function analytics_log_click(PDO $pdo, int $productId, string $linkType): void
 {
+    if (analytics_device_class() === 'bot' || site_stats_skip_view($pdo)) {
+        return;
+    }
+    $hash = analytics_session_hash();
     try {
-        $stmt = $pdo->prepare(
-            'INSERT INTO link_clicks (product_id, link_type, session_hash) VALUES (:pid, :type, :hash)'
+        $dup = $pdo->prepare(
+            'SELECT 1 FROM link_clicks WHERE product_id = :pid AND session_hash = :hash
+               AND clicked_at >= NOW() - INTERVAL ' . ANALYTICS_CLICK_DEDUP_SEC . ' SECOND LIMIT 1'
         );
-        $stmt->execute([
-            ':pid' => $productId,
-            ':type' => $linkType,
-            ':hash' => analytics_session_hash(),
-        ]);
+        $dup->execute([':pid' => $productId, ':hash' => $hash]);
+        if ($dup->fetchColumn() !== false) {
+            return;
+        }
+        // go.php не підключає translations.php: мова — із сесії, без неї — мова оригіналу (uk).
+        $lang = function_exists('current_lang') ? current_lang() : (is_string($_SESSION['lang'] ?? null) ? $_SESSION['lang'] : 'uk');
+        $lang = substr(preg_replace('/[^a-z-]/', '', strtolower($lang)) ?: 'uk', 0, 5);
+        try {
+            $pdo->prepare('INSERT INTO link_clicks (product_id, link_type, session_hash, lang) VALUES (:pid, :type, :hash, :lang)')
+                ->execute([':pid' => $productId, ':type' => $linkType, ':hash' => $hash, ':lang' => $lang]);
+
+            return;
+        } catch (PDOException $e) {
+            // Міграцію 2026-10-16 (колонка lang) ще не застосовано — попередній формат.
+        }
+        $pdo->prepare('INSERT INTO link_clicks (product_id, link_type, session_hash) VALUES (:pid, :type, :hash)')
+            ->execute([':pid' => $productId, ':type' => $linkType, ':hash' => $hash]);
     } catch (Throwable $e) {
         error_log('[analytics] ' . $e->getMessage());
     }

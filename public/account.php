@@ -1422,8 +1422,10 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                     <span><?= htmlspecialchars(t('pv_account_record'), ENT_QUOTES) ?>: <strong><?= site_stats_num($pvMini['record_day']['views'] ?? 0) ?></strong><?php if ($pvMini['record_day'] !== null): ?> <span class="pv-mini__date">(<?= e(site_stats_date($pvMini['record_day']['day'])) ?>)</span><?php endif; ?></span>
                                     <a class="pv-mini__more" href="admin-stats.php"><?= htmlspecialchars(t('pv_account_more'), ENT_QUOTES) ?> →</a>
                                 </div>
+                                <p><a class="section__link" href="admin-outbound.php"><?= htmlspecialchars(t('account_outbound_link'), ENT_QUOTES) ?></a>
+                                    · <a class="section__link" href="admin-summary.php"><?= htmlspecialchars(t('account_summary_link'), ENT_QUOTES) ?></a></p>
                             <?php else: ?>
-                                <p><a class="section__link" href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a></p>
+                                <p><a class="section__link" href="admin-stats.php"><?= htmlspecialchars(t('account_site_stats_link'), ENT_QUOTES) ?></a> · <a class="section__link" href="admin-outbound.php"><?= htmlspecialchars(t('account_outbound_link'), ENT_QUOTES) ?></a></p>
                             <?php endif; ?>
                             <div class="summary">
                                 <span><?= htmlspecialchars(t('stats_total_label'), ENT_QUOTES) ?>: <strong><?= (int) $userStats['total'] ?></strong></span>

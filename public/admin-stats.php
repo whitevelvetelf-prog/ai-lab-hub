@@ -385,6 +385,7 @@ try {
 
         <h1 class="page__title">Статистика сайту</h1>
         <p class="page__subtitle">Власна аналітика: перегляди сторінок і кліки на «Перейти на сайт». Без персональних даних — лише анонімні сесії.</p>
+        <p class="page__subtitle"><a class="table__name" href="admin-outbound.php">Переходи на сайти продуктів →</a> · <a class="table__name" href="admin-summary.php">Зведення для медіакіту →</a></p>
 
         <?php include __DIR__ . '/../app/site-stats-block.php'; ?>
 

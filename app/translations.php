@@ -73,6 +73,8 @@ $GLOBALS['TRANSLATIONS'] = [
     'mp_soon_catalog'            => 'До каталогу',
     'mp_soon_advertise'          => 'Реклама на сайті',
     // Перемикач у кабінеті адміна (account.php → CRM)
+    'account_outbound_link'      => 'Переходи на сайти продуктів →',
+    'account_summary_link'       => 'Зведення для медіакіту →',
     'mp_switch_title'            => 'Marketplace для відвідувачів',
     'mp_switch_on'               => 'показується',
     'mp_switch_off'              => 'приховано — прямі адреси показують сторінку «Скоро»',
