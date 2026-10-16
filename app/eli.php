@@ -68,7 +68,9 @@ function eli_settings(array $ai): array
     if ($provider === 'gemini') {
         $key = trim((string) ($ai['gemini_api_key'] ?? ''));
         $model = trim((string) ($ai['gemini_model'] ?? '')) ?: 'gemini-3.5-flash-lite';
-        $fallback = trim((string) ($ai['gemini_fallback_model'] ?? $ai['fallback_model'] ?? 'gemini-3.5-flash'));
+        // Без ключа в конфігу: до важкої моделі запасна — легка (окремий пул квоти й швидша), до легкої — gemini-3.5-flash.
+        $fallback = trim((string) ($ai['gemini_fallback_model'] ?? $ai['fallback_model']
+            ?? (str_contains($model, 'lite') ? 'gemini-3.5-flash' : 'gemini-3.5-flash-lite')));
         $keyOk = $key !== '' && stripos($key, 'YOUR_') === false;
     } else {
         $provider = 'claude';
