@@ -947,12 +947,37 @@ function eli_cards(PDO $pdo, array $ids, ?int $userId): array
 }
 
 /**
- * Запасний режим без AI: до ELI_FALLBACK_CARDS продуктів зі збігом слів запиту,
- * а без збігів — посилання на популярні підкатегорії.
+ * Запасний режим без AI — осмислений відбір app/eli-search.php (інтенти, бали, поріг, чутливі розділи).
+ * Нічого впевненого — не випадкові картки, а найближчі розділи. Якщо новий пошук недоступний
+ * (збій індексу) — попередній простий відбір eli_db_fallback_basic().
  *
  * @return array{reply_text:string, steps:array, links:array}
  */
-function eli_db_fallback(array $index, array $cand, string $lang): array
+function eli_db_fallback(PDO $pdo, array $index, array $cand, string $message, string $lang): array
+{
+    try {
+        require_once __DIR__ . '/eli-search.php';
+        $sIndex = eli_search_index($pdo);
+        $found = eli_search($sIndex, $message);
+    } catch (Throwable $e) {
+        error_log('[eli] fallback search: ' . $e->getMessage());
+
+        return eli_db_fallback_basic($index, $cand, $lang);
+    }
+    $ids = array_column($found['results'], 'id');
+    if ($ids !== []) {
+        return [
+            'reply_text' => t('eli_fallback_intro'),
+            'steps' => [['step_title' => t('eli_fallback_step'), 'product_ids' => $ids]],
+            'links' => [],
+        ];
+    }
+
+    return ['reply_text' => t('eli_fallback_none'), 'steps' => [], 'links' => eli_search_section_links($sIndex, $found['sections'], $lang)];
+}
+
+/** Попередній простий відбір (збіг слів), запасний варіант для eli_db_fallback(). */
+function eli_db_fallback_basic(array $index, array $cand, string $lang): array
 {
     $ids = array_slice($cand['matched'], 0, ELI_FALLBACK_CARDS);
     if ($ids !== []) {
@@ -1064,7 +1089,7 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
                         'products' => eli_cards($pdo, array_keys($ids), $userId)], $log);
     }
 
-    $fb = eli_db_fallback($index, $cand, $lang);
+    $fb = eli_db_fallback($pdo, $index, $cand, $message, $lang);
     $log['source'] = 'fallback';
     $log['used_fallback'] = true;
     $ids = $fb['steps'] !== [] ? $fb['steps'][0]['product_ids'] : [];
@@ -1084,13 +1109,17 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
 /** @return array<string,mixed>|null null — таблиці ще немає */
 function eli_stats(PDO $pdo): ?array
 {
+    $sql = "SELECT source, error_type, latency_ms, %s AS fb_empty, created_at >= NOW() - INTERVAL 1 DAY AS d1,
+                   created_at >= NOW() - INTERVAL 7 DAY AS d7
+              FROM eli_api_log WHERE created_at >= NOW() - INTERVAL 30 DAY";
     try {
-        $rows = $pdo->query(
-            "SELECT source, error_type, latency_ms, created_at >= NOW() - INTERVAL 1 DAY AS d1, created_at >= NOW() - INTERVAL 7 DAY AS d7
-               FROM eli_api_log WHERE created_at >= NOW() - INTERVAL 30 DAY"
-        )->fetchAll();
+        $rows = $pdo->query(sprintf($sql, 'fallback_empty'))->fetchAll();
     } catch (Throwable $e) {
-        return null;
+        try {
+            $rows = $pdo->query(sprintf($sql, '0'))->fetchAll(); // міграцію 2026-10-17 ще не застосовано
+        } catch (Throwable $e2) {
+            return null;
+        }
     }
     $out = [];
     foreach (['24h' => 'd1', '7d' => 'd7', '30d' => null] as $label => $flag) {
@@ -1100,8 +1129,12 @@ function eli_stats(PDO $pdo): ?array
         $by = ['ai' => 0, 'cache' => 0, 'fallback' => 0, 'fail' => 0];
         $errors = [];
         $lat = [];
+        $fbEmpty = 0;
         foreach ($answered as $r) {
             $by[$r['source']] = ($by[$r['source']] ?? 0) + 1;
+            if ($r['source'] === 'fallback' && (int) $r['fb_empty'] === 1) {
+                $fbEmpty++;
+            }
             if ($r['error_type'] !== 'none') {
                 $errors[$r['error_type']] = ($errors[$r['error_type']] ?? 0) + 1;
             }
@@ -1120,6 +1153,9 @@ function eli_stats(PDO $pdo): ?array
             'ai_pct' => $pct($by['ai'] + $by['cache']),
             'cache_pct' => $pct($by['cache']),
             'fallback_pct' => $pct($by['fallback']),
+            // частка запасних добірок, де не знайшлося нічого впевненого (прогалини каталогу)
+            'fallback_empty_pct' => $by['fallback'] > 0 ? round($fbEmpty * 100 / $by['fallback'], 1) : 0.0,
+            'fallback_empty' => $fbEmpty,
             'fail_pct' => $pct($by['fail']),
             'p50' => $q(0.5),
             'p95' => $q(0.95),
@@ -1161,13 +1197,14 @@ function eli_stats_html(PDO $pdo): string
             . '<td data-label="Запитів">' . $r['answered'] . ($r['limited'] > 0 ? ' <small>(+' . $r['limited'] . ' ліміт)</small>' : '') . '</td>'
             . '<td data-label="AI">' . $h($r['ai_pct']) . '%</td>'
             . '<td data-label="Кеш">' . $h($r['cache_pct']) . '%</td>'
-            . '<td data-label="Запасний режим">' . $h($r['fallback_pct']) . '%</td>'
+            . '<td data-label="Запасний режим">' . $h($r['fallback_pct']) . '%'
+            . ($r['fallback_empty'] > 0 ? ' <small>(з них без збігів: ' . $h($r['fallback_empty_pct']) . '%)</small>' : '') . '</td>'
             . '<td data-label="Збої">' . $h($r['fail_pct']) . '%</td>'
             . '<td data-label="Медіана">' . $sec($r['p50']) . '</td>'
             . '<td data-label="95%">' . $sec($r['p95']) . '</td>'
             . '<td data-label="Помилки">' . ($errs !== [] ? $h(implode(', ', $errs)) : '—') . '</td></tr>';
     }
-    $html .= '</tbody></table></div><p class="eli-stats__note">AI — відповідь моделі (зокрема з кешу); запасний режим — добірка з бази без AI; збій — недоступна база. Час — лише для відповідей AI. Типові помилки враховують і ті, що вирішилися повтором чи запасною моделлю. Текст запитів не зберігається.</p></div>';
+    $html .= '</tbody></table></div><p class="eli-stats__note">AI — відповідь моделі (зокрема з кешу); запасний режим — добірка з бази без AI («без збігів» — нічого впевненого, показано лише розділи: прогалини каталогу); збій — недоступна база. Час — лише для відповідей AI. Типові помилки враховують і ті, що вирішилися повтором чи запасною моделлю. Текст запитів не зберігається.</p></div>';
 
     return $html;
 }

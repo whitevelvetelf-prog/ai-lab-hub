@@ -955,7 +955,7 @@ require_once __DIR__ . '/../app/translations.php';
                 lt.textContent = I18N.fallbackLinks;
                 nav.appendChild(lt);
                 links.forEach(function (l) {
-                    if (!l || !l.href || !/^catalog\.php\?/.test(String(l.href))) {
+                    if (!l || !l.href || !/^(catalog|category)\.php\?/.test(String(l.href))) {
                         return;
                     }
                     var a = document.createElement('a');
