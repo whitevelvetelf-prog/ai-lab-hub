@@ -55,6 +55,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $campaigns = $campaignsSt->fetchAll();
     $totals = promo_campaign_totals($pdo, $userId);
     $balance = promo_balance($pdo, $userId);
+    $balanceCur = promo_balance_currency($pdo, $userId);
     $rates = promo_rate_card($pdo);
     $taxonomy = promo_taxonomy($pdo);
     $enabled = promo_enabled($pdo);
@@ -165,7 +166,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                         </div>
                         <?php endif; ?>
 
-                        <p class="pc-muted"><a href="advertise.php" target="_blank" rel="noopener"><?= pc_e(promo_tr('adv_cabinet_link')) ?></a></p>
+                        <p class="pc-muted"><a href="advertise.php" target="_blank" rel="noopener"><?= pc_e(promo_tr('adv_cabinet_link')) ?></a> · <a href="advertise-guide.php" target="_blank" rel="noopener"><?= pc_e(promo_tr('adv_guide_link')) ?></a></p>
 
                         <div class="pc-tabs" role="tablist">
                             <?php foreach (['campaigns', 'create', 'balance', 'stats'] as $t): ?>
@@ -215,8 +216,8 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="<?= pc_e(promo_tr('col_spent')) ?>">
-                                            <?= pc_e(promo_money($c['spent'])) ?>
-                                            <?php if ($c['total_budget'] !== null): ?><span class="pc-muted">/ <?= pc_e(promo_money($c['total_budget'])) ?></span><?php endif; ?>
+                                            <?= pc_e(promo_money($c['spent'], $c['currency'])) ?>
+                                            <?php if ($c['total_budget'] !== null): ?><span class="pc-muted">/ <?= pc_e(promo_money($c['total_budget'], $c['currency'])) ?></span><?php endif; ?>
                                         </td>
                                         <td data-label="<?= pc_e(promo_tr('col_impressions')) ?>"><?= (int) $t['impressions'] ?></td>
                                         <td data-label="<?= pc_e(promo_tr('col_views')) ?>"><?= (int) $t['views'] ?></td>
@@ -274,7 +275,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <form method="post" action="promo-action.php" enctype="multipart/form-data" class="pc-wizard" id="pcWizard"
                                   data-max-mb="<?= $maxMb ?>" data-max-sec="<?= $maxSec ?>" data-balance="<?= $balance ?>"
                                   data-rates="<?= pc_e((string) json_encode($rates)) ?>"
-                                  data-i18n="<?= pc_e((string) json_encode(promo_tr_many(['js_video_too_big', 'js_video_too_long', 'js_video_type', 'forecast_cpm', 'forecast_cpc', 'forecast_note', 'no_price_for', 'price_cpm', 'price_cpc', 'balance_warning', 'summary_empty', 'yes', 'no', 'all_label', 'currency_uah', 'poster_captured', 'placement_catalog_card', 'placement_product_page', 'placement_blog_inline', 'categories_all', 'categories_selected'], $lang), JSON_UNESCAPED_UNICODE)) ?>">
+                                  data-i18n="<?= pc_e((string) json_encode(promo_tr_many(['js_video_too_big', 'js_video_too_long', 'js_video_type', 'forecast_cpm', 'forecast_cpc', 'forecast_note', 'no_price_for', 'price_cpm', 'price_cpc', 'balance_warning', 'summary_empty', 'yes', 'no', 'all_label', 'money_fmt', 'poster_captured', 'placement_catalog_card', 'placement_product_page', 'placement_blog_inline', 'categories_all', 'categories_selected'], $lang), JSON_UNESCAPED_UNICODE)) ?>">
                                 <?= promo_csrf_field() ?>
                                 <input type="hidden" name="campaign_id" value="<?= $editing ? (int) $editing['id'] : 0 ?>">
                                 <?php if ($house): ?><input type="hidden" name="house" value="1"><?php endif; ?>
@@ -482,7 +483,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                     <dl class="pc-summary" data-pc-summary></dl>
                                     <?php if (!$house): ?>
                                     <p class="pc-note pc-note--warn" data-pc-balance-warning hidden>
-                                        <?= pc_e(promo_tr('balance_warning_static', promo_money($balance))) ?>
+                                        <?= pc_e(promo_tr('balance_warning_static', promo_money($balance, $balanceCur))) ?>
                                         <a href="account.php?promo_tab=balance#acc-promo" data-pc-tab="balance"><?= pc_e(promo_tr('topup_link')) ?></a>
                                     </p>
                                     <?php if ($prohibited !== ''): ?>
@@ -507,7 +508,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ Баланс і оплата ============ -->
                         <section class="pc-panel" data-pc-panel="balance"<?= $tab === 'balance' ? '' : ' hidden' ?>>
-                            <p class="pc-balance"><?= pc_e(promo_tr('balance_current')) ?> <strong><?= pc_e(promo_money($balance)) ?></strong></p>
+                            <p class="pc-balance"><?= pc_e(promo_tr('balance_current')) ?> <strong><?= pc_e(promo_money($balance, $balanceCur)) ?></strong></p>
 
                             <?php if (is_array($flash) && !empty($flash['topup']) && $canTopup): $req = $flash['topup']; ?>
                             <div class="pc-box pc-box--accent">

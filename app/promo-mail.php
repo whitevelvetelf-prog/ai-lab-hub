@@ -434,7 +434,7 @@ function promo_notify(PDO $pdo, string $event, array $d): void
 
 function promo_mail_money(int $kop): string
 {
-    return number_format($kop / 100, 2, ',', ' ') . ' грн';
+    return number_format($kop / 100, 2, ',', ' ') . ' $';
 }
 
 /** promo_log_event без залежності від порядку підключення файлів. */

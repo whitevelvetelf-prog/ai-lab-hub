@@ -55,7 +55,7 @@ function promo_csrf_verify(): bool
 
 // --- Гроші -----------------------------------------------------------------
 
-/** «123,45» / «123.45» грн → 12345 копійок; null — некоректно або порожньо. */
+/** «123,45» / «123.45» → 12345 мінімальних одиниць (центів); null — некоректно або порожньо. */
 function promo_parse_money(mixed $value): ?int
 {
     $txt = str_replace([' ', "\u{00A0}", ','], ['', '', '.'], trim((string) $value));
@@ -67,12 +67,19 @@ function promo_parse_money(mixed $value): ?int
     return (int) $whole * 100 + (int) str_pad(substr($frac, 0, 2), 2, '0');
 }
 
-function promo_money(int|string|null $kop, string $currency = 'UAH'): string
+function promo_money(int|string|null $kop, string $currency = PROMO_CURRENCY): string
 {
     $kop = (int) $kop;
     $sign = $kop < 0 ? '−' : '';
+    $en = promo_lang() === 'en';
+    $num = $en ? number_format(abs($kop) / 100, 2, '.', ',') : number_format(abs($kop) / 100, 2, ',', ' ');
 
-    return $sign . number_format(abs($kop) / 100, 2, ',', ' ') . ' ' . ($currency === 'UAH' ? promo_tr('currency_uah') : $currency);
+    return match ($currency) {
+        // Старі записи (до переходу на долари) лишаються в гривнях.
+        'UAH' => $sign . $num . ' ' . promo_tr('currency_uah'),
+        'USD' => $en ? $sign . '$' . $num : $sign . $num . ' $',
+        default => $sign . $num . ' ' . $currency,
+    };
 }
 
 /** Значення копійок для поля форми («123.45»). */
@@ -369,12 +376,14 @@ function promo_campaign_targeting(PDO $pdo, int $campaignId): array
     return $out;
 }
 
-/** Ціни прайсу: [placement][model] => копійки (лише активні, UAH). */
+/** Ціни прайсу: [placement][model] => центи (лише активні, PROMO_CURRENCY). */
 function promo_rate_card(PDO $pdo): array
 {
     $out = [];
     try {
-        foreach ($pdo->query("SELECT placement, pricing_model, price FROM ad_rate_card WHERE active = 1 AND currency = 'UAH'") as $r) {
+        $st = $pdo->prepare('SELECT placement, pricing_model, price FROM ad_rate_card WHERE active = 1 AND currency = :c');
+        $st->execute([':c' => PROMO_CURRENCY]);
+        foreach ($st as $r) {
             $out[$r['placement']][$r['pricing_model']] = (int) $r['price'];
         }
     } catch (Throwable $e) {
@@ -382,6 +391,15 @@ function promo_rate_card(PDO $pdo): array
     }
 
     return $out;
+}
+
+/** Валюта балансу користувача (старі баланси до переходу на долари — UAH). */
+function promo_balance_currency(PDO $pdo, int $userId): string
+{
+    $st = $pdo->prepare('SELECT currency FROM ad_balances WHERE user_id = :u');
+    $st->execute([':u' => $userId]);
+
+    return (string) ($st->fetchColumn() ?: PROMO_CURRENCY);
 }
 
 function promo_balance(PDO $pdo, int $userId): int
@@ -625,14 +643,15 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':end' => $endDate,
             ':status' => $campaignStatus,
             ':advcat' => $advCategory,
+            ':cur' => PROMO_CURRENCY,
         ];
         if ($campaign === null) {
             $pdo->prepare(
                 "INSERT INTO ad_campaigns (campaign_type, format, user_id, name, advertiser_name, contact_email, objective,
                      pricing_model, unit_price, daily_budget, total_budget, start_date, end_date, status, submitted_at, rules_accepted_at,
-                     advertiser_category)
+                     advertiser_category, currency)
                  VALUES (:ctype, 'video', :uid, :name, :adv, :email, :objective, :model, :unit, :daily, :total, :start, :end,
-                     :status, :sub_at, :rules_at, :advcat)"
+                     :status, :sub_at, :rules_at, :advcat, :cur)"
             )->execute($fields + [
                 ':ctype' => $house ? 'internal' : 'paid',
                 ':uid' => $userId,
@@ -647,7 +666,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             $pdo->prepare(
                 'UPDATE ad_campaigns SET name = :name, objective = :objective, pricing_model = :model, unit_price = :unit,
                      daily_budget = :daily, total_budget = :total, start_date = :start, end_date = :end, status = :status,
-                     advertiser_category = :advcat, rejection_reason = NULL, stop_reason = NULL,
+                     advertiser_category = :advcat, currency = :cur, rejection_reason = NULL, stop_reason = NULL,
                      submitted_at = IF(:sub = 1, NOW(), submitted_at), rules_accepted_at = IF(:sub2 = 1, NOW(), rules_accepted_at)
                  WHERE id = :id AND user_id = :uid'
             )->execute($fields + [':sub' => $doSubmit ? 1 : 0, ':sub2' => $doSubmit ? 1 : 0, ':id' => $campaignId, ':uid' => $userId]);
@@ -839,7 +858,7 @@ function promo_request_topup(PDO $pdo, int $userId, mixed $amountInput): array
     if (!promo_rate_ok($pdo, $userId, 'topup_request')) {
         return [false, 'err_rate_topups', null];
     }
-    $request = promo_payment_provider()->createTopup($pdo, $userId, $amount, 'UAH');
+    $request = promo_payment_provider()->createTopup($pdo, $userId, $amount, PROMO_CURRENCY);
     promo_rate_hit($pdo, $userId, 'topup_request');
     promo_event_notify($pdo, 'topup_requested', ['user_id' => $userId, 'tx_id' => (int) ($request['id'] ?? 0), 'amount' => $amount]);
 

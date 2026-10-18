@@ -8,8 +8,8 @@ declare(strict_types=1);
  * Лише POST, CSRF обов'язковий, роль admin перевіряється за БД.
  *   moderate          creative_id, decision=approve|reject, reason
  *   topup_decide      tx_id, decision=confirm|reject, reason
- *   adjust            who (email|ID), type=adjust|refund, amount (±грн), note
- *   rates             price[placement][cpm|cpc] (грн; порожньо — ціна неактивна)
+ *   adjust            who (email|ID), type=adjust|refund, amount (±$), note
+ *   rates             price[placement][cpm|cpc] ($; порожньо — ціна неактивна)
  *   settings          поля ad_settings
  *   toggle_system     enabled=0|1 — увімкнути/вимкнути ВСЮ рекламу сайту
  *   campaign_status   campaign_id, op=stop|resume|complete

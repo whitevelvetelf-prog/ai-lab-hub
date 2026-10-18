@@ -77,7 +77,7 @@ foreach ($products as $row) {
     ];
 }
 
-foreach (['about.php', 'contacts.php', 'terms.php', 'privacy.php', 'advertise.php'] as $page) {
+foreach (['about.php', 'contacts.php', 'terms.php', 'privacy.php', 'advertise.php', 'advertise-guide.php'] as $page) {
     $urls[] = ['loc' => $page, 'lastmod' => $today, 'priority' => '0.5'];
 }
 

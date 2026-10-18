@@ -25,7 +25,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/promo-exclusions.php';
 
+/** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
+const PROMO_CURRENCY = 'USD';
 const PROMO_PLACEMENTS = ['catalog_card', 'product_page', 'blog_inline'];
+
+/** Баланс в іншій валюті, ніж операція (повідомлення — код валюти балансу). */
+final class PromoCurrencyMismatch extends RuntimeException
+{
+}
 const PROMO_CTA_KEYS = ['learn_more', 'try', 'go', 'download'];
 const PROMO_REPORT_REASONS = ['misleading', 'inappropriate', 'scam', 'irrelevant', 'other'];
 
@@ -365,6 +372,7 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
                  OR (    c.unit_price IS NOT NULL AND c.unit_price > 0
                      AND c.pricing_model IS NOT NULL
                      AND COALESCE(b.balance, 0) > 0
+                     AND b.currency = c.currency
                      AND (c.total_budget IS NULL OR c.spent < c.total_budget)
                      AND (c.daily_budget IS NULL
                           OR (SELECT COALESCE(SUM(sd.spend), 0) FROM ad_stats_daily sd
@@ -616,9 +624,11 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
             $amount = $price;
         }
 
-        $bal = $pdo->prepare('SELECT balance FROM ad_balances WHERE user_id = :u FOR UPDATE');
+        $bal = $pdo->prepare('SELECT balance, currency FROM ad_balances WHERE user_id = :u FOR UPDATE');
         $bal->execute([':u' => $c['user_id']]);
-        $balance = (int) ($bal->fetchColumn() ?: 0);
+        $balRow = $bal->fetch();
+        // Баланс в іншій валюті, ніж ціна кампанії, не списується.
+        $balance = $balRow !== false && $balRow['currency'] === $c['currency'] ? (int) $balRow['balance'] : 0;
 
         $sd = $pdo->prepare('SELECT COALESCE(SUM(spend), 0) FROM ad_stats_daily WHERE campaign_id = :c AND stat_date = :d');
         $sd->execute([':c' => $campaignId, ':d' => $today]);

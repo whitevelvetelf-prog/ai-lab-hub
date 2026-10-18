@@ -82,7 +82,7 @@ function promo_admin_save_settings(PDO $pdo, array $in): array
                 }
                 $kop = promo_parse_money($raw);
                 if ($kop === null || $kop <= 0) {
-                    $errors[] = 'Мінімальне поповнення: сума в гривнях (напр. 500 або 500.00) або порожньо.';
+                    $errors[] = 'Мінімальне поповнення: сума в доларах (напр. 20 або 20.00) або порожньо.';
                     continue 2;
                 }
                 $values[$key] = number_format($kop / 100, 2, '.', '');
@@ -129,9 +129,9 @@ function promo_server_upload_limit(): int
 function promo_admin_queue(PDO $pdo): array
 {
     return $pdo->query(
-        "SELECT cr.*, c.name AS campaign_name, c.objective, c.advertiser_category, c.stop_reason AS campaign_stop_reason, c.pricing_model, c.unit_price, c.daily_budget, c.total_budget,
+        "SELECT cr.*, c.name AS campaign_name, c.objective, c.advertiser_category, c.stop_reason AS campaign_stop_reason, c.pricing_model, c.unit_price, c.daily_budget, c.total_budget, c.currency AS campaign_currency,
                 c.start_date, c.end_date, c.submitted_at, c.user_id, c.id AS cid,
-                u.name AS user_name, u.email AS user_email, COALESCE(b.balance, 0) AS balance
+                u.name AS user_name, u.email AS user_email, COALESCE(b.balance, 0) AS balance, b.currency AS balance_currency
          FROM ad_creatives cr
          JOIN ad_campaigns c ON c.id = cr.campaign_id
          LEFT JOIN users u ON u.id = c.user_id
@@ -361,6 +361,12 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
 
             return [false, 'Заявку не знайдено або її вже оброблено.'];
         }
+        if ($confirm && $tx['currency'] !== PROMO_CURRENCY) {
+            // Заявка до переходу на долари: її сума в гривнях і не може лягти на доларовий баланс.
+            $pdo->rollBack();
+
+            return [false, 'Заявка в ' . $tx['currency'] . ' (створена до переходу на ' . PROMO_CURRENCY . '): відхиліть її й попросіть рекламодавця створити нову або зарахуйте суму вручну через «Коригування» в ' . PROMO_CURRENCY . '.'];
+        }
         $pdo->prepare(
             'UPDATE ad_transactions SET status = :s, reject_reason = :r, confirmed_by = :a, confirmed_at = NOW() WHERE id = :id'
         )->execute([':s' => $confirm ? 'confirmed' : 'rejected', ':r' => $confirm ? null : mb_substr($reason, 0, 500), ':a' => $adminId, ':id' => $txId]);
@@ -368,6 +374,10 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
             promo_admin_balance_add($pdo, (int) $tx['user_id'], (int) $tx['amount'], (string) $tx['currency']);
         }
         $pdo->commit();
+    } catch (PromoCurrencyMismatch $e) {
+        $pdo->rollBack();
+
+        return [false, 'На балансі рекламодавця лишилися кошти в ' . $e->getMessage() . ': спершу обнуліть їх «Коригуванням» (сума списується у валюті балансу), потім підтвердіть заявку.'];
     } catch (Throwable $e) {
         $pdo->rollBack();
         error_log('[promo] topup decide: ' . $e->getMessage());
@@ -387,8 +397,19 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
  * Змінити баланс (у вже відкритій транзакції). Після поповнення кампанії, що
  * стояли на паузі через нестачу коштів, повертаються в показ.
  */
-function promo_admin_balance_add(PDO $pdo, int $userId, int $amount, string $currency = 'UAH'): void
+function promo_admin_balance_add(PDO $pdo, int $userId, int $amount, string $currency = PROMO_CURRENCY): void
 {
+    // Суми різних валют не складаються: нульовий баланс переходить у нову валюту,
+    // ненульовий в іншій валюті — помилка (спершу обнулити коригуванням).
+    $cur = $pdo->prepare('SELECT balance, currency FROM ad_balances WHERE user_id = :u FOR UPDATE');
+    $cur->execute([':u' => $userId]);
+    $row = $cur->fetch();
+    if ($row !== false && $row['currency'] !== $currency) {
+        if ((int) $row['balance'] !== 0) {
+            throw new PromoCurrencyMismatch($row['currency']);
+        }
+        $pdo->prepare('UPDATE ad_balances SET currency = :c WHERE user_id = :u')->execute([':c' => $currency, ':u' => $userId]);
+    }
     $pdo->prepare(
         'INSERT INTO ad_balances (user_id, balance, currency) VALUES (:u, :a, :c)
          ON DUPLICATE KEY UPDATE balance = balance + VALUES(balance)'
@@ -398,8 +419,9 @@ function promo_admin_balance_add(PDO $pdo, int $userId, int $amount, string $cur
     if ($bal > 0) {
         $pdo->prepare(
             "UPDATE ad_campaigns SET status = 'active', stop_reason = NULL
-             WHERE user_id = :u AND format = 'video' AND status = 'paused' AND stop_reason = 'balance'"
-        )->execute([':u' => $userId]);
+             WHERE user_id = :u AND format = 'video' AND status = 'paused' AND stop_reason = 'balance'
+               AND currency = (SELECT currency FROM ad_balances WHERE user_id = :u2)"
+        )->execute([':u' => $userId, ':u2' => $userId]);
     }
 }
 
@@ -434,19 +456,22 @@ function promo_admin_adjust(PDO $pdo, int $adminId, string $who, string $type, s
 
     $pdo->beginTransaction();
     try {
-        $pdo->prepare('INSERT IGNORE INTO ad_balances (user_id, balance) VALUES (:u, 0)')->execute([':u' => $uid]);
-        $b = $pdo->prepare('SELECT balance FROM ad_balances WHERE user_id = :u FOR UPDATE');
+        $pdo->prepare('INSERT IGNORE INTO ad_balances (user_id, balance, currency) VALUES (:u, 0, :c)')->execute([':u' => $uid, ':c' => PROMO_CURRENCY]);
+        $b = $pdo->prepare('SELECT balance, currency FROM ad_balances WHERE user_id = :u FOR UPDATE');
         $b->execute([':u' => $uid]);
-        if ((int) $b->fetchColumn() + $amount < 0) {
+        $balRow = $b->fetch();
+        // Коригування — у валюті балансу (старий гривневий баланс так можна обнулити).
+        $currency = (int) $balRow['balance'] !== 0 ? (string) $balRow['currency'] : PROMO_CURRENCY;
+        if ((int) $balRow['balance'] + $amount < 0) {
             $pdo->rollBack();
 
             return [false, 'Баланс не може стати від\'ємним.'];
         }
         $pdo->prepare(
-            "INSERT INTO ad_transactions (user_id, type, amount, status, method, note, confirmed_by, confirmed_at)
-             VALUES (:u, :t, :a, 'confirmed', 'manual', :n, :by, NOW())"
-        )->execute([':u' => $uid, ':t' => $type, ':a' => $amount, ':n' => mb_substr($note, 0, 500), ':by' => $adminId]);
-        promo_admin_balance_add($pdo, $uid, $amount);
+            "INSERT INTO ad_transactions (user_id, type, amount, currency, status, method, note, confirmed_by, confirmed_at)
+             VALUES (:u, :t, :a, :c, 'confirmed', 'manual', :n, :by, NOW())"
+        )->execute([':u' => $uid, ':t' => $type, ':a' => $amount, ':c' => $currency, ':n' => mb_substr($note, 0, 500), ':by' => $adminId]);
+        promo_admin_balance_add($pdo, $uid, $amount, $currency);
         $pdo->commit();
     } catch (Throwable $e) {
         $pdo->rollBack();
@@ -455,12 +480,12 @@ function promo_admin_adjust(PDO $pdo, int $adminId, string $who, string $type, s
         return [false, 'Не вдалося змінити баланс.'];
     }
 
-    return [true, 'Баланс ' . $user['email'] . ' змінено на ' . promo_money($amount) . '.'];
+    return [true, 'Баланс ' . $user['email'] . ' змінено на ' . promo_money($amount, $currency) . '.'];
 }
 
 // --- Прайс -----------------------------------------------------------------
 
-/** Зберегти прайс: price[placement][model] у гривнях; порожньо — ціна неактивна. */
+/** Зберегти прайс: price[placement][model] у доларах (PROMO_CURRENCY); порожньо — ціна неактивна. */
 function promo_admin_save_rates(PDO $pdo, array $in): array
 {
     $errors = [];
@@ -486,13 +511,13 @@ function promo_admin_save_rates(PDO $pdo, array $in): array
     foreach ($rows as [$pl, $m, $kop]) {
         if ($kop === null) {
             // Ціну прибрано: рядок лишається (історія), але неактивний — нові кампанії з ним не стартують.
-            $pdo->prepare("UPDATE ad_rate_card SET active = 0 WHERE placement = :p AND pricing_model = :m AND currency = 'UAH'")
-                ->execute([':p' => $pl, ':m' => $m]);
+            $pdo->prepare('UPDATE ad_rate_card SET active = 0 WHERE placement = :p AND pricing_model = :m AND currency = :c')
+                ->execute([':p' => $pl, ':m' => $m, ':c' => PROMO_CURRENCY]);
         } else {
             $pdo->prepare(
-                "INSERT INTO ad_rate_card (placement, pricing_model, price, currency, active) VALUES (:p, :m, :pr, 'UAH', 1)
+                "INSERT INTO ad_rate_card (placement, pricing_model, price, currency, active) VALUES (:p, :m, :pr, :c, 1)
                  ON DUPLICATE KEY UPDATE price = VALUES(price), active = 1"
-            )->execute([':p' => $pl, ':m' => $m, ':pr' => $kop]);
+            )->execute([':p' => $pl, ':m' => $m, ':pr' => $kop, ':c' => PROMO_CURRENCY]);
         }
     }
 

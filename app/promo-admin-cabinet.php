@@ -94,7 +94,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         'SELECT t.*, u.email FROM ad_transactions t LEFT JOIN users u ON u.id = t.user_id ORDER BY t.id DESC LIMIT 200'
     )->fetchAll();
     $allCampaigns = $pdo->query(
-        "SELECT c.*, u.email AS user_email, COALESCE(b.balance, 0) AS balance,
+        "SELECT c.*, u.email AS user_email, COALESCE(b.balance, 0) AS balance, b.currency AS balance_currency,
                 (SELECT SUM(impressions) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS impressions,
                 (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks
          FROM ad_campaigns c
@@ -234,7 +234,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     </div>
                                     <dl class="pc-summary">
                                         <dt>Кампанія</dt><dd>#<?= (int) $q['cid'] ?> <?= pc_e($q['campaign_name']) ?></dd>
-                                        <dt>Рекламодавець</dt><dd><?= pc_e($q['user_name']) ?> · <?= pc_e($q['user_email']) ?> (баланс <?= pc_e(promo_money($q['balance'])) ?>)</dd>
+                                        <dt>Рекламодавець</dt><dd><?= pc_e($q['user_name']) ?> · <?= pc_e($q['user_email']) ?> (баланс <?= pc_e(promo_money($q['balance'], $q['balance_currency'] ?: PROMO_CURRENCY)) ?>)</dd>
                                         <dt>Адреса переходу</dt><dd><a href="<?= pc_e($q['destination_url']) ?>" target="_blank" rel="noopener noreferrer nofollow"><?= pc_e($q['destination_url']) ?></a></dd>
                                         <dt>Відео</dt><dd><?= $q['video_type'] === 'upload'
                                             ? pc_e(($q['mime'] ?? '') . ' · ' . ($q['duration_sec'] !== null ? $q['duration_sec'] . ' с' : 'тривалість невідома') . ' · ' . round((int) $q['size_bytes'] / 1048576, 1) . ' МБ')
@@ -243,7 +243,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Модель</dt><dd><?= $q['pricing_model'] === 'cpc' ? 'CPC (за клік)' : 'CPM (за 1000 показів)' ?></dd>
                                         <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price)) ?><br><?php endforeach; ?></dd>
                                         <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?></dd>
-                                        <dt>Бюджет</dt><dd>загальний <?= pc_e(promo_money($q['total_budget'])) ?><?= $q['daily_budget'] !== null ? ', денний ' . pc_e(promo_money($q['daily_budget'])) : '' ?></dd>
+                                        <dt>Бюджет</dt><dd>загальний <?= pc_e(promo_money($q['total_budget'], $q['campaign_currency'])) ?><?= $q['daily_budget'] !== null ? ', денний ' . pc_e(promo_money($q['daily_budget'], $q['campaign_currency'])) : '' ?></dd>
                                         <dt>Дати</dt><dd><?= pc_e($q['start_date']) ?><?= $q['end_date'] ? ' — ' . pc_e($q['end_date']) : ' (без кінця)' ?></dd>
                                         <dt>Надіслано</dt><dd><?= pc_e(promo_local_time($q['submitted_at'])) ?></dd>
                                     </dl>
@@ -319,9 +319,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <?php foreach ($allCampaigns as $c): $cid = (int) $c['id']; ?>
                                     <tr>
                                         <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= $c['campaign_type'] === 'internal' ? 'власна реклама' : strtoupper((string) $c['pricing_model']) ?></span></td>
-                                        <td data-label="Власник"><?= $c['campaign_type'] === 'internal' ? 'AI LAB HUB' : pc_e($c['user_email']) ?><?php if ($c['campaign_type'] !== 'internal'): ?><span class="pc-muted">баланс <?= pc_e(promo_money($c['balance'])) ?></span><?php endif; ?></td>
+                                        <td data-label="Власник"><?= $c['campaign_type'] === 'internal' ? 'AI LAB HUB' : pc_e($c['user_email']) ?><?php if ($c['campaign_type'] !== 'internal'): ?><span class="pc-muted">баланс <?= pc_e(promo_money($c['balance'], $c['balance_currency'] ?: PROMO_CURRENCY)) ?></span><?php endif; ?></td>
                                         <td data-label="Статус"><?= $badge((string) $c['status']) ?><?php if ($c['stop_reason'] && in_array($c['status'], ['paused', 'completed'], true)): ?><span class="pc-muted"><?= pc_e($stopUk[$c['stop_reason']] ?? $c['stop_reason']) ?></span><?php endif; ?></td>
-                                        <td data-label="Витрачено"><?= pc_e(promo_money($c['spent'])) ?><?= $c['total_budget'] !== null ? ' / ' . pc_e(promo_money($c['total_budget'])) : '' ?></td>
+                                        <td data-label="Витрачено"><?= pc_e(promo_money($c['spent'], $c['currency'])) ?><?= $c['total_budget'] !== null ? ' / ' . pc_e(promo_money($c['total_budget'], $c['currency'])) : '' ?></td>
                                         <td data-label="Покази / кліки"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?></td>
                                         <td data-label="Дії" class="pc-actions">
                                             <?php foreach (array_filter([
@@ -397,7 +397,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 <label class="pc-field"><span>Email або ID користувача</span><input type="text" name="who" required></label>
                                 <label class="pc-field"><span>Тип</span>
                                     <select name="type"><option value="adjust">Коригування (±)</option><option value="refund">Повернення на баланс (+)</option></select></label>
-                                <label class="pc-field"><span>Сума, грн (мінус — списати)</span><input type="text" name="amount" inputmode="decimal" required placeholder="напр. 100 або -25.50"></label>
+                                <label class="pc-field"><span>Сума у валюті балансу — $; старий ненульовий баланс у грн (мінус — списати)</span><input type="text" name="amount" inputmode="decimal" required placeholder="напр. 100 або -25.50"></label>
                                 <label class="pc-field"><span>Примітка (обов'язково)</span><input type="text" name="note" maxlength="500" required></label>
                                 <button type="submit" class="pc-btn pc-btn--primary">Застосувати</button>
                             </form>
@@ -425,13 +425,13 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ D3. Прайс-лист ============ -->
                         <section class="pc-panel" data-pc-panel="rates"<?= $tab === 'rates' ? '' : ' hidden' ?>>
-                            <p class="pc-muted">Ціни в гривнях. CPM — за 1000 показів, CPC — за клік. Порожнє поле — ціни немає: платну кампанію з цим розміщенням і моделлю надіслати не можна. Ціна фіксується в кампанії на момент надсилання — зміна прайсу не впливає на вже надіслані кампанії.</p>
+                            <p class="pc-muted">Ціни в доларах США. CPM — за 1000 показів, CPC — за клік. Порожнє поле — ціни немає: платну кампанію з цим розміщенням і моделлю надіслати не можна. Ціна фіксується в кампанії на момент надсилання — зміна прайсу не впливає на вже надіслані кампанії.</p>
                             <form method="post" action="promo-admin-action.php">
                                 <?= $csrf ?>
                                 <input type="hidden" name="action" value="rates">
                                 <div class="pc-table-wrap">
                                     <table class="pc-table">
-                                        <thead><tr><th>Розміщення</th><th>CPM, грн / 1000 показів</th><th>CPC, грн / клік</th></tr></thead>
+                                        <thead><tr><th>Розміщення</th><th>CPM, $ / 1000 показів</th><th>CPC, $ / клік</th></tr></thead>
                                         <tbody>
                                         <?php foreach (PROMO_PLACEMENTS as $pl): ?>
                                         <tr>
@@ -458,7 +458,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 <div class="pc-grid-2">
                                     <label class="pc-field"><span>Макс. розмір відео, МБ</span><input type="text" inputmode="numeric" name="max_video_mb" value="<?= pc_e($settings['max_video_mb'] ?? '30') ?>"></label>
                                     <label class="pc-field"><span>Макс. тривалість відео, с</span><input type="text" inputmode="numeric" name="max_video_sec" value="<?= pc_e($settings['max_video_sec'] ?? '30') ?>"></label>
-                                    <label class="pc-field"><span>Мін. поповнення, грн (порожньо — без мінімуму)</span><input type="text" inputmode="decimal" name="min_topup" value="<?= pc_e($settings['min_topup'] ?? '') ?>"></label>
+                                    <label class="pc-field"><span>Мін. поповнення, $ (порожньо — без мінімуму)</span><input type="text" inputmode="decimal" name="min_topup" value="<?= pc_e($settings['min_topup'] ?? '') ?>"></label>
                                     <label class="pc-field"><span>Ліміт показів кампанії одному сеансу на добу (0 — без ліміту)</span><input type="text" inputmode="numeric" name="frequency_cap_per_session" value="<?= pc_e($settings['frequency_cap_per_session'] ?? '3') ?>"></label>
                                 </div>
                                 <label class="pc-field"><span>Посилання на банку (monobank) для оплати реклами — окреме від донатів. Лише https://; порожньо — кнопки оплати немає.</span>

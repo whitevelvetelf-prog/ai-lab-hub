@@ -72,7 +72,9 @@
         return String(str || '').replace(/%[sd]/g, function () { return args[i++]; });
     }
     function money(kop) {
-        return (kop / 100).toLocaleString('uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (i18n.currency_uah || 'грн');
+        var tpl = i18n.money_fmt || '%s $';
+        var n = (kop / 100).toLocaleString(tpl.charAt(0) === '$' ? 'en-US' : 'uk-UA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return fmt(tpl, n);
     }
     function parseMoney(v) {
         var t = String(v || '').replace(/[\s ]/g, '').replace(',', '.');
