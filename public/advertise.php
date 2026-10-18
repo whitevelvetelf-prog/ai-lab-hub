@@ -151,10 +151,10 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
         <h2 class="adv-h2"><?= $tr('adv_formats_title') ?></h2>
         <p class="adv-muted"><?= $tr('adv_formats_note') ?></p>
         <div class="adv-formats">
-            <?php foreach (PROMO_PLACEMENTS as $pl): ?>
+            <?php foreach (promo_placements_public($pdo) as $pl): ?>
             <section class="adv-format">
-                <h3><?= $tr('placement_' . $pl) ?></h3>
-                <p><?= $tr('adv_place_' . $pl) ?></p>
+                <h3><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></h3>
+                <p><?= $e(promo_placement_description($pdo, $pl, $lang)) ?></p>
                 <?= $demoCard() ?>
             </section>
             <?php endforeach; ?>
@@ -189,9 +189,9 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
             <table class="adv-table">
                 <thead><tr><th><?= $tr('adv_col_placement') ?></th><th><?= $tr('adv_col_cpm') ?></th><th><?= $tr('adv_col_cpc') ?></th></tr></thead>
                 <tbody>
-                <?php foreach (PROMO_PLACEMENTS as $pl): ?>
+                <?php foreach (promo_placements_public($pdo) as $pl): ?>
                 <tr>
-                    <td><?= $tr('placement_' . $pl) ?></td>
+                    <td><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></td>
                     <td><?= isset($rates[$pl]['cpm']) ? $e(promo_money($rates[$pl]['cpm'])) : '—' ?></td>
                     <td><?= isset($rates[$pl]['cpc']) ? $e(promo_money($rates[$pl]['cpc'])) : '—' ?></td>
                 </tr>

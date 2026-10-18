@@ -322,20 +322,21 @@ function promo_page_diagnose(PDO $pdo, string $url): array
             [$cats, $subs] = promo_product_taxonomy($pdo, $page['product']);
             break;
         case 'catalog.php':
-            $placement = 'catalog_card';
+            $placement = 'search_results';
             if (!empty($q['search'])) {
-                $out[] = [true, 'Пошук (catalog_card): реклама без категорійного таргетингу.'];
+                $out[] = [true, 'Пошук (search_results): реклама без категорійного таргетингу.'];
             }
-            if ((int) ($q['subcategory'] ?? 0) > 0) {
+            if ((int) ($q['subcategory'] ?? 0) > 0 && empty($q['search'])) {
+                $placement = 'subcategory_list';
                 $subs = [(int) $q['subcategory']];
                 $cats = array_map('intval', $pdo->query('SELECT category_id FROM subcategories WHERE id = ' . (int) $q['subcategory'])->fetchAll(PDO::FETCH_COLUMN));
-            } elseif ((int) ($q['category'] ?? 0) > 0) {
+            } elseif ((int) ($q['category'] ?? 0) > 0 && empty($q['search'])) {
                 $cats = [(int) $q['category']];
             }
-            $out[] = [true, 'Каталог (розміщення catalog_card).'];
+            $out[] = [true, 'Каталог (місце ' . $placement . ').'];
             break;
         case 'blog-post.php':
-            $placement = 'blog_inline';
+            $placement = 'blog_article';
             $page['article'] = (string) ($q['slug'] ?? '');
             if (!function_exists('blog_article_topics')) {
                 require_once __DIR__ . '/blog.php';
@@ -343,30 +344,26 @@ function promo_page_diagnose(PDO $pdo, string $url): array
             if (!isset(BLOG_ARTICLES[$page['article']])) {
                 return [[false, 'Статтю «' . $page['article'] . '» не знайдено.']];
             }
-            foreach (blog_article_topics($page['article']) as $topic) {
-                $c = $pdo->prepare('SELECT id FROM categories WHERE slug = :s');
-                $c->execute([':s' => $topic['cat']]);
-                $cid = (int) $c->fetchColumn();
-                if ($cid > 0) {
-                    $cats[] = $cid;
-                    if ($topic['sub'] !== '') {
-                        $s = $pdo->prepare('SELECT id FROM subcategories WHERE slug = :s AND category_id = :c');
-                        $s->execute([':s' => $topic['sub'], ':c' => $cid]);
-                        $sid = (int) $s->fetchColumn();
-                        if ($sid > 0) {
-                            $subs[] = $sid;
-                        }
-                    }
-                }
-            }
-            $out[] = [true, 'Стаття блогу «' . $page['article'] . '» (розміщення blog_inline).'];
+            [$cats, $subs] = promo_blog_article_taxonomy($pdo, $page['article']);
+            $out[] = [true, 'Стаття блогу «' . $page['article'] . '» (місце blog_article)' . ($cats === [] ? ', категорій немає — лише реклама для «усіх категорій»' : '') . '.'];
+            break;
+        case 'blog.php':
+            $placement = 'blog_list';
+            $out[] = [true, 'Список статей блогу (місце blog_list): реклама без категорійного таргетингу.'];
             break;
         case 'category.php':
+            $placement = 'category_page';
             $cats = [(int) ($q['id'] ?? 0)];
-            $out[] = [true, 'Сторінка категорії: відеореклами тут немає (лише старі банери).'];
+            $out[] = [true, 'Сторінка категорії (місце category_page).'];
             break;
         default:
-            return [[false, 'На цій сторінці рекламних слотів немає (відеореклама: product.php, catalog.php, blog-post.php).']];
+            return [[false, 'На цій сторінці рекламних слотів немає (відеореклама: category.php, catalog.php, product.php, blog.php, blog-post.php).']];
+    }
+
+    if ($placement !== null) {
+        $reason = promo_placement_block_reason($pdo, $placement);
+        $out[] = [$reason === null, $reason === null ? 'Місце «' . promo_placement_title($pdo, $placement) . '» увімкнене.'
+            : 'Місце «' . promo_placement_title($pdo, $placement) . '» недоступне (' . ['disabled' => 'вимкнене в адмінці', 'setting' => 'вимкнене налаштування сайту', 'feature' => 'ще не зроблено потрібну можливість'][$reason] . ').'];
     }
 
     $out[] = [promo_enabled($pdo), promo_enabled($pdo) ? 'Систему реклами ввімкнено.' : 'Систему реклами ВИМКНЕНО — реклами немає ніде.'];
@@ -398,6 +395,7 @@ function promo_eligible_count(PDO $pdo, string $placement, array $cats, array $s
     $today = function_exists('promo_today') ? promo_today() : date('Y-m-d');
     $catIn = promo_in_ints($cats);
     $subIn = promo_in_ints($subs);
+    $plIn = implode(',', array_map(static fn($k) => $pdo->quote($k), promo_placement_match_keys($placement)));
     $st = $pdo->prepare(
         "SELECT COUNT(DISTINCT c.id) FROM ad_campaigns c
          JOIN ad_creatives cr ON cr.campaign_id = c.id AND cr.status = 'approved'
@@ -405,12 +403,12 @@ function promo_eligible_count(PDO $pdo, string $placement, array $cats, array $s
          WHERE c.format = 'video' AND c.status = 'active'
            AND (c.start_date IS NULL OR c.start_date <= :d1) AND (c.end_date IS NULL OR c.end_date >= :d2)
            AND (c.campaign_type = 'internal' OR COALESCE(b.balance, 0) > 0)
-           AND EXISTS (SELECT 1 FROM ad_targets t WHERE t.campaign_id = c.id AND t.placement = :pl
+           AND EXISTS (SELECT 1 FROM ad_targets t WHERE t.campaign_id = c.id AND t.placement IN ({$plIn})
                        AND (t.category_id IS NULL OR t.category_id IN ({$catIn}))
                        AND (t.subcategory_id IS NULL OR t.subcategory_id IN ({$subIn})))
            AND " . promo_rules_sql($cats, $subs)
     );
-    $st->execute([':d1' => $today, ':d2' => $today, ':pl' => $placement]);
+    $st->execute([':d1' => $today, ':d2' => $today]);
 
     return (int) $st->fetchColumn();
 }

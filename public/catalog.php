@@ -29,12 +29,15 @@ require_once __DIR__ . '/../app/subcategory-note.php';
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
-analytics_log_view($pdo, 'other');
-
 $subcategoryId = (int) ($_GET['subcategory'] ?? 0);
 $categoryId    = (int) ($_GET['category'] ?? 0);
 $searchQuery   = trim((string) ($_GET['search'] ?? ''));
 $isSearch      = mb_strlen($searchQuery) >= 2;
+
+// page_slug — вид сторінки каталогу для ємності місць реклами (app/promo-placements.php):
+// sub:<id> — підкатегорія, cat:<id> — усі продукти категорії, search — пошук, all — усі продукти.
+analytics_log_view($pdo, 'other', null, $isSearch ? 'search'
+    : ($subcategoryId > 0 ? 'sub:' . $subcategoryId : ($categoryId > 0 ? 'cat:' . $categoryId : 'all')));
 
 $pageHeading = t('catalog_default_title');
 $backLink    = null;
@@ -432,18 +435,22 @@ $cardColors = [
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <?php
-        // Відеореклама (catalog_card): одна картка на сторінку, третьою позицією
-        // (або в кінці, якщо продуктів менше). Без реклами слот прихований.
+        // Відеореклама: підкатегорія — місце subcategory_list, пошук і добірки (усі
+        // продукти, усі продукти категорії) — search_results. Одна картка на сторінку
+        // на позиції з правила місця (3-я; або в кінці, якщо продуктів менше).
+        // Без реклами слот прихований.
         $promoCats = [];
         $promoSubs = [];
+        $promoPlacement = 'search_results';
         if (!$isSearch && !empty($subcategory)) {
             $promoCats = [(int) $subcategory['category_id']];
             $promoSubs = [(int) $subcategory['id']];
+            $promoPlacement = 'subcategory_list';
         } elseif (!$isSearch && !empty($category)) {
             $promoCats = [(int) $category['id']];
         }
-        $promoSlotHtml = promo_slot($pdo, 'catalog_card', $promoCats, $promoSubs);
-        $promoSlotAt = min(2, count($products));
+        $promoSlotHtml = promo_slot($pdo, $promoPlacement, $promoCats, $promoSubs);
+        $promoSlotAt = min(promo_placement_rule_int($pdo, $promoPlacement, 'position', 3) - 1, count($products));
         ?>
         <div class="catalog-grid">
             <?php foreach ($products as $i => $product): ?>

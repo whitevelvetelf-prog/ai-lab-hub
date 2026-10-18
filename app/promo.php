@@ -24,10 +24,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/promo-exclusions.php';
+require_once __DIR__ . '/promo-placements.php';
 
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';
-const PROMO_PLACEMENTS = ['catalog_card', 'product_page', 'blog_inline'];
+/** Місця показу (ad_placements, app/promo-placements.php); старі ключі — PROMO_LEGACY_PLACEMENTS. */
+const PROMO_PLACEMENTS = ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article', 'marketplace_listing'];
 
 /** Баланс в іншій валюті, ніж операція (повідомлення — код валюти балансу). */
 final class PromoCurrencyMismatch extends RuntimeException
@@ -210,8 +212,9 @@ function promo_session_tag(): string
 
 /**
  * Підписаний токен показу: креатив, кампанія, розміщення, сеанс, час.
+ * x=1 — адмін-перегляд: події й кліки за таким токеном не рахуються.
  *
- * @param array{c:int,k:int,p:string} $data
+ * @param array{c:int,k:int,p:string,x?:int} $data
  */
 function promo_token_make(array $data): string
 {
@@ -221,7 +224,7 @@ function promo_token_make(array $data): string
         'p' => $data['p'],
         's' => promo_session_tag(),
         't' => time(),
-    ]));
+    ] + (!empty($data['x']) ? ['x' => 1] : [])));
     $sig = promo_b64u_encode(hash_hmac('sha256', $payload, promo_config()['secret'], true));
 
     return $payload . '.' . $sig;
@@ -231,7 +234,7 @@ function promo_token_make(array $data): string
  * Перевірити токен. null — підпис невірний або формат зламаний (підробка).
  * Повертає дані з прапорцями fresh (не прострочений) і own (той самий сеанс).
  *
- * @return array{c:int,k:int,p:string,s:string,t:int,fresh:bool,own:bool}|null
+ * @return array{c:int,k:int,p:string,s:string,t:int,fresh:bool,own:bool,preview:bool}|null
  */
 function promo_token_read(string $token): ?array
 {
@@ -247,7 +250,7 @@ function promo_token_read(string $token): ?array
     $json = promo_b64u_decode($payload);
     $data = $json === false ? null : json_decode($json, true);
     if (!is_array($data) || !isset($data['c'], $data['k'], $data['p'], $data['s'], $data['t'])
-        || !in_array($data['p'], PROMO_PLACEMENTS, true)) {
+        || !promo_placement_valid((string) $data['p'])) {
         return null;
     }
 
@@ -259,6 +262,7 @@ function promo_token_read(string $token): ?array
         't' => (int) $data['t'],
         'fresh' => time() - (int) $data['t'] <= PROMO_TOKEN_TTL && (int) $data['t'] <= time() + 60,
         'own' => hash_equals(promo_session_tag(), (string) $data['s']),
+        'preview' => !empty($data['x']),
     ];
 }
 
@@ -308,16 +312,21 @@ function promo_lang(?string $param = null): string
  * Сторінка з no_promo (сама, її категорія чи підкатегорія) → null; кампанії з
  * категорією реклами, забороненою на сторінці (promo_category_rules), не беруться.
  *
+ * Місце вимкнене адміном чи недоступне (promo_placement_available) → null. Таргет
+ * підходить і зі старим ключем місця (catalog_card, blog_inline). $excludeCreatives —
+ * креативи, уже показані на цій сторінці (одна реклама не повторюється).
+ *
  * Платні кампанії мають пріоритет над власною рекламою сайту. Серед платних —
  * випадковий вибір із вагою «залишок бюджету / днів до завершення»
  * (рівномірне витрачання: кампанія з більшим денним запасом показується частіше).
  *
  * @param list<int> $categoryIds
  * @param list<int> $subcategoryIds
+ * @param list<int> $excludeCreatives
  */
-function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, string $sessionHash, array $page = []): ?array
+function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, string $sessionHash, array $page = [], array $excludeCreatives = []): ?array
 {
-    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo)) {
+    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo) || !promo_placement_available($pdo, $placement)) {
         return null;
     }
     if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
@@ -331,8 +340,14 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     }
     $rulesCond = promo_rules_sql($categoryIds, $subcategoryIds);
 
-    $params = [':pl' => $placement, ':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash,
+    $params = [':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash,
         ':today1' => promo_today(), ':today2' => promo_today(), ':today3' => promo_today()];
+    $plNames = [];
+    foreach (promo_placement_match_keys($placement) as $i => $key) {
+        $plNames[] = ':pl' . $i;
+        $params[':pl' . $i] = $key;
+    }
+    $plCond = 't.placement IN (' . implode(',', $plNames) . ')';
 
     $inList = static function (string $prefix, array $ids) use (&$params): string {
         $names = [];
@@ -345,6 +360,8 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     };
     $catCond = $categoryIds !== [] ? '(t.category_id IS NULL OR t.category_id IN (' . $inList('c', $categoryIds) . '))' : 't.category_id IS NULL';
     $subCond = $subcategoryIds !== [] ? '(t.subcategory_id IS NULL OR t.subcategory_id IN (' . $inList('s', $subcategoryIds) . '))' : 't.subcategory_id IS NULL';
+    $excludeIds = array_values(array_filter(array_map('intval', $excludeCreatives), static fn($id) => $id > 0));
+    $excludeCond = $excludeIds !== [] ? 'AND cr.id NOT IN (' . $inList('x', $excludeIds) . ')' : '';
 
     $cap = (int) promo_setting($pdo, 'frequency_cap_per_session', '3');
     $capCond = '';
@@ -381,13 +398,14 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
               AND EXISTS (
                     SELECT 1 FROM ad_targets t
                     WHERE t.campaign_id = c.id
-                      AND t.placement = :pl
+                      AND {$plCond}
                       AND {$catCond}
                       AND {$subCond}
                       AND (t.language IS NULL OR t.language = :lang)
                       AND (t.device IS NULL OR t.device = :dev)
               )
               AND {$rulesCond}
+              {$excludeCond}
               {$capCond}
             LIMIT 100";
 
@@ -490,7 +508,7 @@ function promo_labels(): array
  */
 function promo_record_event(PDO $pdo, int $creativeId, string $type, string $placement, string $sessionHash): bool
 {
-    if (!in_array($type, ['impression', 'view', 'click'], true) || !in_array($placement, PROMO_PLACEMENTS, true)) {
+    if (!in_array($type, ['impression', 'view', 'click'], true) || !promo_placement_valid($placement)) {
         return false;
     }
 
@@ -561,8 +579,8 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
  * Журнал: один агрегований рядок ad_transactions (type=spend) на кампанію на
  * день, reference = spend:<id>:<дата>; amount — від'ємна сума за день.
  *
- * Ціна — знімок для розміщення події (ad_targets.unit_price), інакше
- * ad_campaigns.unit_price.
+ * Ціна — знімок для розміщення події (ad_targets.unit_price; рядок зі старим ключем
+ * місця теж підходить), інакше ad_campaigns.unit_price.
  */
 function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placement = null, ?int $creativeId = null): int
 {
@@ -607,8 +625,9 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
 
         $price = (int) $c['unit_price'];
         if ($placement !== null) {
-            $pp = $pdo->prepare('SELECT MAX(unit_price) FROM ad_targets WHERE campaign_id = :c AND placement = :pl');
-            $pp->execute([':c' => $campaignId, ':pl' => $placement]);
+            $keys = promo_placement_match_keys($placement);
+            $pp = $pdo->prepare('SELECT MAX(unit_price) FROM ad_targets WHERE campaign_id = ? AND placement IN (' . implode(',', array_fill(0, count($keys), '?')) . ')');
+            $pp->execute(array_merge([$campaignId], $keys));
             $placementPrice = (int) ($pp->fetchColumn() ?: 0);
             if ($placementPrice > 0) {
                 $price = $placementPrice;
@@ -753,7 +772,8 @@ function promo_maintenance(PDO $pdo): array
 /**
  * Порожній слот, який sponsored.js заповнює креативом із promo-serve.php.
  * Слот прихований (display:none) доки немає реклами — порожнього місця не лишається.
- * Нічого не виводить, якщо система вимкнена або сторінку виключено (no_promo).
+ * Нічого не виводить, якщо система вимкнена, місце вимкнене/недоступне, сторінку
+ * виключено (no_promo) або на сторінці вже стоїть slots_per_page блоків цього місця.
  * $page: ['product' => id] або ['article' => slug] — для перевірки прапорців.
  *
  * @param list<int> $categoryIds
@@ -762,11 +782,16 @@ function promo_maintenance(PDO $pdo): array
 function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array $subcategoryIds = [], array $page = []): string
 {
     static $assetsPrinted = false;
-    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo)) {
+    static $perPage = [];
+    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo) || !promo_placement_available($pdo, $placement)) {
         return '';
     }
     // Чутлива сторінка (no_promo) — жодного слота, жодного порожнього місця.
     if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
+        return '';
+    }
+    $perPage[$placement] = ($perPage[$placement] ?? 0) + 1;
+    if ($perPage[$placement] > promo_placement_slots($pdo, $placement)) {
         return '';
     }
 

@@ -41,7 +41,7 @@ $num = static fn(int|float $n): string => number_format((float) $n, 0, ',', ' ')
 // Приклад розрахунку: мінімальне поповнення на першому розміщенні з ціною CPM.
 $example = null;
 if ($minTopup) {
-    foreach (PROMO_PLACEMENTS as $pl) {
+    foreach (promo_placements_public($pdo) as $pl) {
         if (!empty($rates[$pl]['cpm'])) {
             $example = [
                 'placement' => $pl,
@@ -148,9 +148,9 @@ $canonical = 'https://ailabhub-directory.com/advertise-guide.php';
             <table class="adv-table">
                 <thead><tr><th><?= $tr('adv_col_placement') ?></th><th><?= $tr('adv_col_cpm') ?></th><th><?= $tr('adv_col_cpc') ?></th></tr></thead>
                 <tbody>
-                <?php foreach (PROMO_PLACEMENTS as $pl): ?>
+                <?php foreach (promo_placements_public($pdo) as $pl): ?>
                 <tr>
-                    <td><?= $tr('placement_' . $pl) ?></td>
+                    <td><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></td>
                     <td><?= isset($rates[$pl]['cpm']) ? $e(promo_money($rates[$pl]['cpm'])) : '—' ?></td>
                     <td><?= isset($rates[$pl]['cpc']) ? $e(promo_money($rates[$pl]['cpc'])) : '—' ?></td>
                 </tr>
@@ -166,7 +166,7 @@ $canonical = 'https://ailabhub-directory.com/advertise-guide.php';
         </ul>
         <?php if ($example !== null): ?>
         <p class="adv-note">
-            <?= $tr('guide_cost_example_cpm', promo_money($minTopup), promo_tr('placement_' . $example['placement']), $num($example['impressions'])) ?>
+            <?= $tr('guide_cost_example_cpm', promo_money($minTopup), promo_placement_title($pdo, $example['placement'], $lang), $num($example['impressions'])) ?>
             <?php if ($example['clicks'] !== null): ?> <?= $tr('guide_cost_example_cpc', $num($example['clicks'])) ?><?php endif; ?>
         </p>
         <?php endif; ?>
@@ -204,8 +204,8 @@ $canonical = 'https://ailabhub-directory.com/advertise-guide.php';
         <div class="adv-guide-step">
             <h3><?= $tr('guide_dl_where') ?></h3>
             <ul class="adv-list">
-                <?php foreach (PROMO_PLACEMENTS as $pl): ?>
-                <li><?= $tr('adv_place_' . $pl) ?></li>
+                <?php foreach (promo_placements_public($pdo) as $pl): ?>
+                <li><strong><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></strong> — <?= $e(promo_placement_description($pdo, $pl, $lang)) ?></li>
                 <?php endforeach; ?>
             </ul>
         </div>

@@ -60,7 +60,7 @@ if ($article !== null) {
     } catch (Throwable $e) {
         error_log('[promo] blog topics: ' . $e->getMessage());
     }
-    $promoSlotHtml = promo_slot($pdo, 'blog_inline', $promoCats, $promoSubs, ['article' => $slug]);
+    $promoSlotHtml = promo_slot($pdo, 'blog_article', $promoCats, $promoSubs, ['article' => $slug]);
     if ($promoSlotHtml !== '') {
         $h2At = [];
         $offset = 0;

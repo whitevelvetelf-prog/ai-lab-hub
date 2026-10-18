@@ -369,7 +369,8 @@ function promo_campaign_targeting(PDO $pdo, int $campaignId): array
         $out['language'] = $t['language'] ?? 'all';
         $out['device'] = $t['device'] ?? 'all';
     }
-    $out['placements'] = array_values(array_unique($out['placements']));
+    // Старі ключі (catalog_card, blog_inline) → місця, які вони покривають.
+    $out['placements'] = promo_placements_normalize($out['placements']);
     $out['cats'] = array_values(array_unique($out['cats']));
     $out['subs'] = array_values(array_unique($out['subs']));
 

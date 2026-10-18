@@ -9,9 +9,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
+require_once __DIR__ . '/../app/analytics.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
+
+// Перегляд списку статей — для ємності місця реклами blog_list (page_slug 'blog').
+analytics_log_view($pdo, 'other', null, 'blog');
 
 // Фільтр за тематикою: ?cat={slug категорії}[&sub={slug підкатегорії}].
 // Невідомі slug-и ігноруються — тоді показуються всі статті.
