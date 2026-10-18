@@ -100,6 +100,24 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 - Міграція: `database/migration-2026-10-12-promo-operations.sql`. Експлуатація:
   `docs/PROMO_OPERATIONS.md`.
 
+## Місця показу (2026-10-18, блоки L1–L5)
+
+- `ad_placements` (міграція `database/migration-2026-10-18-promo-placements.sql`): category_page,
+  subcategory_list, search_results, product_page, blog_list, blog_article, marketplace_listing.
+  Логіка — `app/promo-placements.php`; галочки в майстрі — `app/promo-placement-picker.php`;
+  ємність — `public/promo-capacity.php`; вкладка адмінки «Місця показу».
+- Старі ключі працюють: `catalog_card` = subcategory_list + search_results, `blog_inline` = blog_article
+  (`PROMO_LEGACY_PLACEMENTS`, `promo_placement_match_keys`). Міграція копіює їхні таргети й ціни.
+- Вимкнене місце не відбирається й не має слота. marketplace_listing — «Скоро», доки
+  `marketplace_public = 0` і не зроблено позначку «Просунуте» (`PROMO_PLACEMENT_FEATURES`).
+- Правило позиції — `position_rule` (JSON): `position`, `after_item`, `min_chars_before/after`.
+- Ліміт `slots_per_page` — у `promo_slot`; повтори на сторінці — `exclude` у `promo-serve.php`.
+- Адмін-перегляд: `?promo_preview=1` + тестова кампанія `is_test` (токен з `x=1`, події не рахуються).
+- Категорії статей: теми з коду (`BLOG_ARTICLE_TOPICS`) + `blog_post_categories` з адмінки.
+- Аналітика каталогу: `page_views.page_type='other'`, `page_slug` = `sub:<id>` / `cat:<id>` / `search` / `all`;
+  список блогу — `blog`.
+- Перевірка (локально): `php tools/promo-placements-check.php` → PASS/FAIL по кожному місцю.
+
 ## Юридичне
 
 `promo-rules.php` (вбудована чернетка UA/EN, адмін може замінити текстом у налаштуваннях),
