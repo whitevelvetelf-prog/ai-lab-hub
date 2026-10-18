@@ -162,7 +162,10 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $maxImpr = max([1, ...array_map(static fn($r) => (int) $r['impressions'], $byDay)]);
 
     $catName = static fn(array $row): string => $lang === 'en' && !empty($row['name_en']) ? (string) $row['name_en'] : (string) $row['name'];
-    $placementLabel = static fn(string $pl): string => promo_tr('placement_' . $pl);
+    // Людська назва місця (ad_placements); старі ключі до 18.10 — з позначкою періоду.
+    $placementLabel = static fn(string $pl): string => isset(PROMO_LEGACY_PLACEMENTS[$pl])
+        ? promo_tr('placement_legacy', promo_tr('placement_' . $pl))
+        : promo_placement_title($pdo, $pl, $lang);
     ?>
             <div class="accordion" id="acc-promo">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-promo-panel">

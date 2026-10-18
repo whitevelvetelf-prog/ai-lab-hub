@@ -107,6 +107,7 @@ const PROMO_I18N = [
     'placement_product_page_hint' => ['під описом продукту', 'below the product description'],
     'placement_blog_inline' => ['Стаття блогу', 'Blog article'],
     'placement_blog_inline_hint' => ['між розділами статті', 'between article sections'],
+    'placement_legacy' => ['%s (до 18.10)', '%s (before Oct 18)'],
     // Місця показу з 2026-10-18 (назви й описи редагуються в ad_placements; тут — запасні).
     'placement_category_page' => ['Сторінка категорії', 'Category page'],
     'placement_category_page_hint' => ['після вступу, перед сіткою підкатегорій', 'after the intro, before the grid of subcategories'],

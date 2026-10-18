@@ -170,9 +170,10 @@ function promo_placement_description(PDO $pdo, string $key, string $lang = 'uk')
 function promo_placement_block_reason(PDO $pdo, string $key): ?string
 {
     $p = promo_placements($pdo)[$key] ?? null;
-    if ($p === null || !$p['enabled']) {
+    if ($p === null) {
         return 'disabled';
     }
+    // Залежності — першими: рекламодавець бачить «Скоро», навіть якщо адмін місце ще не ввімкнув.
     if ($p['requires_setting'] !== null && site_setting($pdo, $p['requires_setting'], '0') !== '1') {
         return 'setting';
     }
@@ -181,7 +182,7 @@ function promo_placement_block_reason(PDO $pdo, string $key): ?string
         return 'feature';
     }
 
-    return null;
+    return $p['enabled'] ? null : 'disabled';
 }
 
 function promo_placement_available(PDO $pdo, string $key): bool

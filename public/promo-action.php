@@ -63,12 +63,12 @@ if ($action === 'export' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     header('Cache-Control: no-store');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF");
-    fputcsv($out, ['date', 'campaign_id', 'campaign', 'placement', 'impressions', 'views', 'clicks', 'ctr_percent', 'spend_uah']);
+    fputcsv($out, ['date', 'campaign_id', 'campaign', 'placement', 'placement_name', 'impressions', 'views', 'clicks', 'ctr_percent', 'spend_uah']);
     foreach (promo_stats_rows($pdo, $userId, $campaignId ?: null, $from, $to, 'day_campaign_placement') as $r) {
         $ctr = (int) $r['impressions'] > 0 ? round((int) $r['clicks'] / (int) $r['impressions'] * 100, 2) : 0;
         // Назва — текст рекламодавця: нейтралізуємо формули в Excel.
         $name = preg_match('/^[=+\-@\t\r]/', (string) $r['name']) ? "'" . $r['name'] : (string) $r['name'];
-        fputcsv($out, [$r['d'], $r['campaign_id'], $name, $r['placement'], $r['impressions'], $r['views'], $r['clicks'], $ctr, number_format((int) $r['spend'] / 100, 2, '.', '')]);
+        fputcsv($out, [$r['d'], $r['campaign_id'], $name, $r['placement'], promo_placement_title($pdo, (string) $r['placement'], promo_lang()), $r['impressions'], $r['views'], $r['clicks'], $ctr, number_format((int) $r['spend'] / 100, 2, '.', '')]);
     }
     fclose($out);
     exit;
