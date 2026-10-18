@@ -524,6 +524,155 @@ function promo_admin_save_rates(PDO $pdo, array $in): array
     return [];
 }
 
+// --- Місця показу (вкладка «Місця показу») ----------------------------------
+
+/**
+ * Зберегти перемикачі й ліміти місць: enabled[key]=1, slots[key]=1..3.
+ * Без таблиці ad_placements (міграцію не застосовано) — помилка.
+ *
+ * @return array{0:bool,1:string}
+ */
+function promo_admin_save_placements(PDO $pdo, int $adminId, array $in): array
+{
+    try {
+        $before = promo_placements($pdo, true);
+        $st = $pdo->prepare('UPDATE ad_placements SET enabled = :e, slots_per_page = :s, updated_at = UTC_TIMESTAMP() WHERE placement_key = :k');
+        $changes = [];
+        foreach (array_keys($before) as $k) {
+            $on = !empty($in['enabled'][$k]) ? 1 : 0;
+            $slots = max(1, min(3, (int) ($in['slots'][$k] ?? 1)));
+            $st->execute([':e' => $on, ':s' => $slots, ':k' => $k]);
+            if ($on !== (int) $before[$k]['enabled'] || $slots !== $before[$k]['slots_per_page']) {
+                $changes[] = $k . ': ' . ($on ? 'увімк.' : 'вимк.') . ', слотів ' . $slots;
+            }
+        }
+    } catch (Throwable $e) {
+        error_log('[promo] save placements: ' . $e->getMessage());
+
+        return [false, 'Не вдалося зберегти: застосуйте міграцію 2026-10-18 (таблиця ad_placements).'];
+    }
+    promo_placements($pdo, true);
+    if ($changes !== []) {
+        require_once __DIR__ . '/promo-linkcheck.php';
+        promo_log_event($pdo, 'placements_admin', null, null, implode('; ', $changes), $adminId);
+    }
+
+    return [true, $changes === [] ? 'Змін немає.' : 'Місця показу збережено.'];
+}
+
+/**
+ * Єдина ціна за моделлю для всіх увімкнених місць (ad_rate_card, PROMO_CURRENCY).
+ * Ціна фіксується в кампанії на момент надсилання — надіслані кампанії не змінюються.
+ *
+ * @return array{0:bool,1:string}
+ */
+function promo_admin_uniform_price(PDO $pdo, int $adminId, string $model, string $raw): array
+{
+    if (!in_array($model, ['cpm', 'cpc'], true)) {
+        return [false, 'Оберіть модель: CPM або CPC.'];
+    }
+    $price = promo_parse_money($raw);
+    if ($price === null || $price <= 0) {
+        return [false, 'Некоректна ціна.'];
+    }
+    $keys = array_keys(array_filter(promo_placements($pdo, true), static fn($p) => $p['enabled']));
+    if ($keys === []) {
+        return [false, 'Немає увімкнених місць.'];
+    }
+    $st = $pdo->prepare(
+        "INSERT INTO ad_rate_card (placement, pricing_model, price, currency, active) VALUES (:p, :m, :pr, :c, 1)
+         ON DUPLICATE KEY UPDATE price = VALUES(price), active = 1"
+    );
+    foreach ($keys as $k) {
+        $st->execute([':p' => $k, ':m' => $model, ':pr' => $price, ':c' => PROMO_CURRENCY]);
+    }
+    require_once __DIR__ . '/promo-linkcheck.php';
+    promo_log_event($pdo, 'uniform_price', null, null, strtoupper($model) . ' ' . promo_money($price) . ': ' . implode(', ', $keys), $adminId);
+
+    return [true, 'Ціну ' . strtoupper($model) . ' ' . promo_money($price) . ' задано для місць: ' . count($keys) . '.'];
+}
+
+/**
+ * Тестова кампанія для адмін-перегляду місць (is_test): лише одна; 0 — зняти.
+ *
+ * @return array{0:bool,1:string}
+ */
+function promo_admin_set_test_campaign(PDO $pdo, int $campaignId): array
+{
+    try {
+        $pdo->exec('UPDATE ad_campaigns SET is_test = 0 WHERE is_test = 1');
+        if ($campaignId > 0) {
+            $st = $pdo->prepare("UPDATE ad_campaigns SET is_test = 1 WHERE id = :id AND format = 'video'");
+            $st->execute([':id' => $campaignId]);
+            if ($st->rowCount() === 0) {
+                return [false, 'Кампанію не знайдено.'];
+            }
+        }
+    } catch (Throwable $e) {
+        return [false, 'Не вдалося: застосуйте міграцію 2026-10-18 (колонка is_test).'];
+    }
+
+    return [true, $campaignId > 0 ? 'Тестову кампанію для перегляду задано.' : 'Тестову кампанію знято.'];
+}
+
+/**
+ * Адреса сторінки-прикладу для адмін-перегляду місця (+ ?promo_preview=1), або null.
+ * Береться сторінка без no_promo.
+ */
+function promo_admin_placement_preview_url(PDO $pdo, string $key): ?string
+{
+    $one = static function (string $sql) use ($pdo): ?string {
+        try {
+            $v = $pdo->query($sql)->fetchColumn();
+
+            return $v === false ? null : (string) $v;
+        } catch (Throwable $e) {
+            return null;
+        }
+    };
+    $url = match ($key) {
+        'category_page' => ($id = $one('SELECT c.id FROM categories c WHERE c.no_promo = 0 AND EXISTS (SELECT 1 FROM subcategories s WHERE s.category_id = c.id) ORDER BY c.id LIMIT 1')) !== null ? 'category.php?id=' . $id : null,
+        'subcategory_list' => ($id = $one("SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id
+                                            WHERE s.no_promo = 0 AND c.no_promo = 0
+                                              AND (SELECT COUNT(*) FROM product_subcategories ps JOIN products p ON p.id = ps.product_id
+                                                   WHERE ps.subcategory_id = s.id AND p.status = 'published') >= 3
+                                            ORDER BY s.id LIMIT 1")) !== null ? 'catalog.php?subcategory=' . $id : null,
+        'search_results' => 'catalog.php?search=ai',
+        'product_page' => ($id = $one("SELECT p.id FROM products p WHERE p.status = 'published' AND p.no_promo = 0
+                                        AND NOT EXISTS (SELECT 1 FROM product_categories pc JOIN categories c ON c.id = pc.category_id WHERE pc.product_id = p.id AND c.no_promo = 1)
+                                        ORDER BY p.id LIMIT 1")) !== null ? 'product.php?id=' . $id : null,
+        'blog_list' => 'blog.php',
+        'blog_article' => promo_admin_preview_article($pdo),
+        'marketplace_listing' => 'marketplace.php',
+        default => null,
+    };
+
+    return $url === null ? null : $url . (str_contains($url, '?') ? '&' : '?') . 'promo_preview=1';
+}
+
+/** Стаття без no_promo, у якій правило місця blog_article знаходить позицію. */
+function promo_admin_preview_article(PDO $pdo): ?string
+{
+    require_once __DIR__ . '/blog.php';
+    $flagged = [];
+    try {
+        $flagged = $pdo->query('SELECT slug FROM promo_blog_flags WHERE no_promo = 1')->fetchAll(PDO::FETCH_COLUMN);
+    } catch (Throwable $e) {
+        // без таблиці — прапорців немає
+    }
+    foreach (array_keys(BLOG_ARTICLES) as $slug) {
+        if (in_array($slug, $flagged, true)) {
+            continue;
+        }
+        $a = blog_load_article((string) $slug, BLOG_DEFAULT_LANG);
+        if ($a !== null && substr_count(strtolower($a['html']), '<h2') >= 2) {
+            return 'blog-post.php?slug=' . rawurlencode((string) $slug);
+        }
+    }
+
+    return null;
+}
+
 // --- Кампанії: екстрена зупинка -------------------------------------------
 
 function promo_admin_campaign_status(PDO $pdo, int $campaignId, string $action): array

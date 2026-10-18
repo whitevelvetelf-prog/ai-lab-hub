@@ -10,6 +10,10 @@ declare(strict_types=1);
  *   topup_decide      tx_id, decision=confirm|reject, reason
  *   adjust            who (email|ID), type=adjust|refund, amount (±$), note
  *   rates             price[placement][cpm|cpc] ($; порожньо — ціна неактивна)
+ *   placements_save   enabled[key]=1, slots[key]=1..3 — місця показу (ad_placements)
+ *   uniform_price     model=cpm|cpc, price ($) — одна ціна для всіх увімкнених місць
+ *   test_campaign     campaign_id (0 — зняти) — тестова кампанія для адмін-перегляду (is_test)
+ *   blog_categories   slug, cats[]=5|5:12 — категорії статті блогу (blog_post_categories)
  *   settings          поля ad_settings
  *   toggle_system     enabled=0|1 — увімкнути/вимкнути ВСЮ рекламу сайту
  *   campaign_status   campaign_id, op=stop|resume|complete
@@ -104,6 +108,33 @@ switch ($action) {
     case 'rates':
         $errors = promo_admin_save_rates($pdo, $_POST);
         $back('rates', $errors === [], $errors === [] ? ['Прайс збережено.'] : $errors);
+
+    case 'placements_save':
+        [$ok, $msg] = promo_admin_save_placements($pdo, $adminId, $_POST);
+        $back('placements', $ok, [$msg]);
+
+    case 'uniform_price':
+        [$ok, $msg] = promo_admin_uniform_price($pdo, $adminId, $str('model'), $str('price'));
+        $back('placements', $ok, [$msg]);
+
+    case 'test_campaign':
+        [$ok, $msg] = promo_admin_set_test_campaign($pdo, (int) $str('campaign_id'));
+        $back('placements', $ok, [$msg]);
+
+    case 'blog_categories':
+        $slug = $str('slug');
+        require_once __DIR__ . '/../app/blog.php';
+        if (!isset(BLOG_ARTICLES[$slug])) {
+            $back('placements', false, ['Статтю не знайдено.']);
+        }
+        try {
+            $n = promo_blog_assign($pdo, $slug, array_values(array_filter((array) ($_POST['cats'] ?? []), 'is_string')));
+        } catch (Throwable $e) {
+            error_log('[promo] blog categories: ' . $e->getMessage());
+            $back('placements', false, ['Не вдалося зберегти: застосуйте міграцію 2026-10-18 (таблиця blog_post_categories).']);
+        }
+        promo_log_event($pdo, 'blog_categories', null, null, $slug . ': ' . implode(', ', (array) ($_POST['cats'] ?? [])), $adminId);
+        $back('placements', true, ['Категорії статті збережено (' . $n . ').']);
 
     case 'settings':
         $errors = promo_admin_save_settings($pdo, $_POST);

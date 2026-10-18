@@ -69,6 +69,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         'campaigns' => 'Кампанії',
         'payments' => 'Платежі',
         'rates' => 'Прайс-лист',
+        'placements' => 'Місця показу',
         'settings' => 'Налаштування',
         'reports' => 'Звіти й скарги',
         'house' => 'Власна реклама',
@@ -150,7 +151,44 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         require_once __DIR__ . '/blog.php';
     }
 
-    $plLabel = ['catalog_card' => 'Картка в каталозі', 'product_page' => 'Сторінка продукту', 'blog_inline' => 'Стаття блогу'];
+    $plLabel = ['catalog_card' => 'Картка в каталозі (до 18.10)', 'blog_inline' => 'Стаття блогу (до 18.10)'];
+    foreach (PROMO_PLACEMENTS as $pl) {
+        $plLabel[$pl] = promo_placement_title($pdo, $pl);
+    }
+
+    // Вкладка «Місця показу»: стан, ємність, приклади сторінок, тестова кампанія, категорії статей.
+    $placementRows = [];
+    foreach (promo_placements($pdo, true) as $k => $p) {
+        $placementRows[$k] = $p + [
+            'block' => promo_placement_block_reason($pdo, $k),
+            'capacity' => promo_placement_capacity($pdo, $k, [], [], null, null),
+            'preview' => promo_admin_placement_preview_url($pdo, $k),
+        ];
+    }
+    require_once __DIR__ . '/blog.php';
+    $blogMap = promo_blog_taxonomy_map($pdo);
+    $catNames = [];
+    foreach ($pdo->query('SELECT id, name FROM categories') as $r) {
+        $catNames[(int) $r['id']] = (string) $r['name'];
+    }
+    $subNames = [];
+    foreach ($pdo->query('SELECT id, name FROM subcategories') as $r) {
+        $subNames[(int) $r['id']] = (string) $r['name'];
+    }
+    $placementsTableOk = true;
+    try {
+        $pdo->query('SELECT 1 FROM ad_placements LIMIT 1');
+        $testCandidates = $pdo->query(
+            "SELECT c.id, c.name, c.status, c.campaign_type, c.is_test FROM ad_campaigns c
+             WHERE c.format = 'video' AND EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id
+                   AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL)))
+             ORDER BY c.is_test DESC, c.id DESC LIMIT 100"
+        )->fetchAll();
+    } catch (Throwable $e) {
+        $placementsTableOk = false;
+        $testCandidates = [];
+    }
+    $blogSlug = is_string($_GET['padm_blog'] ?? null) ? $_GET['padm_blog'] : '';
     $statusUk = ['draft' => 'Чернетка', 'pending_review' => 'На модерації', 'active' => 'Активна', 'paused' => 'Пауза', 'rejected' => 'Відхилена', 'completed' => 'Завершена', 'expired' => 'Завершена'];
     $stopUk = ['budget' => 'бюджет вичерпано', 'balance' => 'нема коштів', 'end_date' => 'термін минув', 'user' => 'рекламодавцем', 'admin' => 'адміном', 'link_check' => 'перевірка посилання'];
     $txUk = ['topup' => 'Поповнення', 'spend' => 'Списання', 'refund' => 'Повернення', 'adjust' => 'Коригування'];
@@ -446,6 +484,127 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 </div>
                                 <button type="submit" class="pc-btn pc-btn--primary">Зберегти прайс</button>
                             </form>
+                        </section>
+
+                        <!-- ============ Місця показу ============ -->
+                        <section class="pc-panel" data-pc-panel="placements"<?= $tab === 'placements' ? '' : ' hidden' ?>>
+                            <?php if (!$placementsTableOk): ?>
+                            <p class="pc-note pc-note--warn">Таблиці ad_placements ще немає — застосуйте міграцію database/migration-2026-10-18-promo-placements.sql. Доти діють значення за замовчуванням.</p>
+                            <?php endif; ?>
+                            <p class="pc-muted">Вимкнене місце ніколи не показує рекламу, і рекламодавці не можуть його обрати. Місце без ціни за моделлю в прайсі в майстрі неактивне. Ємність — людські перегляди відповідних сторінок за останні 30 днів (без ботів і сторінок no_promo; клас пристрою пишеться з 12.10, види сторінок каталогу й список блогу — з 18.10).</p>
+                            <form method="post" action="promo-admin-action.php">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="placements_save">
+                                <div class="pc-table-wrap">
+                                    <table class="pc-table">
+                                        <thead><tr><th>Місце</th><th>Увімкнено</th><th>Блоків на сторінку</th><th>Стан</th><th>Перегляди за 30 днів</th><th>На сайті</th></tr></thead>
+                                        <tbody>
+                                        <?php foreach ($placementRows as $k => $p):
+                                            $state = [];
+                                            if ($p['requires_setting'] !== null) {
+                                                $state[] = 'залежить від ' . $p['requires_setting'] . (site_setting($pdo, $p['requires_setting'], '0') === '1' ? ' (увімкнено)' : ' (вимкнено)');
+                                            }
+                                            if (!empty($p['rule']['requires_feature']) && empty(PROMO_PLACEMENT_FEATURES[$p['rule']['requires_feature']])) {
+                                                $state[] = 'потрібна позначка «Просунуте» для оголошень (ще не зроблена)';
+                                            }
+                                            $prices = [];
+                                            foreach (['cpm' => 'CPM', 'cpc' => 'CPC'] as $m => $ml) {
+                                                if (!empty($rates[$k][$m])) {
+                                                    $prices[] = $ml . ' ' . promo_money($rates[$k][$m]);
+                                                }
+                                            }
+                                            $state[] = $prices !== [] ? 'є ціна: ' . implode(' · ', $prices) : 'немає ціни';
+                                            ?>
+                                        <tr>
+                                            <td data-label="Місце"><strong><?= pc_e($p['title_uk']) ?></strong><span class="pc-muted"><?= pc_e($k) ?> · <?= pc_e(['catalog' => 'Каталог', 'blog' => 'Блог', 'marketplace' => 'Маркетплейс'][$p['group_key']] ?? $p['group_key']) ?></span></td>
+                                            <td data-label="Увімкнено"><label class="pc-check"><input type="checkbox" name="enabled[<?= pc_e($k) ?>]" value="1"<?= $p['enabled'] ? ' checked' : '' ?>> <span>так</span></label></td>
+                                            <td data-label="Блоків на сторінку"><input type="number" name="slots[<?= pc_e($k) ?>]" value="<?= (int) $p['slots_per_page'] ?>" min="1" max="3" style="width:5em"></td>
+                                            <td data-label="Стан"><?= pc_e(implode('; ', $state)) ?><?php if ($p['block'] === null && $p['enabled']): ?><span class="pc-muted">доступне</span><?php elseif ($p['block'] === 'disabled'): ?><span class="pc-muted">вимкнене</span><?php endif; ?></td>
+                                            <td data-label="Перегляди за 30 днів"><?= $p['capacity'] === null ? 'немає даних' : ($p['capacity'] < PROMO_CAPACITY_MIN_VIEWS ? 'даних поки замало (' . (int) $p['capacity'] . ')' : number_format($p['capacity'], 0, ',', ' ')) ?></td>
+                                            <td data-label="На сайті"><?php if ($p['preview'] !== null): ?><a href="<?= pc_e($p['preview']) ?>" target="_blank" rel="noopener">Переглянути на сайті</a><?php else: ?>—<?php endif; ?></td>
+                                        </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <button type="submit" class="pc-btn pc-btn--primary">Зберегти місця</button>
+                            </form>
+                            <p class="pc-muted">«Переглянути на сайті» відкриває сторінку з ?promo_preview=1: адміністратор бачить блок місця з креативом тестової кампанії (навіть коли реклама чи місце вимкнені). Покази, кліки й скарги в перегляді не рахуються й не списуються. Сторінки no_promo блока не мають і в перегляді.</p>
+
+                            <h3 class="pc-h3">Тестова кампанія для перегляду</h3>
+                            <form method="post" action="promo-admin-action.php" class="pc-inline-form">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="test_campaign">
+                                <select name="campaign_id" aria-label="Тестова кампанія">
+                                    <option value="0">— немає —</option>
+                                    <?php foreach ($testCandidates as $c): ?>
+                                    <option value="<?= (int) $c['id'] ?>"<?= (int) $c['is_test'] === 1 ? ' selected' : '' ?>>#<?= (int) $c['id'] ?> <?= pc_e($c['name']) ?> (<?= pc_e($statusUk[$c['status']] ?? $c['status']) ?><?= $c['campaign_type'] === 'internal' ? ', власна' : '' ?>)</option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="submit" class="pc-btn">Зберегти</button>
+                            </form>
+                            <p class="pc-muted">Підійде будь-яка відеокампанія з відео (зручно — власна реклама сайту на паузі). Статус кампанії не змінюється.</p>
+
+                            <h3 class="pc-h3">Єдина ціна для всіх місць</h3>
+                            <form method="post" action="promo-admin-action.php" class="pc-inline-form" data-pc-confirm="Задати цю ціну для всіх увімкнених місць? Ціни в уже надісланих кампаніях не зміняться.">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="uniform_price">
+                                <select name="model" aria-label="Модель">
+                                    <option value="cpm">CPM, $ за 1000 показів</option>
+                                    <option value="cpc">CPC, $ за клік</option>
+                                </select>
+                                <input type="text" inputmode="decimal" name="price" placeholder="0.00" aria-label="Ціна, $" style="width:7em">
+                                <button type="submit" class="pc-btn pc-btn--primary">Задати для всіх увімкнених</button>
+                            </form>
+                            <p class="pc-muted">Записується в прайс (ad_rate_card) для кожного увімкненого місця; окремі ціни потім можна змінити на вкладці «Прайс-лист».</p>
+
+                            <h3 class="pc-h3">Категорії статей блогу</h3>
+                            <p class="pc-muted">Таргетинг за категорією в блозі працює для статей із категоріями: теми з коду (BLOG_ARTICLE_TOPICS) + призначені тут. Статті без категорій показують лише рекламу для всіх категорій.</p>
+                            <?php if ($blogSlug !== '' && isset(BLOG_ARTICLES[$blogSlug])):
+                                $assigned = [];
+                                foreach (promo_blog_assigned($pdo, $blogSlug) as [$bc, $bs]) {
+                                    $assigned[] = $bs > 0 ? $bc . ':' . $bs : (string) $bc;
+                                }
+                                ?>
+                            <form method="post" action="promo-admin-action.php" class="pc-box">
+                                <?= $csrf ?>
+                                <input type="hidden" name="action" value="blog_categories">
+                                <input type="hidden" name="slug" value="<?= pc_e($blogSlug) ?>">
+                                <p><strong><?= pc_e($blogSlug) ?></strong> — оберіть категорії або окремі підкатегорії (додатково до тем із коду).</p>
+                                <div class="pc-cats">
+                                    <?php foreach (promo_taxonomy($pdo) as $cid => $cat): ?>
+                                    <details class="pc-cat"<?= in_array((string) $cid, $assigned, true) || array_filter($assigned, static fn($a) => str_starts_with($a, $cid . ':')) ? ' open' : '' ?>>
+                                        <summary><label class="pc-check" onclick="event.stopPropagation()"><input type="checkbox" name="cats[]" value="<?= $cid ?>"<?= in_array((string) $cid, $assigned, true) ? ' checked' : '' ?>> <span><?= pc_e($cat['name']) ?> <small>(уся категорія)</small></span></label></summary>
+                                        <div class="pc-subs">
+                                            <?php foreach ($cat['subs'] as $sid => $sub): ?>
+                                            <label class="pc-check"><input type="checkbox" name="cats[]" value="<?= $cid ?>:<?= $sid ?>"<?= in_array($cid . ':' . $sid, $assigned, true) ? ' checked' : '' ?>> <span><?= pc_e($sub['name']) ?></span></label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    </details>
+                                    <?php endforeach; ?>
+                                </div>
+                                <p class="pc-actions"><button type="submit" class="pc-btn pc-btn--primary">Зберегти категорії статті</button>
+                                    <a class="pc-btn" href="account.php?padm_tab=placements#acc-promo-admin">Скасувати</a></p>
+                            </form>
+                            <?php endif; ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th>Стаття</th><th>Категорії</th><th>Дії</th></tr></thead>
+                                    <tbody>
+                                    <?php foreach (blog_list_articles('uk') as $art):
+                                        $slugA = (string) $art['slug'];
+                                        [$ac, $as] = $blogMap[$slugA] ?? [[], []];
+                                        $names = array_merge(array_map(static fn($i) => $catNames[$i] ?? ('#' . $i), $ac), array_map(static fn($i) => $subNames[$i] ?? ('#' . $i), $as));
+                                        ?>
+                                    <tr>
+                                        <td data-label="Стаття"><?= pc_e($art['title']) ?><span class="pc-muted"><?= pc_e($slugA) ?></span></td>
+                                        <td data-label="Категорії"><?= $names === [] ? '<span class="pc-warn-text">немає — лише реклама для всіх категорій</span>' : pc_e(implode(', ', $names)) ?></td>
+                                        <td data-label="Дії"><a class="pc-btn pc-btn--small" href="account.php?padm_tab=placements&amp;padm_blog=<?= pc_e(rawurlencode($slugA)) ?>#acc-promo-admin">Призначити</a></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </section>
 
                         <!-- ============ D4. Налаштування ============ -->
