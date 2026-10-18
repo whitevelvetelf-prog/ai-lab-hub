@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/ads.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/marketplace.php';
 
@@ -19,8 +18,6 @@ require_once __DIR__ . '/../app/marketplace.php';
 $pdo = require __DIR__ . '/../config/database.php';
 
 analytics_log_view($pdo, 'home');
-
-$homepageBanner = ads_pick_campaign($pdo, 'homepage_banner');
 
 $categories = $pdo->query(
     "SELECT id, name, name_en, slug
@@ -391,12 +388,6 @@ $categoryIcons = [
             font-weight: 700;
         }
 
-        .home-ad {
-            width: 100%;
-            max-width: 1080px;
-            margin-top: 40px;
-        }
-
         @media (max-width: 600px) {
             .site-header {
                 justify-content: flex-end;
@@ -448,12 +439,6 @@ $categoryIcons = [
                 <?php endforeach; ?>
             </div>
         </section>
-
-        <?php if ($homepageBanner !== null): ?>
-        <section class="home-ad">
-            <?php $campaign = $homepageBanner; require __DIR__ . '/../app/ad-banner.php'; ?>
-        </section>
-        <?php endif; ?>
     </main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
