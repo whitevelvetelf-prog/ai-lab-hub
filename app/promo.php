@@ -454,14 +454,15 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     return $pool[array_key_last($pool)];
 }
 
-/** Публічні дані креативу для промальовування (JSON для sponsored.js). */
-function promo_public_payload(array $creative, string $placement): array
+/** Публічні дані креативу для промальовування (JSON для sponsored.js). $preview — адмін-перегляд без обліку. */
+function promo_public_payload(array $creative, string $placement, bool $preview = false): array
 {
     $isUpload = $creative['video_type'] === 'upload';
 
     return [
         'id'          => (int) $creative['id'],
-        'token'       => promo_token_make(['c' => (int) $creative['id'], 'k' => (int) $creative['campaign_id'], 'p' => $placement]),
+        'token'       => promo_token_make(['c' => (int) $creative['id'], 'k' => (int) $creative['campaign_id'], 'p' => $placement, 'x' => $preview ? 1 : 0]),
+        'preview'     => $preview,
         'placement'   => $placement,
         'title'       => (string) $creative['title'],
         'description' => (string) $creative['description'],
@@ -774,6 +775,8 @@ function promo_maintenance(PDO $pdo): array
  * Слот прихований (display:none) доки немає реклами — порожнього місця не лишається.
  * Нічого не виводить, якщо система вимкнена, місце вимкнене/недоступне, сторінку
  * виключено (no_promo) або на сторінці вже стоїть slots_per_page блоків цього місця.
+ * Адмін із ?promo_preview=1 бачить слот і при вимкненій системі чи місці — його
+ * заповнює креатив тестової кампанії (is_test) без обліку подій.
  * $page: ['product' => id] або ['article' => slug] — для перевірки прапорців.
  *
  * @param list<int> $categoryIds
@@ -783,10 +786,14 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
 {
     static $assetsPrinted = false;
     static $perPage = [];
-    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo) || !promo_placement_available($pdo, $placement)) {
+    if (!in_array($placement, PROMO_PLACEMENTS, true)) {
         return '';
     }
-    // Чутлива сторінка (no_promo) — жодного слота, жодного порожнього місця.
+    $preview = promo_preview_active($pdo);
+    if (!$preview && (!promo_video_ready($pdo) || !promo_placement_available($pdo, $placement))) {
+        return '';
+    }
+    // Чутлива сторінка (no_promo) — жодного слота, жодного порожнього місця (і в перегляді).
     if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
         return '';
     }
@@ -801,6 +808,7 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
         . ' data-subcategory="' . htmlspecialchars(implode(',', array_map('intval', $subcategoryIds)), ENT_QUOTES) . '"'
         . (!empty($page['product']) ? ' data-product="' . (int) $page['product'] . '"' : '')
         . (!empty($page['article']) ? ' data-article="' . htmlspecialchars((string) $page['article'], ENT_QUOTES) . '"' : '')
+        . ($preview ? ' data-preview="1"' : '')
         . ' data-lang="' . promo_lang() . '"></div>';
 
     if (!$assetsPrinted) {
@@ -811,4 +819,51 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
     }
 
     return $html;
+}
+
+// --- Адмін-перегляд місць --------------------------------------------------
+
+/**
+ * Адмін-перегляд: ?promo_preview=1 в адресі сторінки й роль admin (за БД). Слоти
+ * виводяться навіть при вимкненій системі чи місці; promo-serve.php віддає креатив
+ * тестової кампанії (is_test) з позначкою перегляду — події й кліки не рахуються.
+ */
+function promo_preview_active(PDO $pdo): bool
+{
+    static $active = null;
+    if ($active !== null) {
+        return $active;
+    }
+    $active = false;
+    $uid = ($_GET['promo_preview'] ?? '') === '1' && function_exists('auth_user_id') ? auth_user_id() : null;
+    if ($uid !== null) {
+        try {
+            $st = $pdo->prepare('SELECT role FROM users WHERE id = :u');
+            $st->execute([':u' => $uid]);
+            $active = $st->fetchColumn() === 'admin';
+        } catch (Throwable $e) {
+            $active = false;
+        }
+    }
+
+    return $active;
+}
+
+/** Креатив тестової кампанії (is_test = 1) для адмін-перегляду, або null. */
+function promo_preview_creative(PDO $pdo): ?array
+{
+    try {
+        $row = $pdo->query(
+            "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,
+                    cr.video_path, cr.youtube_id, cr.poster_path
+             FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
+             WHERE c.is_test = 1 AND c.format = 'video'
+               AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL))
+             ORDER BY cr.id LIMIT 1"
+        )->fetch();
+    } catch (Throwable $e) {
+        return null; // міграцію 2026-10-18 ще не застосовано
+    }
+
+    return $row === false ? null : $row;
 }

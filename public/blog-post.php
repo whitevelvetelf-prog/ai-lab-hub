@@ -34,42 +34,26 @@ if ($article !== null) {
     $pdo = require __DIR__ . '/../config/database.php';
     analytics_log_view($pdo, 'article', null, $slug);
 
-    // Відеореклама (blog_inline): перед другим розділом статті (другим <h2>),
-    // таргетинг — за темами статті (BLOG_ARTICLE_TOPICS → id категорій/підкатегорій).
-    // Немає другого розділу або реклами — стаття без змін.
-    $promoCats = [];
-    $promoSubs = [];
-    try {
-        foreach (blog_article_topics($slug) as $topic) {
-            $q = $pdo->prepare('SELECT id FROM categories WHERE slug = :s');
-            $q->execute([':s' => $topic['cat']]);
-            $catId = (int) $q->fetchColumn();
-            if ($catId <= 0) {
-                continue;
-            }
-            $promoCats[] = $catId;
-            if ($topic['sub'] !== '') {
-                $q = $pdo->prepare('SELECT id FROM subcategories WHERE slug = :s AND category_id = :c');
-                $q->execute([':s' => $topic['sub'], ':c' => $catId]);
-                $subId = (int) $q->fetchColumn();
-                if ($subId > 0) {
-                    $promoSubs[] = $subId;
-                }
-            }
-        }
-    } catch (Throwable $e) {
-        error_log('[promo] blog topics: ' . $e->getMessage());
-    }
+    // Відеореклама (місце blog_article): перед заголовком розділу (<h2>), до якого в статті
+    // вже набралося щонайменше min_chars_before символів тексту, а після якого лишається
+    // щонайменше min_chars_after (правило місця в ad_placements) — не на самому початку
+    // й не в кінці. Таргетинг — за категоріями статті (теми з коду + призначені в адмінці).
+    // Немає такого розділу або реклами — стаття без змін.
+    [$promoCats, $promoSubs] = promo_blog_article_taxonomy($pdo, $slug);
     $promoSlotHtml = promo_slot($pdo, 'blog_article', $promoCats, $promoSubs, ['article' => $slug]);
     if ($promoSlotHtml !== '') {
-        $h2At = [];
-        $offset = 0;
+        $minBefore = promo_placement_rule_int($pdo, 'blog_article', 'min_chars_before', 600);
+        $minAfter = promo_placement_rule_int($pdo, 'blog_article', 'min_chars_after', 400);
+        $textLen = static fn(string $html): int => mb_strlen(trim((string) preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'))));
+        $offset = 1;
         while (($pos = stripos($article['html'], '<h2', $offset)) !== false) {
-            $h2At[] = $pos;
+            if ($textLen(substr($article['html'], 0, $pos)) >= $minBefore) {
+                if ($textLen(substr($article['html'], $pos)) >= $minAfter) {
+                    $article['html'] = substr($article['html'], 0, $pos) . $promoSlotHtml . substr($article['html'], $pos);
+                }
+                break;
+            }
             $offset = $pos + 3;
-        }
-        if (count($h2At) >= 2) {
-            $article['html'] = substr($article['html'], 0, $h2At[1]) . $promoSlotHtml . substr($article['html'], $h2At[1]);
         }
     }
 }

@@ -45,7 +45,8 @@ if ($target === '' || !preg_match('~^https://[^\s/?#]+~i', $target)) {
     exit;
 }
 
-if ($data['fresh'] && $data['own'] && !promo_is_bot() && promo_video_ready($pdo)) {
+// Адмін-перегляд (preview) — перехід без обліку.
+if ($data['fresh'] && $data['own'] && !$data['preview'] && !promo_is_bot() && promo_video_ready($pdo)) {
     try {
         promo_record_event($pdo, $data['c'], 'click', $data['p'], analytics_session_hash());
     } catch (Throwable $e) {

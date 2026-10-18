@@ -20,7 +20,7 @@ $ok = false;
 $reason = is_string($_POST['reason'] ?? null) ? $_POST['reason'] : '';
 $data = promo_token_read(is_string($_POST['t'] ?? null) ? $_POST['t'] : '');
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $data !== null && $data['own']
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $data !== null && $data['own'] && !$data['preview']
     && in_array($reason, PROMO_REPORT_REASONS, true) && !promo_is_bot()) {
     try {
         /** @var PDO $pdo */

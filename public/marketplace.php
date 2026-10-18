@@ -16,6 +16,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/promo.php';
 
 mp_public_require();
 
@@ -164,10 +165,18 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>
         <?php else: ?>
+            <?php
+            // Реклама (місце marketplace_listing): лише коли місце дозволене — маркетплейс
+            // відкритий (marketplace_public) і зроблено позначку «Просунуте»; доти promo_slot порожній.
+            $promoSlotHtml = promo_slot($pdo, 'marketplace_listing');
+            $promoSlotAt = min(promo_placement_rule_int($pdo, 'marketplace_listing', 'position', 3) - 1, count($result['rows']));
+            ?>
             <div class="mp-grid">
-                <?php foreach ($result['rows'] as $card): ?>
+                <?php foreach ($result['rows'] as $i => $card): ?>
+                    <?php if ($i === $promoSlotAt) { echo $promoSlotHtml; } ?>
                     <?php include __DIR__ . '/../app/mpb-card.php'; ?>
                 <?php endforeach; ?>
+                <?php if ($promoSlotAt === count($result['rows'])) { echo $promoSlotHtml; } ?>
             </div>
 
             <?php if ($result['pages'] > 1): ?>

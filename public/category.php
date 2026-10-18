@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/promo.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -546,6 +547,8 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
         <?php if ($subcategories === []): ?>
         <p class="category__empty"><?= htmlspecialchars(t('category_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
+        <?php // Відеореклама (місце category_page): один блок після вступу, перед сіткою підкатегорій. ?>
+        <?= promo_slot($pdo, 'category_page', [(int) $category['id']]) ?>
         <div class="subcategory-grid">
             <?php foreach ($subcategories as $subcategory): ?>
                 <?php

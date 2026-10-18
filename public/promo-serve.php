@@ -5,10 +5,12 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — відбір відеореклами для слота (app/promo.php → promo_pick).
  *
- * GET placement=catalog_card|product_page|blog_inline
+ * GET placement=category_page|subcategory_list|search_results|product_page|blog_list|blog_article|marketplace_listing
  *     category=1,2  subcategory=5  (id сторінки, через кому; порожньо — без категорії)
  *     lang=uk|en  device=mobile|desktop  (необов'язкові; інакше — мова сесії / User-Agent)
  *     product=N | article=slug  (сторінка: перевірка no_promo і правил категорій реклами)
+ *     exclude=3,7  (креативи, уже показані на цій сторінці — одна реклама не повторюється)
+ *     preview=1    (адмін із ?promo_preview=1: креатив тестової кампанії is_test, без обліку)
  *
  * 200 + JSON {creative, labels} — один креатив; 204 — реклами немає
  * (система вимкнена, сторінку виключено no_promo, немає придатних кампаній, бот). Викликає sponsored.js.
@@ -36,7 +38,7 @@ $ids = static function (string $key): array {
 
 $placement = is_string($_GET['placement'] ?? null) ? $_GET['placement'] : '';
 
-if (promo_is_bot() || !in_array($placement, PROMO_PLACEMENTS, true)) {
+if (!in_array($placement, PROMO_PLACEMENTS, true) || (promo_is_bot() && ($_GET['preview'] ?? '') !== '1')) {
     http_response_code(204);
     exit;
 }
@@ -44,6 +46,20 @@ if (promo_is_bot() || !in_array($placement, PROMO_PLACEMENTS, true)) {
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 promo_db_utc($pdo);
+
+// Адмін-перегляд місця: тестова кампанія, токен із позначкою перегляду (події не рахуються).
+if (($_GET['preview'] ?? '') === '1') {
+    $_GET['promo_preview'] = '1';
+    $creative = promo_preview_active($pdo) ? promo_preview_creative($pdo) : null;
+    if ($creative === null) {
+        http_response_code(204);
+        exit;
+    }
+    $payload = promo_public_payload($creative, $placement, true);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['creative' => $payload, 'labels' => promo_labels()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
 
 $page = [];
 if ((int) ($_GET['product'] ?? 0) > 0) {
@@ -61,7 +77,8 @@ $creative = promo_pick(
     promo_lang(is_string($_GET['lang'] ?? null) ? $_GET['lang'] : null),
     promo_device(is_string($_GET['device'] ?? null) ? $_GET['device'] : null),
     analytics_session_hash(),
-    $page
+    $page,
+    $ids('exclude')
 );
 
 if ($creative === null) {

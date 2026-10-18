@@ -12,6 +12,11 @@
  *   * Облік: impression — ≥50% площі видно ≥1 с, одна подія за завантаження
  *     сторінки; view — ≥3 с відтворення (лише власне відео). Події — sendBeacon на
  *     /promo-event.php; клік — тільки через /promo-click.php?t=ТОКЕН.
+ *   * Слоти сторінки заповнюються по черзі: кожен запит передає exclude — креативи,
+ *     уже показані на сторінці, тож одна реклама не повторюється.
+ *   * Слот вище видимої області — прокрутка компенсується на висоту картки (без стрибка).
+ *   * data-preview="1" (адмін із ?promo_preview=1) — креатив тестової кампанії, події
+ *     не надсилаються.
  *   * Увесь текст із сервера вставляється через textContent (без HTML).
  */
 (function () {
@@ -206,9 +211,9 @@
         var media = el('div', 'sponsored-card__media');
         card.appendChild(media);
 
-        var impressionSent = false;
+        var impressionSent = !!creative.preview;
         var player = creative.type === 'upload' && creative.video
-            ? buildVideo(media, creative, labels, function (type) { sendEvent(creative.token, type); })
+            ? buildVideo(media, creative, labels, function (type) { if (!creative.preview) { sendEvent(creative.token, type); } })
             : buildYoutube(media, creative, labels);
 
         if (creative.title) {
@@ -227,8 +232,14 @@
         buildReport(card, footer, creative, labels);
         card.appendChild(footer);
 
+        // Слот вище видимої області: зберігаємо положення читача (без стрибка вмісту).
+        var above = slot.getBoundingClientRect().top < 0;
+        var before = document.documentElement.scrollHeight;
         slot.appendChild(card);
         slot.hidden = false;
+        if (above) {
+            window.scrollBy(0, document.documentElement.scrollHeight - before);
+        }
 
         if (!('IntersectionObserver' in window)) {
             return;
@@ -255,6 +266,8 @@
         observer.observe(card);
     }
 
+    var shown = [];
+
     function fill(slot) {
         var params = new URLSearchParams({
             placement: slot.dataset.placement || '',
@@ -269,12 +282,21 @@
         if (slot.dataset.article) {
             params.set('article', slot.dataset.article);
         }
-        fetch(SERVE + '?' + params.toString(), { credentials: 'same-origin' })
+        if (shown.length) {
+            params.set('exclude', shown.join(','));
+        }
+        if (slot.dataset.preview === '1') {
+            params.set('preview', '1');
+        }
+        return fetch(SERVE + '?' + params.toString(), { credentials: 'same-origin' })
             .then(function (res) {
                 return res.status === 200 ? res.json() : null;
             })
             .then(function (payload) {
                 if (payload && payload.creative && payload.labels) {
+                    if (!payload.creative.preview) {
+                        shown.push(payload.creative.id);
+                    }
                     render(slot, payload);
                 }
             })
@@ -282,7 +304,10 @@
     }
 
     function init() {
-        Array.prototype.forEach.call(document.querySelectorAll('.sponsored-slot[data-placement]'), fill);
+        // По черзі: наступний слот знає, що вже показано (exclude).
+        Array.prototype.reduce.call(document.querySelectorAll('.sponsored-slot[data-placement]'), function (chain, slot) {
+            return chain.then(function () { return fill(slot); });
+        }, Promise.resolve());
     }
 
     if (document.readyState === 'loading') {

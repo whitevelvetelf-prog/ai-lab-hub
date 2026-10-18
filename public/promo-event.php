@@ -28,7 +28,7 @@ if (!in_array($type, ['impression', 'view'], true)) {
 }
 
 $data = promo_token_read($token);
-if ($data === null || !$data['fresh'] || !$data['own']) {
+if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview']) {
     exit;
 }
 

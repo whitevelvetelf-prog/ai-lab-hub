@@ -10,6 +10,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/blog.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/promo.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -292,8 +293,27 @@ $topicLabels = static function (string $slug) use ($taxonomy): array {
         <?php if ($articles === []): ?>
             <p class="blog-empty"><?= htmlspecialchars(t('blog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
+            <?php
+            // Відеореклама (місце blog_list): один блок після 3-ї статті (правило місця),
+            // якщо статей менше — після останньої. Відфільтровано за темою — таргетинг за нею.
+            $promoCats = [];
+            $promoSubs = [];
+            if ($cat !== '') {
+                $q = $pdo->prepare('SELECT id FROM categories WHERE slug = :s');
+                $q->execute([':s' => $cat]);
+                $promoCats = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+                if ($sub !== '' && $promoCats !== []) {
+                    $q = $pdo->prepare('SELECT id FROM subcategories WHERE slug = :s AND category_id = :c');
+                    $q->execute([':s' => $sub, ':c' => $promoCats[0]]);
+                    $promoSubs = array_map('intval', $q->fetchAll(PDO::FETCH_COLUMN));
+                }
+            }
+            $promoSlotHtml = promo_slot($pdo, 'blog_list', $promoCats, $promoSubs);
+            $promoAfter = min(promo_placement_rule_int($pdo, 'blog_list', 'after_item', 3), count($articles));
+            ?>
             <div class="blog-list">
-                <?php foreach ($articles as $article): ?>
+                <?php foreach ($articles as $i => $article): ?>
+                    <?php if ($i === $promoAfter) { echo $promoSlotHtml; } ?>
                     <a class="blog-card" href="<?= htmlspecialchars(blog_article_url($article['slug'], $article['lang']), ENT_QUOTES) ?>">
                         <?php $labels = $topicLabels($article['slug']); ?>
                         <?php if ($labels !== []): ?>
@@ -310,6 +330,7 @@ $topicLabels = static function (string $slug) use ($taxonomy): array {
                         <?php endif; ?>
                     </a>
                 <?php endforeach; ?>
+                <?php if ($promoAfter === count($articles)) { echo $promoSlotHtml; } ?>
             </div>
         <?php endif; ?>
     </main>

@@ -1,5 +1,6 @@
 /* AI LAB HUB — картка відеореклами (.sponsored-card), спільна для всіх розміщень
-   (catalog_card, product_page, blog_inline). Заповнює sponsored.js.
+   (місця ad_placements: category_page, subcategory_list, search_results, product_page,
+   blog_list, blog_article; старі catalog_card, blog_inline). Заповнює sponsored.js.
    Слот прихований (hidden), доки немає реклами — порожнього місця не лишається.
    Світлі посилання й наведення на темному фоні сайту; без горизонтальної прокрутки. */
 
@@ -7,7 +8,10 @@
     display: none !important;
 }
 
+.sponsored-slot--category_page,
 .sponsored-slot--product_page,
+.sponsored-slot--blog_list,
+.sponsored-slot--blog_article,
 .sponsored-slot--blog_inline {
     margin: 28px 0;
 }
@@ -28,7 +32,10 @@
     overflow: hidden;
 }
 
+.sponsored-slot--category_page .sponsored-card,
 .sponsored-slot--product_page .sponsored-card,
+.sponsored-slot--blog_list .sponsored-card,
+.sponsored-slot--blog_article .sponsored-card,
 .sponsored-slot--blog_inline .sponsored-card {
     max-width: 640px;
 }
@@ -205,12 +212,19 @@
     }
 }
 
-/* Розміщення catalog_card: слот — звичайна клітинка сітки каталогу, картка заповнює її на всю висоту. */
+/* Картка в сітці каталогу (subcategory_list, search_results, раніше catalog_card): слот —
+   звичайна клітинка сітки, картка заповнює її на всю висоту. */
+.sponsored-slot--subcategory_list,
+.sponsored-slot--search_results,
+.sponsored-slot--marketplace_listing,
 .sponsored-slot--catalog_card {
     display: flex;
     min-width: 0;
 }
 
+.sponsored-slot--subcategory_list .sponsored-card,
+.sponsored-slot--search_results .sponsored-card,
+.sponsored-slot--marketplace_listing .sponsored-card,
 .sponsored-slot--catalog_card .sponsored-card {
     flex: 1 1 auto;
 }
