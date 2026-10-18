@@ -55,6 +55,132 @@
     });
     var root = document.querySelector('.pc[data-pc-param="promo_tab"]') || roots[0];
 
+    // --- Місця показу (галочки): майстер і форма «Місця показу» кампанії ---------
+    // opts.model() — 'cpm' | 'cpc' | null; opts.targeting() — {language, device, cats, subs};
+    // opts.onChange() — після зміни вибору (прогноз бюджету).
+    function initPlaces(box, opts) {
+        var t = JSON.parse(box.getAttribute('data-i18n') || '{}');
+        var house = box.getAttribute('data-house') === '1';
+        var minViews = parseInt(box.getAttribute('data-min-views'), 10) || 100;
+        var items = Array.prototype.slice.call(box.querySelectorAll('[data-pc-place]'));
+        var all = box.querySelector('[data-pc-places-all]');
+        var required = box.querySelector('[data-pc-places-required]');
+        var onChange = opts.onChange || function () {};
+
+        function inputs(enabledOnly) {
+            return items.map(function (item) { return item.querySelector('input'); })
+                .filter(function (i) { return !enabledOnly || !i.disabled; });
+        }
+        function syncAll() {
+            var enabled = inputs(true);
+            var checked = enabled.filter(function (i) { return i.checked; }).length;
+            all.disabled = enabled.length === 0;
+            all.checked = enabled.length > 0 && checked === enabled.length;
+            all.indeterminate = checked > 0 && checked < enabled.length;
+            if (checked > 0) {
+                required.hidden = true;
+            }
+        }
+        function refresh() {
+            var m = opts.model();
+            items.forEach(function (item) {
+                var input = item.querySelector('input');
+                var block = item.getAttribute('data-block');
+                var price = m ? parseInt(item.getAttribute('data-' + m), 10) || 0 : 0;
+                var ok = !block && (house || price > 0);
+                input.disabled = !ok;
+                if (!ok) {
+                    input.checked = false;
+                }
+                item.classList.toggle('is-disabled', !ok);
+                var priceEl = item.querySelector('[data-pc-place-price]');
+                if (priceEl && !block) {
+                    priceEl.textContent = !m ? t.place_no_model : (price > 0 ? item.getAttribute('data-' + m + '-text') : t.place_no_price);
+                    priceEl.classList.toggle('pc-warn-text', !!m && price <= 0);
+                }
+            });
+            syncAll();
+        }
+
+        all.addEventListener('change', function () {
+            inputs(true).forEach(function (i) { i.checked = all.checked; });
+            syncAll();
+            onChange();
+        });
+        inputs(false).forEach(function (i) {
+            i.addEventListener('change', function () { syncAll(); onChange(); });
+        });
+
+        // Орієнтовна ємність: перегляди сторінок місця за 30 днів у межах таргетингу.
+        var timer = null;
+        var seq = 0;
+        function loadCapacity() {
+            window.clearTimeout(timer);
+            timer = window.setTimeout(function () {
+                var tg = opts.targeting();
+                var q = new URLSearchParams({
+                    cats: tg.cats.join(','), subs: tg.subs.join(','), language: tg.language || 'all', device: tg.device || 'all'
+                });
+                var my = ++seq;
+                items.forEach(function (item) { item.querySelector('[data-pc-place-capacity]').textContent = t.capacity_loading; });
+                fetch(box.getAttribute('data-capacity-url') + '?' + q.toString(), { credentials: 'same-origin' })
+                    .then(function (res) { return res.ok ? res.json() : {}; })
+                    .catch(function () { return {}; })
+                    .then(function (data) {
+                        if (my !== seq) {
+                            return;
+                        }
+                        items.forEach(function (item) {
+                            var n = data[item.getAttribute('data-pc-place')];
+                            var el = item.querySelector('[data-pc-place-capacity]');
+                            if (typeof n !== 'number') {
+                                el.textContent = t.capacity_none;
+                            } else if (n < minViews) {
+                                el.textContent = t.capacity_few;
+                            } else {
+                                el.textContent = String(t.capacity_views || '%s').replace('%s', n.toLocaleString(document.documentElement.lang === 'en' ? 'en-US' : 'uk-UA'));
+                            }
+                        });
+                    });
+            }, 300);
+        }
+
+        refresh();
+        loadCapacity();
+
+        return {
+            refresh: refresh,
+            loadCapacity: loadCapacity,
+            // Мінімум одна галочка: false — показали спокійне повідомлення.
+            validate: function () {
+                if (inputs(true).some(function (i) { return i.checked; })) {
+                    return true;
+                }
+                required.hidden = false;
+                required.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                return false;
+            },
+            labels: function () {
+                return items.filter(function (item) { return item.querySelector('input').checked; })
+                    .map(function (item) { return item.querySelector('strong').textContent; });
+            }
+        };
+    }
+
+    document.querySelectorAll('form.pc-places-form').forEach(function (f) {
+        var box = f.querySelector('[data-pc-places]');
+        var fixed = JSON.parse(box.getAttribute('data-fixed-targeting') || '{}');
+        var places = initPlaces(box, {
+            model: function () { return box.getAttribute('data-fixed-model') || null; },
+            targeting: function () { return { language: fixed.language, device: fixed.device, cats: fixed.cats || [], subs: fixed.subs || [] }; }
+        });
+        f.addEventListener('submit', function (e) {
+            if (!places.validate()) {
+                e.preventDefault();
+            }
+        });
+    });
+
     // --- Майстер ---------------------------------------------------------
     var form = document.getElementById('pcWizard');
     if (!form) {
@@ -295,15 +421,6 @@
         } catch (e) { /* відео з іншого джерела — кадр недоступний */ }
     });
 
-    // --- Аудиторія: «усі категорії» вимикає вибір окремих ------------------
-    var catAll = form.querySelector('[data-pc-cat-all]');
-    var catsBox = form.querySelector('[data-pc-cats]');
-    function syncCats() {
-        catsBox.classList.toggle('is-disabled', catAll.checked);
-        catsBox.querySelectorAll('input').forEach(function (i) { i.disabled = catAll.checked; });
-    }
-    catAll.addEventListener('change', syncCats);
-
     // --- Ціни й прогноз --------------------------------------------------
     var pricesBox = form.querySelector('[data-pc-prices]');
     var forecastBox = form.querySelector('[data-pc-forecast]');
@@ -311,6 +428,38 @@
 
     function model() {
         return val('objective') === 'clicks' ? 'cpc' : 'cpm';
+    }
+
+    // --- Аудиторія й місця показу ----------------------------------------
+    // Нічого не вибрано в категоріях = усі категорії.
+    var places = initPlaces(form.querySelector('[data-pc-places]'), {
+        model: function () { return form.querySelector('[data-pc-places]').getAttribute('data-house') === '1' ? null : model(); },
+        targeting: function () {
+            return {
+                language: val('language'),
+                device: val('device'),
+                cats: checkedValues('cats[]'),
+                subs: checkedValues('subs[]')
+            };
+        },
+        onChange: function () { updatePrices(); }
+    });
+    form.querySelectorAll('input[name="cats[]"], input[name="subs[]"], select[name="language"], select[name="device"]').forEach(function (i) {
+        i.addEventListener('change', places.loadCapacity);
+    });
+    form.querySelectorAll('input[name="objective"]').forEach(function (i) {
+        i.addEventListener('change', places.refresh);
+    });
+    form.addEventListener('submit', function (e) {
+        if (!places.validate()) {
+            e.preventDefault();
+            go(3);
+        }
+    });
+
+    function placeTitle(pl) {
+        var strong = form.querySelector('[data-pc-place="' + pl + '"] strong');
+        return strong ? strong.textContent : pl;
     }
 
     function updatePrices() {
@@ -324,7 +473,7 @@
         var prices = [];
         placements.forEach(function (pl) {
             var p = document.createElement('p');
-            var label = i18n['placement_' + pl] || pl;
+            var label = placeTitle(pl);
             var price = rates[pl] && rates[pl][m];
             if (price) {
                 prices.push(price);
@@ -387,11 +536,9 @@
             var s = form.elements[n];
             row(labelOf(s), s.options[s.selectedIndex].text);
         });
-        row(labelOf(form.querySelector('input[name="placements[]"]')), checkedValues('placements[]').map(function (pl) {
-            return i18n['placement_' + pl] || pl;
-        }).join(', '));
-        row(labelOf(catAll), catAll.checked ? i18n.categories_all
-            : fmt(i18n.categories_selected, checkedValues('cats[]').length + checkedValues('subs[]').length));
+        row(labelOf(form.querySelector('input[name="placements[]"]')), places.labels().join(', '));
+        var catCount = checkedValues('cats[]').length + checkedValues('subs[]').length;
+        row(labelOf(form.querySelector('[data-pc-cats]')), catCount === 0 ? i18n.categories_all : fmt(i18n.categories_selected, catCount));
         row(labelOf(form.elements.daily_budget), val('daily_budget') ? money(parseMoney(val('daily_budget')) || 0) : '');
         row(labelOf(form.elements.total_budget), val('total_budget') ? money(parseMoney(val('total_budget')) || 0) : '');
         row(labelOf(form.elements.start_date), val('start_date') + (val('end_date') ? ' — ' + val('end_date') : ''));
@@ -404,6 +551,5 @@
 
     previewText();
     toggleShow();
-    syncCats();
     go(1);
 })();

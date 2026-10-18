@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/promo-advertiser.php';
+require_once __DIR__ . '/promo-placement-picker.php';
 
 function pc_e(mixed $v): string
 {
@@ -60,6 +61,12 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $taxonomy = promo_taxonomy($pdo);
     $enabled = promo_enabled($pdo);
 
+    // Форма «Місця показу» для наявної кампанії (draft/paused/active).
+    $placesId = (int) ($_GET['promo_places'] ?? 0);
+    $placesCampaign = $placesId > 0 ? promo_owned_campaign($pdo, $userId, $placesId) : null;
+    if ($placesCampaign !== null && !in_array($placesCampaign['status'], PROMO_PLACES_EDITABLE, true)) {
+        $placesCampaign = null;
+    }
     // Майстер: нова кампанія, редагування власної (draft/paused/rejected) або повернене введення.
     $editId = (int) ($_GET['promo_edit'] ?? 0);
     $editing = $editId > 0 ? promo_owned_campaign($pdo, $userId, $editId) : null;
@@ -111,8 +118,18 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     }
     if ($editing === null && !is_array($old)) {
         $f['cat_all'] = true;
-        $f['placements'] = PROMO_PLACEMENTS;
+        // Нова кампанія: позначені всі місця, які зараз можна обрати (доступні й з ціною).
+        $f['placements'] = promo_placements_selectable($pdo, $rates, $f['objective'] === 'clicks' ? 'cpc' : 'cpm', $house);
         $f['start_date'] = promo_today();
+    }
+    // Блог: скільки статей мають категорії (таргетинг за категорією працює лише для них).
+    require_once __DIR__ . '/blog.php';
+    $blogTotal = count(BLOG_ARTICLES);
+    $blogWithCats = 0;
+    foreach (promo_blog_taxonomy_map($pdo) as $slug => [$blogCats]) {
+        if ($blogCats !== [] && isset(BLOG_ARTICLES[$slug])) {
+            $blogWithCats++;
+        }
     }
 
     $maxMb = (int) promo_setting($pdo, 'max_video_mb', '30');
@@ -181,6 +198,19 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <p class="pc-empty"><?= pc_e(promo_tr('no_campaigns')) ?>
                                 <a href="account.php?promo_tab=create#acc-promo" data-pc-tab="create"><?= pc_e(promo_tr('create_first')) ?></a></p>
                             <?php else: ?>
+                            <?php if ($placesCampaign !== null): $pt = promo_campaign_targeting($pdo, (int) $placesCampaign['id']); ?>
+                            <form method="post" action="promo-action.php" class="pc-box pc-places-form">
+                                <h3 class="pc-h3"><?= pc_e(promo_tr('places_edit_title', $placesCampaign['name'] ?: '#' . (int) $placesCampaign['id'])) ?></h3>
+                                <p class="pc-muted"><?= pc_e(promo_tr('places_edit_note')) ?></p>
+                                <?= promo_csrf_field() ?>
+                                <input type="hidden" name="campaign_id" value="<?= (int) $placesCampaign['id'] ?>">
+                                <?= promo_placement_picker_html($pdo, $pt['placements'], $lang, $rates, $placesCampaign['campaign_type'] === 'internal' ? null : $placesCampaign['pricing_model'], $placesCampaign['campaign_type'] === 'internal', $pt) ?>
+                                <p class="pc-actions">
+                                    <button type="submit" name="action" value="placements" class="pc-btn pc-btn--primary"><?= pc_e(promo_tr('places_save')) ?></button>
+                                    <a class="pc-btn" href="account.php?promo_tab=campaigns#acc-promo"><?= pc_e(promo_tr('btn_cancel')) ?></a>
+                                </p>
+                            </form>
+                            <?php endif; ?>
                             <div class="pc-table-wrap">
                                 <table class="pc-table">
                                     <thead>
@@ -226,6 +256,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="<?= pc_e(promo_tr('col_actions')) ?>" class="pc-actions">
                                             <?php if (in_array($c['status'], PROMO_EDITABLE, true)): ?>
                                             <a class="pc-btn pc-btn--small" href="account.php?promo_tab=create&amp;promo_edit=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_edit')) ?></a>
+                                            <?php endif; ?>
+                                            <?php if (in_array($c['status'], PROMO_PLACES_EDITABLE, true)): ?>
+                                            <a class="pc-btn pc-btn--small" href="account.php?promo_tab=campaigns&amp;promo_places=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_places')) ?></a>
                                             <?php endif; ?>
                                             <?php
                                             $actions = [];
@@ -409,20 +442,13 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         </label>
                                     </div>
                                     <div class="pc-field">
-                                        <span><?= pc_e(promo_tr('field_placements')) ?></span>
-                                        <?php foreach (PROMO_PLACEMENTS as $pl): ?>
-                                        <label class="pc-check">
-                                            <input type="checkbox" name="placements[]" value="<?= $pl ?>"<?= in_array($pl, $f['placements'], true) ? ' checked' : '' ?>>
-                                            <span><?= pc_e($placementLabel($pl)) ?> <small><?= pc_e(promo_tr('placement_' . $pl . '_hint')) ?></small></span>
-                                        </label>
-                                        <?php endforeach; ?>
+                                        <span><?= pc_e(promo_tr('places_title')) ?></span>
+                                        <?= promo_placement_picker_html($pdo, $f['placements'], $lang, $rates, $house ? null : ($f['objective'] === 'clicks' ? 'cpc' : 'cpm'), $house) ?>
                                     </div>
                                     <div class="pc-field">
                                         <span><?= pc_e(promo_tr('field_categories')) ?></span>
-                                        <label class="pc-check">
-                                            <input type="checkbox" name="cat_all" value="1"<?= $f['cat_all'] ? ' checked' : '' ?> data-pc-cat-all>
-                                            <span><strong><?= pc_e(promo_tr('categories_all')) ?></strong></span>
-                                        </label>
+                                        <p class="pc-muted" data-pc-cat-summary><?= pc_e(promo_tr('categories_hint')) ?></p>
+                                        <p class="pc-muted"><?= pc_e(promo_tr('blog_categories_note', $blogWithCats, $blogTotal)) ?></p>
                                         <div class="pc-cats" data-pc-cats>
                                             <?php foreach ($taxonomy as $cid => $cat): ?>
                                             <details class="pc-cat"<?= in_array($cid, $f['cats'], true) || array_intersect(array_keys($cat['subs']), $f['subs']) ? ' open' : '' ?>>

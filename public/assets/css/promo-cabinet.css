@@ -700,3 +700,123 @@
 .pc-diagnose li {
     margin: 0 0 6px;
 }
+
+/* --- Місця показу (галочки зі схемами сторінок) --------------------------- */
+.pc-places {
+    min-width: 0;
+}
+
+.pc-places__all {
+    margin-bottom: 10px;
+}
+
+.pc-places__group {
+    min-width: 0;
+    margin: 0 0 14px;
+    padding: 0;
+    border: 0;
+}
+
+.pc-places__group legend {
+    margin-bottom: 8px;
+    padding: 0;
+    font-weight: 600;
+    color: #e6ecff;
+}
+
+.pc-places__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 10px;
+}
+
+.pc-place {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.pc-place:hover {
+    border-color: rgba(188, 208, 255, 0.75);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.pc-place:has(input:checked) {
+    border-color: #9fb8ff;
+    background: rgba(159, 184, 255, 0.12);
+}
+
+.pc-place.is-disabled {
+    cursor: default;
+    opacity: 0.55;
+}
+
+.pc-place.is-disabled:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.pc-place__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.pc-place__badge {
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    color: #1a1f4d;
+    background: #ffd27a;
+}
+
+.pc-place__desc,
+.pc-place__price,
+.pc-place__capacity {
+    font-size: 0.82rem;
+    color: #c9d3f2;
+    overflow-wrap: anywhere;
+}
+
+.pc-place__price {
+    color: #e6ecff;
+    font-weight: 600;
+}
+
+.pc-place__price.pc-warn-text {
+    color: #ffd27a;
+}
+
+.pc-pl-svg {
+    display: block;
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+}
+
+.pc-pl-svg__page {
+    fill: rgba(255, 255, 255, 0.06);
+    stroke: rgba(255, 255, 255, 0.35);
+}
+
+.pc-pl-svg__box {
+    fill: rgba(255, 255, 255, 0.16);
+}
+
+.pc-pl-svg__line {
+    fill: rgba(255, 255, 255, 0.28);
+}
+
+.pc-pl-svg__hl {
+    fill: #9fb8ff;
+    stroke: #ffffff;
+    stroke-width: 1;
+}

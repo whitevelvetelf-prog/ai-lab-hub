@@ -9,6 +9,7 @@ declare(strict_types=1);
  *   action=save_draft | submit            — майстер кампанії (multipart: video, poster);
  *                                           house=1 — власна реклама сайту (лише admin)
  *   action=pause | resume | complete | duplicate  campaign_id=N
+ *   action=placements  campaign_id=N  placements[]=…  — лише місця показу (без модерації)
  *   action=topup  amount=123.45           — заявка на поповнення (ручний переказ)
  *   action=notify_prefs  low_balance=1    — листи про низький баланс (решта обов'язкові)
  * GET:
@@ -125,6 +126,11 @@ switch ($action) {
             $back('create', ['ok' => true, 'msgs' => [$msg]], ['promo_edit' => $id]);
         }
         $back('campaigns', ['ok' => $ok, 'msgs' => [$msg]]);
+
+    case 'placements':
+        [$ok, $msg] = promo_update_placements($pdo, $userId, (int) ($_POST['campaign_id'] ?? 0),
+            array_values(array_filter((array) ($_POST['placements'] ?? []), 'is_string')));
+        $back('campaigns', ['ok' => $ok, 'msgs' => [$msg]], $ok ? [] : ['promo_places' => (int) ($_POST['campaign_id'] ?? 0)]);
 
     case 'notify_prefs':
         require_once __DIR__ . '/../app/promo-mail.php';

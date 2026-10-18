@@ -494,7 +494,11 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     // 3. Аудиторія й розміщення
     $language = in_array($in['language'] ?? '', ['uk', 'en'], true) ? $in['language'] : null;
     $device = in_array($in['device'] ?? '', ['mobile', 'desktop'], true) ? $in['device'] : null;
-    $placements = array_values(array_intersect(PROMO_PLACEMENTS, (array) ($in['placements'] ?? [])));
+    // Лише доступні місця (вимкнені адміном чи залежні від вимкненого налаштування відкидаються).
+    $placements = array_values(array_filter(
+        array_intersect(PROMO_PLACEMENTS, (array) ($in['placements'] ?? [])),
+        static fn($pl) => promo_placement_available($pdo, $pl)
+    ));
     $allCats = !empty($in['cat_all']);
     $taxonomy = promo_taxonomy($pdo);
     $subParent = [];
@@ -592,9 +596,6 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         }
         if ($placements === []) {
             $missing[] = 'err_placements_required';
-        }
-        if (!$allCats && $cats === [] && $subs === []) {
-            $missing[] = 'err_audience_required';
         }
         if ($total === null && !$house) {
             $missing[] = 'err_total_budget';
@@ -756,6 +757,106 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     }
 
     return ['saved' => true, 'id' => $campaignId, 'errors' => array_values(array_unique($missing)), 'submitted' => $doSubmit];
+}
+
+/** Статуси, у яких рекламодавець може змінити місця показу без повторної модерації. */
+const PROMO_PLACES_EDITABLE = ['draft', 'paused', 'active'];
+
+/**
+ * Змінити лише місця показу кампанії (креатив не змінюється — модерація не потрібна).
+ * Категорії, мова й пристрій лишаються. Платна кампанія з обраною моделлю: кожне місце
+ * має мати ціну в прайсі; нові місця отримують поточну ціну (знімок), наявні —
+ * зберігають свою. Зміна пишеться в журнал (promo_event_log, placements_changed).
+ *
+ * @param list<string> $placements
+ * @return array{0:bool,1:string}
+ */
+function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $placements): array
+{
+    $c = promo_owned_campaign($pdo, $userId, $campaignId);
+    if ($c === null) {
+        return [false, 'err_not_found'];
+    }
+    if (!in_array($c['status'], PROMO_PLACES_EDITABLE, true)) {
+        return [false, 'err_places_status'];
+    }
+    $placements = array_values(array_unique(array_intersect(PROMO_PLACEMENTS, $placements)));
+    if ($placements === []) {
+        return [false, 'err_placements_required'];
+    }
+    foreach ($placements as $pl) {
+        if (!promo_placement_available($pdo, $pl)) {
+            return [false, 'err_places_unavailable'];
+        }
+    }
+    $internal = $c['campaign_type'] === 'internal';
+    $model = $c['pricing_model'];
+    $card = promo_rate_card($pdo);
+    if (!$internal && $model !== null) {
+        if ($c['currency'] !== PROMO_CURRENCY) {
+            return [false, 'err_no_price'];
+        }
+        foreach ($placements as $pl) {
+            if (empty($card[$pl][$model])) {
+                return [false, 'err_no_price'];
+            }
+        }
+    }
+
+    $st = $pdo->prepare('SELECT * FROM ad_targets WHERE campaign_id = :c');
+    $st->execute([':c' => $campaignId]);
+    $rows = $st->fetchAll();
+    $before = promo_placements_normalize(array_column($rows, 'placement'));
+    // Наявна ціна місця (знімок; рядок зі старим ключем теж рахується).
+    $oldPrice = [];
+    $combos = [];
+    foreach ($rows as $r) {
+        foreach (promo_placements_normalize([$r['placement']]) as $pl) {
+            if ($r['unit_price'] !== null) {
+                $oldPrice[$pl] = max($oldPrice[$pl] ?? 0, (int) $r['unit_price']);
+            }
+        }
+        $combos[$r['category_id'] . '|' . $r['subcategory_id'] . '|' . $r['language'] . '|' . $r['device']]
+            = [$r['category_id'], $r['subcategory_id'], $r['language'], $r['device']];
+    }
+    if ($combos === []) {
+        $combos[] = [null, null, null, null];
+    }
+    $snapshot = !$internal && $model !== null && $c['status'] !== 'draft';
+
+    $pdo->beginTransaction();
+    try {
+        $pdo->prepare('DELETE FROM ad_targets WHERE campaign_id = :c')->execute([':c' => $campaignId]);
+        $ins = $pdo->prepare(
+            'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, language, device, unit_price)
+             VALUES (:c, :pl, :cat, :sub, :lang, :dev, :price)'
+        );
+        $prices = [];
+        foreach ($placements as $pl) {
+            $price = $snapshot ? ($oldPrice[$pl] ?? (int) $card[$pl][$model]) : null;
+            if ($price !== null) {
+                $prices[] = $price;
+            }
+            foreach ($combos as [$cat, $sub, $lang, $dev]) {
+                $ins->execute([':c' => $campaignId, ':pl' => $pl, ':cat' => $cat, ':sub' => $sub, ':lang' => $lang, ':dev' => $dev, ':price' => $price]);
+            }
+        }
+        if ($prices !== []) {
+            $pdo->prepare('UPDATE ad_campaigns SET unit_price = :u WHERE id = :id')->execute([':u' => max($prices), ':id' => $campaignId]);
+        }
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        error_log('[promo] update placements: ' . $e->getMessage());
+
+        return [false, 'err_generic'];
+    }
+
+    require_once __DIR__ . '/promo-linkcheck.php';
+    promo_log_event($pdo, 'placements_changed', null, $campaignId,
+        'було: ' . (implode(', ', $before) ?: '—') . ' → стало: ' . implode(', ', $placements), $userId);
+
+    return [true, 'ok_places_saved'];
 }
 
 // --- Дії зі списку кампаній ------------------------------------------------
