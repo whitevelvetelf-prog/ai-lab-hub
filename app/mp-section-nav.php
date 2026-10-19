@@ -6,7 +6,7 @@ declare(strict_types=1);
  * AI LAB HUB — єдина навігація розділу Marketplace (вкладки + кнопка «Подати оголошення»).
  *
  * Виводиться на всіх публічних сторінках розділу одразу під шапкою сайту:
- *   <?= mp_section_nav('board') ?>   // board | solutions | my | favorites | rules | post | offer
+ *   <?= mp_section_nav('board') ?>   // board | solutions | lst_job | lst_course | lst_service | my | favorites | rules | post | offer
  * Кнопка подачі є ЛИШЕ тут (поза Marketplace її немає). «Мої оголошення» і «Вибране» — лише залогіненим,
  * «Правила» — за mp_rules_link_visible(). Подачу відкрито — за mp_posting_enabled() або для employee/admin
  * (як mpb_posting_open(); сервер однаково перевіряє доступ на marketplace-post.php).
@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/listing-i18n.php';   // підписи вкладок вакансій, курсів і послуг
 
 function mp_section_nav(string $active): string
 {
@@ -21,6 +22,10 @@ function mp_section_nav(string $active): string
         'board'     => ['marketplace.php', t('mp_nav_board')],
         'solutions' => ['marketplace.php?category=solutions', t('mp_nav_solutions')],
     ];
+    // Оголошення компаній (app/listing.php): вакансії, курси, послуги — окремі списки listings.php?type=…
+    foreach (['job', 'course', 'service'] as $lt) {
+        $tabs['lst_' . $lt] = ['listings.php?type=' . $lt, lst_tr('type_' . $lt)];
+    }
     if (auth_check()) {
         $tabs['my'] = ['marketplace-my.php', t('mpb_my_link')];
         $tabs['favorites'] = ['marketplace-favorites.php', t('mpb_fav_title')];

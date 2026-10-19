@@ -101,6 +101,30 @@ foreach (BLOG_ARTICLES as $slug => $files) {
     }
 }
 
+// Оголошення компаній (вакансії, курси, послуги): лише коли Marketplace показано відвідувачам і лише живі
+// (опубліковані й не прострочені) — прострочені зникають із карти автоматично.
+require_once __DIR__ . '/../app/marketplace.php';
+if (mp_public_enabled()) {
+    try {
+        foreach (['job', 'course', 'service'] as $lt) {
+            $urls[] = ['loc' => 'listings.php?type=' . $lt, 'lastmod' => $today, 'priority' => '0.5'];
+        }
+        $listings = $pdo->query(
+            "SELECT id, slug, updated_at FROM mp_listings
+             WHERE section IN ('job', 'course', 'service') AND status = 'published' AND expires_at > NOW() ORDER BY id"
+        )->fetchAll();
+        foreach ($listings as $row) {
+            $urls[] = [
+                'loc'      => 'listing.php?id=' . (int) $row['id'] . ((string) $row['slug'] !== '' ? '&s=' . rawurlencode((string) $row['slug']) : ''),
+                'lastmod'  => sitemap_date($row['updated_at'], $today),
+                'priority' => '0.5',
+            ];
+        }
+    } catch (Throwable $e) {
+        error_log('sitemap.php listings: ' . $e->getMessage());
+    }
+}
+
 /** Абсолютний URL, екранований для XML (&amp; у query-рядку). */
 function sitemap_loc(string $path): string
 {

@@ -820,3 +820,69 @@
     stroke: #ffffff;
     stroke-width: 1;
 }
+
+/* Оголошення компаній (app/listing-account.php, app/listing-admin-cabinet.php) */
+.pc-badge--published {
+    background: rgba(52, 211, 153, 0.25);
+}
+
+.pc-badge--pending {
+    background: rgba(255, 193, 7, 0.25);
+}
+
+.pc-badge--archived,
+.pc-badge--draft {
+    background: rgba(255, 255, 255, 0.08);
+    color: #c9d3f2;
+}
+
+.lst-acc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.lst-acc-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.lst-mod {
+    margin-bottom: 18px;
+}
+
+.lst-mod a,
+.lst-acc-actions + .pc-muted a,
+.pc-table a {
+    color: #bcd0ff;
+}
+
+.lst-preview {
+    margin: 10px 0;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    overflow-wrap: anywhere;
+}
+
+.lst-facts-admin,
+.lst-signals {
+    margin: 8px 0;
+    padding-left: 18px;
+}
+
+.lst-mod__actions,
+.lst-reject,
+.lst-bulk {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.lst-reject .pc-input {
+    min-width: 0;
+    flex: 1 1 180px;
+}

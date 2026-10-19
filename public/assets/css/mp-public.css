@@ -1021,3 +1021,68 @@ textarea.mp-input {
     background: rgba(91, 140, 255, 0.28);
     border: 1px solid rgba(91, 140, 255, 0.5);
 }
+
+/* Оголошення компаній: вакансії, курси, послуги (public/listings.php, listing.php, listing-post.php) */
+.lst-types {
+    margin: 0 0 16px;
+    flex-wrap: wrap;
+}
+
+.lst-card .mp-card__tag {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+.lst-card__tags {
+    margin: 4px 0 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.lst-free,
+.lst-free-inline {
+    color: #ffe08a;
+}
+
+.lst-free-inline {
+    align-self: center;
+    font-weight: 600;
+}
+
+.lst-item .mp-title {
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+.lst-item a,
+.lst-rules a,
+.mp-note a {
+    color: #bcd0ff;
+}
+
+.lst-item a.mp-btn {
+    color: #ffffff;
+}
+
+.lst-rules ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.lst-salary {
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.lst-salary .mp-input--num {
+    flex: 1 1 110px;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .lst-types .mp-tab {
+        flex: 1 1 auto;
+        text-align: center;
+    }
+}
