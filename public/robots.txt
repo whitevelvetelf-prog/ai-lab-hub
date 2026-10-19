@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /listing-go.php
 
 Sitemap: https://ailabhub-directory.com/sitemap.xml

@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — публічний список оголошень компаній одного типу (блок M1).
  *
- *   listings.php?type=job|course|service [&q=&lang=&country=&remote=1&focus=ID] [&price=free|paid&max=N — курси] [&page=N]
+ *   listings.php?type=job|course|service [&q=&olang=&country=&remote=1&focus=ID] [&price=free|paid&max=N — курси] [&page=N]
  *
  * Поки marketplace_public = 0 — лише співробітникам (з noindex), решті — сторінка «Скоро» (mp_public_require()).
  * Для курсів, коли на сторінці ≥3 курси з повною розміткою, — ItemList (вимога Google для каруселі курсів).
@@ -29,7 +29,7 @@ $get = static fn(string $k): string => is_string($_GET[$k] ?? null) ? trim((stri
 $max = $get('max');
 $filters = [
     'q' => mb_substr($get('q'), 0, 100),
-    'lang' => in_array($get('lang'), LST_LANGS, true) ? $get('lang') : '',
+    'lang' => in_array($get('olang'), LST_LANGS, true) ? $get('olang') : '',
     'country' => isset(LST_COUNTRIES[strtoupper($get('country'))]) ? strtoupper($get('country')) : '',
     'remote' => $get('remote') === '1',
     'focus' => (int) $get('focus'),
@@ -43,7 +43,7 @@ $hasFilters = $filters['q'] !== '' || $filters['lang'] !== '' || $filters['count
 
 $pageUrl = static function (int $p) use ($filters, $type): string {
     $q = array_filter([
-        'type' => $type, 'q' => $filters['q'], 'lang' => $filters['lang'], 'country' => $filters['country'],
+        'type' => $type, 'q' => $filters['q'], 'olang' => $filters['lang'], 'country' => $filters['country'],
         'remote' => $filters['remote'] ? '1' : null, 'focus' => $filters['focus'] ?: null, 'price' => $filters['price'],
         'max' => $filters['max'], 'page' => $p > 1 ? $p : null,
     ], static fn($x): bool => $x !== null && $x !== '');
@@ -92,7 +92,7 @@ lst_open($heading, !mp_public_enabled(), $head, 'lst_' . $type);
             </div>
             <div class="mp-field">
                 <label class="mp-label" for="f_lang"><?= lst_e(lst_tr('flt_lang')) ?></label>
-                <select class="mp-input" id="f_lang" name="lang">
+                <select class="mp-input" id="f_lang" name="olang">
                     <option value=""><?= lst_e(lst_tr('flt_all')) ?></option>
                     <?php foreach (LST_LANGS as $l): ?><option value="<?= $l ?>"<?= $filters['lang'] === $l ? ' selected' : '' ?>><?= lst_e(lst_tr('lang_' . $l)) ?></option><?php endforeach; ?>
                 </select>
