@@ -491,7 +491,8 @@ function outreach_country_code(string $name): ?string
 {
     $map = ['ukraine' => 'UA', 'poland' => 'PL', 'germany' => 'DE', 'united kingdom' => 'GB', 'uk' => 'GB', 'united states' => 'US', 'usa' => 'US',
         'canada' => 'CA', 'netherlands' => 'NL', 'france' => 'FR', 'spain' => 'ES', 'italy' => 'IT', 'portugal' => 'PT', 'ireland' => 'IE',
-        'czechia' => 'CZ', 'czech republic' => 'CZ', 'romania' => 'RO', 'estonia' => 'EE', 'sweden' => 'SE', 'israel' => 'IL', 'india' => 'IN', 'singapore' => 'SG'];
+        'czechia' => 'CZ', 'czech republic' => 'CZ', 'romania' => 'RO', 'estonia' => 'EE', 'sweden' => 'SE', 'israel' => 'IL', 'india' => 'IN', 'singapore' => 'SG',
+        'russia' => 'RU', 'russian federation' => 'RU', 'belarus' => 'BY'];
     $k = strtolower(trim($name));
     if (preg_match('/^[A-Z]{2}$/', trim($name))) {
         return trim($name);
