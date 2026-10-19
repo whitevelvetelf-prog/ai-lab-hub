@@ -184,6 +184,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 'is_remote' => $v['is_remote'], 'details' => $details, 'focus' => $v['focus'], 'check' => $check,
             ], $existing, $userId, $sellerId, $lang);
             lst_mail($pdo, $savedId, 'received');
+            // Оголошення за запрошенням аутрічу (marketplace-join.php) → лід «Розмістили».
+            $joinLead = (int) ($_SESSION['outreach_join_lead'] ?? 0);
+            if ($existing === null && $joinLead > 0 && is_file(__DIR__ . '/../app/outreach-mail.php')) {
+                require_once __DIR__ . '/../app/outreach-mail.php';
+                omail_join_listed($pdo, $joinLead, $savedId);
+                unset($_SESSION['outreach_join_lead']);
+            }
             mpb_flash('ok', lst_tr('saved'));
             header('Location: account.php#acc-listings', true, 303);
             exit;

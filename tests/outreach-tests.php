@@ -3,9 +3,9 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — тести лідів (M2) і аутрічу (M3) на збережених зразках, без живої мережі.
+ * AI LAB HUB — тести лідів (M2) і аутрічу (M3, tests/outreach-mail-tests.php) на збережених зразках, без живої мережі.
  *   php tests/outreach-tests.php
- * Лише CLI. Записи в БД — у транзакції, яка відкочується наприкінці (локальна БД не змінюється).
+ * Лише CLI. Записи M2 — у транзакції з відкатом; M3 прибирає свої тестові дані сам (локальна БД не змінюється).
  */
 
 if (PHP_SAPI !== 'cli') {
@@ -13,6 +13,7 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
+require_once __DIR__ . '/../app/auth.php';   // сесія — до будь-якого виводу
 require_once __DIR__ . '/../app/outreach.php';
 
 $fails = 0;
@@ -109,18 +110,13 @@ try {
     check(array_intersect($cols, ['author', 'person_name', 'first_name', 'last_name', 'recruiter']) === [], 'у схемі лідів немає полів для імен людей');
     $personal = (int) $pdo->query("SELECT COUNT(*) FROM outreach_leads WHERE contact_email REGEXP '^[a-z]+\\\\.[a-z]+@'")->fetchColumn();
     check($personal === 0, 'у лідах немає адрес виду ім\'я.прізвище@');
-
-    if (function_exists('omail_tests')) {
-        omail_tests($pdo);   // тести аутрічу (M3), якщо розгорнуто
-    } elseif (is_file(__DIR__ . '/../app/outreach-mail.php')) {
-        require_once __DIR__ . '/../app/outreach-mail.php';
-        if (function_exists('omail_tests')) {
-            omail_tests($pdo);
-        }
-    }
 } finally {
     $pdo->rollBack();
 }
+
+// Тести аутрічу (M3): власне прибирання замість транзакції (диспетчер сам відкриває транзакції).
+require_once __DIR__ . '/outreach-mail-tests.php';
+omail_tests($pdo);
 
 echo "\nУсього: $total, збоїв: $fails\n";
 exit($fails > 0 ? 1 : 0);

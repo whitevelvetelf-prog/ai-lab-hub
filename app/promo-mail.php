@@ -83,6 +83,19 @@ function promo_mail_transport_send(array $m): ?string
 {
     $cfg = promo_mail_config();
     $clean = static fn(string $v): string => str_replace(["\r", "\n", "\0"], '', $v);
+    // Листи аутрічу (app/outreach-mail.php): власні From / Reply-To і List-Unsubscribe (mail_queue.headers_json).
+    $extra = json_decode((string) ($m['headers_json'] ?? ''), true);
+    $extra = is_array($extra) ? $extra : [];
+    $fromEmail = filter_var($extra['from_email'] ?? '', FILTER_VALIDATE_EMAIL) !== false ? (string) $extra['from_email'] : $cfg['from_email'];
+    $fromName = isset($extra['from_name']) && is_string($extra['from_name']) && $extra['from_name'] !== '' ? $clean($extra['from_name']) : $cfg['from_name'];
+    $replyTo = filter_var($extra['reply_to'] ?? '', FILTER_VALIDATE_EMAIL) !== false ? (string) $extra['reply_to'] : $cfg['reply_to'];
+    $customHeaders = [];
+    foreach ((array) ($extra['headers'] ?? []) as $hn => $hv) {
+        if (in_array($hn, ['List-Unsubscribe', 'List-Unsubscribe-Post'], true) && is_string($hv)) {
+            $customHeaders[$hn] = $clean($hv);
+        }
+    }
+    $headerLines = array_map(static fn($k, $v): string => $k . ': ' . $v, array_keys($customHeaders), $customHeaders);
 
     if ($cfg['transport'] === 'log') {
         $dir = __DIR__ . '/../storage/logs';
@@ -91,7 +104,9 @@ function promo_mail_transport_send(array $m): ?string
         }
         $ok = @file_put_contents(
             $dir . '/mail-dryrun.log',
-            sprintf("[%s UTC] To: %s <%s> | %s\n%s\n%s\n\n", gmdate('Y-m-d H:i:s'), $m['to_name'], $m['to_email'], $m['subject'], str_repeat('-', 60), $m['body_text']),
+            sprintf("[%s UTC] To: %s <%s> | %s%s\n%s\n%s\n\n", gmdate('Y-m-d H:i:s'), $m['to_name'], $m['to_email'], $m['subject'],
+                $extra !== [] ? ' | From: ' . $fromName . ' <' . $fromEmail . '> | Reply-To: ' . $replyTo . ($headerLines !== [] ? ' | ' . implode(' | ', $headerLines) : '') : '',
+                str_repeat('-', 60), $m['body_text']),
             FILE_APPEND | LOCK_EX
         );
 
@@ -116,8 +131,11 @@ function promo_mail_transport_send(array $m): ?string
             $mail->SMTPAutoTLS = $cfg['encryption'] !== '';
             $mail->Timeout = 20;
             $mail->CharSet = 'UTF-8';
-            $mail->setFrom($cfg['from_email'], $cfg['from_name']);
-            $mail->addReplyTo($cfg['reply_to']);
+            $mail->setFrom($fromEmail, $fromName);
+            $mail->addReplyTo($replyTo);
+            foreach ($customHeaders as $hn => $hv) {
+                $mail->addCustomHeader($hn, $hv);
+            }
             $mail->addAddress($m['to_email'], $m['to_name']);
             $mail->Subject = $m['subject'];
             $mail->isHTML(true);
@@ -137,8 +155,9 @@ function promo_mail_transport_send(array $m): ?string
     $headers = implode("\r\n", [
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
-        'From: ' . $clean($cfg['from_name']) . ' <' . $clean($cfg['from_email']) . '>',
-        'Reply-To: ' . $clean($cfg['reply_to']),
+        'From: ' . $clean($fromName) . ' <' . $clean($fromEmail) . '>',
+        'Reply-To: ' . $clean($replyTo),
+        ...$headerLines,
     ]);
     $body = "--{$boundary}\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n" . $m['body_text'] . "\r\n\r\n"
         . "--{$boundary}\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n" . $m['body_html'] . "\r\n\r\n--{$boundary}--";

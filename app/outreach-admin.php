@@ -258,8 +258,8 @@ function olead_admin_action(PDO $pdo, string $action, int $actor, callable $back
                 ->execute([':s' => $status, ':n' => mb_substr(strip_tags((string) ($_POST['notes'] ?? '')), 0, 1000) ?: null,
                     ':w' => $site !== '' ? mb_substr($site, 0, 500) : null, ':d' => $domain !== '' ? $domain : null,
                     ':ic' => $domain !== '' && isset($catalog[$domain]) ? 1 : 0, ':id' => $id]);
-            if (function_exists('omail_log')) {
-                omail_log($pdo, $id, $actor, 'status', $status);
+            if (function_exists('omail_on_status')) {
+                omail_on_status($pdo, $id, $status, $actor);   // відповідь → replied_at; відмова/відписка/відскок → список заборон
             }
             $back(true, ['Лід #' . $id . ' збережено.']);
         case 'lead_add':

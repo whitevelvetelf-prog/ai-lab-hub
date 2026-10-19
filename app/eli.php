@@ -498,7 +498,7 @@ function eli_http_post(string $url, array $headers, string $payload, int $timeou
  *
  * @return array{ok:bool, text:string, status:?int, error_type:string, detail:string, retry_after:?int}
  */
-function eli_provider_call(array $cfg, string $model, string $system, string $message, int $timeout, callable $transport, ?bool $thinkingMin = null): array
+function eli_provider_call(array $cfg, string $model, string $system, string $message, int $timeout, callable $transport, ?bool $thinkingMin = null, ?float $temperature = null): array
 {
     // «Важкі» моделі Gemini 3.x за замовчуванням міркують (thinking) — для підбору зі списку це лише
     // затримка. Просимо мінімальне міркування; якщо модель відхилить параметр (400) — повтор без нього.
@@ -509,7 +509,7 @@ function eli_provider_call(array $cfg, string $model, string $system, string $me
         $headers = ['Content-Type: application/json'];
         $gen = [
             'maxOutputTokens' => $cfg['max_tokens'],
-            'temperature' => 0.4,
+            'temperature' => $temperature ?? 0.4,
             'responseMimeType' => 'application/json',
         ];
         if ($thinkingMin) {
@@ -526,12 +526,16 @@ function eli_provider_call(array $cfg, string $model, string $system, string $me
         if ($cfg['workspace_id'] !== '') {
             $headers[] = 'anthropic-workspace-id: ' . $cfg['workspace_id'];
         }
-        $payload = json_encode([
+        $body = [
             'model' => $model,
             'max_tokens' => $cfg['max_tokens'],
             'system' => $system,
             'messages' => [['role' => 'user', 'content' => $message]],
-        ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        ];
+        if ($temperature !== null) {
+            $body['temperature'] = $temperature;   // лише коли викликач просить (напр. перефразування листів аутрічу)
+        }
+        $payload = json_encode($body, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
     $res = ['ok' => false, 'text' => '', 'status' => null, 'error_type' => 'other', 'detail' => '', 'retry_after' => null];
     if ($payload === false) {
