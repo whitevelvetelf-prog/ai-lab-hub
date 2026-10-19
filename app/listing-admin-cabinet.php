@@ -12,6 +12,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/listing.php';
 require_once __DIR__ . '/promo-linkcheck.php';
+foreach (['outreach-admin.php', 'outreach-mail-admin.php'] as $lstExtra) {   // вкладки лідів (M2) і аутрічу (M3), якщо розгорнуто
+    if (is_file(__DIR__ . '/' . $lstExtra)) {
+        require_once __DIR__ . '/' . $lstExtra;
+    }
+}
 
 const LST_ADMIN_STATUS_UK = ['draft' => 'Чернетка', 'pending' => 'На модерації', 'published' => 'Опубліковано', 'rejected' => 'Відхилено', 'expired' => 'Термін минув', 'archived' => 'Знято'];
 const LST_ADMIN_TYPE_UK = ['job' => 'Вакансія', 'course' => 'Курс', 'service' => 'Послуга'];

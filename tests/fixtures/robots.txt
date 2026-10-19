@@ -1,0 +1,11 @@
+User-agent: Googlebot
+Disallow: /private
+
+User-agent: *
+User-agent: SomeBot
+Disallow: /partners
+Allow: /contact
+
+# comment
+User-agent: AILabHub-Partners
+Disallow: /about

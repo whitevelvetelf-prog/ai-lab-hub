@@ -7,15 +7,12 @@ declare(strict_types=1);
  * налаштування — лише admin. Повертає у вкладку account.php?ladm_tab=…#acc-listings-admin.
  *
  *   approve | reject (template, comment) | bulk_approve | bulk_reject (ids[], template) | remove | to_pending | recheck | settings
- * Інші дії (ліди, аутріч) обробляє olead_admin_action(), якщо підключено app/outreach-admin.php.
+ * Інші дії (ліди, аутріч) обробляє olead_admin_action() з app/outreach-admin.php (лише admin).
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
-require_once __DIR__ . '/../app/listing-admin-cabinet.php';
-if (is_file(__DIR__ . '/../app/outreach-admin.php')) {
-    require_once __DIR__ . '/../app/outreach-admin.php';
-}
+require_once __DIR__ . '/../app/listing-admin-cabinet.php';   // підключає й вкладки лідів (M2) та аутрічу (M3)
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
