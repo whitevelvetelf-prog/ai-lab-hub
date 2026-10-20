@@ -57,6 +57,7 @@ const AST_I18N = [
     'download_note' => ['У виданий файл додаються метадані: автор, ліцензія й унікальний номер завантаження.', 'The issued file contains metadata: author, licence and a unique download number.'],
     'report_btn' => ['Повідомити про порушення авторських прав', 'Report a copyright infringement'],
     'policy_link' => ['Політика авторських прав', 'Copyright policy'],
+    'policy_short' => ['Авторські права', 'Copyright'],
     'contact_reveal' => ['Показати контакт автора', 'Show the author’s contact'],
     'contact_none' => ['Автор не залишив контакту. Напишіть через форму скарги, якщо йдеться про порушення.', 'The author left no contact.'],
     'guard_note' => ['Збереження превʼю через контекстне меню вимкнено — це лише легка перешкода, а не захист.', 'Saving the preview via the context menu is disabled — this is only a light obstacle, not protection.'],

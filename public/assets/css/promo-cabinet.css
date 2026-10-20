@@ -916,3 +916,21 @@
     gap: 6px 16px;
     margin: 4px 0 8px;
 }
+
+/* Власна реклама: форма варіанта — помітний заголовок і запас знизу над закріпленим підвалом. */
+.pc-house-edit {
+    margin: 8px 0;
+    padding: 8px 12px;
+    border: 1px solid rgba(188, 208, 255, 0.45);
+    border-radius: 10px;
+}
+
+.pc-house-edit > summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #bcd0ff;
+}
+
+.pc-house-edit[open] {
+    margin-bottom: 160px;
+}

@@ -367,20 +367,22 @@ function promo_house_admin_html(PDO $pdo, string $csrf, callable $badge): string
         $h .= '</fieldset><button type="submit" class="pc-btn pc-btn--primary">Зберегти кампанію</button></form></details>';
 
         // Варіанти
-        $h .= '<div class="pc-table-wrap"><table class="pc-table"><thead><tr><th>Варіант</th><th>Покази</th><th>Кліки</th><th>CTR</th><th>Кампаній створено</th><th>Оголошень створено</th></tr></thead><tbody>';
+        $h .= '<div class="pc-table-wrap"><table class="pc-table"><thead><tr><th>Варіант</th><th>Покази</th><th>Кліки</th><th>CTR</th><th>Кампаній створено</th><th>Оголошень створено</th><th>Дії</th></tr></thead><tbody>';
         foreach ($creatives as $cr) {
             $s = $stats[(int) $cr['id']];
+            $hv = 'hv-' . (int) $cr['id'];
             $h .= '<tr><td data-label="Варіант"><strong>' . $e($cr['ref_code'] ?: '#' . $cr['id']) . '</strong><span class="pc-muted">' . $e($cr['title']) . '</span></td>'
                 . '<td data-label="Покази">' . $s['impressions'] . '</td><td data-label="Кліки">' . $s['clicks'] . '</td>'
                 . '<td data-label="CTR">' . $e(promo_ctr($s['clicks'], $s['impressions'])) . '</td>'
-                . '<td data-label="Кампаній">' . $s['campaigns'] . '</td><td data-label="Оголошень">' . $s['listings'] . '</td></tr>';
+                . '<td data-label="Кампаній">' . $s['campaigns'] . '</td><td data-label="Оголошень">' . $s['listings'] . '</td>'
+                . '<td data-label="Дії"><a class="pc-btn pc-btn--small pc-btn--primary" href="#' . $hv . '" data-pc-house-open="' . $hv . '">Редагувати текст і кнопку</a></td></tr>';
         }
         $h .= '</tbody></table></div><p class="pc-muted">' . $e(promo_house_ab_text($creatives, $stats)) . '</p>';
         foreach ($creatives as $cr) {
             $f = static fn(string $name, string $label, int $max, bool $area = false) => '<label class="pc-field"><span>' . $label . '</span>'
                 . ($area ? '<textarea name="' . $name . '" maxlength="' . $max . '" rows="2">' . $e($cr[$name] ?? '') . '</textarea>'
                          : '<input type="text" name="' . $name . '" maxlength="' . $max . '" value="' . $e($cr[$name] ?? '') . '">') . '</label>';
-            $h .= '<details><summary>Редагувати варіант ' . $e($cr['ref_code'] ?: '#' . $cr['id']) . '</summary><form method="post" action="promo-admin-action.php">' . $csrf
+            $h .= '<details id="hv-' . (int) $cr['id'] . '" class="pc-house-edit"><summary>Редагувати варіант ' . $e($cr['ref_code'] ?: '#' . $cr['id']) . ' (заголовок, опис, кнопка, адреса)</summary><form method="post" action="promo-admin-action.php">' . $csrf
                 . '<input type="hidden" name="action" value="house_variant_save"><input type="hidden" name="creative_id" value="' . (int) $cr['id'] . '"><div class="pc-grid-2">'
                 . $f('title', 'Заголовок UA (до 60)', 60) . $f('title_en', 'Заголовок EN (до 60)', 60)
                 . $f('description', 'Опис UA (до 150; можна {free_until})', 150, true) . $f('description_en', 'Опис EN', 150, true)
@@ -394,6 +396,11 @@ function promo_house_admin_html(PDO $pdo, string $csrf, callable $badge): string
         }
         $h .= '</article>';
     }
+
+    // «Редагувати текст і кнопку» у рядку таблиці відкриває форму варіанта й прокручує до неї (над закріпленим підвалом).
+    $h .= "<script>document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('[data-pc-house-open]');if(!a){return;}"
+        . "var d=document.getElementById(a.getAttribute('data-pc-house-open'));if(!d){return;}e.preventDefault();d.open=true;"
+        . "d.scrollIntoView({block:'start'});window.scrollBy(0,-110);});</script>";
 
     return $h;
 }
