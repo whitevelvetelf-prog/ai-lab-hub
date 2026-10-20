@@ -87,32 +87,32 @@ require_once __DIR__ . '/marketplace.php';
     }
 
     /* ===== Кнопка «Викликати Асистента» — найпомітніша дія шапки =====
-       Теплий градієнт на темно-синьому фоні сайту (контрастує з блакитними
-       кнопками), світіння й м'яка пульсація кільця. Пульсація вимикається при
+       Холодний яскравий градієнт (бірюзовий → електрично-синій → фіолетовий), білий текст
+       із підсвіткою, неонове світіння й м'яка пульсація кільця. Пульсація вимикається при
        prefers-reduced-motion. Стоїть тут (підвал підключається на кожній
        сторінці після стилів сторінки), тож перекриває вбудовані копії стилів. */
     .site-header .site-nav__link--cta.site-header__cta {
         position: relative;
-        color: #1a1033;
-        background: linear-gradient(135deg, #ffd27a 0%, #ff9a6b 55%, #ff7aa8 100%);
-        border: 1px solid rgba(255, 255, 255, 0.55);
-        box-shadow: 0 0 0 0 rgba(255, 170, 110, 0.55), 0 8px 24px rgba(255, 140, 110, 0.45);
+        color: #ffffff;
+        background: linear-gradient(120deg, #19e3ff 0%, #2f7bff 50%, #a63dff 100%);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        box-shadow: 0 0 0 0 rgba(40, 210, 255, 0.6), 0 0 18px rgba(60, 170, 255, 0.75), 0 8px 26px rgba(120, 80, 255, 0.55);
         font-size: 1.02rem;
         font-weight: 800;
         letter-spacing: 0.01em;
-        /* Підсвітка тексту: світлий ореол навколо літер на теплому фоні. */
-        text-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255, 240, 200, 0.7);
+        /* Підсвітка тексту: тонка темна тінь для чіткості + світлий неоновий ореол. */
+        text-shadow: 0 1px 2px rgba(0, 10, 60, 0.55), 0 0 10px rgba(255, 255, 255, 0.75), 0 0 18px rgba(120, 220, 255, 0.8);
         animation: eli-cta-pulse 2.8s ease-out infinite;
         transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     }
 
     .site-header .site-nav__link--cta.site-header__cta:hover,
     .site-header .site-nav__link--cta.site-header__cta:focus-visible {
-        color: #1a1033;
-        background: linear-gradient(135deg, #ffdd94 0%, #ffab80 55%, #ff8fb6 100%);
+        color: #ffffff;
+        background: linear-gradient(120deg, #4debff 0%, #4a8dff 50%, #b85cff 100%);
         transform: translateY(-1px);
-        filter: brightness(1.04);
-        box-shadow: 0 0 0 4px rgba(255, 210, 122, 0.35), 0 10px 28px rgba(255, 140, 110, 0.55);
+        filter: brightness(1.08);
+        box-shadow: 0 0 0 4px rgba(60, 220, 255, 0.35), 0 0 24px rgba(80, 190, 255, 0.9), 0 10px 30px rgba(140, 90, 255, 0.6);
     }
 
     .site-header .site-nav__link--cta.site-header__cta:focus-visible {
@@ -126,9 +126,9 @@ require_once __DIR__ . '/marketplace.php';
     }
 
     @keyframes eli-cta-pulse {
-        0% { box-shadow: 0 0 0 0 rgba(255, 170, 110, 0.55), 0 8px 24px rgba(255, 140, 110, 0.45); }
-        70% { box-shadow: 0 0 0 12px rgba(255, 170, 110, 0), 0 8px 24px rgba(255, 140, 110, 0.45); }
-        100% { box-shadow: 0 0 0 0 rgba(255, 170, 110, 0), 0 8px 24px rgba(255, 140, 110, 0.45); }
+        0% { box-shadow: 0 0 0 0 rgba(40, 210, 255, 0.6), 0 0 18px rgba(60, 170, 255, 0.75), 0 8px 26px rgba(120, 80, 255, 0.55); }
+        70% { box-shadow: 0 0 0 13px rgba(40, 210, 255, 0), 0 0 22px rgba(60, 170, 255, 0.9), 0 8px 26px rgba(120, 80, 255, 0.55); }
+        100% { box-shadow: 0 0 0 0 rgba(40, 210, 255, 0), 0 0 18px rgba(60, 170, 255, 0.75), 0 8px 26px rgba(120, 80, 255, 0.55); }
     }
 
     @media (prefers-reduced-motion: reduce) {
