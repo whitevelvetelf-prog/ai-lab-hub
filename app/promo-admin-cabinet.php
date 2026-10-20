@@ -496,7 +496,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <?php if (!$placementsTableOk): ?>
                             <p class="pc-note pc-note--warn">Таблиці ad_placements ще немає — застосуйте міграцію database/migration-2026-10-18-promo-placements.sql. Доти діють значення за замовчуванням.</p>
                             <?php endif; ?>
-                            <p class="pc-muted">Вимкнене місце ніколи не показує рекламу, і рекламодавці не можуть його обрати. Місце без ціни за моделлю в прайсі в майстрі неактивне. Ємність — людські перегляди відповідних сторінок за останні 30 днів (без ботів і сторінок no_promo; клас пристрою пишеться з 12.10, види сторінок каталогу й список блогу — з 18.10).</p>
+                            <p class="pc-muted">Вимкнене місце ніколи не показує рекламу, і рекламодавці не можуть його обрати. Місце без ціни за моделлю в прайсі в майстрі неактивне. Місця маркетплейсу показують рекламу лише коли маркетплейс відкрито (marketplace_public); до відкриття їх можна обрати, якщо ad_allow_marketplace_preselect = 1 (кошти не списуються). Перегляди сторінок маркетплейсу пишуться з 20.10. Ємність — людські перегляди відповідних сторінок за останні 30 днів (без ботів і сторінок no_promo; клас пристрою пишеться з 12.10, види сторінок каталогу й список блогу — з 18.10).</p>
                             <form method="post" action="promo-admin-action.php">
                                 <?= $csrf ?>
                                 <input type="hidden" name="action" value="placements_save">
@@ -506,7 +506,10 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <tbody>
                                         <?php foreach ($placementRows as $k => $p):
                                             $state = [];
-                                            if ($p['requires_setting'] !== null) {
+                                            $mpClosed = $p['group_key'] === 'marketplace' && $p['block'] === 'setting';
+                                            if ($mpClosed) {
+                                                $state[] = 'маркетплейс не відкрито' . (promo_placement_pending($pdo, $k) ? ' (місце вже можна обрати; показ — після відкриття)' : '');
+                                            } elseif ($p['requires_setting'] !== null) {
                                                 $state[] = 'залежить від ' . $p['requires_setting'] . (site_setting($pdo, $p['requires_setting'], '0') === '1' ? ' (увімкнено)' : ' (вимкнено)');
                                             }
                                             if (!empty($p['rule']['requires_feature']) && empty(PROMO_PLACEMENT_FEATURES[$p['rule']['requires_feature']])) {
@@ -524,8 +527,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                             <td data-label="Місце"><strong><?= pc_e($p['title_uk']) ?></strong><span class="pc-muted"><?= pc_e($k) ?> · <?= pc_e(['catalog' => 'Каталог', 'blog' => 'Блог', 'marketplace' => 'Маркетплейс'][$p['group_key']] ?? $p['group_key']) ?></span></td>
                                             <td data-label="Увімкнено"><label class="pc-check"><input type="checkbox" name="enabled[<?= pc_e($k) ?>]" value="1"<?= $p['enabled'] ? ' checked' : '' ?>> <span>так</span></label></td>
                                             <td data-label="Блоків на сторінку"><input type="number" name="slots[<?= pc_e($k) ?>]" value="<?= (int) $p['slots_per_page'] ?>" min="1" max="3" style="width:5em"></td>
-                                            <td data-label="Стан"><?= pc_e(implode('; ', $state)) ?><?php if ($p['block'] === null && $p['enabled']): ?><span class="pc-muted">доступне</span><?php elseif ($p['block'] === 'disabled'): ?><span class="pc-muted">вимкнене</span><?php endif; ?></td>
-                                            <td data-label="Перегляди за 30 днів"><?= $p['capacity'] === null ? 'немає даних' : ($p['capacity'] < PROMO_CAPACITY_MIN_VIEWS ? 'даних поки замало (' . (int) $p['capacity'] . ')' : number_format($p['capacity'], 0, ',', ' ')) ?></td>
+                                            <td data-label="Стан"><?= pc_e(implode('; ', $state)) ?><?php if ($p['block'] === null && $p['enabled']): ?><span class="pc-muted"><?= $prices !== [] ? 'активно' : 'доступне, але без ціни не обирається' ?></span><?php elseif ($p['block'] === 'disabled'): ?><span class="pc-muted">вимкнене</span><?php endif; ?></td>
+                                            <td data-label="Перегляди за 30 днів"><?= $mpClosed ? 'ще немає' : ($p['capacity'] === null ? 'немає даних' : ($p['capacity'] < PROMO_CAPACITY_MIN_VIEWS ? 'даних поки замало (' . (int) $p['capacity'] . ')' : number_format($p['capacity'], 0, ',', ' '))) ?></td>
                                             <td data-label="На сайті"><?php if ($p['preview'] !== null): ?><a href="<?= pc_e($p['preview']) ?>" target="_blank" rel="noopener">Переглянути на сайті</a><?php else: ?>—<?php endif; ?></td>
                                         </tr>
                                         <?php endforeach; ?>

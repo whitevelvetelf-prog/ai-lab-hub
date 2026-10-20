@@ -104,6 +104,10 @@ $demoCard = static function () use ($tr, $e, $poster): string {
         . '</article>';
 };
 $ver = static fn(string $f): string => (string) (@filemtime(__DIR__ . '/assets/' . $f) ?: 1);
+// Місця сайту — у «Форматах»; маркетплейс — окремим блоком (і до відкриття, якщо місця вже можна обрати).
+$sitePlaces = array_values(array_filter(promo_placements_public($pdo), static fn($pl) => !promo_placement_is_marketplace($pdo, $pl)));
+$mpPlaces = array_values(array_filter(array_keys(promo_placements($pdo)), static fn($pl) => promo_placement_is_marketplace($pdo, $pl) && promo_placement_selectable_now($pdo, $pl)));
+$mpOpen = site_setting($pdo, 'marketplace_public', '0') === '1';
 $canonical = 'https://ailabhub-directory.com/advertise.php';
 ?>
 <!DOCTYPE html>
@@ -151,7 +155,7 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
         <h2 class="adv-h2"><?= $tr('adv_formats_title') ?></h2>
         <p class="adv-muted"><?= $tr('adv_formats_note') ?></p>
         <div class="adv-formats">
-            <?php foreach (promo_placements_public($pdo) as $pl): ?>
+            <?php foreach ($sitePlaces as $pl): ?>
             <section class="adv-format">
                 <h3><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></h3>
                 <p><?= $e(promo_placement_description($pdo, $pl, $lang)) ?></p>
@@ -159,6 +163,20 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
             </section>
             <?php endforeach; ?>
         </div>
+
+        <?php if ($mpPlaces !== []): ?>
+        <h2 class="adv-h2" id="marketplace"><?= $tr('adv_mp_title') ?></h2>
+        <p><?= $tr('adv_mp_intro') ?></p>
+        <?php if (!$mpOpen): ?>
+        <p class="adv-box"><?= $tr('adv_mp_closed') ?></p>
+        <?php endif; ?>
+        <ul class="adv-list">
+            <?php foreach ($mpPlaces as $pl): ?>
+            <li><strong><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></strong> — <?= $e(promo_placement_description($pdo, $pl, $lang)) ?></li>
+            <?php endforeach; ?>
+        </ul>
+        <p class="adv-muted"><?= $tr('adv_mp_no_data') ?></p>
+        <?php endif; ?>
 
         <h2 class="adv-h2"><?= $tr('adv_spec_title') ?></h2>
         <ul class="adv-list">
@@ -189,7 +207,7 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
             <table class="adv-table">
                 <thead><tr><th><?= $tr('adv_col_placement') ?></th><th><?= $tr('adv_col_cpm') ?></th><th><?= $tr('adv_col_cpc') ?></th></tr></thead>
                 <tbody>
-                <?php foreach (promo_placements_public($pdo) as $pl): ?>
+                <?php foreach (array_merge($sitePlaces, $mpPlaces) as $pl): ?>
                 <tr>
                     <td><?= $e(promo_placement_title($pdo, $pl, $lang)) ?></td>
                     <td><?= isset($rates[$pl]['cpm']) ? $e(promo_money($rates[$pl]['cpm'])) : '—' ?></td>

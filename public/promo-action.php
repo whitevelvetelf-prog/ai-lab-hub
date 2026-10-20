@@ -63,7 +63,7 @@ if ($action === 'export' && ($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
     header('Cache-Control: no-store');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF");
-    fputcsv($out, ['date', 'campaign_id', 'campaign', 'placement', 'placement_name', 'impressions', 'views', 'clicks', 'ctr_percent', 'spend_uah']);
+    fputcsv($out, ['date', 'campaign_id', 'campaign', 'placement', 'placement_name', 'impressions', 'views', 'clicks', 'ctr_percent', 'spend_' . strtolower(PROMO_CURRENCY)]);
     foreach (promo_stats_rows($pdo, $userId, $campaignId ?: null, $from, $to, 'day_campaign_placement') as $r) {
         $ctr = (int) $r['impressions'] > 0 ? round((int) $r['clicks'] / (int) $r['impressions'] * 100, 2) : 0;
         // Назва — текст рекламодавця: нейтралізуємо формули в Excel.
