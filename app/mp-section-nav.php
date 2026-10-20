@@ -6,7 +6,7 @@ declare(strict_types=1);
  * AI LAB HUB — єдина навігація розділу Marketplace (вкладки + кнопка «Подати оголошення»).
  *
  * Виводиться на всіх публічних сторінках розділу одразу під шапкою сайту:
- *   <?= mp_section_nav('board') ?>   // board | solutions | lst_job | lst_course | lst_service | my | favorites | rules | post | offer
+ *   <?= mp_section_nav('board') ?>   // board | solutions | lst_job | lst_course | lst_service | assets | my | favorites | rules | post | offer
  * Кнопка подачі є ЛИШЕ тут (поза Marketplace її немає). «Мої оголошення» і «Вибране» — лише залогіненим,
  * «Правила» — за mp_rules_link_visible(). Подачу відкрито — за mp_posting_enabled() або для employee/admin
  * (як mpb_posting_open(); сервер однаково перевіряє доступ на marketplace-post.php).
@@ -26,6 +26,9 @@ function mp_section_nav(string $active): string
     foreach (['job', 'course', 'service'] as $lt) {
         $tabs['lst_' . $lt] = ['listings.php?type=' . $lt, lst_tr('type_' . $lt)];
     }
+    // Цифрові матеріали (app/asset.php): зображення, ілюстрації, персонажі.
+    require_once __DIR__ . '/asset-i18n.php';
+    $tabs['assets'] = ['assets.php', ast_tr('nav')];
     if (auth_check()) {
         $tabs['my'] = ['marketplace-my.php', t('mpb_my_link')];
         $tabs['favorites'] = ['marketplace-favorites.php', t('mpb_fav_title')];

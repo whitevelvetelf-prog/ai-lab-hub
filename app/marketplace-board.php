@@ -1277,7 +1277,7 @@ function mpb_toggle_favorite(PDO $pdo, int $userId, int $listingId): ?bool
  */
 function mpb_contacts(PDO $pdo, int $listingId): array
 {
-    $stmt = $pdo->prepare('SELECT contact_name, contact_phone, contact_telegram, contact_email FROM mp_listings WHERE id = :id AND section = \'board\'');
+    $stmt = $pdo->prepare('SELECT contact_name, contact_phone, contact_telegram, contact_email FROM mp_listings WHERE id = :id AND section IN (\'board\', \'asset\')');
     $stmt->execute([':id' => $listingId]);
     $r = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($r === false) {
@@ -1310,8 +1310,8 @@ function mpb_contacts(PDO $pdo, int $listingId): array
 function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
 {
     $stmt = $pdo->prepare(
-        "SELECT l.id, (l.status = 'published' AND l.expires_at > NOW()) AS live, s.user_id AS owner
-         FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE l.id = :id AND l.section = 'board'"
+        "SELECT l.id, (l.status = 'published' AND (l.expires_at > NOW() OR (l.section = 'asset' AND l.expires_at IS NULL))) AS live, s.user_id AS owner
+         FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE l.id = :id AND l.section IN ('board', 'asset')"
     );
     $stmt->execute([':id' => $listingId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
