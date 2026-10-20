@@ -11,6 +11,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/listing.php';
+require_once __DIR__ . '/asset-admin.php';   // вкладки «Цифрових матеріалів»
 require_once __DIR__ . '/promo-linkcheck.php';
 foreach (['outreach-admin.php', 'outreach-mail-admin.php'] as $lstExtra) {   // вкладки лідів (M2) і аутрічу (M3), якщо розгорнуто
     if (is_file(__DIR__ . '/' . $lstExtra)) {
@@ -276,8 +277,8 @@ function lst_admin_extra_tabs(array $tabs, bool $isAdmin): array
     if ($isAdmin && function_exists('olead_admin_tabs')) {
         $tabs = olead_admin_tabs($tabs);
     }
-
-    return $tabs;
+    // Цифрові матеріали: модерація, скарги, підозріла активність (employee/admin), налаштування (admin).
+    return ast_admin_tabs($tabs, $isAdmin);
 }
 
 function lst_admin_extra_panels(PDO $pdo, string $tab, bool $isAdmin): void
@@ -285,6 +286,7 @@ function lst_admin_extra_panels(PDO $pdo, string $tab, bool $isAdmin): void
     if ($isAdmin && function_exists('olead_admin_panels')) {
         olead_admin_panels($pdo, $tab);
     }
+    ast_admin_panels($pdo, $tab, $isAdmin);
 }
 
 /** Стан: останні запуски cron-завдань маркетплейсу, черга пошти, лічильники. */
