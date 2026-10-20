@@ -12,6 +12,10 @@ declare(strict_types=1);
  * blog_inline) показується й списується як раніше; виключення повторів (exclude).
  * HTTP: слоти є на сторінках місць і немає на головній, у Елі, на вході, реєстрації,
  * у кабінеті й на сторінці no_promo; promo-serve віддає креатив / 204.
+ * Маркетплейс (з 2026-10-20): п'ять місць; таргетинг за розділом; кампанія лише з місцями
+ * закритого маркетплейсу — «Очікує показу», без показу й списань, після відкриття показ без
+ * повторної модерації; старий ключ marketplace_listing працює як marketplace_feed; реклами
+ * немає на сторінках подачі й редагування оголошень і в «Моїх оголошеннях».
  *
  * Створює тимчасові кампанії й тимчасово вмикає рекламу (ad_settings.enabled) —
  * у finally все повертається як було, тестові рядки видаляються. Виводить PASS/FAIL.
@@ -67,8 +71,10 @@ $oldBalance = $pdo->prepare('SELECT * FROM ad_balances WHERE user_id = :u');
 $oldBalance->execute([':u' => $userId]);
 $oldBalance = $oldBalance->fetch() ?: null;
 $oldPlacements = $pdo->query('SELECT placement_key, enabled, slots_per_page FROM ad_placements')->fetchAll();
+$oldMpPublic = site_setting($pdo, 'marketplace_public', '0');
 $oldRates = $pdo->query('SELECT id, active FROM ad_rate_card')->fetchAll(PDO::FETCH_KEY_PAIR);
 $campaignIds = [];
+$tmpRates = [];
 
 $mkCampaign = static function (string $name, array $targets, string $type = 'paid') use ($pdo, $userId, &$campaignIds): array {
     $pdo->prepare(
@@ -92,10 +98,11 @@ $mkCampaign = static function (string $name, array $targets, string $type = 'pai
 };
 
 try {
-    // Підготовка: реклама ввімкнена, усі місця (крім маркетплейсу) ввімкнені, баланс.
+    // Підготовка: реклама ввімкнена, маркетплейс відкритий, усі місця ввімкнені, баланс.
     promo_admin_set_setting($pdo, 'enabled', '1');
     promo_admin_set_setting($pdo, 'frequency_cap_per_session', '0');
     promo_settings($pdo, true);
+    site_settings_save($pdo, ['marketplace_public' => '1']);
     $pdo->exec("UPDATE ad_placements SET enabled = 1, slots_per_page = 1 WHERE placement_key <> 'marketplace_listing'");
     promo_placements($pdo, true);
     $pdo->prepare('INSERT INTO ad_balances (user_id, balance, currency) VALUES (:u, 100000, :c)
@@ -114,6 +121,10 @@ try {
     parse_str($article, $aq);
     $article = (string) ($aq['slug'] ?? '');
     $flagged = (string) ($one('SELECT slug FROM promo_blog_flags WHERE no_promo = 1 LIMIT 1') ?: '');
+    // Живе оголошення компанії (сторінка оголошення маркетплейсу).
+    $lstRow = $pdo->query("SELECT id, section FROM mp_listings WHERE section IN ('job', 'course', 'service') AND status = 'published' AND expires_at > NOW() ORDER BY id LIMIT 1")->fetch();
+    $lstUrl = $lstRow ? 'listing.php?id=' . (int) $lstRow['id'] : 'marketplace-offer.php?id=' . (int) $one("SELECT id FROM mp_listings WHERE section = 'solution' AND status = 'published' ORDER BY id LIMIT 1");
+    $lstSec = $lstRow ? (string) $lstRow['section'] : 'solutions';
 
     $ctx = [
         'category_page' => [[$catId], [], [], 'category.php?id=' . $catId],
@@ -122,8 +133,15 @@ try {
         'product_page' => [[], [], ['product' => $productId], 'product.php?id=' . $productId],
         'blog_list' => [[], [], [], 'blog.php'],
         'blog_article' => [[], [], ['article' => $article], 'blog-post.php?slug=' . rawurlencode($article)],
-        'marketplace_listing' => [[], [], [], 'marketplace.php'],
+        'marketplace_home' => [[], [], ['mp' => ['board', 'solutions']], 'marketplace.php'],
+        'marketplace_feed' => [[], [], ['mp' => ['board', 'solutions']], 'marketplace.php'],
+        'marketplace_category' => [[], [], ['mp' => ['course']], 'listings.php?type=course'],
+        'marketplace_search' => [[], [], ['mp' => ['board', 'solutions']], 'marketplace.php?q=a'],
+        'marketplace_listing_page' => [[], [], ['mp' => [$lstSec]], $lstUrl],
     ];
+    $serveQs = static fn(array $cats, array $subs, array $page): string => '&category=' . implode(',', $cats) . '&subcategory=' . implode(',', $subs)
+        . (!empty($page['product']) ? '&product=' . $page['product'] : '') . (!empty($page['article']) ? '&article=' . $page['article'] : '')
+        . (!empty($page['mp']) ? '&mp=' . implode(',', $page['mp']) : '');
 
     $targets = [];
     foreach (PROMO_PLACEMENTS as $pl) {
@@ -138,10 +156,6 @@ try {
         $g = $pl;
         $sh = hash('sha256', 'check-' . $pl . '-' . microtime());
         $picked = promo_pick($pdo, $pl, $cats, $subs, 'uk', 'desktop', $sh, $page);
-        if ($pl === 'marketplace_listing') {
-            $check($g, 'недоступне місце не показується (' . (promo_placement_block_reason($pdo, $pl) ?? 'доступне') . ')', $picked === null);
-            continue;
-        }
         $check($g, 'відбір повертає креатив', $picked !== null && (int) $picked['id'] === $mainCr);
 
         $before = $balanceOf();
@@ -158,20 +172,17 @@ try {
         $pdo->prepare('UPDATE ad_placements SET enabled = 0 WHERE placement_key = :k')->execute([':k' => $pl]);
         promo_placements($pdo, true);
         $off = promo_pick($pdo, $pl, $cats, $subs, 'uk', 'desktop', hash('sha256', 'off' . $pl), $page);
-        [$code] = $http('promo-serve.php?placement=' . $pl . '&category=' . implode(',', $cats) . '&subcategory=' . implode(',', $subs)
-            . (!empty($page['product']) ? '&product=' . $page['product'] : '') . (!empty($page['article']) ? '&article=' . $page['article'] : ''));
+        [$code] = $http('promo-serve.php?placement=' . $pl . $serveQs($cats, $subs, $page));
         [, $html] = $http($ctx[$pl][3]);
         $check($g, 'вимкнене місце не показується (відбір, promo-serve 204, без слота на сторінці)',
             $off === null && $code === 204 && !str_contains($html, 'sponsored-slot--' . $pl), "serve={$code}");
         $pdo->prepare('UPDATE ad_placements SET enabled = 1 WHERE placement_key = :k')->execute([':k' => $pl]);
         promo_placements($pdo, true);
 
-        [$code, $body] = $http('promo-serve.php?placement=' . $pl . '&category=' . implode(',', $cats) . '&subcategory=' . implode(',', $subs)
-            . (!empty($page['product']) ? '&product=' . $page['product'] : '') . (!empty($page['article']) ? '&article=' . $page['article'] : ''));
+        [$code, $body] = $http('promo-serve.php?placement=' . $pl . $serveQs($cats, $subs, $page));
         $json = json_decode($body, true);
         $check($g, 'promo-serve віддає креатив', $code === 200 && (int) ($json['creative']['id'] ?? 0) === $mainCr, "serve={$code}");
-        [$code] = $http('promo-serve.php?placement=' . $pl . '&exclude=' . $mainCr . '&category=' . implode(',', $cats) . '&subcategory=' . implode(',', $subs)
-            . (!empty($page['product']) ? '&product=' . $page['product'] : '') . (!empty($page['article']) ? '&article=' . $page['article'] : ''));
+        [$code] = $http('promo-serve.php?placement=' . $pl . '&exclude=' . $mainCr . $serveQs($cats, $subs, $page));
         $check($g, 'той самий креатив не повторюється на сторінці (exclude → 204)', $code === 204, "serve={$code}");
         [$code, $html] = $http($ctx[$pl][3]);
         $check($g, 'слот на сторінці ' . $ctx[$pl][3], $code === 200 && substr_count($html, 'class="sponsored-slot sponsored-slot--' . $pl . '"') === 1, "http={$code}");
@@ -192,6 +203,84 @@ try {
     $s1 = promo_slot($pdo, 'search_results');
     $s2 = promo_slot($pdo, 'search_results');
     $check('загальне', 'не більше slots_per_page блоків місця на сторінку', $s1 !== '' && $s2 === '');
+    foreach (['marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page'] as $pl) {
+        $m1 = promo_slot($pdo, $pl, [], [], ['mp' => ['board']]);
+        $m2 = promo_slot($pdo, $pl, [], [], ['mp' => ['board']]);
+        $check($pl, 'не більше slots_per_page блоків на сторінку; блок позначено групою маркетплейсу', $m1 !== '' && $m2 === '' && str_contains($m1, 'data-group="marketplace"'));
+    }
+    // Позиції в стрічці: 4-та, далі кожні 10 справжніх карток, не більше slots_per_page.
+    $pdo->exec("UPDATE ad_placements SET slots_per_page = 3 WHERE placement_key = 'marketplace_feed'");
+    promo_placements($pdo, true);
+    $pos30 = promo_placement_positions($pdo, 'marketplace_feed', 30);
+    $pos12 = promo_placement_positions($pdo, 'marketplace_feed', 12);
+    $pos2 = promo_placement_positions($pdo, 'marketplace_feed', 2);
+    $pdo->exec("UPDATE ad_placements SET slots_per_page = 1 WHERE placement_key = 'marketplace_feed'");
+    promo_placements($pdo, true);
+    $check('marketplace_feed', 'позиції: 4-та й далі кожні 10 (30 карток → 4, 14, 24; 12 → лише 4; 2 → у кінці)',
+        $pos30 === [3, 13, 23] && $pos12 === [3] && $pos2 === [2], json_encode([$pos30, $pos12, $pos2]));
+    $check('marketplace_feed', 'slots_per_page = 1 → одна картка навіть у довгій стрічці', promo_placement_positions($pdo, 'marketplace_feed', 30) === [3]);
+
+    // --- Маркетплейс: таргетинг за розділом ---------------------------------------
+    [$jobCid, $jobCr] = $mkCampaign('CHECK mp job', []);
+    $pdo->prepare("INSERT INTO ad_targets (campaign_id, placement, mp_section, unit_price) VALUES (:c, 'marketplace_category', 'job', 25)")->execute([':c' => $jobCid]);
+    $pJob = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'job' . microtime()), ['mp' => ['job']], [$mainCr]);
+    $pCourse = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'course' . microtime()), ['mp' => ['course']], [$mainCr]);
+    $pCat = promo_pick($pdo, 'marketplace_category', [$catId], [], 'uk', 'desktop', hash('sha256', 'cat' . microtime()), ['mp' => ['job']], [$mainCr]);
+    $check('маркетплейс: розділи', 'реклама для «Вакансій» — лише у вакансіях; категорії каталогу на маркетплейс не впливають',
+        $pJob !== null && (int) $pJob['id'] === $jobCr && $pCourse === null && $pCat !== null,
+        json_encode([$pJob['id'] ?? null, $pCourse['id'] ?? null, $pCat['id'] ?? null, $jobCr]));
+    $boardCat = (int) $one("SELECT id FROM mp_categories WHERE section = 'board' AND is_active = 1 ORDER BY id LIMIT 1");
+    if ($boardCat > 0) {
+        $pdo->prepare("UPDATE ad_targets SET mp_section = :s WHERE campaign_id = :c")->execute([':s' => 'board:' . $boardCat, ':c' => $jobCid]);
+        $pIn = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'b1' . microtime()), ['mp' => promo_mp_page_sections('board', $boardCat)], [$mainCr]);
+        $pOut = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'b2' . microtime()), ['mp' => ['board']], [$mainCr]);
+        $check('маркетплейс: розділи', 'категорія оголошень: показ лише в цій категорії', $pIn !== null && (int) $pIn['id'] === $jobCr && $pOut === null);
+    }
+    $wizard = promo_mp_sections_from_input($pdo, ['mp_sections' => ['job', 'board', 'bogus'], 'mp_board_cats' => [$boardCat]]);
+    $check('маркетплейс: розділи', 'форма: зайві значення відкидаються, «Оголошення» цілком поглинає їхні категорії', $wizard === ['job', 'board'], json_encode($wizard));
+
+    // --- Маркетплейс ще не відкрито: «Очікує показу» ------------------------------
+    [$waitCid, $waitCr] = $mkCampaign('CHECK mp waiting', ['marketplace_feed' => 25, 'marketplace_listing_page' => 25]);
+    site_settings_save($pdo, ['marketplace_public' => '0']);
+    $before = $balanceOf();
+    $wPlaces = promo_campaign_targeting($pdo, $waitCid)['placements'];
+    $check('маркетплейс закрито', 'місця можна обрати (ad_allow_marketplace_preselect = 1), але вони недоступні для показу',
+        promo_placement_selectable_now($pdo, 'marketplace_feed') && !promo_placement_available($pdo, 'marketplace_feed') && promo_placement_pending($pdo, 'marketplace_feed'));
+    $check('маркетплейс закрито', 'кампанія лише з місцями маркетплейсу — «Очікує показу»', promo_placements_waiting($pdo, $wPlaces));
+    $check('маркетплейс закрито', 'кампанія з місцями сайту — НЕ «Очікує показу»', !promo_placements_waiting($pdo, ['marketplace_feed', 'product_page']));
+    $wPick = promo_pick($pdo, 'marketplace_feed', [], [], 'uk', 'desktop', hash('sha256', 'w' . microtime()), ['mp' => ['board']]);
+    [$wCode] = $http('promo-serve.php?placement=marketplace_feed&mp=board');
+    [, $wHtml] = $http('marketplace.php');
+    $check('маркетплейс закрито', 'реклама не показується (відбір, promo-serve 204, без слотів), бюджет не списується',
+        $wPick === null && $wCode === 204 && !str_contains($wHtml, 'sponsored-slot') && $balanceOf() === $before, "serve={$wCode}");
+    // Ціни для місць маркетплейсу (локально їх може не бути) — тимчасові рядки прайсу.
+    foreach (['marketplace_feed', 'marketplace_home'] as $pl) {
+        if (!$one("SELECT COUNT(*) FROM ad_rate_card WHERE placement = :p AND pricing_model = 'cpc' AND currency = :c", [':p' => $pl, ':c' => PROMO_CURRENCY])) {
+            $pdo->prepare("INSERT INTO ad_rate_card (placement, pricing_model, price, currency, active) VALUES (:p, 'cpc', 25, :c, 1)")->execute([':p' => $pl, ':c' => PROMO_CURRENCY]);
+            $tmpRates[] = (int) $pdo->lastInsertId();
+        }
+    }
+    [$okUp, $msgUp] = promo_update_placements($pdo, $userId, $waitCid, ['marketplace_feed', 'marketplace_home']);
+    $check('маркетплейс закрито', 'зміна місць на маркетплейс-місця до відкриття дозволена', $okUp, $msgUp);
+    $pdo->prepare("UPDATE ad_settings SET setting_value = '0' WHERE setting_key = 'ad_allow_marketplace_preselect'")->execute();
+    $check('маркетплейс закрито', 'ad_allow_marketplace_preselect = 0 → місця не обираються', !promo_placement_selectable_now($pdo, 'marketplace_feed'));
+    $pdo->prepare("UPDATE ad_settings SET setting_value = '1' WHERE setting_key = 'ad_allow_marketplace_preselect'")->execute();
+    site_settings_save($pdo, ['marketplace_public' => '1']);
+    $status = (string) $one('SELECT status FROM ad_campaigns WHERE id = :c', [':c' => $waitCid]);
+    $oPick = promo_pick($pdo, 'marketplace_feed', [], [], 'uk', 'desktop', hash('sha256', 'o' . microtime()), ['mp' => ['board']], [$mainCr]);
+    $check('маркетплейс закрито', 'після відкриття показ починається без повторної модерації',
+        $status === 'active' && $oPick !== null && (int) $oPick['id'] === $waitCr && !promo_placements_waiting($pdo, promo_campaign_targeting($pdo, $waitCid)['placements']));
+
+    // --- Старий ключ marketplace_listing → marketplace_feed -----------------------
+    [$oldMpCid, $oldMpCr] = $mkCampaign('CHECK mp legacy', ['marketplace_listing' => 30]);
+    $sh = hash('sha256', 'mpl' . microtime());
+    $lp = promo_pick($pdo, 'marketplace_feed', [], [], 'uk', 'desktop', $sh, ['mp' => ['board', 'solutions']], [$mainCr, $waitCr]);
+    $before = $balanceOf();
+    promo_record_event($pdo, $oldMpCr, 'click', 'marketplace_feed', $sh);
+    $check('стара кампанія', 'marketplace_listing показується в стрічці маркетплейсу й списує свою ціну (0,30 $)',
+        $lp !== null && (int) $lp['id'] === $oldMpCr && $before - $balanceOf() === 30, 'списано ' . ($before - $balanceOf()));
+    $check('стара кампанія', 'у майстрі marketplace_listing показується як «Стрічка оголошень»',
+        promo_campaign_targeting($pdo, $oldMpCid)['placements'] === ['marketplace_feed']);
 
     // --- no_promo --------------------------------------------------------------
     if ($flagged !== '') {
@@ -231,6 +320,12 @@ try {
         $eliCode .= (string) @file_get_contents(__DIR__ . '/../' . $f);
     }
     $check('без реклами', 'Еля, підвал, кабінет, вхід, реєстрація, головна не викликають promo_slot', !str_contains($eliCode, 'promo_slot'));
+    $mpNoAds = '';
+    foreach (['public/listing-post.php', 'public/marketplace-post.php', 'public/mp-post.php', 'public/mp-add-offer.php', 'public/marketplace-my.php', 'public/mp-my.php',
+              'public/marketplace-favorites.php', 'public/mp-favorites.php', 'app/listing-account.php', 'app/listing-admin-cabinet.php', 'public/marketplace-join.php', 'public/marketplace-rules.php'] as $f) {
+        $mpNoAds .= (string) @file_get_contents(__DIR__ . '/../' . $f);
+    }
+    $check('без реклами', 'подача й редагування оголошень, «Мої оголошення», вибране, правила маркетплейсу не викликають promo_slot', !str_contains($mpNoAds, 'promo_slot'));
 } catch (Throwable $e) {
     $check('загальне', 'виняток: ' . $e->getMessage(), false);
 } finally {
@@ -254,8 +349,12 @@ try {
     foreach ($oldRates as $rid => $active) {
         $pdo->prepare('UPDATE ad_rate_card SET active = :a WHERE id = :id')->execute([':a' => $active, ':id' => $rid]);
     }
+    foreach ($tmpRates as $rid) {
+        $pdo->prepare('DELETE FROM ad_rate_card WHERE id = :id')->execute([':id' => $rid]);
+    }
     promo_admin_set_setting($pdo, 'frequency_cap_per_session', $oldCap);
     promo_admin_set_setting($pdo, 'enabled', $oldEnabled);
+    site_settings_save($pdo, ['marketplace_public' => $oldMpPublic]);
 }
 
 foreach ($results as $group => $rows) {

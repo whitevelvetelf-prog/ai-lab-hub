@@ -333,6 +333,11 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo) || !promo_placement_available($pdo, $placement)) {
         return null;
     }
+    if (promo_placement_is_marketplace($pdo, $placement)) {
+        // Категорії каталогу (і правила категорій реклами для них) до маркетплейсу не застосовуються.
+        $categoryIds = [];
+        $subcategoryIds = [];
+    }
     if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
         return null;
     }
@@ -367,8 +372,6 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     // Маркетплейс: категорії каталогу не застосовуються, збіг за розділом (NULL — усі розділи).
     $mpCond = '';
     if (promo_placement_is_marketplace($pdo, $placement)) {
-        $catCond = 't.category_id IS NULL';
-        $subCond = 't.subcategory_id IS NULL';
         $mpNames = [];
         foreach (array_values(array_filter((array) ($page['mp'] ?? []), static fn($v) => is_string($v) && promo_mp_section_valid($v))) as $i => $sec) {
             $mpNames[] = ':mp' . $i;
