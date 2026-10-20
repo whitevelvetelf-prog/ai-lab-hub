@@ -98,7 +98,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         'youtube_url' => $creative['video_url'] ?? '',
         'title' => $creative['title'] ?? '',
         'description' => $creative['description'] ?? '',
-        'cta_key' => $creative['cta_key'] ?? 'learn_more',
+        'cta_key' => trim((string) ($creative['cta_text'] ?? '')) !== '' ? 'custom' : ($creative['cta_key'] ?? 'learn_more'),
+        'cta_text' => (string) ($creative['cta_text'] ?? ''),
+        'cta_text_en' => (string) ($creative['cta_text_en'] ?? ''),
         'destination_url' => $creative['destination_url'] ?? '',
         'language' => $targeting['language'],
         'device' => $targeting['device'],
@@ -113,7 +115,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         'end_date' => $editing['end_date'] ?? '',
     ];
     if (is_array($old)) {
-        foreach (['name', 'objective', 'advertiser_category', 'video_type', 'youtube_url', 'title', 'description', 'cta_key', 'destination_url', 'language', 'device', 'daily_budget', 'total_budget', 'start_date', 'end_date'] as $k) {
+        foreach (['name', 'objective', 'advertiser_category', 'video_type', 'youtube_url', 'title', 'description', 'cta_key', 'cta_text', 'cta_text_en', 'destination_url', 'language', 'device', 'daily_budget', 'total_budget', 'start_date', 'end_date'] as $k) {
             if (isset($old[$k]) && is_string($old[$k])) {
                 $f[$k] = $old[$k];
             }
@@ -436,8 +438,22 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                                     <?php foreach (PROMO_CTA_KEYS as $k): ?>
                                                     <option value="<?= $k ?>"<?= $f['cta_key'] === $k ? ' selected' : '' ?>><?= pc_e(t('promo_cta_' . $k)) ?></option>
                                                     <?php endforeach; ?>
+                                                    <?php if (promo_house_columns($pdo)): ?>
+                                                    <option value="custom"<?= $f['cta_key'] === 'custom' ? ' selected' : '' ?>><?= pc_e(promo_tr('cta_custom')) ?></option>
+                                                    <?php endif; ?>
                                                 </select>
                                             </label>
+                                            <div class="pc-field" data-pc-cta-custom<?= $f['cta_key'] === 'custom' ? '' : ' hidden' ?>>
+                                                <label class="pc-field">
+                                                    <span><?= pc_e(promo_tr('field_cta_text')) ?> <small data-pc-count="cta_text">0/30</small></span>
+                                                    <input type="text" name="cta_text" maxlength="30" value="<?= pc_e($f['cta_text']) ?>">
+                                                </label>
+                                                <label class="pc-field">
+                                                    <span><?= pc_e(promo_tr('field_cta_text_en')) ?></span>
+                                                    <input type="text" name="cta_text_en" maxlength="30" value="<?= pc_e($f['cta_text_en']) ?>">
+                                                </label>
+                                                <p class="pc-muted"><?= pc_e(promo_tr('cta_text_hint')) ?></p>
+                                            </div>
                                             <label class="pc-field">
                                                 <span><?= pc_e(promo_tr('field_url')) ?></span>
                                                 <input type="url" name="destination_url" maxlength="500" placeholder="https://" value="<?= pc_e($f['destination_url']) ?>" data-summary="destination_url">

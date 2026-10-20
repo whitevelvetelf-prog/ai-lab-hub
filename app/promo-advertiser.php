@@ -455,6 +455,24 @@ function promo_mp_sections_from_input(PDO $pdo, array $in): array
     return array_values(array_unique($secs));
 }
 
+/**
+ * Свій текст кнопки: 2–30 символів, звичайний текст без посилань, e-mail, телефонів і HTML; null — некоректний.
+ * Зміст (чесність, відповідність сторінці) перевіряє модератор.
+ */
+function promo_cta_text_clean(string $raw): ?string
+{
+    $t = trim((string) preg_replace('/\s+/u', ' ', strip_tags($raw)));
+    $len = mb_strlen($t);
+    if ($len < 2 || $len > 30) {
+        return null;
+    }
+    if (preg_match('~(https?://|www\.|\.(com|net|org|ua|io|ru)\b|@|\+?\d[\d\s()-]{6,})~iu', $t) === 1) {
+        return null;
+    }
+
+    return $t;
+}
+
 /** Ціни прайсу: [placement][model] => центи (лише активні, PROMO_CURRENCY). */
 function promo_rate_card(PDO $pdo): array
 {
@@ -553,7 +571,18 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     if (mb_strlen($description) > 150) {
         $errors[] = 'err_desc_long';
     }
+    // Кнопка: зі списку або свій текст (UA обов'язково, EN необов'язково) — перевіряє модератор.
+    $ctaCustom = ($in['cta_key'] ?? '') === 'custom';
     $cta = in_array($in['cta_key'] ?? '', PROMO_CTA_KEYS, true) ? $in['cta_key'] : 'learn_more';
+    $ctaText = null;
+    $ctaTextEn = null;
+    if ($ctaCustom) {
+        $ctaText = promo_cta_text_clean((string) ($in['cta_text'] ?? ''));
+        $ctaTextEn = promo_cta_text_clean((string) ($in['cta_text_en'] ?? ''));
+        if ($ctaText === null || (trim((string) ($in['cta_text_en'] ?? '')) !== '' && $ctaTextEn === null)) {
+            $errors[] = 'err_cta_text';
+        }
+    }
     $destination = trim((string) ($in['destination_url'] ?? ''));
     if ($destination !== '' && ($e = promo_url_error($destination)) !== null) {
         $errors[] = $e;
@@ -778,11 +807,18 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':rat' => $doSubmit && $house ? promo_utc_now() : null,
         ];
         $creativeId = $creative !== null ? (int) $creative['id'] : 0;
+        // Свій текст кнопки (колонки з міграції 2026-10-23); без них — лише кнопка зі списку.
+        $ctaCols = promo_house_columns($pdo);
+        if ($ctaCols) {
+            $crFields += [':ctat' => $ctaCustom ? $ctaText : null, ':ctate' => $ctaCustom ? $ctaTextEn : null];
+        }
         if ($creative === null) {
             $pdo->prepare(
                 'INSERT INTO ad_creatives (campaign_id, title, description, cta_key, destination_url, video_type, video_path,
-                     video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status, reviewed_by, reviewed_at)
-                 VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status, :rby, :rat)'
+                     video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status, reviewed_by, reviewed_at'
+                     . ($ctaCols ? ', cta_text, cta_text_en' : '') . ')
+                 VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status, :rby, :rat'
+                     . ($ctaCols ? ', :ctat, :ctate' : '') . ')'
             )->execute($crFields + [':cid' => $campaignId]);
             $creativeId = (int) $pdo->lastInsertId();
         } else {
@@ -790,7 +826,8 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
                 'UPDATE ad_creatives SET title = :title, description = :desc, cta_key = :cta, destination_url = :dest,
                      video_type = :vtype, video_path = :vpath, video_url = :vurl, youtube_id = :yt, poster_path = :poster,
                      duration_sec = :dur, size_bytes = :size, mime = :mime, status = :status,
-                     rejection_reason = NULL, reviewed_by = :rby, reviewed_at = :rat
+                     rejection_reason = NULL, reviewed_by = :rby, reviewed_at = :rat'
+                     . ($ctaCols ? ', cta_text = :ctat, cta_text_en = :ctate' : '') . '
                  WHERE id = :id'
             )->execute($crFields + [':id' => (int) $creative['id']]);
         }
@@ -1073,9 +1110,11 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
                 $newId = (int) $pdo->lastInsertId();
                 $pdo->prepare(
                     "INSERT INTO ad_creatives (campaign_id, title, description, cta_key, destination_url, video_type, video_path,
-                         video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status)
+                         video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status"
+                         . (promo_house_columns($pdo) ? ', cta_text, cta_text_en' : '') . ")
                      SELECT :new, title, description, cta_key, destination_url, video_type, video_path, video_url, youtube_id,
-                         poster_path, duration_sec, size_bytes, mime, 'draft'
+                         poster_path, duration_sec, size_bytes, mime, 'draft'"
+                         . (promo_house_columns($pdo) ? ', cta_text, cta_text_en' : '') . "
                      FROM ad_creatives WHERE campaign_id = :id ORDER BY id LIMIT 1"
                 )->execute([':new' => $newId, ':id' => $campaignId]);
                 $pdo->prepare(

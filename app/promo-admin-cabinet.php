@@ -271,7 +271,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                             </div>
                                             <h3 class="sponsored-card__title"><?= pc_e($q['title']) ?></h3>
                                             <p class="sponsored-card__desc"><?= pc_e($q['description']) ?></p>
-                                            <div class="sponsored-card__footer"><span class="sponsored-card__cta"><?= pc_e(t('promo_cta_' . $q['cta_key'])) ?></span></div>
+                                            <div class="sponsored-card__footer"><span class="sponsored-card__cta"><?= pc_e(promo_cta_label($q)) ?></span></div>
                                         </article>
                                     </div>
                                     <dl class="pc-summary">
@@ -282,6 +282,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                             ? pc_e(($q['mime'] ?? '') . ' · ' . ($q['duration_sec'] !== null ? $q['duration_sec'] . ' с' : 'тривалість невідома') . ' · ' . round((int) $q['size_bytes'] / 1048576, 1) . ' МБ')
                                             : 'YouTube: ' . pc_e($q['video_url']) ?></dd>
                                         <dt>Категорія реклами</dt><dd><?= pc_e(promo_advertiser_category_label($q['advertiser_category'])) ?><?php if (promo_category_blocked_everywhere($pdo, $q['advertiser_category'])): ?> <strong class="pc-warn-text">— заборонена всюди, відхиліть</strong><?php endif; ?><span class="pc-muted">Перевірте, що відео й сторінка відповідають категорії.</span></dd>
+                                        <?php if (trim((string) ($q['cta_text'] ?? '')) !== ''): ?>
+                                        <dt>Кнопка</dt><dd><strong class="pc-warn-text">свій текст:</strong> «<?= pc_e($q['cta_text']) ?>»<?= trim((string) ($q['cta_text_en'] ?? '')) !== '' ? ' / EN «' . pc_e($q['cta_text_en']) . '»' : '' ?><span class="pc-muted">Перевірте: текст чесно описує дію на сторінці переходу, без обіцянок результату й маскування.</span></dd>
+                                        <?php endif; ?>
                                         <dt>Модель</dt><dd><?= $q['pricing_model'] === 'cpc' ? 'CPC (за клік)' : 'CPM (за 1000 показів)' ?></dd>
                                         <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price)) ?><br><?php endforeach; ?></dd>
                                         <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?><?php if ($tg['has_marketplace']): ?><br>Маркетплейс: <?= pc_e($tg['mp_sections']) ?><?php endif; ?></dd>

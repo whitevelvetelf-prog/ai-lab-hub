@@ -512,7 +512,7 @@ function promo_public_payload(array $creative, string $placement, bool $preview 
         'placement'   => $placement,
         'title'       => (string) $creative['title'],
         'description' => (string) $creative['description'],
-        'cta'         => t('promo_cta_' . (in_array($creative['cta_key'], PROMO_CTA_KEYS, true) ? $creative['cta_key'] : 'learn_more')),
+        'cta'         => promo_cta_label($creative),
         'type'        => $isUpload ? 'upload' : 'youtube',
         'video'       => $isUpload && $creative['video_path'] ? '/' . ltrim((string) $creative['video_path'], '/') : null,
         'youtube'     => !$isUpload ? (string) $creative['youtube_id'] : null,
@@ -917,6 +917,19 @@ function promo_preview_creative(PDO $pdo): ?array
     }
 
     return $row === false ? null : $row;
+}
+
+/** Текст кнопки креативу: свій (EN — з cta_text_en, інакше UA) або зі списку PROMO_CTA_KEYS мовою інтерфейсу. */
+function promo_cta_label(array $creative): string
+{
+    $own = trim((string) ($creative['cta_text'] ?? ''));
+    if ($own !== '') {
+        $en = trim((string) ($creative['cta_text_en'] ?? ''));
+
+        return promo_lang() === 'en' && $en !== '' ? $en : $own;
+    }
+
+    return t('promo_cta_' . (in_array($creative['cta_key'] ?? '', PROMO_CTA_KEYS, true) ? $creative['cta_key'] : 'learn_more'));
 }
 
 // --- Власна реклама платформи (картки, умови показу) ----------------------

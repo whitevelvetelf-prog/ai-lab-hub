@@ -53,6 +53,7 @@ $draft = [
             ['3. Модерація', [
                 'Кожен креатив перевіряється модератором до початку показу. Строк модерації не гарантується; поточний статус кампанії видно в кабінеті.',
                 'Після будь-якого редагування кампанія знову проходить модерацію.',
+                'Свій текст кнопки має чесно описувати дію на сторінці переходу; посилання, контакти й обіцянки результату в ньому заборонені.',
                 'Креативи, обрані для місць у маркетплейсі, додатково перевіряються на те, що їх не можна сплутати з оголошенням. Реклама в маркетплейсі завжди показується окремим блоком із позначкою «Реклама».',
                 'AI LAB HUB має право відхилити рекламу або зупинити вже схвалену рекламу (зокрема після скарг відвідувачів), повідомивши причину в кабінеті рекламодавця.',
             ]],
@@ -102,6 +103,7 @@ $draft = [
             ['3. Moderation', [
                 'Every creative is reviewed by a moderator before it is shown. Review time is not guaranteed; the current status is shown in the advertiser account.',
                 'Any edit sends the campaign to review again.',
+                'Custom button text must honestly describe the action on the landing page; links, contacts and promises of results are not allowed in it.',
                 'Creatives chosen for marketplace placements are additionally checked so that they cannot be mistaken for a listing. Marketplace ads are always shown as a separate block labelled “Sponsored”.',
                 'AI LAB HUB may reject an ad or stop an approved ad (including after visitor reports), stating the reason in the advertiser account.',
             ]],

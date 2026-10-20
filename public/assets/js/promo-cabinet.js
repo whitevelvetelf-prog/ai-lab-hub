@@ -336,9 +336,19 @@
         form.querySelector('[data-pc-preview="title"]').textContent = val('title');
         form.querySelector('[data-pc-preview="description"]').textContent = val('description');
         var cta = form.elements.cta_key;
-        form.querySelector('[data-pc-preview="cta"]').textContent = cta.options[cta.selectedIndex].text;
+        var custom = cta.value === 'custom';
+        var box = form.querySelector('[data-pc-cta-custom]');
+        if (box) {
+            box.hidden = !custom;
+        }
+        // Свій текст кнопки — у попередньому перегляді одразу.
+        var own = form.elements.cta_text ? form.elements.cta_text.value.trim() : '';
+        form.querySelector('[data-pc-preview="cta"]').textContent = custom ? (own || '…') : cta.options[cta.selectedIndex].text;
     }
-    ['title', 'description', 'cta_key'].forEach(function (n) {
+    ['title', 'description', 'cta_key', 'cta_text'].forEach(function (n) {
+        if (!form.elements[n]) {
+            return;
+        }
         form.elements[n].addEventListener('input', previewText);
         form.elements[n].addEventListener('change', previewText);
     });
