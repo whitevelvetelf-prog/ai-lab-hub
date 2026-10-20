@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/promo-admin.php';
+require_once __DIR__ . '/promo-house.php';   // «Власна реклама»: картки, варіанти, умови
 require_once __DIR__ . '/promo-cabinet.php';
 
 /**
@@ -108,7 +109,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
     $house = array_values(array_filter(
         $pdo->query("SELECT c.*, (SELECT SUM(impressions) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS impressions,
                             (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks
-                     FROM ad_campaigns c WHERE c.format = 'video' AND c.campaign_type = 'internal' ORDER BY c.id DESC")->fetchAll()
+                     FROM ad_campaigns c WHERE c.format = 'video' AND c.campaign_type = 'internal'"
+                     . (promo_house_columns($pdo) ? " AND c.house_key IS NULL AND NOT EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id AND cr.creative_type = 'card')" : '')
+                     . ' ORDER BY c.id DESC')->fetchAll()
     ));
     $reports = promo_admin_reports($pdo);
     $newReports = array_sum(array_map(static fn($r) => (int) $r['new_count'], $reports));
@@ -677,6 +680,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 </table>
                             </div>
 
+                            <?= promo_house_report_html($pdo) ?>
+
                             <h3 class="pc-h3">Топ кампаній за період</h3>
                             <?php if ($top === []): ?>
                             <p class="pc-empty">Даних за період немає.</p>
@@ -1016,8 +1021,10 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
 
                         <!-- ============ D6. Власна реклама ============ -->
                         <section class="pc-panel" data-pc-panel="house"<?= $tab === 'house' ? '' : ' hidden' ?>>
-                            <p class="pc-muted">Самопромоція сайту (напр. підписка на розсилку, Еля): без білінгу й модерації, показується у вільних слотах — платні кампанії мають пріоритет.</p>
-                            <p><a class="pc-btn pc-btn--primary" href="account.php?promo_tab=create&amp;promo_house=1#acc-promo">Створити власну рекламу</a></p>
+                            <?= promo_house_admin_html($pdo, $csrf, $badge) ?>
+                            <h3 class="pc-h3">Власна відеореклама</h3>
+                            <p class="pc-muted">Самопромоція сайту з відео (напр. підписка на розсилку, Еля): без білінгу й модерації, показується у вільних слотах — платні кампанії мають пріоритет.</p>
+                            <p><a class="pc-btn" href="account.php?promo_tab=create&amp;promo_house=1#acc-promo">Створити власну відеорекламу</a></p>
                             <?php if ($house === []): ?>
                             <p class="pc-empty">Власної відеореклами ще немає.</p>
                             <?php else: ?>

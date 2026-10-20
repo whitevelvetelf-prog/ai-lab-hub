@@ -25,12 +25,16 @@ declare(strict_types=1);
  *   no_promo          type=category|subcategory|product|article, id, on=0|1 (блок H)
  *   rule_add          advertiser_category, scope=all:0|category:N|subcategory:N, note;  rule_delete  id
  *   diagnose_page     url — «перевірити сторінку»: чи буде реклама й чому ні
+ *   house_campaign_save  campaign_id, name, placements[], rules[…] — власна кампанія (місця, умови)
+ *   house_variant_save   creative_id, тексти UA/EN, cta, destination_url, ref_code, card_layout
+ *   house_add_variant | house_duplicate | house_preview   campaign_id
  * Після дії — редирект у кабінет (account.php?padm_tab=…#acc-promo-admin).
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/promo-admin.php';
+require_once __DIR__ . '/../app/promo-house.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -162,6 +166,31 @@ switch ($action) {
     case 'suspend_creative':
         [$ok, $msg] = promo_admin_suspend_creative($pdo, $adminId, (int) $str('creative_id'), $str('reason'));
         $back('reports', $ok, [$msg]);
+
+    case 'house_campaign_save':
+        [$ok, $msg] = promo_house_save_campaign($pdo, $adminId, $_POST);
+        $back('house', $ok, [$msg]);
+
+    case 'house_variant_save':
+        [$ok, $msg] = promo_house_save_variant($pdo, $adminId, $_POST);
+        $back('house', $ok, [$msg]);
+
+    case 'house_add_variant':
+        [$ok, $msg] = promo_house_add_variant($pdo, $adminId, (int) $str('campaign_id'));
+        $back('house', $ok, [$msg]);
+
+    case 'house_duplicate':
+        [$ok, $msg] = promo_house_duplicate($pdo, $adminId, (int) $str('campaign_id'));
+        $back('house', $ok, [$msg]);
+
+    case 'house_preview':
+        // Перегляд: кампанія стає тестовою (is_test), сторінка з ?promo_preview=1 — бачить лише адмін, без обліку.
+        [$ok, $msg] = promo_admin_set_test_campaign($pdo, (int) $str('campaign_id'));
+        if (!$ok) {
+            $back('house', false, [$msg]);
+        }
+        header('Location: blog.php?promo_preview=1', true, 303);
+        exit;
 
     case 'reports_reviewed':
         $pdo->prepare("UPDATE ad_reports SET status = 'reviewed' WHERE creative_id = :id")->execute([':id' => (int) $str('creative_id')]);
