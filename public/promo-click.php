@@ -42,7 +42,7 @@ $target = str_replace(["\r", "\n"], '', (string) ($stmt->fetchColumn() ?: ''));
 
 // Власна реклама сайту може вести на свою сторінку відносною адресою (/advertise.php?ref=house-A1).
 $internal = false;
-if (preg_match('~^/(?!/)[A-Za-z0-9._~/?=&%-]*$~', $target) === 1) {
+if (preg_match('#^/(?!/)[A-Za-z0-9._~/?=&%-]*$#', $target) === 1) {
     $st = $pdo->prepare("SELECT campaign_type FROM ad_campaigns WHERE id = :c");
     $st->execute([':c' => $data['k']]);
     $internal = $st->fetchColumn() === 'internal';

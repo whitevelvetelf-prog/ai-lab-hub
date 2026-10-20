@@ -168,7 +168,7 @@ function promo_house_save_campaign(PDO $pdo, int $adminId, array $in): array
 function promo_house_url(string $url, string $ref): ?string
 {
     $url = trim($url);
-    $ok = preg_match('~^/(?!/)[A-Za-z0-9._~/?=&%-]*$~', $url) === 1 || (filter_var($url, FILTER_VALIDATE_URL) !== false && str_starts_with($url, 'https://'));
+    $ok = preg_match('#^/(?!/)[A-Za-z0-9._~/?=&%-]*$#', $url) === 1 || (filter_var($url, FILTER_VALIDATE_URL) !== false && str_starts_with($url, 'https://'));
     if (!$ok) {
         return null;
     }

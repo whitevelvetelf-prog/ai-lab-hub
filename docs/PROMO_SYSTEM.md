@@ -142,3 +142,19 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 
 `promo-rules.php` (вбудована чернетка UA/EN, адмін може замінити текстом у налаштуваннях),
 пункт 3.3 у `terms.php`, пункт 3.3 у `privacy.php` — **чернетки, потребують перевірки юристом**.
+
+## Власна реклама платформи (2026-10-23)
+
+- Міграція `database/migration-2026-10-23-house-ads.sql`: `ad_creatives.creative_type` ('video' | 'card'), `card_layout`,
+  тексти EN, запасний опис без дати, власний текст кнопки, `ref_code`; `ad_campaigns.house_key`, `house_rules`,
+  `acquisition_ref`; `mp_listings.acquisition_ref`; `ad_settings.ad_allow_card_creatives = 0`, `house_frequency_cap = 2`.
+- Засів (paused): A «Рекламуйтесь у нас» (house-A1, house-A2 → /advertise.php, усі місця, приховано для тих, хто вже має
+  кампанію, не на advertise/кабінеті) і B «Marketplace: оголошення» (house-B1, house-B2 → /marketplace.php, лише сайт і блог,
+  `requires_setting = marketplace_public`, приховано для тих, хто вже має оголошення). Активація — адмінка «Власна реклама».
+- Відбір (`promo_pick`): платні завжди перші; власна — лише у вільному слоті, один блок на сторінку (`nohouse`),
+  `house_frequency_cap` показів кампанії сеансу за добу, умови `promo_house_allowed()`, рівномірна ротація варіантів.
+- Картка: `promo_card_payload()` — `{free_until}` (дата `marketplace_free_until` мовою інтерфейсу) або запасний текст;
+  `sponsored.js` малює `.sponsored-card--card` (градієнт #00032c → #2116ad), компактну в сітках.
+- Джерело: `?ref=house-…` → сесія (`app/acquisition.php`) → `acquisition_ref` першої кампанії чи оголошення.
+  Звіт — «Звіти» → «Власна реклама за варіантами»; порівняння CTR після 100 показів кожного варіанта (без автовимкнення).
+- Перевірка: `php tools/promo-house-check.php`.
