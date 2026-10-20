@@ -886,3 +886,33 @@
     min-width: 0;
     flex: 1 1 180px;
 }
+
+/* Маркетплейс: місця, що очікують відкриття, і розділи таргетингу (2026-10-20) */
+.pc-badge--waiting {
+    background: rgba(125, 211, 252, 0.25);
+}
+
+.pc-place__badge--pending {
+    background: #9fe0ff;
+}
+
+.pc-place__note {
+    font-size: 0.8rem;
+    color: #9fe0ff;
+    overflow-wrap: anywhere;
+}
+
+.pc-mp {
+    transition: opacity 0.15s ease;
+}
+
+.pc-mp.is-muted {
+    opacity: 0.6;
+}
+
+.pc-mp__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin: 4px 0 8px;
+}

@@ -83,7 +83,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         $house = false;
     }
     $creative = $editing ? promo_campaign_creative($pdo, (int) $editing['id']) : null;
-    $targeting = $editing ? promo_campaign_targeting($pdo, (int) $editing['id']) : ['placements' => [], 'cats' => [], 'subs' => [], 'language' => 'all', 'device' => 'all'];
+    $targeting = $editing ? promo_campaign_targeting($pdo, (int) $editing['id']) : ['placements' => [], 'cats' => [], 'subs' => [], 'mp' => [], 'language' => 'all', 'device' => 'all'];
     $f = [
         'name' => $editing['name'] ?? '',
         'objective' => $editing['objective'] ?? 'awareness',
@@ -99,6 +99,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         'placements' => $targeting['placements'],
         'cats' => $targeting['cats'],
         'subs' => $targeting['subs'],
+        'mp' => $targeting['mp'],
         'cat_all' => $editing !== null && $targeting['placements'] !== [] && $targeting['cats'] === [] && $targeting['subs'] === [],
         'daily_budget' => promo_money_input($editing['daily_budget'] ?? null),
         'total_budget' => promo_money_input($editing['total_budget'] ?? null),
@@ -114,6 +115,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         $f['placements'] = array_values(array_filter((array) ($old['placements'] ?? []), 'is_string'));
         $f['cats'] = array_map('intval', (array) ($old['cats'] ?? []));
         $f['subs'] = array_map('intval', (array) ($old['subs'] ?? []));
+        $f['mp'] = promo_mp_sections_from_input($pdo, $old);
         $f['cat_all'] = !empty($old['cat_all']);
     }
     if ($editing === null && !is_array($old)) {
@@ -239,13 +241,25 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             <span class="pc-muted"><?= pc_e(promo_tr('model_' . ($c['pricing_model'] ?: 'none'))) ?><?php if ($c['start_date']): ?> · <?= pc_e($c['start_date']) ?><?= $c['end_date'] ? ' — ' . pc_e($c['end_date']) : '' ?><?php endif; ?></span>
                                         </td>
                                         <td data-label="<?= pc_e(promo_tr('col_status')) ?>">
-                                            <?= promo_status_badge((string) $c['status']) ?>
-                                            <?php if ($c['status'] === 'rejected' && $c['rejection_reason']): ?>
+                                            <?php
+                                            // «Очікує показу»: активна, але всі місця — маркетплейс, який ще не відкрито.
+                                            $cPlaces = promo_campaign_targeting($pdo, $cid)['placements'];
+                                            $cWaiting = $c['status'] === 'active' && promo_placements_waiting($pdo, $cPlaces);
+                                            $cMpLater = !$cWaiting && in_array($c['status'], ['active', 'pending_review'], true)
+                                                && array_filter($cPlaces, static fn($pl) => promo_placements_waiting($pdo, [$pl])) !== [];
+                                            ?>
+                                            <?= $cWaiting ? '<span class="pc-badge pc-badge--waiting">' . pc_e(promo_tr('status_waiting')) . '</span>' : promo_status_badge((string) $c['status']) ?>
+                                            <?php if ($cWaiting): ?>
+                                            <span class="pc-reason"><?= pc_e(promo_tr('waiting_reason')) ?></span>
+                                            <?php elseif ($c['status'] === 'rejected' && $c['rejection_reason']): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('rejection_reason')) ?>: <?= pc_e($c['rejection_reason']) ?></span>
                                             <?php elseif ($c['stop_reason'] && (in_array($c['status'], ['paused', 'completed'], true) || $c['stop_reason'] === 'link_check')): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('stop_' . $c['stop_reason'])) ?></span>
                                             <?php elseif ($c['status'] === 'active' && $balance <= 0): ?>
                                             <span class="pc-reason"><?= pc_e(promo_tr('stop_balance')) ?></span>
+                                            <?php endif; ?>
+                                            <?php if ($cMpLater): ?>
+                                            <span class="pc-reason"><?= pc_e(promo_tr('waiting_mixed')) ?></span>
                                             <?php endif; ?>
                                         </td>
                                         <td data-label="<?= pc_e(promo_tr('col_spent')) ?>">
@@ -472,6 +486,30 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             </details>
                                             <?php endforeach; ?>
                                         </div>
+                                    </div>
+                                    <?php $mpBoardCats = promo_mp_board_categories($pdo, $lang); ?>
+                                    <div class="pc-field pc-mp" data-pc-mp>
+                                        <span><?= pc_e(promo_tr('field_mp_sections')) ?></span>
+                                        <p class="pc-muted"><?= pc_e(promo_tr('mp_sections_hint')) ?></p>
+                                        <div class="pc-mp__list">
+                                            <?php foreach (PROMO_MP_SECTIONS as $sec): ?>
+                                            <label class="pc-check">
+                                                <input type="checkbox" name="mp_sections[]" value="<?= pc_e($sec) ?>"<?= in_array($sec, $f['mp'], true) ? ' checked' : '' ?>>
+                                                <span><?= pc_e(promo_tr('mp_sec_' . $sec)) ?></span>
+                                            </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <?php if ($mpBoardCats !== []): ?>
+                                        <p class="pc-muted"><?= pc_e(promo_tr('mp_board_cats')) ?></p>
+                                        <div class="pc-mp__list">
+                                            <?php foreach ($mpBoardCats as $mid => $mname): ?>
+                                            <label class="pc-check">
+                                                <input type="checkbox" name="mp_board_cats[]" value="<?= (int) $mid ?>"<?= in_array('board:' . $mid, $f['mp'], true) ? ' checked' : '' ?>>
+                                                <span><?= pc_e($mname) ?></span>
+                                            </label>
+                                            <?php endforeach; ?>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </fieldset>
 

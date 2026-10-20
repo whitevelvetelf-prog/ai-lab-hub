@@ -358,9 +358,12 @@ function promo_campaign_targeting(PDO $pdo, int $campaignId): array
 {
     $st = $pdo->prepare('SELECT * FROM ad_targets WHERE campaign_id = :c');
     $st->execute([':c' => $campaignId]);
-    $out = ['placements' => [], 'cats' => [], 'subs' => [], 'language' => 'all', 'device' => 'all'];
+    $out = ['placements' => [], 'cats' => [], 'subs' => [], 'mp' => [], 'language' => 'all', 'device' => 'all'];
     foreach ($st->fetchAll() as $t) {
         $out['placements'][] = $t['placement'];
+        if (($t['mp_section'] ?? null) !== null) {
+            $out['mp'][] = (string) $t['mp_section'];
+        }
         if ($t['subcategory_id'] !== null) {
             $out['subs'][] = (int) $t['subcategory_id'];
         } elseif ($t['category_id'] !== null) {
@@ -373,8 +376,76 @@ function promo_campaign_targeting(PDO $pdo, int $campaignId): array
     $out['placements'] = promo_placements_normalize($out['placements']);
     $out['cats'] = array_values(array_unique($out['cats']));
     $out['subs'] = array_values(array_unique($out['subs']));
+    $out['mp'] = array_values(array_unique($out['mp']));
 
     return $out;
+}
+
+/**
+ * Категорії оголошень дошки (mp_categories) для таргетингу розділу «Оголошення»: id => назва.
+ *
+ * @return array<int,string>
+ */
+function promo_mp_board_categories(PDO $pdo, string $lang): array
+{
+    try {
+        $st = $pdo->prepare(
+            "SELECT c.id, COALESCE(NULLIF(tl.name, ''), NULLIF(ts.name, ''), c.slug) AS name
+             FROM mp_categories c
+             LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = :lang
+             LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = 'uk'
+             WHERE c.section = 'board' AND c.is_active = 1
+             ORDER BY c.sort_order, c.id"
+        );
+        $st->execute([':lang' => $lang]);
+
+        return array_map('strval', $st->fetchAll(PDO::FETCH_KEY_PAIR));
+    } catch (Throwable $e) {
+        return [];
+    }
+}
+
+/** Розділи маркетплейсу кампанії текстом («усі розділи» або перелік). */
+function promo_mp_sections_text(PDO $pdo, array $sections, string $lang): string
+{
+    $tr = static fn(string $k): string => promo_tr_many([$k], $lang)[$k];
+    if ($sections === []) {
+        return $tr('mp_sections_all');
+    }
+    $cats = promo_mp_board_categories($pdo, $lang);
+    $out = [];
+    foreach ($sections as $sec) {
+        $out[] = str_starts_with((string) $sec, 'board:')
+            ? $tr('mp_sec_board') . ' → ' . ($cats[(int) substr((string) $sec, 6)] ?? $sec)
+            : $tr('mp_sec_' . $sec);
+    }
+
+    return implode(', ', $out);
+}
+
+/**
+ * Розділи маркетплейсу з форми: mp_sections[] (job, course, service, board, solutions) і
+ * mp_board_cats[] (категорії оголошень дошки → board:<id>). Обрано «Оголошення» цілком —
+ * окремі його категорії зайві. Нічого не обрано (або mp_all) — усі розділи.
+ *
+ * @return list<string>
+ */
+function promo_mp_sections_from_input(PDO $pdo, array $in): array
+{
+    if (!empty($in['mp_all'])) {
+        return [];
+    }
+    $secs = array_values(array_intersect(PROMO_MP_SECTIONS, array_filter((array) ($in['mp_sections'] ?? []), 'is_string')));
+    if (!in_array('board', $secs, true)) {
+        $valid = array_keys(promo_mp_board_categories($pdo, 'uk'));
+        foreach ((array) ($in['mp_board_cats'] ?? []) as $id) {
+            if (in_array((int) $id, $valid, true)) {
+                $secs[] = 'board:' . (int) $id;
+            }
+        }
+    }
+
+    return array_values(array_unique($secs));
 }
 
 /** Ціни прайсу: [placement][model] => центи (лише активні, PROMO_CURRENCY). */
@@ -494,11 +565,13 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     // 3. Аудиторія й розміщення
     $language = in_array($in['language'] ?? '', ['uk', 'en'], true) ? $in['language'] : null;
     $device = in_array($in['device'] ?? '', ['mobile', 'desktop'], true) ? $in['device'] : null;
-    // Лише доступні місця (вимкнені адміном чи залежні від вимкненого налаштування відкидаються).
+    // Лише доступні місця (вимкнені адміном чи залежні від вимкненого налаштування відкидаються);
+    // місця маркетплейсу, що очікує відкриття, — можна (promo_placement_pending).
     $placements = array_values(array_filter(
         array_intersect(PROMO_PLACEMENTS, (array) ($in['placements'] ?? [])),
-        static fn($pl) => promo_placement_available($pdo, $pl)
+        static fn($pl) => promo_placement_selectable_now($pdo, $pl)
     ));
+    $mpSections = promo_mp_sections_from_input($pdo, $in);
     $allCats = !empty($in['cat_all']);
     $taxonomy = promo_taxonomy($pdo);
     $subParent = [];
@@ -721,14 +794,17 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         foreach ($subs as $sid) {
             $combos[] = [$subParent[$sid], $sid];
         }
+        // Маркетплейс: категорії каталогу не застосовуються — рядок на розділ (NULL — усі розділи).
+        $mpCombos = $mpSections === [] ? [null] : $mpSections;
         $ins = $pdo->prepare(
-            'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, language, device, unit_price)
-             VALUES (:c, :pl, :cat, :sub, :lang, :dev, :price)'
+            'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, mp_section, language, device, unit_price)
+             VALUES (:c, :pl, :cat, :sub, :mp, :lang, :dev, :price)'
         );
         foreach ($placements as $pl) {
-            foreach ($combos as [$cid, $sid]) {
+            $isMp = promo_placement_is_marketplace($pdo, $pl);
+            foreach ($isMp ? array_map(static fn($mp) => [null, null, $mp], $mpCombos) : array_map(static fn($c) => [$c[0], $c[1], null], $combos) as [$cid, $sid, $mp]) {
                 $ins->execute([
-                    ':c' => $campaignId, ':pl' => $pl, ':cat' => $cid, ':sub' => $sid,
+                    ':c' => $campaignId, ':pl' => $pl, ':cat' => $cid, ':sub' => $sid, ':mp' => $mp,
                     ':lang' => $language, ':dev' => $device, ':price' => $prices[$pl] ?? null,
                 ]);
             }
@@ -785,7 +861,7 @@ function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $
         return [false, 'err_placements_required'];
     }
     foreach ($placements as $pl) {
-        if (!promo_placement_available($pdo, $pl)) {
+        if (!promo_placement_selectable_now($pdo, $pl)) {
             return [false, 'err_places_unavailable'];
         }
     }
@@ -808,19 +884,33 @@ function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $
     $rows = $st->fetchAll();
     $before = promo_placements_normalize(array_column($rows, 'placement'));
     // Наявна ціна місця (знімок; рядок зі старим ключем теж рахується).
+    // Умови окремо для місць сайту (категорії) і маркетплейсу (розділи); мова й пристрій — спільні.
     $oldPrice = [];
     $combos = [];
+    $mpCombos = [];
+    $lang = null;
+    $dev = null;
     foreach ($rows as $r) {
+        $isMp = false;
         foreach (promo_placements_normalize([$r['placement']]) as $pl) {
             if ($r['unit_price'] !== null) {
                 $oldPrice[$pl] = max($oldPrice[$pl] ?? 0, (int) $r['unit_price']);
             }
+            $isMp = $isMp || promo_placement_is_marketplace($pdo, $pl);
         }
-        $combos[$r['category_id'] . '|' . $r['subcategory_id'] . '|' . $r['language'] . '|' . $r['device']]
-            = [$r['category_id'], $r['subcategory_id'], $r['language'], $r['device']];
+        $lang = $r['language'];
+        $dev = $r['device'];
+        if ($isMp) {
+            $mpCombos[(string) ($r['mp_section'] ?? '')] = $r['mp_section'] ?? null;
+        } else {
+            $combos[$r['category_id'] . '|' . $r['subcategory_id']] = [$r['category_id'], $r['subcategory_id']];
+        }
     }
     if ($combos === []) {
-        $combos[] = [null, null, null, null];
+        $combos[] = [null, null];
+    }
+    if ($mpCombos === []) {
+        $mpCombos[] = null;
     }
     $snapshot = !$internal && $model !== null && $c['status'] !== 'draft';
 
@@ -828,8 +918,8 @@ function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $
     try {
         $pdo->prepare('DELETE FROM ad_targets WHERE campaign_id = :c')->execute([':c' => $campaignId]);
         $ins = $pdo->prepare(
-            'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, language, device, unit_price)
-             VALUES (:c, :pl, :cat, :sub, :lang, :dev, :price)'
+            'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, mp_section, language, device, unit_price)
+             VALUES (:c, :pl, :cat, :sub, :mp, :lang, :dev, :price)'
         );
         $prices = [];
         foreach ($placements as $pl) {
@@ -837,8 +927,9 @@ function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $
             if ($price !== null) {
                 $prices[] = $price;
             }
-            foreach ($combos as [$cat, $sub, $lang, $dev]) {
-                $ins->execute([':c' => $campaignId, ':pl' => $pl, ':cat' => $cat, ':sub' => $sub, ':lang' => $lang, ':dev' => $dev, ':price' => $price]);
+            $isMp = promo_placement_is_marketplace($pdo, $pl);
+            foreach ($isMp ? array_map(static fn($mp) => [null, null, $mp], $mpCombos) : array_map(static fn($c) => [$c[0], $c[1], null], $combos) as [$cat, $sub, $mp]) {
+                $ins->execute([':c' => $campaignId, ':pl' => $pl, ':cat' => $cat, ':sub' => $sub, ':mp' => $mp, ':lang' => $lang, ':dev' => $dev, ':price' => $price]);
             }
         }
         if ($prices !== []) {
@@ -923,8 +1014,8 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
                      FROM ad_creatives WHERE campaign_id = :id ORDER BY id LIMIT 1"
                 )->execute([':new' => $newId, ':id' => $campaignId]);
                 $pdo->prepare(
-                    'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, language, device)
-                     SELECT :new, placement, category_id, subcategory_id, language, device FROM ad_targets WHERE campaign_id = :id'
+                    'INSERT INTO ad_targets (campaign_id, placement, category_id, subcategory_id, mp_section, language, device)
+                     SELECT :new, placement, category_id, subcategory_id, mp_section, language, device FROM ad_targets WHERE campaign_id = :id'
                 )->execute([':new' => $newId, ':id' => $campaignId]);
                 promo_rate_hit($pdo, $userId, 'campaign_create');
                 $pdo->commit();

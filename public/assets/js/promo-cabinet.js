@@ -119,7 +119,7 @@
             timer = window.setTimeout(function () {
                 var tg = opts.targeting();
                 var q = new URLSearchParams({
-                    cats: tg.cats.join(','), subs: tg.subs.join(','), language: tg.language || 'all', device: tg.device || 'all'
+                    cats: tg.cats.join(','), subs: tg.subs.join(','), mp: (tg.mp || []).join(','), language: tg.language || 'all', device: tg.device || 'all'
                 });
                 var my = ++seq;
                 items.forEach(function (item) { item.querySelector('[data-pc-place-capacity]').textContent = t.capacity_loading; });
@@ -133,7 +133,10 @@
                         items.forEach(function (item) {
                             var n = data[item.getAttribute('data-pc-place')];
                             var el = item.querySelector('[data-pc-place-capacity]');
-                            if (typeof n !== 'number') {
+                            if (item.getAttribute('data-pending') === '1') {
+                                // Маркетплейс ще не відкрито — переглядів ще немає.
+                                el.textContent = t.capacity_pending;
+                            } else if (typeof n !== 'number') {
                                 el.textContent = t.capacity_none;
                             } else if (n < minViews) {
                                 el.textContent = t.capacity_few;
@@ -172,7 +175,7 @@
         var fixed = JSON.parse(box.getAttribute('data-fixed-targeting') || '{}');
         var places = initPlaces(box, {
             model: function () { return box.getAttribute('data-fixed-model') || null; },
-            targeting: function () { return { language: fixed.language, device: fixed.device, cats: fixed.cats || [], subs: fixed.subs || [] }; }
+            targeting: function () { return { language: fixed.language, device: fixed.device, cats: fixed.cats || [], subs: fixed.subs || [], mp: fixed.mp || [] }; }
         });
         f.addEventListener('submit', function (e) {
             if (!places.validate()) {
@@ -439,14 +442,45 @@
                 language: val('language'),
                 device: val('device'),
                 cats: checkedValues('cats[]'),
-                subs: checkedValues('subs[]')
+                subs: checkedValues('subs[]'),
+                mp: mpSections()
             };
         },
         onChange: function () { updatePrices(); }
     });
-    form.querySelectorAll('input[name="cats[]"], input[name="subs[]"], select[name="language"], select[name="device"]').forEach(function (i) {
+    form.querySelectorAll('input[name="cats[]"], input[name="subs[]"], input[name="mp_sections[]"], input[name="mp_board_cats[]"], select[name="language"], select[name="device"]').forEach(function (i) {
         i.addEventListener('change', places.loadCapacity);
     });
+
+    // Розділи маркетплейсу: нічого не вибрано = усі; обрано «Оголошення» цілком — категорії оголошень зайві.
+    function mpSections() {
+        var secs = checkedValues('mp_sections[]');
+        if (secs.indexOf('board') === -1) {
+            checkedValues('mp_board_cats[]').forEach(function (id) { secs.push('board:' + id); });
+        }
+        return secs;
+    }
+    var mpBox = form.querySelector('[data-pc-mp]');
+    function syncMp() {
+        if (!mpBox) {
+            return;
+        }
+        var board = mpBox.querySelector('input[name="mp_sections[]"][value="board"]');
+        mpBox.querySelectorAll('input[name="mp_board_cats[]"]').forEach(function (i) {
+            i.disabled = !!(board && board.checked);
+            if (i.disabled) {
+                i.checked = false;
+            }
+        });
+        // Блок розділів має сенс лише з місцями маркетплейсу.
+        var anyMp = Array.prototype.some.call(form.querySelectorAll('[data-pc-place][data-group="marketplace"] input'), function (i) { return i.checked; });
+        mpBox.classList.toggle('is-muted', !anyMp);
+    }
+    if (mpBox) {
+        mpBox.addEventListener('change', syncMp);
+        form.querySelectorAll('[data-pc-place] input, [data-pc-places-all]').forEach(function (i) { i.addEventListener('change', syncMp); });
+        syncMp();
+    }
     form.querySelectorAll('input[name="objective"]').forEach(function (i) {
         i.addEventListener('change', places.refresh);
     });

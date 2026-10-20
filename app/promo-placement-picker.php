@@ -10,7 +10,8 @@ declare(strict_types=1);
  * сторінки з підсвіченим місцем блока, ціна за обраною моделлю (з прайсу) і
  * орієнтовна ємність (перегляди за 30 днів — public/promo-capacity.php).
  * Місце вимкнене адміном, залежне від вимкненого налаштування чи без ціни —
- * неактивне з поясненням. Ціни й доступність перемикає promo-cabinet.js при зміні
+ * неактивне з поясненням. Місця маркетплейсу до його відкриття (promo_placement_pending)
+ * обираються з чесною приміткою, ємність — «ще немає». Ціни й доступність перемикає promo-cabinet.js при зміні
  * цілі кампанії; сервер перевіряє те саме ще раз (promo_save_campaign,
  * promo_update_placements).
  */
@@ -44,6 +45,25 @@ function promo_placement_svg(string $key): string
             . $line . 'x="8" y="16" width="104" height="3" rx="1.5"/>' . $line . 'x="8" y="22" width="100" height="3" rx="1.5"/>' . $line . 'x="8" y="28" width="104" height="3" rx="1.5"/>'
             . $hl . 'x="8" y="36" width="104" height="16" rx="3"/>'
             . $line . 'x="8" y="57" width="50" height="4" rx="2"/>' . $line . 'x="8" y="65" width="104" height="3" rx="1.5"/>' . $line . 'x="8" y="71" width="90" height="3" rx="1.5"/>',
+        // Маркетплейс: каркас зі смугою вкладок розділів угорі.
+        'marketplace_home' => $box . 'x="8" y="6" width="104" height="7" rx="3"/>'
+            . $line . 'x="8" y="17" width="54" height="5" rx="2"/>'
+            . $hl . 'x="8" y="26" width="104" height="16" rx="3"/>'
+            . $box . 'x="8" y="46" width="32" height="26" rx="3"/>' . $box . 'x="44" y="46" width="32" height="26" rx="3"/>' . $box . 'x="80" y="46" width="32" height="26" rx="3"/>',
+        'marketplace_feed' => $box . 'x="8" y="6" width="104" height="7" rx="3"/>'
+            . $box . 'x="8" y="17" width="23" height="26" rx="3"/>' . $box . 'x="35" y="17" width="23" height="26" rx="3"/>' . $box . 'x="62" y="17" width="23" height="26" rx="3"/>' . $hl . 'x="89" y="17" width="23" height="26" rx="3"/>'
+            . $box . 'x="8" y="47" width="23" height="26" rx="3"/>' . $box . 'x="35" y="47" width="23" height="26" rx="3"/>' . $box . 'x="62" y="47" width="23" height="26" rx="3"/>' . $box . 'x="89" y="47" width="23" height="26" rx="3"/>',
+        'marketplace_category' => $box . 'x="8" y="6" width="104" height="7" rx="3"/>'
+            . $line . 'x="8" y="17" width="40" height="5" rx="2"/>' . $box . 'x="8" y="25" width="104" height="6" rx="3"/>'
+            . $hl . 'x="8" y="35" width="104" height="13" rx="3"/>'
+            . $box . 'x="8" y="52" width="32" height="21" rx="3"/>' . $box . 'x="44" y="52" width="32" height="21" rx="3"/>' . $box . 'x="80" y="52" width="32" height="21" rx="3"/>',
+        'marketplace_search' => $box . 'x="8" y="6" width="104" height="10" rx="5"/>'
+            . $box . 'x="8" y="20" width="23" height="25" rx="3"/>' . $box . 'x="35" y="20" width="23" height="25" rx="3"/>' . $box . 'x="62" y="20" width="23" height="25" rx="3"/>' . $hl . 'x="89" y="20" width="23" height="25" rx="3"/>'
+            . $box . 'x="8" y="49" width="23" height="24" rx="3"/>' . $box . 'x="35" y="49" width="23" height="24" rx="3"/>' . $box . 'x="62" y="49" width="23" height="24" rx="3"/>' . $box . 'x="89" y="49" width="23" height="24" rx="3"/>',
+        'marketplace_listing_page' => $line . 'x="8" y="6" width="64" height="6" rx="2"/>'
+            . $line . 'x="8" y="16" width="104" height="3" rx="1.5"/>' . $line . 'x="8" y="22" width="96" height="3" rx="1.5"/>' . $line . 'x="8" y="28" width="100" height="3" rx="1.5"/>'
+            . $box . 'x="8" y="35" width="40" height="9" rx="4"/>'
+            . $hl . 'x="8" y="50" width="104" height="22" rx="3"/>',
         default => $box . 'x="8" y="8" width="50" height="30" rx="3"/>' . $hl . 'x="62" y="8" width="50" height="30" rx="3"/>'
             . $box . 'x="8" y="42" width="50" height="30" rx="3"/>' . $box . 'x="62" y="42" width="50" height="30" rx="3"/>',
     };
@@ -62,7 +82,7 @@ function promo_placements_selectable(PDO $pdo, array $rates, ?string $model, boo
 {
     $out = [];
     foreach (array_keys(promo_placements($pdo)) as $k) {
-        if (promo_placement_available($pdo, $k) && ($house || ($model !== null && !empty($rates[$k][$model])))) {
+        if (promo_placement_selectable_now($pdo, $k) && ($house || ($model !== null && !empty($rates[$k][$model])))) {
             $out[] = $k;
         }
     }
@@ -82,7 +102,7 @@ function promo_placement_picker_html(PDO $pdo, array $selected, string $lang, ar
 {
     $e = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
     $i18n = promo_tr_many(['place_price_cpm', 'place_price_cpc', 'place_no_price', 'place_no_model', 'capacity_views', 'capacity_few',
-        'capacity_none', 'capacity_loading', 'places_required'], $lang);
+        'capacity_none', 'capacity_loading', 'places_required', 'capacity_pending'], $lang);
     $groups = [];
     foreach (promo_placements($pdo) as $k => $p) {
         $groups[$p['group_key']][] = $p;
@@ -99,6 +119,7 @@ function promo_placement_picker_html(PDO $pdo, array $selected, string $lang, ar
                 'device' => $fixedTargeting['device'] ?? 'all',
                 'cats' => array_values($fixedTargeting['cats'] ?? []),
                 'subs' => array_values($fixedTargeting['subs'] ?? []),
+                'mp' => array_values($fixedTargeting['mp'] ?? []),
             ])) . '"';
     }
 
@@ -113,7 +134,9 @@ function promo_placement_picker_html(PDO $pdo, array $selected, string $lang, ar
         $html .= '<fieldset class="pc-places__group"><legend>' . $e(promo_tr('group_' . $g)) . '</legend><div class="pc-places__grid">';
         foreach ($groups[$g] as $p) {
             $k = $p['key'];
-            $block = promo_placement_block_reason($pdo, $k);
+            // Маркетплейс ще не відкрито, але попередній вибір дозволено — місце обирається з приміткою.
+            $pending = promo_placement_pending($pdo, $k);
+            $block = $pending ? null : promo_placement_block_reason($pdo, $k);
             $cpm = (int) ($rates[$k]['cpm'] ?? 0);
             $cpc = (int) ($rates[$k]['cpc'] ?? 0);
             $price = $model !== null ? (int) ($rates[$k][$model] ?? 0) : 0;
@@ -123,16 +146,19 @@ function promo_placement_picker_html(PDO $pdo, array $selected, string $lang, ar
             $priceText = $house ? '' : ($model === null ? promo_tr('place_no_model')
                 : ($price > 0 ? promo_tr('place_price_' . $model, promo_money($price)) : promo_tr('place_no_price')));
 
-            $html .= '<label class="pc-place' . ($selectable ? '' : ' is-disabled') . '" data-pc-place="' . $e($k) . '"'
+            $html .= '<label class="pc-place' . ($selectable ? '' : ' is-disabled') . ($pending ? ' is-pending' : '') . '" data-pc-place="' . $e($k) . '"'
                 . ' data-block="' . $e((string) $block) . '" data-cpm="' . $cpm . '" data-cpc="' . $cpc . '"'
+                . ' data-group="' . $e($p['group_key']) . '"' . ($pending ? ' data-pending="1"' : '')
                 . ' data-cpm-text="' . $e($cpm > 0 ? promo_tr('place_price_cpm', promo_money($cpm)) : '') . '"'
                 . ' data-cpc-text="' . $e($cpc > 0 ? promo_tr('place_price_cpc', promo_money($cpc)) : '') . '">'
                 . '<span class="pc-place__head"><input type="checkbox" name="placements[]" value="' . $e($k) . '"'
                 . ($checked ? ' checked' : '') . ($selectable ? '' : ' disabled') . '>'
                 . ' <strong>' . $e($lang === 'en' ? $p['title_en'] : $p['title_uk']) . '</strong>'
-                . ($blockText !== '' ? ' <span class="pc-place__badge">' . $e($blockText) . '</span>' : '') . '</span>'
+                . ($blockText !== '' ? ' <span class="pc-place__badge">' . $e($blockText) . '</span>' : '')
+                . ($pending ? ' <span class="pc-place__badge pc-place__badge--pending">' . $e(promo_tr('place_pending_badge')) . '</span>' : '') . '</span>'
                 . promo_placement_svg($k)
                 . '<span class="pc-place__desc">' . $e($lang === 'en' ? $p['description_en'] : $p['description_uk']) . '</span>'
+                . ($pending ? '<span class="pc-place__note">' . $e(promo_tr('place_mp_pending')) . '</span>' : '')
                 . ($house ? '' : '<span class="pc-place__price" data-pc-place-price>' . $e($block === null ? $priceText : '') . '</span>')
                 . '<span class="pc-place__capacity" data-pc-place-capacity></span>'
                 . '</label>';

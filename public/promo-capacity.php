@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — орієнтовна ємність місць показу для майстра кампанії (promo-cabinet.js).
  *
- * GET cats=1,2  subs=5  language=all|uk|en  device=all|mobile|desktop
+ * GET cats=1,2  subs=5  mp=job,board:3 (розділи маркетплейсу)  language=all|uk|en  device=all|mobile|desktop
  * 200 + JSON {placement_key: N | null} — людські перегляди відповідних сторінок за
  * останні 30 днів у межах таргетингу, без сторінок no_promo (app/promo-placements.php →
  * promo_placement_capacity). null — для місця немає даних. Лише для авторизованих.
@@ -39,9 +39,12 @@ $device = in_array($_GET['device'] ?? '', ['mobile', 'desktop'], true) ? $_GET['
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
+$mp = is_string($_GET['mp'] ?? null) ? array_slice(array_values(array_filter(explode(',', $_GET['mp']), 'promo_mp_section_valid')), 0, 50) : [];
+
 $out = [];
 foreach (array_keys(promo_placements($pdo)) as $key) {
-    $out[$key] = promo_placement_capacity($pdo, $key, $ids('cats'), $ids('subs'), $lang, $device);
+    // Маркетплейс ще не відкрито — переглядів немає (майстер пише «ще немає»).
+    $out[$key] = promo_placement_pending($pdo, $key) ? null : promo_placement_capacity($pdo, $key, $ids('cats'), $ids('subs'), $lang, $device, $mp);
 }
 
 header('Content-Type: application/json; charset=utf-8');
