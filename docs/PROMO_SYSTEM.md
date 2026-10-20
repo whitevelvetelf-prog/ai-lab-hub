@@ -103,13 +103,12 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 ## Місця показу (2026-10-18, блоки L1–L5)
 
 - `ad_placements` (міграція `database/migration-2026-10-18-promo-placements.sql`): category_page,
-  subcategory_list, search_results, product_page, blog_list, blog_article, marketplace_listing.
+  subcategory_list, search_results, product_page, blog_list, blog_article (маркетплейс — див. нижче).
   Логіка — `app/promo-placements.php`; галочки в майстрі — `app/promo-placement-picker.php`;
   ємність — `public/promo-capacity.php`; вкладка адмінки «Місця показу».
 - Старі ключі працюють: `catalog_card` = subcategory_list + search_results, `blog_inline` = blog_article
   (`PROMO_LEGACY_PLACEMENTS`, `promo_placement_match_keys`). Міграція копіює їхні таргети й ціни.
-- Вимкнене місце не відбирається й не має слота. marketplace_listing — «Скоро», доки
-  `marketplace_public = 0` і не зроблено позначку «Просунуте» (`PROMO_PLACEMENT_FEATURES`).
+- Вимкнене місце не відбирається й не має слота.
 - Правило позиції — `position_rule` (JSON): `position`, `after_item`, `min_chars_before/after`.
 - Ліміт `slots_per_page` — у `promo_slot`; повтори на сторінці — `exclude` у `promo-serve.php`.
 - Адмін-перегляд: `?promo_preview=1` + тестова кампанія `is_test` (токен з `x=1`, події не рахуються).
@@ -117,6 +116,27 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 - Аналітика каталогу: `page_views.page_type='other'`, `page_slug` = `sub:<id>` / `cat:<id>` / `search` / `all`;
   список блогу — `blog`.
 - Перевірка (локально): `php tools/promo-placements-check.php` → PASS/FAIL по кожному місцю.
+
+## Місця в маркетплейсі (2026-10-20)
+
+- Міграція `database/migration-2026-10-20-promo-marketplace-placements.sql`. marketplace_listing замінено
+  п'ятьма місцями: `marketplace_home` (marketplace.php без фільтрів, 1-ша сторінка — блок над списком),
+  `marketplace_feed` (стрічка marketplace.php — картка на 4-й позиції, далі кожні 10, `{"position":4,"every":10}`),
+  `marketplace_category` (категорія/Готові рішення в marketplace.php, listings.php?type=… без фільтрів — блок
+  на початку списку), `marketplace_search` (пошук і фільтри — 4-та позиція), `marketplace_listing_page`
+  (listing.php, marketplace-offer.php — окремий блок після оголошення й кнопки). Нових цін немає.
+- Старий ключ `marketplace_listing` = `marketplace_feed` (`PROMO_LEGACY_PLACEMENTS`); міграція копіює таргети
+  (без категорій каталогу) і ціни.
+- Таргетинг: `ad_targets.mp_section` (NULL — усі розділи; job, course, service, board, board:<id>, solutions).
+  Категорії каталогу й правила категорій реклами до маркетплейсу не застосовуються (`promo_pick`).
+- Показ лише коли `marketplace_public = 1` (`requires_setting`). До відкриття, якщо
+  `ad_settings.ad_allow_marketplace_preselect = 1`, місця можна обрати (`promo_placement_pending`); кампанія лише
+  з такими місцями в кабінеті — «Очікує показу», бюджет не витрачається; після відкриття показ починається без
+  повторної модерації.
+- Аналітика: `page_views.page_type` marketplace_home (page_slug = розділи або `p:<N>` для наступних сторінок),
+  marketplace_category, marketplace_search, marketplace_listing (page_id = оголошення); page_slug — розділи через кому.
+- Вигляд: `.sponsored-slot[data-group="marketplace"]` — пунктирна тепла рамка й жовта позначка «Реклама».
+  Правила реклами: заборона маскування під оголошення; підказка в черзі модерації.
 
 ## Юридичне
 
