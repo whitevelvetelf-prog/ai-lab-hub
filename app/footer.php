@@ -94,7 +94,10 @@ require_once __DIR__ . '/marketplace.php';
     .site-header .site-nav__link--cta.site-header__cta {
         position: relative;
         color: #ffffff;
-        background: linear-gradient(120deg, #19e3ff 0%, #2f7bff 50%, #a63dff 100%);
+        /* Верхній шар — світлий відблиск, що раз на кілька секунд пробігає по кнопці. */
+        background:
+            linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) -150% 0 / 60% 100% no-repeat,
+            linear-gradient(120deg, #19e3ff 0%, #2f7bff 50%, #a63dff 100%);
         border: 1px solid rgba(255, 255, 255, 0.7);
         box-shadow: 0 0 0 0 rgba(40, 210, 255, 0.6), 0 0 18px rgba(60, 170, 255, 0.75), 0 8px 26px rgba(120, 80, 255, 0.55);
         font-size: 1.02rem;
@@ -102,14 +105,16 @@ require_once __DIR__ . '/marketplace.php';
         letter-spacing: 0.01em;
         /* Підсвітка тексту: тонка темна тінь для чіткості + світлий неоновий ореол. */
         text-shadow: 0 1px 2px rgba(0, 10, 60, 0.55), 0 0 10px rgba(255, 255, 255, 0.75), 0 0 18px rgba(120, 220, 255, 0.8);
-        animation: eli-cta-pulse 2.8s ease-out infinite;
+        animation: eli-cta-pulse 4s ease-out infinite, eli-cta-shine 6s ease-in-out infinite;
         transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     }
 
     .site-header .site-nav__link--cta.site-header__cta:hover,
     .site-header .site-nav__link--cta.site-header__cta:focus-visible {
         color: #ffffff;
-        background: linear-gradient(120deg, #4debff 0%, #4a8dff 50%, #b85cff 100%);
+        background:
+            linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%) -150% 0 / 60% 100% no-repeat,
+            linear-gradient(120deg, #4debff 0%, #4a8dff 50%, #b85cff 100%);
         transform: translateY(-1px);
         filter: brightness(1.08);
         box-shadow: 0 0 0 4px rgba(60, 220, 255, 0.35), 0 0 24px rgba(80, 190, 255, 0.9), 0 10px 30px rgba(140, 90, 255, 0.6);
@@ -123,6 +128,20 @@ require_once __DIR__ . '/marketplace.php';
     .site-header .site-nav__link--cta.site-header__cta > svg {
         width: 18px;
         height: 18px;
+        animation: eli-cta-twinkle 4s ease-in-out infinite;
+    }
+
+    /* Відблиск: швидкий прохід зліва направо, далі довга пауза. */
+    @keyframes eli-cta-shine {
+        0%, 70% { background-position: -150% 0, 0 0; }
+        85%, 100% { background-position: 250% 0, 0 0; }
+    }
+
+    /* Зірочка: легке «мерехтіння» — поворот і масштаб, без зміни розміру кнопки. */
+    @keyframes eli-cta-twinkle {
+        0%, 80%, 100% { transform: rotate(0deg) scale(1); }
+        88% { transform: rotate(18deg) scale(1.18); }
+        94% { transform: rotate(-6deg) scale(0.96); }
     }
 
     @keyframes eli-cta-pulse {
@@ -131,8 +150,19 @@ require_once __DIR__ . '/marketplace.php';
         100% { box-shadow: 0 0 0 0 rgba(40, 210, 255, 0), 0 0 18px rgba(60, 170, 255, 0.75), 0 8px 26px rgba(120, 80, 255, 0.55); }
     }
 
+    /* «Зменшити рух» у системі: без руху (відблиск, кільце, зірочка вимкнені) — лише м'яке
+       «дихання» світіння: змінюється яскравість ореолу, кнопка й текст нерухомі. */
+    @keyframes eli-cta-glow {
+        0%, 100% { box-shadow: 0 0 14px rgba(60, 170, 255, 0.6), 0 8px 26px rgba(120, 80, 255, 0.45); }
+        50% { box-shadow: 0 0 26px rgba(80, 200, 255, 0.95), 0 8px 30px rgba(140, 90, 255, 0.65); }
+    }
+
     @media (prefers-reduced-motion: reduce) {
         .site-header .site-nav__link--cta.site-header__cta {
+            animation: eli-cta-glow 3.5s ease-in-out infinite;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta > svg {
             animation: none;
         }
     }
