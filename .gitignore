@@ -49,3 +49,6 @@
 
 # Пошта (SMTP-пароль) — шаблон config/mail.example.php.
 /config/mail.php
+
+# Приватне сховище оригіналів «Цифрових матеріалів» і секрет підпису превʼю — шаблон config/storage.example.php.
+/config/storage.php
