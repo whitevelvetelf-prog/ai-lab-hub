@@ -86,6 +86,53 @@ require_once __DIR__ . '/marketplace.php';
         }
     }
 
+    /* ===== Кнопка «Викликати Асистента» — найпомітніша дія шапки =====
+       Теплий градієнт на темно-синьому фоні сайту (контрастує з блакитними
+       кнопками), світіння й м'яка пульсація кільця. Пульсація вимикається при
+       prefers-reduced-motion. Стоїть тут (підвал підключається на кожній
+       сторінці після стилів сторінки), тож перекриває вбудовані копії стилів. */
+    .site-header .site-nav__link--cta.site-header__cta {
+        position: relative;
+        color: #1a1033;
+        background: linear-gradient(135deg, #ffd27a 0%, #ff9a6b 55%, #ff7aa8 100%);
+        border: 1px solid rgba(255, 255, 255, 0.55);
+        box-shadow: 0 0 0 0 rgba(255, 170, 110, 0.55), 0 8px 24px rgba(255, 140, 110, 0.45);
+        font-weight: 700;
+        animation: eli-cta-pulse 2.8s ease-out infinite;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+
+    .site-header .site-nav__link--cta.site-header__cta:hover,
+    .site-header .site-nav__link--cta.site-header__cta:focus-visible {
+        color: #1a1033;
+        background: linear-gradient(135deg, #ffdd94 0%, #ffab80 55%, #ff8fb6 100%);
+        transform: translateY(-1px);
+        filter: brightness(1.04);
+        box-shadow: 0 0 0 4px rgba(255, 210, 122, 0.35), 0 10px 28px rgba(255, 140, 110, 0.55);
+    }
+
+    .site-header .site-nav__link--cta.site-header__cta:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+    }
+
+    .site-header .site-nav__link--cta.site-header__cta > svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    @keyframes eli-cta-pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255, 170, 110, 0.55), 0 8px 24px rgba(255, 140, 110, 0.45); }
+        70% { box-shadow: 0 0 0 12px rgba(255, 170, 110, 0), 0 8px 24px rgba(255, 140, 110, 0.45); }
+        100% { box-shadow: 0 0 0 0 rgba(255, 170, 110, 0), 0 8px 24px rgba(255, 140, 110, 0.45); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .site-header .site-nav__link--cta.site-header__cta {
+            animation: none;
+        }
+    }
+
     /* ===== Шапка: гнучка розкладка + гамбургер на вузьких екранах =====
        Кнопка «Викликати Асистента» (.site-header__cta) винесена з <nav>,
        тож на мобільному лишається видимою поруч із гамбургером; гамбургер
