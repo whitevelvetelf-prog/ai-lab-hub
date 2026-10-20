@@ -29,7 +29,8 @@ require_once __DIR__ . '/promo-placements.php';
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';
 /** Місця показу (ad_placements, app/promo-placements.php); старі ключі — PROMO_LEGACY_PLACEMENTS. */
-const PROMO_PLACEMENTS = ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article', 'marketplace_listing'];
+const PROMO_PLACEMENTS = ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article',
+    'marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page'];
 
 /** Баланс в іншій валюті, ніж операція (повідомлення — код валюти балансу). */
 final class PromoCurrencyMismatch extends RuntimeException
@@ -312,6 +313,9 @@ function promo_lang(?string $param = null): string
  * Сторінка з no_promo (сама, її категорія чи підкатегорія) → null; кампанії з
  * категорією реклами, забороненою на сторінці (promo_category_rules), не беруться.
  *
+ * Маркетплейс: $page['mp'] — розділи сторінки (promo_mp_page_sections); таргет підходить,
+ * якщо його mp_section порожній (усі розділи) або є серед них.
+ *
  * Місце вимкнене адміном чи недоступне (promo_placement_available) → null. Таргет
  * підходить і зі старим ключем місця (catalog_card, blog_inline). $excludeCreatives —
  * креативи, уже показані на цій сторінці (одна реклама не повторюється).
@@ -360,6 +364,18 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
     };
     $catCond = $categoryIds !== [] ? '(t.category_id IS NULL OR t.category_id IN (' . $inList('c', $categoryIds) . '))' : 't.category_id IS NULL';
     $subCond = $subcategoryIds !== [] ? '(t.subcategory_id IS NULL OR t.subcategory_id IN (' . $inList('s', $subcategoryIds) . '))' : 't.subcategory_id IS NULL';
+    // Маркетплейс: категорії каталогу не застосовуються, збіг за розділом (NULL — усі розділи).
+    $mpCond = '';
+    if (promo_placement_is_marketplace($pdo, $placement)) {
+        $catCond = 't.category_id IS NULL';
+        $subCond = 't.subcategory_id IS NULL';
+        $mpNames = [];
+        foreach (array_values(array_filter((array) ($page['mp'] ?? []), static fn($v) => is_string($v) && promo_mp_section_valid($v))) as $i => $sec) {
+            $mpNames[] = ':mp' . $i;
+            $params[':mp' . $i] = $sec;
+        }
+        $mpCond = 'AND ' . ($mpNames !== [] ? '(t.mp_section IS NULL OR t.mp_section IN (' . implode(',', $mpNames) . '))' : 't.mp_section IS NULL');
+    }
     $excludeIds = array_values(array_filter(array_map('intval', $excludeCreatives), static fn($id) => $id > 0));
     $excludeCond = $excludeIds !== [] ? 'AND cr.id NOT IN (' . $inList('x', $excludeIds) . ')' : '';
 
@@ -401,6 +417,7 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
                       AND {$plCond}
                       AND {$catCond}
                       AND {$subCond}
+                      {$mpCond}
                       AND (t.language IS NULL OR t.language = :lang)
                       AND (t.device IS NULL OR t.device = :dev)
               )
@@ -777,7 +794,9 @@ function promo_maintenance(PDO $pdo): array
  * виключено (no_promo) або на сторінці вже стоїть slots_per_page блоків цього місця.
  * Адмін із ?promo_preview=1 бачить слот і при вимкненій системі чи місці — його
  * заповнює креатив тестової кампанії (is_test) без обліку подій.
- * $page: ['product' => id] або ['article' => slug] — для перевірки прапорців.
+ * $page: ['product' => id] або ['article' => slug] — для перевірки прапорців;
+ * ['mp' => розділи] — сторінка маркетплейсу (promo_mp_page_sections).
+ * Маркетплейс: слот лише коли marketplace_public = 1 (місце доступне); адмін-перегляд — завжди.
  *
  * @param list<int> $categoryIds
  * @param list<int> $subcategoryIds
@@ -808,6 +827,8 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
         . ' data-subcategory="' . htmlspecialchars(implode(',', array_map('intval', $subcategoryIds)), ENT_QUOTES) . '"'
         . (!empty($page['product']) ? ' data-product="' . (int) $page['product'] . '"' : '')
         . (!empty($page['article']) ? ' data-article="' . htmlspecialchars((string) $page['article'], ENT_QUOTES) . '"' : '')
+        . (!empty($page['mp']) ? ' data-mp="' . htmlspecialchars(implode(',', array_filter((array) $page['mp'], static fn($v) => is_string($v) && promo_mp_section_valid($v))), ENT_QUOTES) . '"' : '')
+        . (promo_placement_is_marketplace($pdo, $placement) ? ' data-group="marketplace"' : '')
         . ($preview ? ' data-preview="1"' : '')
         . ' data-lang="' . promo_lang() . '"></div>';
 

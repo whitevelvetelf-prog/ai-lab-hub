@@ -6,12 +6,13 @@ declare(strict_types=1);
  * AI LAB HUB — місця показу реклами (ad_placements, міграція 2026-10-18).
  *
  * Кожне місце — ключ (category_page, subcategory_list, search_results, product_page,
- * blog_list, blog_article, marketplace_listing), назва й опис UA/EN, група, перемикач
+ * blog_list, blog_article; маркетплейс з 2026-10-20 — marketplace_home, marketplace_feed,
+ * marketplace_category, marketplace_search, marketplace_listing_page), назва й опис UA/EN, група, перемикач
  * адміна, ліміт блоків на сторінку, правило позиції (JSON) і залежність від
  * налаштування сайту (requires_setting, напр. marketplace_public).
  *
  * Старі ключі (до 2026-10-18) працюють і далі: catalog_card = subcategory_list +
- * search_results, blog_inline = blog_article. Рядок ad_targets зі старим ключем
+ * search_results, blog_inline = blog_article, marketplace_listing = marketplace_feed. Рядок ad_targets зі старим ключем
  * підходить для нового місця (promo_placement_match_keys), тож кампанії, створені до
  * міграції, показуються там само, як і раніше.
  *
@@ -20,11 +21,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/site-settings.php';
 
-/** Старий ключ → нові місця, які він покриває. */
+/** Старий ключ → нові місця, які він покриває (marketplace_listing — до 2026-10-20). */
 const PROMO_LEGACY_PLACEMENTS = [
     'catalog_card' => ['subcategory_list', 'search_results'],
     'blog_inline'  => ['blog_article'],
+    'marketplace_listing' => ['marketplace_feed'],
 ];
+
+/**
+ * Розділи маркетплейсу для таргетингу (ad_targets.mp_section; NULL — усі розділи):
+ * board — оголошення користувачів (і board:<id> — одна категорія оголошень),
+ * solutions — Готові AI-рішення, job / course / service — оголошення компаній.
+ * Категорії каталогу до маркетплейсу не застосовуються.
+ */
+const PROMO_MP_SECTIONS = ['job', 'course', 'service', 'board', 'solutions'];
 
 const PROMO_PLACEMENT_GROUPS = ['catalog', 'blog', 'marketplace'];
 
@@ -40,7 +50,11 @@ const PROMO_PLACEMENT_DEFAULTS = [
     'product_page' => ['Сторінка продукту', 'Product page', 'Один блок під описом продукту.', 'One block below the product description.', 'catalog', 1, 1, '{"after":"description"}', null, 40],
     'blog_list' => ['Список статей блогу', 'Blog article list', 'Один блок після 3-ї статті у списку.', 'One block after the 3rd article in the list.', 'blog', 1, 1, '{"after_item":3}', null, 50],
     'blog_article' => ['Усередині статті', 'Inside an article', 'Один блок після першого розділу з достатньою кількістю тексту — не на початку й не в кінці.', 'One block after the first section with enough text — not at the very start or end.', 'blog', 1, 1, '{"min_chars_before":600,"min_chars_after":400}', null, 60],
-    'marketplace_listing' => ['Оголошення маркетплейсу', 'Marketplace listings', 'Просунуте оголошення серед оголошень маркетплейсу.', 'A promoted listing among marketplace listings.', 'marketplace', 0, 1, '{"position":3,"requires_feature":"featured_listings"}', 'marketplace_public', 70],
+    'marketplace_home' => ['Головна маркетплейсу', 'Marketplace home', 'Один блок на головній сторінці маркетплейсу — над списком оголошень.', 'One block on the marketplace home page — above the list of listings.', 'marketplace', 1, 1, '{"before":"list"}', 'marketplace_public', 70],
+    'marketplace_feed' => ['Стрічка оголошень', 'Listings feed', 'Рекламна картка на 4-й позиції в стрічці оголошень і далі не частіше ніж кожні 10 карток.', 'An ad card in 4th position in the listings feed, then no more often than every 10 cards.', 'marketplace', 1, 1, '{"position":4,"every":10}', 'marketplace_public', 71],
+    'marketplace_category' => ['Розділи маркетплейсу', 'Marketplace sections', 'Один блок на початку списку в розділах: вакансії, курси, послуги, оголошення, готові рішення.', 'One block at the start of the list in sections: jobs, courses, services, listings, ready-made solutions.', 'marketplace', 1, 1, '{"before":"list"}', 'marketplace_public', 72],
+    'marketplace_search' => ['Пошук і фільтри маркетплейсу', 'Marketplace search and filters', 'Рекламна картка на 4-й позиції в результатах пошуку й фільтрів маркетплейсу.', 'An ad card in 4th position in marketplace search and filter results.', 'marketplace', 1, 1, '{"position":4}', 'marketplace_public', 73],
+    'marketplace_listing_page' => ['Сторінка оголошення', 'Listing page', 'Один блок під описом і нижче кнопки «Перейти» чи контактів — окремо від самого оголошення.', 'One block below the description and below the “Go” button or contacts — separate from the listing itself.', 'marketplace', 1, 1, '{"after":"actions"}', 'marketplace_public', 74],
 ];
 
 /** Можливості сайту, від яких залежать місця (position_rule.requires_feature). Ще не зроблені — false. */
@@ -188,6 +202,111 @@ function promo_placement_block_reason(PDO $pdo, string $key): ?string
 function promo_placement_available(PDO $pdo, string $key): bool
 {
     return promo_placement_block_reason($pdo, $key) === null;
+}
+
+/** Місце групи «Маркетплейс». */
+function promo_placement_is_marketplace(PDO $pdo, string $key): bool
+{
+    return (promo_placements($pdo)[$key]['group_key'] ?? '') === 'marketplace';
+}
+
+/**
+ * Місце маркетплейсу, яке «очікує відкриття»: увімкнене адміном, але маркетплейс ще не
+ * відкрито (marketplace_public = 0), а ad_allow_marketplace_preselect = 1. Таке місце
+ * можна обрати в майстрі; реклама там не показується й кошти не списуються, доки
+ * маркетплейс не відкриють (тоді показ починається без повторної модерації).
+ */
+function promo_placement_pending(PDO $pdo, string $key): bool
+{
+    $p = promo_placements($pdo)[$key] ?? null;
+    if ($p === null || $p['group_key'] !== 'marketplace' || !$p['enabled'] || promo_placement_block_reason($pdo, $key) !== 'setting') {
+        return false;
+    }
+    $allow = '1';
+    try {
+        $st = $pdo->prepare('SELECT setting_value FROM ad_settings WHERE setting_key = :k');
+        $st->execute([':k' => 'ad_allow_marketplace_preselect']);
+        $v = $st->fetchColumn();
+        $allow = $v === false ? '1' : (string) $v;
+    } catch (Throwable $e) {
+        // без таблиці — значення за замовчуванням
+    }
+
+    return $allow === '1';
+}
+
+/** Місце можна обрати в кампанії зараз: доступне або очікує відкриття маркетплейсу. */
+function promo_placement_selectable_now(PDO $pdo, string $key): bool
+{
+    return promo_placement_available($pdo, $key) || promo_placement_pending($pdo, $key);
+}
+
+/**
+ * Обрані місця кампанії є, але всі вони — маркетплейс, що ще не відкритий: кампанія
+ * «Очікує показу» (не витрачає бюджет). $placements — нові ключі (promo_placements_normalize).
+ *
+ * @param list<string> $placements
+ */
+function promo_placements_waiting(PDO $pdo, array $placements): bool
+{
+    if ($placements === []) {
+        return false;
+    }
+    foreach ($placements as $k) {
+        if (!promo_placement_is_marketplace($pdo, $k) || promo_placement_block_reason($pdo, $k) !== 'setting') {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Розділи сторінки маркетплейсу для таргетингу: [$section] або [$section, $section:<id категорії>].
+ *
+ * @return list<string>
+ */
+function promo_mp_page_sections(string $section, int $categoryId = 0): array
+{
+    if (!in_array($section, PROMO_MP_SECTIONS, true)) {
+        return [];
+    }
+
+    return $categoryId > 0 && $section === 'board' ? [$section, $section . ':' . $categoryId] : [$section];
+}
+
+/** Значення розділу з форми чи запиту: розділ або board:<id>; інакше null. */
+function promo_mp_section_valid(string $v): bool
+{
+    return in_array($v, PROMO_MP_SECTIONS, true) || preg_match('/^board:[1-9]\d{0,8}$/', $v) === 1;
+}
+
+/**
+ * Індекси карток списку (з нуля), ПЕРЕД якими стоїть рекламна картка: position (1-based)
+ * і далі через кожні every справжніх карток; не більше slots_per_page. Карток менше за
+ * position — одна рекламна картка в кінці (індекс = $count), як у каталозі.
+ *
+ * @return list<int>
+ */
+function promo_placement_positions(PDO $pdo, string $key, int $count, int $defaultPosition = 4): array
+{
+    if ($count <= 0) {
+        return [];
+    }
+    $first = min(promo_placement_rule_int($pdo, $key, 'position', $defaultPosition) - 1, $count);
+    $every = promo_placement_rule_int($pdo, $key, 'every', 0);
+    $out = [];
+    for ($i = $first; $i <= $count && count($out) < promo_placement_slots($pdo, $key); $i += max(1, $every)) {
+        if ($i === $count && $out !== []) {
+            break; // у кінці — лише єдина картка короткого списку
+        }
+        $out[] = $i;
+        if ($every <= 0) {
+            break;
+        }
+    }
+
+    return $out;
 }
 
 /**
@@ -345,12 +464,18 @@ function promo_blog_taxonomy_map(PDO $pdo): array
  * сторінки місця; інакше сторінка, чия категорія є в $cats або підкатегорія в $subs.
  * Пошук, список статей і статті без категорій збігаються лише з «усіма категоріями».
  *
+ * Маркетплейс (сторінки пишуть page_type marketplace_*, page_slug — розділ, див.
+ * promo_mp_log_view): категорії каталогу не враховуються, лише $mpSections (порожньо — усі
+ * розділи). Головна — перша сторінка без фільтрів, стрічка — усі сторінки стрічки.
+ *
  * @param list<int> $cats
  * @param list<int> $subs
+ * @param list<string> $mpSections
  */
-function promo_placement_capacity(PDO $pdo, string $key, array $cats, array $subs, ?string $lang, ?string $device): ?int
+function promo_placement_capacity(PDO $pdo, string $key, array $cats, array $subs, ?string $lang, ?string $device, array $mpSections = []): ?int
 {
-    if (!in_array($key, ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article'], true)) {
+    if (!in_array($key, ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article',
+        'marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page'], true)) {
         return null;
     }
     $all = $cats === [] && $subs === [];
@@ -404,6 +529,33 @@ function promo_placement_capacity(PDO $pdo, string $key, array $cats, array $sub
                     WHERE {$where} AND v.page_type = 'other'
                       AND (v.page_slug IN ('search', 'all') OR (v.page_slug LIKE 'cat:%' AND c.no_promo = 0))"
                 . ($all ? '' : " AND c.id IN ({$catIn})");
+            break;
+        case 'marketplace_home':
+        case 'marketplace_feed':
+        case 'marketplace_category':
+        case 'marketplace_search':
+        case 'marketplace_listing_page':
+            $type = ['marketplace_home' => 'marketplace_home', 'marketplace_feed' => 'marketplace_home', 'marketplace_category' => 'marketplace_category',
+                'marketplace_search' => 'marketplace_search', 'marketplace_listing_page' => 'marketplace_listing'][$key];
+            $sql = "SELECT COUNT(*) FROM page_views v WHERE {$where} AND v.page_type = '{$type}'";
+            if ($key === 'marketplace_home') {
+                $sql .= " AND (v.page_slug IS NULL OR v.page_slug NOT LIKE 'p:%')"; // лише перша сторінка
+            }
+            $secs = array_values(array_filter($mpSections, 'promo_mp_section_valid'));
+            if ($secs !== [] && in_array($key, ['marketplace_category', 'marketplace_search', 'marketplace_listing_page'], true)) {
+                // page_slug — розділи сторінки через кому (board,board:3 / job / board,solutions).
+                $or = [];
+                foreach ($secs as $i => $sec) {
+                    $or[] = 'FIND_IN_SET(:m' . $i . ', v.page_slug) > 0';
+                    $params[':m' . $i] = $sec;
+                }
+                $sql .= ' AND (' . implode(' OR ', $or) . ')';
+            } elseif ($secs !== []) {
+                // Головна й стрічка показують усі розділи разом: збіг лише з рекламою для дошки й рішень.
+                if (array_intersect($secs, ['board', 'solutions']) === []) {
+                    return 0;
+                }
+            }
             break;
         case 'blog_list':
             if (!$all) {

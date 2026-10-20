@@ -156,9 +156,13 @@ function promo_admin_targets_text(PDO $pdo, int $campaignId): array
     }
     $prices = $pdo->prepare('SELECT placement, MAX(unit_price) FROM ad_targets WHERE campaign_id = :c GROUP BY placement');
     $prices->execute([':c' => $campaignId]);
+    $placements = $prices->fetchAll(PDO::FETCH_KEY_PAIR);
+    $hasMp = array_filter(array_keys($placements), static fn($pl) => promo_placement_is_marketplace($pdo, (string) $pl) || $pl === 'marketplace_listing') !== [];
 
     return [
-        'placements' => $prices->fetchAll(PDO::FETCH_KEY_PAIR),
+        'placements' => $placements,
+        'has_marketplace' => $hasMp,
+        'mp_sections' => $hasMp ? promo_mp_sections_text($pdo, $t['mp'], 'uk') : '',
         'categories' => $names === [] ? ['усі категорії'] : $names,
         'language' => $t['language'],
         'device' => $t['device'],
@@ -643,7 +647,21 @@ function promo_admin_placement_preview_url(PDO $pdo, string $key): ?string
                                         ORDER BY p.id LIMIT 1")) !== null ? 'product.php?id=' . $id : null,
         'blog_list' => 'blog.php',
         'blog_article' => promo_admin_preview_article($pdo),
-        'marketplace_listing' => 'marketplace.php',
+        'marketplace_home', 'marketplace_feed' => 'marketplace.php',
+        'marketplace_category' => 'listings.php?type=job',
+        'marketplace_search' => 'marketplace.php?q=ai',
+        'marketplace_listing_page' => (static function () use ($one): ?string {
+            // Живе оголошення: компанії — listing.php, дошка й Готові рішення — marketplace-offer.php.
+            $row = $one("SELECT CONCAT(l.section, ':', l.id) FROM mp_listings l
+                         WHERE l.status = 'published' AND (l.section = 'solution' OR l.expires_at > NOW())
+                         ORDER BY FIELD(l.section, 'job', 'course', 'service', 'board', 'solution'), l.id DESC LIMIT 1");
+            if ($row === null) {
+                return null;
+            }
+            [$section, $id] = explode(':', $row, 2);
+
+            return (in_array($section, ['job', 'course', 'service'], true) ? 'listing.php?id=' : 'marketplace-offer.php?id=') . (int) $id;
+        })(),
         default => null,
     };
 

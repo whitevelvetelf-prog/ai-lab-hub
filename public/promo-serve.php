@@ -5,10 +5,12 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — відбір відеореклами для слота (app/promo.php → promo_pick).
  *
- * GET placement=category_page|subcategory_list|search_results|product_page|blog_list|blog_article|marketplace_listing
+ * GET placement=category_page|subcategory_list|search_results|product_page|blog_list|blog_article|
+ *              marketplace_home|marketplace_feed|marketplace_category|marketplace_search|marketplace_listing_page
  *     category=1,2  subcategory=5  (id сторінки, через кому; порожньо — без категорії)
  *     lang=uk|en  device=mobile|desktop  (необов'язкові; інакше — мова сесії / User-Agent)
  *     product=N | article=slug  (сторінка: перевірка no_promo і правил категорій реклами)
+ *     mp=board,board:3  (розділи сторінки маркетплейсу — таргетинг за розділом)
  *     exclude=3,7  (креативи, уже показані на цій сторінці — одна реклама не повторюється)
  *     preview=1    (адмін із ?promo_preview=1: креатив тестової кампанії is_test, без обліку)
  *
@@ -67,6 +69,9 @@ if ((int) ($_GET['product'] ?? 0) > 0) {
 }
 if (is_string($_GET['article'] ?? null) && preg_match('/^[a-z0-9-]{1,191}$/', $_GET['article'])) {
     $page['article'] = $_GET['article'];
+}
+if (is_string($_GET['mp'] ?? null) && $_GET['mp'] !== '') {
+    $page['mp'] = array_slice(array_values(array_filter(explode(',', $_GET['mp']), 'promo_mp_section_valid')), 0, 5);
 }
 
 $creative = promo_pick(

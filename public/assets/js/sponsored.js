@@ -282,6 +282,9 @@
         if (slot.dataset.article) {
             params.set('article', slot.dataset.article);
         }
+        if (slot.dataset.mp) {
+            params.set('mp', slot.dataset.mp);
+        }
         if (shown.length) {
             params.set('exclude', shown.join(','));
         }
