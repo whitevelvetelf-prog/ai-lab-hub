@@ -81,6 +81,8 @@ lst_open($heading, !mp_public_enabled(), $head, 'lst_' . $type);
     <div class="mp-page">
         <h1 class="mp-title"><?= lst_e($heading) ?></h1>
         <p class="mp-subtitle"><?= lst_e(lst_tr('sub_' . $type)) ?></p>
+        <?php // Платформа не є стороною відносин — завжди вгорі, до списку. ?>
+        <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= lst_e(lst_tr('disclaimer')) ?> <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a></p>
         <p class="mp-actions mp-actions--tight">
             <a class="mp-btn mp-btn--primary" href="listing-post.php?type=<?= $type ?>"><?= lst_e(lst_tr('post_' . $type)) ?></a>
             <?php if ($freeLabel !== ''): ?><span class="lst-free-inline"><?= lst_e($freeLabel) ?></span><?php endif; ?>
@@ -170,6 +172,5 @@ lst_open($heading, !mp_public_enabled(), $head, 'lst_' . $type);
         <?php endif; ?>
 
         <?= lst_rules_html() ?>
-        <p class="mp-note"><?= lst_e(lst_tr('disclaimer')) ?> <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a></p>
     </div>
 <?php mpb_close(); ?>

@@ -47,6 +47,7 @@ mpb_open((string) $board['title'], !$isLive, 'board');
         <?php endif; ?>
 
         <h1 class="mp-title"><?= mp_e($board['title']) ?></h1>
+        <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
 
         <?php if ($fallbackLang !== null): ?>
             <p class="mp-note"><?= mp_e(sprintf(t('mp_original_lang'), $langNames[$fallbackLang] ?? strtoupper($fallbackLang))) ?></p>
@@ -156,7 +157,6 @@ mpb_open((string) $board['title'], !$isLive, 'board');
             </details>
         <?php endif; ?>
 
-        <p class="mp-note mp-note--box"><?= mp_e(t('mpb_disclaimer')) ?></p>
 
         <?php if ($others !== []): ?>
             <h2 class="mp-section-title"><?= mp_e(t('mpb_seller_other')) ?></h2>

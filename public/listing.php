@@ -70,6 +70,7 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'lst_' 
 ?>
     <div class="mp-page mp-page--narrow">
         <p><a class="mp-back" href="listings.php?type=<?= lst_e($type) ?>"><?= lst_e(lst_tr('back_list')) ?></a></p>
+        <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= lst_e(lst_tr('disclaimer')) ?> <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a></p>
         <?= mpb_flash_html() ?>
         <?php if (!$live && !$expired): ?>
             <div class="mp-alert"><?= lst_e(lst_tr('preview_notice', lst_tr('st_' . $row['status']))) ?></div>
@@ -154,6 +155,5 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'lst_' 
             <p class="mp-actions"><a class="mp-btn" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a> <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('my_title')) ?></a></p>
         <?php endif; ?>
 
-        <p class="mp-note"><?= lst_e(lst_tr('disclaimer')) ?> <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a></p>
     </div>
 <?php mpb_close(); ?>

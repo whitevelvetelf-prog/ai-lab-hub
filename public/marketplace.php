@@ -97,6 +97,8 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
     <div class="mp-page">
         <h1 class="mp-title"><?= mp_e($heading) ?></h1>
         <p class="mp-subtitle"><?= mp_e(t($isSolutions ? 'mp_subtitle' : 'mpb_subtitle')) ?></p>
+        <?php // Платформа не бере участі в угодах — завжди вгорі, до списку. ?>
+        <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
 
         <?php if ($solutionCats !== []): ?>
             <ul class="mp-cats">
@@ -217,6 +219,5 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
             <?php endif; ?>
         <?php endif; ?>
 
-        <p class="mp-note"><?= mp_e(t('mpb_disclaimer')) ?></p>
     </div>
 <?php mpb_close(); ?>

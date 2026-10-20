@@ -777,6 +777,13 @@ textarea.mp-input {
     background: var(--card-bg);
 }
 
+/* «Платформа не бере участі в угодах» — завжди вгорі сторінки, помітно. */
+.mp-note--disclaimer {
+    margin: 0 0 18px;
+    border-color: rgba(255, 210, 122, 0.55);
+    color: #f3f6ff;
+}
+
 /* Кабінет автора */
 .mp-tabs {
     display: flex;
