@@ -16,6 +16,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/translations.php';
 require_once __DIR__ . '/paw-icon.php';
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/asset-i18n.php';   // «Політика авторських прав» у підвалі
 
 ?>
 <style>
@@ -812,6 +813,7 @@ require_once __DIR__ . '/marketplace.php';
             <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
             <li><a href="advertise.php"><?= htmlspecialchars(t('footer_advertise'), ENT_QUOTES) ?></a></li>
             <li><a href="promo-rules.php"><?= htmlspecialchars(t('footer_promo_rules'), ENT_QUOTES) ?></a></li>
+            <li><a href="copyright-policy.php"><?= htmlspecialchars(ast_tr('policy_link'), ENT_QUOTES) ?></a></li>
         </ul>
 
         <a class="site-footer__support" href="/donate.php">
