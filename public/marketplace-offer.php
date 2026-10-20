@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';   // підключає app/marketplace.php
+require_once __DIR__ . '/../app/promo.php';
 
 mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
@@ -34,6 +35,7 @@ $offer = $id > 0 ? mp_public_listing($pdo, $id, $lang) : null;
 if ($offer === null) {
     mp_not_found();
 }
+analytics_log_view($pdo, 'marketplace_listing', (int) $offer['id'], 'solutions');
 
 $cover = mp_cover_url($offer['cover_image'] ?? null);
 $skill = mp_skill_text($offer['skill_level'] ?? null);
@@ -130,6 +132,8 @@ $blocks = [
                 </section>
             <?php endif; ?>
         <?php endforeach; ?>
+
+        <?= promo_slot($pdo, 'marketplace_listing_page', [], [], ['mp' => ['solutions']]) ?>
     </div>
     <?php include __DIR__ . '/../app/footer.php'; ?>
 </body>

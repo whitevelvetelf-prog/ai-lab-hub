@@ -1,6 +1,6 @@
 /* AI LAB HUB — картка відеореклами (.sponsored-card), спільна для всіх розміщень
    (місця ad_placements: category_page, subcategory_list, search_results, product_page,
-   blog_list, blog_article; старі catalog_card, blog_inline). Заповнює sponsored.js.
+   blog_list, blog_article, marketplace_*; старі catalog_card, blog_inline). Заповнює sponsored.js.
    Слот прихований (hidden), доки немає реклами — порожнього місця не лишається.
    Світлі посилання й наведення на темному фоні сайту; без горизонтальної прокрутки. */
 
@@ -216,7 +216,8 @@
    звичайна клітинка сітки, картка заповнює її на всю висоту. */
 .sponsored-slot--subcategory_list,
 .sponsored-slot--search_results,
-.sponsored-slot--marketplace_listing,
+.sponsored-slot--marketplace_feed,
+.sponsored-slot--marketplace_search,
 .sponsored-slot--catalog_card {
     display: flex;
     min-width: 0;
@@ -224,7 +225,37 @@
 
 .sponsored-slot--subcategory_list .sponsored-card,
 .sponsored-slot--search_results .sponsored-card,
-.sponsored-slot--marketplace_listing .sponsored-card,
+.sponsored-slot--marketplace_feed .sponsored-card,
+.sponsored-slot--marketplace_search .sponsored-card,
 .sponsored-slot--catalog_card .sponsored-card {
     flex: 1 1 auto;
+}
+
+/* Маркетплейс (з 2026-10-20): реклама ЧІТКО відмінна від оголошень — пунктирна тепла рамка,
+   інший фон і помітна позначка «Реклама»; без ціни й контактів (їх у картці немає взагалі). */
+.sponsored-slot--marketplace_home,
+.sponsored-slot--marketplace_category,
+.sponsored-slot--marketplace_listing_page {
+    margin: 20px 0;
+}
+
+.sponsored-slot--marketplace_listing_page {
+    margin-top: 28px;
+}
+
+.sponsored-slot--marketplace_home .sponsored-card,
+.sponsored-slot--marketplace_category .sponsored-card,
+.sponsored-slot--marketplace_listing_page .sponsored-card {
+    max-width: 640px;
+}
+
+.sponsored-slot[data-group="marketplace"] .sponsored-card {
+    border: 2px dashed rgba(255, 210, 122, 0.7);
+    background: rgba(255, 210, 122, 0.06);
+    box-shadow: none;
+}
+
+.sponsored-slot[data-group="marketplace"] .sponsored-card__label {
+    color: #1a1f4d;
+    background: #ffd27a;
 }

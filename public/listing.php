@@ -15,6 +15,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
+require_once __DIR__ . '/../app/promo.php';
 
 mp_public_or_staff_require();
 
@@ -44,6 +45,7 @@ if ($live && (string) $row['slug'] !== '' && $slug !== (string) $row['slug'] && 
 
 if ($live) {
     lst_count_view($pdo, $id, $row['seller_user_id'] !== null ? (int) $row['seller_user_id'] : null);
+    analytics_log_view($pdo, 'marketplace_listing', $id, (string) $row['section']);
 } elseif ($expired) {
     http_response_code(410);
 }
@@ -113,6 +115,13 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'lst_' 
             <?php endif; ?>
             <?php if ($freeLabel !== ''): ?><p class="mp-hint lst-free-inline"><?= lst_e($freeLabel) ?></p><?php endif; ?>
         </article>
+
+        <?php
+        // Реклама — окремим блоком ПІСЛЯ оголошення (під описом і кнопкою «Перейти»), лише на живому оголошенні.
+        if ($live) {
+            echo promo_slot($pdo, 'marketplace_listing_page', [], [], ['mp' => [(string) $row['section']]]);
+        }
+        ?>
 
         <?php if ($live && !$isOwner): ?>
             <details class="mp-report"<?= is_array($reportMsg) ? ' open' : '' ?>>

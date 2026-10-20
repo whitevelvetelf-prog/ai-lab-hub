@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
+require_once __DIR__ . '/../app/promo.php';
 
 mp_public_require();
 
@@ -40,6 +41,8 @@ $result = lst_search($pdo, $lang, $type, $filters, max(1, (int) $get('page')));
 $focusTags = lst_focus_tags($pdo);
 $hasFilters = $filters['q'] !== '' || $filters['lang'] !== '' || $filters['country'] !== '' || $filters['remote'] || $filters['focus'] > 0
     || $filters['price'] !== '' || $filters['max'] !== null;
+// Реклама й облік переглядів: розділ без фільтрів — marketplace_category, з фільтрами — marketplace_search.
+analytics_log_view($pdo, $hasFilters ? 'marketplace_search' : 'marketplace_category', null, $type);
 
 $pageUrl = static function (int $p) use ($filters, $type): string {
     $q = array_filter([
@@ -138,8 +141,20 @@ lst_open($heading, !mp_public_enabled(), $head, 'lst_' . $type);
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= lst_e(lst_tr($hasFilters ? 'list_empty_search' : 'list_empty')) ?></p>
         <?php else: ?>
+            <?php
+            if (!$hasFilters) {
+                echo promo_slot($pdo, 'marketplace_category', [], [], ['mp' => [$type]]);
+            }
+            $promoAt = $hasFilters ? promo_placement_positions($pdo, 'marketplace_search', count($result['rows'])) : [];
+            ?>
             <div class="mp-grid">
-                <?php foreach ($result['rows'] as $row) { echo lst_card_html($row); } ?>
+                <?php foreach ($result['rows'] as $i => $row) {
+                    if (in_array($i, $promoAt, true)) {
+                        echo promo_slot($pdo, 'marketplace_search', [], [], ['mp' => [$type]]);
+                    }
+                    echo lst_card_html($row);
+                } ?>
+                <?php if (in_array(count($result['rows']), $promoAt, true)) { echo promo_slot($pdo, 'marketplace_search', [], [], ['mp' => [$type]]); } ?>
             </div>
             <?php if ($result['pages'] > 1): ?>
                 <nav class="mp-pager" aria-label="<?= lst_e(lst_tr('pages')) ?>">

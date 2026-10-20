@@ -53,6 +53,19 @@ $result = mpb_search($pdo, $lang, $filters, $page);
 $hasFilters = $filters['q'] !== '' || $filters['category'] !== 0 || $filters['price_type'] !== '' || $filters['min'] !== null
     || $filters['max'] !== null || $filters['city'] !== '' || $filters['remote'];
 
+// Реклама й облік переглядів: пошук/фільтри → marketplace_search; категорія чи Готові рішення →
+// marketplace_category (блок на початку списку); інакше стрічка (marketplace_feed) і на першій
+// сторінці — головна маркетплейсу (marketplace_home, блок над списком).
+$isSearch = $filters['q'] !== '' || $filters['price_type'] !== '' || $filters['min'] !== null || $filters['max'] !== null
+    || $filters['city'] !== '' || $filters['remote'];
+$mpSections = $isSolutions ? ['solutions'] : ($filters['category'] !== 0 ? promo_mp_page_sections('board', (int) $filters['category']) : ['board', 'solutions']);
+$mpMode = $isSearch ? 'search' : ($filters['category'] !== 0 ? 'category' : 'feed');
+if ($mpMode === 'feed') {
+    analytics_log_view($pdo, 'marketplace_home', null, $page > 1 ? 'p:' . $page : implode(',', $mpSections));
+} else {
+    analytics_log_view($pdo, 'marketplace_' . $mpMode, null, implode(',', $mpSections));
+}
+
 /** Посилання на сторінку пагінації із збереженням фільтрів. */
 $pageUrl = static function (int $p) use ($filters): string {
     $q = array_filter([
@@ -160,23 +173,33 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
             </div>
         </form>
 
+        <?php
+        // Реклама в маркетплейсі — лише коли marketplace_public = 1 і місце ввімкнене (promo_slot
+        // інакше порожній; адмін із ?promo_preview=1 бачить блоки завжди). Чітко відмінна від оголошень.
+        if ($mpMode === 'feed' && $page === 1 && $result['rows'] !== []) {
+            echo promo_slot($pdo, 'marketplace_home', [], [], ['mp' => $mpSections]);
+        }
+        ?>
         <p class="mp-count"><?= mp_e(sprintf(t('mpb_found'), $result['total'])) ?></p>
 
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>
         <?php else: ?>
             <?php
-            // Реклама (місце marketplace_listing): лише коли місце дозволене — маркетплейс
-            // відкритий (marketplace_public) і зроблено позначку «Просунуте»; доти promo_slot порожній.
-            $promoSlotHtml = promo_slot($pdo, 'marketplace_listing');
-            $promoSlotAt = min(promo_placement_rule_int($pdo, 'marketplace_listing', 'position', 3) - 1, count($result['rows']));
+            if ($mpMode === 'category') {
+                echo promo_slot($pdo, 'marketplace_category', [], [], ['mp' => $mpSections]);
+            }
+            // Картка в списку: стрічка — 4-та позиція й далі кожні 10 карток; пошук — 4-та позиція.
+            $promoListKey = $mpMode === 'category' ? null : 'marketplace_' . $mpMode;
+            $promoAt = $promoListKey !== null ? promo_placement_positions($pdo, $promoListKey, count($result['rows'])) : [];
+            $promoCard = static fn(): string => promo_slot($pdo, (string) $promoListKey, [], [], ['mp' => $mpSections]);
             ?>
             <div class="mp-grid">
                 <?php foreach ($result['rows'] as $i => $card): ?>
-                    <?php if ($i === $promoSlotAt) { echo $promoSlotHtml; } ?>
+                    <?php if (in_array($i, $promoAt, true)) { echo $promoCard(); } ?>
                     <?php include __DIR__ . '/../app/mpb-card.php'; ?>
                 <?php endforeach; ?>
-                <?php if ($promoSlotAt === count($result['rows'])) { echo $promoSlotHtml; } ?>
+                <?php if (in_array(count($result['rows']), $promoAt, true)) { echo $promoCard(); } ?>
             </div>
 
             <?php if ($result['pages'] > 1): ?>

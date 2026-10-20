@@ -280,12 +280,17 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Категорія реклами</dt><dd><?= pc_e(promo_advertiser_category_label($q['advertiser_category'])) ?><?php if (promo_category_blocked_everywhere($pdo, $q['advertiser_category'])): ?> <strong class="pc-warn-text">— заборонена всюди, відхиліть</strong><?php endif; ?><span class="pc-muted">Перевірте, що відео й сторінка відповідають категорії.</span></dd>
                                         <dt>Модель</dt><dd><?= $q['pricing_model'] === 'cpc' ? 'CPC (за клік)' : 'CPM (за 1000 показів)' ?></dd>
                                         <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price)) ?><br><?php endforeach; ?></dd>
-                                        <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?></dd>
+                                        <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?><?php if ($tg['has_marketplace']): ?><br>Маркетплейс: <?= pc_e($tg['mp_sections']) ?><?php endif; ?></dd>
                                         <dt>Бюджет</dt><dd>загальний <?= pc_e(promo_money($q['total_budget'], $q['campaign_currency'])) ?><?= $q['daily_budget'] !== null ? ', денний ' . pc_e(promo_money($q['daily_budget'], $q['campaign_currency'])) : '' ?></dd>
                                         <dt>Дати</dt><dd><?= pc_e($q['start_date']) ?><?= $q['end_date'] ? ' — ' . pc_e($q['end_date']) : ' (без кінця)' ?></dd>
                                         <dt>Надіслано</dt><dd><?= pc_e(promo_local_time($q['submitted_at'])) ?></dd>
                                     </dl>
                                 </div>
+                                <?php if ($tg['has_marketplace']): ?>
+                                <div class="pc-box pc-box--warn">
+                                    <p><strong>Обрано місця в маркетплейсі.</strong> Перевірте, що креатив не маскується під оголошення: немає псевдо-ціни чи псевдо-контактів, він не виглядає як вакансія, курс, послуга чи оголошення користувача, позначку «Реклама» не приховано (правила реклами, розділ 2). Якщо маскується — відхиліть із цією причиною.</p>
+                                </div>
+                                <?php endif; ?>
                                 <?php $lc = promo_last_link_check($pdo, (int) $q['id']); $lcFlagged = $q['link_check_status'] !== 'ok'; ?>
                                 <div class="pc-box <?= $lcFlagged ? 'pc-box--warn' : '' ?> pc-linkcheck">
                                     <p><strong>Перевірка посилання:</strong>

@@ -48,10 +48,12 @@ $draft = [
                 'Порушення авторських прав і прав на товарні знаки.',
                 'Азартні ігри (за замовчуванням заборонені).',
                 'Медичні та фінансові твердження без належного підтвердження.',
+                'Маскування реклами під оголошення маркетплейсу чи картку каталогу: псевдо-ціни, псевдо-контакти, вигляд вакансії, курсу, послуги чи оголошення користувача, приховування позначки «Реклама».',
             ]],
             ['3. Модерація', [
                 'Кожен креатив перевіряється модератором до початку показу. Строк модерації не гарантується; поточний статус кампанії видно в кабінеті.',
                 'Після будь-якого редагування кампанія знову проходить модерацію.',
+                'Креативи, обрані для місць у маркетплейсі, додатково перевіряються на те, що їх не можна сплутати з оголошенням. Реклама в маркетплейсі завжди показується окремим блоком із позначкою «Реклама».',
                 'AI LAB HUB має право відхилити рекламу або зупинити вже схвалену рекламу (зокрема після скарг відвідувачів), повідомивши причину в кабінеті рекламодавця.',
             ]],
             ['4. Оплата й баланс', [
@@ -95,10 +97,12 @@ $draft = [
                 'Copyright and trademark infringement.',
                 'Gambling (prohibited by default).',
                 'Unsubstantiated medical or financial claims.',
+                'Disguising an ad as a marketplace listing or a catalog card: fake prices, fake contacts, looking like a job, course, service or user listing, hiding the “Sponsored” label.',
             ]],
             ['3. Moderation', [
                 'Every creative is reviewed by a moderator before it is shown. Review time is not guaranteed; the current status is shown in the advertiser account.',
                 'Any edit sends the campaign to review again.',
+                'Creatives chosen for marketplace placements are additionally checked so that they cannot be mistaken for a listing. Marketplace ads are always shown as a separate block labelled “Sponsored”.',
                 'AI LAB HUB may reject an ad or stop an approved ad (including after visitor reports), stating the reason in the advertiser account.',
             ]],
             ['4. Payment and balance', [

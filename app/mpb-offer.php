@@ -17,8 +17,11 @@ $isOwner = $viewerId !== null && $board['seller_user_id'] !== null && (int) $boa
 if (!$isLive && !$isOwner && !mpb_is_staff()) {
     mp_not_found();
 }
+// Розділи сторінки для реклами й аналітики: дошка + її категорії (board:<id>).
+$mpSections = array_slice(array_merge(['board'], array_map(static fn($c) => 'board:' . (int) $c['id'], $board['categories'])), 0, 5);
 if ($isLive) {
     mpb_count_view($pdo, $bid, $board['seller_user_id'] !== null ? (int) $board['seller_user_id'] : null);
+    analytics_log_view($pdo, 'marketplace_listing', $bid, implode(',', $mpSections));
 }
 
 $photos = $board['photos'];
@@ -117,6 +120,13 @@ mpb_open((string) $board['title'], !$isLive, 'board');
             <?php endif; ?>
             <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_views')) ?>:</span> <?= (int) $board['views_count'] ?></p>
         </div>
+
+        <?php
+        // Реклама — окремим блоком після оголошення (нижче опису й кнопки контактів), лише на живому оголошенні.
+        if ($isLive) {
+            echo promo_slot($pdo, 'marketplace_listing_page', [], [], ['mp' => $mpSections]);
+        }
+        ?>
 
         <?php if ($isOwner): ?>
             <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="marketplace-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="marketplace-my.php"><?= mp_e(t('mpb_my_link')) ?></a></div>
