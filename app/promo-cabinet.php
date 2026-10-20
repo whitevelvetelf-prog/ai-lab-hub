@@ -67,7 +67,13 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     if ($placesCampaign !== null && !in_array($placesCampaign['status'], PROMO_PLACES_EDITABLE, true)) {
         $placesCampaign = null;
     }
-    // Майстер: нова кампанія, редагування власної (draft/paused/rejected) або повернене введення.
+    // Форма «Бюджет і дати» (без модерації).
+    $budgetId = (int) ($_GET['promo_budget'] ?? 0);
+    $budgetCampaign = $budgetId > 0 ? promo_owned_campaign($pdo, $userId, $budgetId) : null;
+    if ($budgetCampaign !== null && !in_array($budgetCampaign['status'], PROMO_BUDGET_EDITABLE, true)) {
+        $budgetCampaign = null;
+    }
+    // Майстер: нова кампанія, редагування власної (PROMO_EDITABLE) або повернене введення.
     $editId = (int) ($_GET['promo_edit'] ?? 0);
     $editing = $editId > 0 ? promo_owned_campaign($pdo, $userId, $editId) : null;
     if ($editing !== null && !in_array($editing['status'], PROMO_EDITABLE, true)) {
@@ -203,6 +209,26 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <p class="pc-empty"><?= pc_e(promo_tr('no_campaigns')) ?>
                                 <a href="account.php?promo_tab=create#acc-promo" data-pc-tab="create"><?= pc_e(promo_tr('create_first')) ?></a></p>
                             <?php else: ?>
+                            <?php if ($budgetCampaign !== null): $bc = $budgetCampaign; ?>
+                            <form method="post" action="promo-action.php" class="pc-box">
+                                <h3 class="pc-h3"><?= pc_e(promo_tr('budget_edit_title', $bc['name'] ?: '#' . (int) $bc['id'])) ?></h3>
+                                <p class="pc-muted"><?= pc_e(promo_tr('budget_edit_note', promo_money((int) $bc['spent'], (string) $bc['currency']))) ?></p>
+                                <?= promo_csrf_field() ?>
+                                <input type="hidden" name="campaign_id" value="<?= (int) $bc['id'] ?>">
+                                <div class="pc-grid-2">
+                                    <label class="pc-field"><span><?= pc_e(promo_tr('field_daily_budget')) ?></span>
+                                        <input type="text" inputmode="decimal" name="daily_budget" value="<?= pc_e(promo_money_input($bc['daily_budget'])) ?>" placeholder="0.00"></label>
+                                    <label class="pc-field"><span><?= pc_e(promo_tr('field_total_budget')) ?></span>
+                                        <input type="text" inputmode="decimal" name="total_budget" value="<?= pc_e(promo_money_input($bc['total_budget'])) ?>" placeholder="0.00"></label>
+                                    <label class="pc-field"><span><?= pc_e(promo_tr('field_end')) ?></span>
+                                        <input type="date" name="end_date" value="<?= pc_e((string) $bc['end_date']) ?>" min="<?= promo_today() ?>"></label>
+                                </div>
+                                <p class="pc-actions">
+                                    <button type="submit" name="action" value="budget" class="pc-btn pc-btn--primary"><?= pc_e(promo_tr('budget_save')) ?></button>
+                                    <a class="pc-btn" href="account.php?promo_tab=campaigns#acc-promo"><?= pc_e(promo_tr('btn_cancel')) ?></a>
+                                </p>
+                            </form>
+                            <?php endif; ?>
                             <?php if ($placesCampaign !== null): $pt = promo_campaign_targeting($pdo, (int) $placesCampaign['id']); ?>
                             <form method="post" action="promo-action.php" class="pc-box pc-places-form">
                                 <h3 class="pc-h3"><?= pc_e(promo_tr('places_edit_title', $placesCampaign['name'] ?: '#' . (int) $placesCampaign['id'])) ?></h3>
@@ -272,7 +298,10 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="CTR"><?= pc_e(promo_ctr($t['clicks'], $t['impressions'])) ?></td>
                                         <td data-label="<?= pc_e(promo_tr('col_actions')) ?>" class="pc-actions">
                                             <?php if (in_array($c['status'], PROMO_EDITABLE, true)): ?>
-                                            <a class="pc-btn pc-btn--small" href="account.php?promo_tab=create&amp;promo_edit=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_edit')) ?></a>
+                                            <a class="pc-btn pc-btn--small" href="account.php?promo_tab=create&amp;promo_edit=<?= $cid ?>#acc-promo"<?= in_array($c['status'], ['active', 'pending_review'], true) ? ' title="' . pc_e(promo_tr('edit_live_hint')) . '"' : '' ?>><?= pc_e(promo_tr('act_edit')) ?></a>
+                                            <?php endif; ?>
+                                            <?php if (in_array($c['status'], PROMO_BUDGET_EDITABLE, true)): ?>
+                                            <a class="pc-btn pc-btn--small" href="account.php?promo_tab=campaigns&amp;promo_budget=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_budget')) ?></a>
                                             <?php endif; ?>
                                             <?php if (in_array($c['status'], PROMO_PLACES_EDITABLE, true)): ?>
                                             <a class="pc-btn pc-btn--small" href="account.php?promo_tab=campaigns&amp;promo_places=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_places')) ?></a>
@@ -312,7 +341,12 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <?php endif; ?>
                             <?php if ($editing !== null): ?>
                             <p class="pc-note"><?= pc_e(promo_tr('editing_campaign', $editing['name'] ?: ('#' . $editing['id']))) ?>
-                                <?php if ($editing['status'] !== 'draft'): ?> <?= pc_e(promo_tr('edit_needs_review')) ?><?php endif; ?>
+                                <?php if ($editing['status'] === 'active'): ?> <strong class="pc-warn-text"><?= pc_e(promo_tr('edit_active_warning')) ?></strong>
+                                <?php elseif ($editing['status'] === 'pending_review'): ?> <?= pc_e(promo_tr('edit_pending_warning')) ?>
+                                <?php elseif ($editing['status'] !== 'draft'): ?> <?= pc_e(promo_tr('edit_needs_review')) ?><?php endif; ?>
+                                <?php if (in_array($editing['status'], PROMO_BUDGET_EDITABLE, true) && $editing['status'] !== 'draft'): ?>
+                                <a href="account.php?promo_tab=campaigns&amp;promo_budget=<?= (int) $editing['id'] ?>#acc-promo"><?= pc_e(promo_tr('edit_budget_only')) ?></a>
+                                <?php endif; ?>
                                 <a href="account.php?promo_tab=create#acc-promo"><?= pc_e(promo_tr('new_campaign_link')) ?></a></p>
                             <?php endif; ?>
 

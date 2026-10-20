@@ -10,6 +10,7 @@ declare(strict_types=1);
  *                                           house=1 — власна реклама сайту (лише admin)
  *   action=pause | resume | complete | duplicate  campaign_id=N
  *   action=placements  campaign_id=N  placements[]=…  — лише місця показу (без модерації)
+ *   action=budget  campaign_id=N  daily_budget  total_budget  end_date  — бюджет і дата (без модерації)
  *   action=topup  amount=123.45           — заявка на поповнення (ручний переказ)
  *   action=notify_prefs  low_balance=1    — листи про низький баланс (решта обов'язкові)
  * GET:
@@ -131,6 +132,11 @@ switch ($action) {
         [$ok, $msg] = promo_update_placements($pdo, $userId, (int) ($_POST['campaign_id'] ?? 0),
             array_values(array_filter((array) ($_POST['placements'] ?? []), 'is_string')));
         $back('campaigns', ['ok' => $ok, 'msgs' => [$msg]], $ok ? [] : ['promo_places' => (int) ($_POST['campaign_id'] ?? 0)]);
+
+    case 'budget':
+        $cid = (int) ($_POST['campaign_id'] ?? 0);
+        [$ok, $msg] = promo_update_budget($pdo, $userId, $cid, $_POST);
+        $back('campaigns', ['ok' => $ok, 'msgs' => [$msg]], $ok ? [] : ['promo_budget' => $cid]);
 
     case 'notify_prefs':
         require_once __DIR__ . '/../app/promo-mail.php';

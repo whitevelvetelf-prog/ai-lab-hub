@@ -26,7 +26,14 @@ const PROMO_UPLOAD_URL = 'uploads/promo/';
 const PROMO_VIDEO_EXT = ['mp4' => 'video/mp4', 'webm' => 'video/webm'];
 const PROMO_POSTER_MIME = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
 const PROMO_POSTER_MAX_BYTES = 2 * 1024 * 1024;
-const PROMO_EDITABLE = ['draft', 'paused', 'rejected'];
+/**
+ * Статуси, у яких кампанію можна відкрити в майстрі. Активна й на модерації — теж: збереження змін
+ * повертає кампанію на модерацію (активна до схвалення не показується). Бюджет і дату завершення
+ * можна змінити без модерації — promo_update_budget().
+ */
+const PROMO_EDITABLE = ['draft', 'paused', 'rejected', 'active', 'pending_review'];
+/** Статуси, у яких можна змінити бюджет і дату завершення без модерації. */
+const PROMO_BUDGET_EDITABLE = ['draft', 'pending_review', 'active', 'paused'];
 /** Ліміти дій на користувача за 24 години. */
 const PROMO_LIMITS = ['campaign_create' => 10, 'video_upload' => 20, 'topup_request' => 10];
 
@@ -597,6 +604,9 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     if ($daily !== null && $total !== null && $daily > $total) {
         $errors[] = 'err_daily_gt_total';
     }
+    if ($campaign !== null && $total !== null && $total < (int) $campaign['spent']) {
+        $errors[] = 'err_total_lt_spent';
+    }
     $parseDate = static function (mixed $v): ?string {
         $v = trim((string) $v);
         $d = DateTime::createFromFormat('!Y-m-d', $v);
@@ -948,6 +958,58 @@ function promo_update_placements(PDO $pdo, int $userId, int $campaignId, array $
         'було: ' . (implode(', ', $before) ?: '—') . ' → стало: ' . implode(', ', $placements), $userId);
 
     return [true, 'ok_places_saved'];
+}
+
+/**
+ * Змінити лише бюджет (денний, загальний) і дату завершення — без модерації: креатив, таргетинг і ціни не
+ * змінюються. Загальний бюджет не менший за вже витрачене; денний не більший за загальний; дата завершення
+ * не раніше сьогодні й дати початку. Кампанія, зупинена системою через вичерпаний бюджет (completed/budget),
+ * сюди не потрапляє — її можна дублювати. Зміна пишеться в журнал (budget_changed).
+ *
+ * @return array{0:bool,1:string}
+ */
+function promo_update_budget(PDO $pdo, int $userId, int $campaignId, array $in): array
+{
+    $c = promo_owned_campaign($pdo, $userId, $campaignId);
+    if ($c === null) {
+        return [false, 'err_not_found'];
+    }
+    if (!in_array($c['status'], PROMO_BUDGET_EDITABLE, true)) {
+        return [false, 'err_budget_status'];
+    }
+    $house = $c['campaign_type'] === 'internal';
+    $rawDaily = trim((string) ($in['daily_budget'] ?? ''));
+    $rawTotal = trim((string) ($in['total_budget'] ?? ''));
+    $daily = $rawDaily === '' ? null : promo_parse_money($rawDaily);
+    $total = $rawTotal === '' ? null : promo_parse_money($rawTotal);
+    if ($rawDaily !== '' && ($daily === null || $daily <= 0)) {
+        return [false, 'err_daily_budget'];
+    }
+    if (($rawTotal !== '' && ($total === null || $total <= 0)) || ($total === null && !$house)) {
+        return [false, 'err_total_budget'];
+    }
+    if ($daily !== null && $total !== null && $daily > $total) {
+        return [false, 'err_daily_gt_total'];
+    }
+    if ($total !== null && $total < (int) $c['spent']) {
+        return [false, 'err_total_lt_spent'];
+    }
+    $end = trim((string) ($in['end_date'] ?? ''));
+    if ($end !== '') {
+        $d = DateTime::createFromFormat('!Y-m-d', $end);
+        if ($d === false || $d->format('Y-m-d') !== $end || $end < promo_today() || ($c['start_date'] !== null && $end < (string) $c['start_date'])) {
+            return [false, 'err_end_date'];
+        }
+    }
+    $pdo->prepare('UPDATE ad_campaigns SET daily_budget = :d, total_budget = :t, end_date = :e WHERE id = :id')
+        ->execute([':d' => $daily, ':t' => $total, ':e' => $end !== '' ? $end : null, ':id' => $campaignId]);
+    require_once __DIR__ . '/promo-linkcheck.php';
+    $fmt = static fn($v) => $v === null ? '—' : promo_money((int) $v, (string) $c['currency']);
+    promo_log_event($pdo, 'budget_changed', null, $campaignId,
+        'денний ' . $fmt($c['daily_budget']) . ' → ' . $fmt($daily) . '; загальний ' . $fmt($c['total_budget']) . ' → ' . $fmt($total)
+        . '; завершення ' . ($c['end_date'] ?: '—') . ' → ' . ($end ?: '—'), $userId);
+
+    return [true, 'ok_budget_saved'];
 }
 
 // --- Дії зі списку кампаній ------------------------------------------------
