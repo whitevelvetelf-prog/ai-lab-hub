@@ -946,6 +946,7 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
             $id = (int) $pdo->lastInsertId();
             $textLang = $lang;
             mp_log($pdo, $id, $userId, 'created', $isStaff ? 'опубліковано без модерації (employee/admin)' : 'на модерації');
+            acq_ref_record($pdo, 'listing', $id);
         } else {
             $id = (int) $existing['id'];
             $textLang = (string) $existing['source_lang'];

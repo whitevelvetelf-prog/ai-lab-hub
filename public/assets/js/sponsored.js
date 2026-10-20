@@ -212,9 +212,17 @@
         card.appendChild(media);
 
         var impressionSent = !!creative.preview;
-        var player = creative.type === 'upload' && creative.video
-            ? buildVideo(media, creative, labels, function (type) { if (!creative.preview) { sendEvent(creative.token, type); } })
-            : buildYoutube(media, creative, labels);
+        var player;
+        if (creative.type === 'card') {
+            // Картка без відео (власна реклама): градієнт бренду, без медіа.
+            card.classList.add('sponsored-card--card', 'sponsored-card--' + (creative.layout === 'compact' ? 'compact' : 'wide'));
+            media.remove();
+            player = { visible: function () {} };
+        } else {
+            player = creative.type === 'upload' && creative.video
+                ? buildVideo(media, creative, labels, function (type) { if (!creative.preview) { sendEvent(creative.token, type); } })
+                : buildYoutube(media, creative, labels);
+        }
 
         if (creative.title) {
             card.appendChild(el('h3', 'sponsored-card__title', creative.title));
@@ -267,6 +275,7 @@
     }
 
     var shown = [];
+    var houseShown = false;   // власна реклама — не більше одного блока на сторінку
 
     function fill(slot) {
         var params = new URLSearchParams({
@@ -288,6 +297,9 @@
         if (shown.length) {
             params.set('exclude', shown.join(','));
         }
+        if (houseShown) {
+            params.set('nohouse', '1');
+        }
         if (slot.dataset.preview === '1') {
             params.set('preview', '1');
         }
@@ -299,6 +311,9 @@
                 if (payload && payload.creative && payload.labels) {
                     if (!payload.creative.preview) {
                         shown.push(payload.creative.id);
+                    }
+                    if (payload.creative.house) {
+                        houseShown = true;
                     }
                     render(slot, payload);
                 }

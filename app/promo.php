@@ -379,22 +379,37 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
         }
         $mpCond = 'AND ' . ($mpNames !== [] ? '(t.mp_section IS NULL OR t.mp_section IN (' . implode(',', $mpNames) . '))' : 't.mp_section IS NULL');
     }
+    // Власна реклама: не більше одного блока на сторінку — наступні слоти просять no_house.
+    $houseCond = !empty($page['no_house']) ? "AND c.campaign_type <> 'internal'" : '';
+    $houseCols = promo_house_columns($pdo)
+        ? ', cr.creative_type, cr.card_layout, cr.title_en, cr.description_en, cr.description_fallback, cr.description_fallback_en,
+             cr.cta_text, cr.cta_text_en, cr.ref_code, c.house_key, c.house_rules'
+        : '';
     $excludeIds = array_values(array_filter(array_map('intval', $excludeCreatives), static fn($id) => $id > 0));
     $excludeCond = $excludeIds !== [] ? 'AND cr.id NOT IN (' . $inList('x', $excludeIds) . ')' : '';
 
+    // Ліміт показів кампанії одному сеансу за добу: платні — frequency_cap_per_session, власна — house_frequency_cap.
     $cap = (int) promo_setting($pdo, 'frequency_cap_per_session', '3');
+    $houseCap = (int) promo_setting($pdo, 'house_frequency_cap', '2');
     $capCond = '';
-    if ($cap > 0) {
-        $capCond = 'AND (SELECT COUNT(*) FROM ad_events e
-                          WHERE e.session_hash = :sh AND e.campaign_id = c.id AND e.type = \'impression\'
-                            AND e.created_at >= NOW() - INTERVAL 1 DAY) < ' . $cap;
+    if ($cap > 0 || $houseCap > 0) {
+        $cnt = "(SELECT COUNT(*) FROM ad_events e
+                  WHERE e.session_hash = :sh AND e.campaign_id = c.id AND e.type = 'impression'
+                    AND e.created_at >= NOW() - INTERVAL 1 DAY)";
+        $capCond = "AND IF(c.campaign_type = 'internal', " . ($houseCap > 0 ? "{$cnt} < {$houseCap}" : '1') . ', '
+            . ($cap > 0 ? "{$cnt} < {$cap}" : '1') . ')';
+        // Плейсхолдер :sh використовується двічі — PDO без емуляції цього не дозволяє, тому другий — :sh2.
+        if ($cap > 0 && $houseCap > 0) {
+            $capCond = "AND IF(c.campaign_type = 'internal', {$cnt} < {$houseCap}, " . str_replace(':sh', ':sh2', $cnt) . " < {$cap})";
+            $params[':sh2'] = $sessionHash;
+        }
     } else {
         unset($params[':sh']);
     }
 
     $sql = "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,
                    cr.video_path, cr.youtube_id, cr.poster_path,
-                   c.campaign_type, c.total_budget, c.spent, c.end_date, COALESCE(b.balance, 0) AS balance
+                   c.campaign_type, c.total_budget, c.spent, c.end_date, COALESCE(b.balance, 0) AS balance{$houseCols}
             FROM ad_creatives cr
             JOIN ad_campaigns c ON c.id = cr.campaign_id
             LEFT JOIN ad_balances b ON b.user_id = c.user_id
@@ -426,6 +441,7 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
               )
               AND {$rulesCond}
               {$excludeCond}
+              {$houseCond}
               {$capCond}
             LIMIT 100";
 
@@ -442,14 +458,20 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
         return null;
     }
 
+    // Платні кампанії завжди перші; власна реклама — лише коли платної немає й виконані її умови.
     $paid = array_values(array_filter($rows, static fn($r) => $r['campaign_type'] !== 'internal'));
-    $pool = $paid !== [] ? $paid : $rows;
+    $pool = $paid !== [] ? $paid : array_values(array_filter($rows, static fn($r) => promo_house_allowed($pdo, $r, $placement, $page)));
+    if ($pool === []) {
+        return null;
+    }
+    // Варіанти однієї власної кампанії — рівномірно (A/B): вага кампанії ділиться між її креативами.
+    $perCampaign = array_count_values(array_map(static fn($r) => (int) $r['campaign_id'], $pool));
 
     $today = new DateTimeImmutable(promo_today());
     $weights = [];
     foreach ($pool as $i => $r) {
         if ($r['campaign_type'] === 'internal') {
-            $weights[$i] = 1.0;
+            $weights[$i] = 1.0 / max(1, $perCampaign[(int) $r['campaign_id']] ?? 1);
             continue;
         }
         $remaining = (int) $r['balance'];
@@ -475,11 +497,15 @@ function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subc
 }
 
 /** Публічні дані креативу для промальовування (JSON для sponsored.js). $preview — адмін-перегляд без обліку. */
-function promo_public_payload(array $creative, string $placement, bool $preview = false): array
+function promo_public_payload(array $creative, string $placement, bool $preview = false, ?PDO $pdo = null): array
 {
+    if (($creative['creative_type'] ?? 'video') === 'card') {
+        return promo_card_payload($creative, $placement, $preview, $pdo);
+    }
     $isUpload = $creative['video_type'] === 'upload';
 
     return [
+        'house'       => ($creative['campaign_type'] ?? '') === 'internal',
         'id'          => (int) $creative['id'],
         'token'       => promo_token_make(['c' => (int) $creative['id'], 'k' => (int) $creative['campaign_id'], 'p' => $placement, 'x' => $preview ? 1 : 0]),
         'preview'     => $preview,
@@ -877,17 +903,145 @@ function promo_preview_active(PDO $pdo): bool
 function promo_preview_creative(PDO $pdo): ?array
 {
     try {
+        // Тестова кампанія може бути й власною рекламою з картками (без відео).
+        $card = promo_house_columns($pdo) ? " OR cr.creative_type = 'card'" : '';
         $row = $pdo->query(
-            "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,
-                    cr.video_path, cr.youtube_id, cr.poster_path
+            "SELECT cr.*, c.campaign_type
              FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
              WHERE c.is_test = 1 AND c.format = 'video'
-               AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL))
-             ORDER BY cr.id LIMIT 1"
+               AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL){$card})
+             ORDER BY RAND() LIMIT 1"
         )->fetch();
     } catch (Throwable $e) {
         return null; // міграцію 2026-10-18 ще не застосовано
     }
 
     return $row === false ? null : $row;
+}
+
+// --- Власна реклама платформи (картки, умови показу) ----------------------
+
+/** Колонки міграції 2026-10-23 (картки, house_rules) є? Без них відбір працює як раніше. */
+function promo_house_columns(PDO $pdo): bool
+{
+    static $has = null;
+    if ($has === null) {
+        try {
+            $has = (bool) $pdo->query("SHOW COLUMNS FROM ad_creatives LIKE 'creative_type'")->fetch();
+        } catch (Throwable $e) {
+            $has = false;
+        }
+    }
+
+    return $has;
+}
+
+/**
+ * Умови показу власної кампанії (ad_campaigns.house_rules, JSON):
+ *   requires_setting — налаштування сайту має бути '1' (кампанія B чекає marketplace_public);
+ *   site_only        — лише місця сайту й блогу, не всередині маркетплейсу;
+ *   hide_if_campaign — не показувати користувачу, який уже створив рекламну кампанію;
+ *   hide_if_listing  — не показувати користувачу, який уже публікував оголошення;
+ *   exclude_pages    — список сторінок (advertise, cabinet), де кампанія не показується ($page['page']).
+ */
+function promo_house_allowed(PDO $pdo, array $row, string $placement, array $page = []): bool
+{
+    $rules = json_decode((string) ($row['house_rules'] ?? ''), true);
+    if (!is_array($rules)) {
+        return true;
+    }
+    if (!empty($rules['requires_setting']) && site_setting($pdo, (string) $rules['requires_setting'], '0') !== '1') {
+        return false;
+    }
+    if (!empty($rules['site_only']) && promo_placement_is_marketplace($pdo, $placement)) {
+        return false;
+    }
+    if (!empty($rules['exclude_pages']) && !empty($page['page']) && in_array($page['page'], (array) $rules['exclude_pages'], true)) {
+        return false;
+    }
+    $uid = function_exists('auth_user_id') ? auth_user_id() : null;
+    if ($uid !== null) {
+        try {
+            if (!empty($rules['hide_if_campaign'])) {
+                $st = $pdo->prepare("SELECT 1 FROM ad_campaigns WHERE user_id = :u AND campaign_type = 'paid' LIMIT 1");
+                $st->execute([':u' => $uid]);
+                if ($st->fetchColumn()) {
+                    return false;
+                }
+            }
+            if (!empty($rules['hide_if_listing'])) {
+                $st = $pdo->prepare('SELECT 1 FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE s.user_id = :u LIMIT 1');
+                $st->execute([':u' => $uid]);
+                if ($st->fetchColumn()) {
+                    return false;
+                }
+            }
+        } catch (Throwable $e) {
+            error_log('[promo] house rules: ' . $e->getMessage());
+        }
+    }
+
+    return true;
+}
+
+/** Дата marketplace_free_until мовою інтерфейсу («31 грудня 2026» / «December 31, 2026»); '' — немає або минула. */
+function promo_free_until_text(?PDO $pdo, string $lang): string
+{
+    $raw = $pdo !== null ? site_setting($pdo, 'marketplace_free_until', '') : '';
+    $d = DateTime::createFromFormat('!Y-m-d', $raw);
+    if ($d === false || $d->format('Y-m-d') !== $raw || $raw < date('Y-m-d')) {
+        return '';
+    }
+    $m = (int) $d->format('n');
+    if ($lang === 'en') {
+        return $d->format('F j, Y');
+    }
+    $uk = ['січня', 'лютого', 'березня', 'квітня', 'травня', 'червня', 'липня', 'серпня', 'вересня', 'жовтня', 'листопада', 'грудня'];
+
+    return $d->format('j') . ' ' . $uk[$m - 1] . ' ' . $d->format('Y');
+}
+
+/**
+ * Текст власного креативу мовою: EN — з колонки *_en (порожньо — UA). Змінна {free_until}: підставляється дата;
+ * немає дати — запасний текст (description_fallback*), а без нього — текст без змінної.
+ */
+function promo_card_text(array $cr, string $field, string $lang, ?PDO $pdo): string
+{
+    $txt = $lang === 'en' && trim((string) ($cr[$field . '_en'] ?? '')) !== '' ? (string) $cr[$field . '_en'] : (string) ($cr[$field] ?? '');
+    if (!str_contains($txt, '{free_until}')) {
+        return $txt;
+    }
+    $date = promo_free_until_text($pdo, $lang);
+    if ($date !== '') {
+        return str_replace('{free_until}', $date, $txt);
+    }
+    $fb = $lang === 'en' && trim((string) ($cr['description_fallback_en'] ?? '')) !== '' ? (string) $cr['description_fallback_en'] : (string) ($cr['description_fallback'] ?? '');
+
+    return $field === 'description' && trim($fb) !== '' ? $fb : trim(str_replace('{free_until}', '', $txt));
+}
+
+/** Дані картки без відео (тип creative_type = 'card') для sponsored.js. */
+function promo_card_payload(array $cr, string $placement, bool $preview, ?PDO $pdo): array
+{
+    $lang = promo_lang();
+    $cta = $lang === 'en' && trim((string) ($cr['cta_text_en'] ?? '')) !== '' ? (string) $cr['cta_text_en'] : trim((string) ($cr['cta_text'] ?? ''));
+    if ($cta === '') {
+        $cta = t('promo_cta_' . (in_array($cr['cta_key'] ?? '', PROMO_CTA_KEYS, true) ? $cr['cta_key'] : 'learn_more'));
+    }
+
+    return [
+        'id'          => (int) $cr['id'],
+        'token'       => promo_token_make(['c' => (int) $cr['id'], 'k' => (int) $cr['campaign_id'], 'p' => $placement, 'x' => $preview ? 1 : 0]),
+        'preview'     => $preview,
+        'house'       => ($cr['campaign_type'] ?? 'internal') === 'internal',
+        'placement'   => $placement,
+        'type'        => 'card',
+        'layout'      => ($cr['card_layout'] ?? '') === 'compact' || in_array($placement, ['subcategory_list', 'search_results', 'marketplace_feed', 'marketplace_search'], true) ? 'compact' : 'wide',
+        'title'       => promo_card_text($cr, 'title', $lang, $pdo),
+        'description' => promo_card_text($cr, 'description', $lang, $pdo),
+        'cta'         => $cta,
+        'video'       => null,
+        'youtube'     => null,
+        'poster'      => null,
+    ];
 }

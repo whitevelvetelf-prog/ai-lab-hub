@@ -656,6 +656,7 @@ function lst_save(PDO $pdo, array $d, ?array $existing, int $userId, int $seller
             $id = (int) $pdo->lastInsertId();
             $textLang = $lang;
             mp_log($pdo, $id, $userId, 'created', 'на модерації (' . $d['type'] . ')');
+            acq_ref_record($pdo, 'listing', $id);
         } else {
             $id = (int) $existing['id'];
             $textLang = (string) $existing['source_lang'];

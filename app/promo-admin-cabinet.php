@@ -181,7 +181,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
         $testCandidates = $pdo->query(
             "SELECT c.id, c.name, c.status, c.campaign_type, c.is_test FROM ad_campaigns c
              WHERE c.format = 'video' AND EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id
-                   AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL)))
+                   AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL)"
+                   . (promo_house_columns($pdo) ? " OR cr.creative_type = 'card'" : '') . "))
              ORDER BY c.is_test DESC, c.id DESC LIMIT 100"
         )->fetchAll();
     } catch (Throwable $e) {

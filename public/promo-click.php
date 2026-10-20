@@ -40,7 +40,14 @@ $stmt = $pdo->prepare('SELECT destination_url FROM ad_creatives WHERE id = :id A
 $stmt->execute([':id' => $data['c'], ':c' => $data['k']]);
 $target = str_replace(["\r", "\n"], '', (string) ($stmt->fetchColumn() ?: ''));
 
-if ($target === '' || !preg_match('~^https://[^\s/?#]+~i', $target)) {
+// Власна реклама сайту може вести на свою сторінку відносною адресою (/advertise.php?ref=house-A1).
+$internal = false;
+if (preg_match('~^/(?!/)[A-Za-z0-9._~/?=&%-]*$~', $target) === 1) {
+    $st = $pdo->prepare("SELECT campaign_type FROM ad_campaigns WHERE id = :c");
+    $st->execute([':c' => $data['k']]);
+    $internal = $st->fetchColumn() === 'internal';
+}
+if ($target === '' || (!$internal && !preg_match('~^https://[^\s/?#]+~i', $target))) {
     header('Location: /index.php', true, 302);
     exit;
 }

@@ -22,6 +22,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Джерело приходу з власної реклами (?ref=house-…) — для звіту «скільки кампаній/оголошень принесла».
+require_once __DIR__ . '/acquisition.php';
+
 /** ID поточного користувача або null. */
 function auth_user_id(): ?int
 {

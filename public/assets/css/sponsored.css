@@ -259,3 +259,45 @@
     color: #1a1f4d;
     background: #ffd27a;
 }
+
+/* Картка без відео (власна реклама, creative_type = 'card', з 2026-10-23): градієнт бренду, білий текст,
+   без нових акцентних кольорів. «Широка» — стрічка/блок, «компактна» — картка в сітці списку. */
+.sponsored-card--card {
+    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
+    border-color: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+}
+
+.sponsored-card--card .sponsored-card__title {
+    margin-top: 4px;
+    font-size: 1.2rem;
+}
+
+.sponsored-card--card .sponsored-card__desc {
+    color: rgba(255, 255, 255, 0.86);
+}
+
+.sponsored-card--wide {
+    padding: 20px 22px;
+}
+
+.sponsored-card--compact {
+    justify-content: flex-start;
+}
+
+.sponsored-card--compact .sponsored-card__title {
+    font-size: 1.05rem;
+}
+
+.sponsored-card--card .sponsored-card__report {
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.sponsored-card--card .sponsored-card__report:hover {
+    color: #ffffff;
+}
+
+/* Маркетплейс: та сама відмінна рамка, що й у відео-реклами, поверх градієнта. */
+.sponsored-slot[data-group="marketplace"] .sponsored-card--card {
+    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
+}

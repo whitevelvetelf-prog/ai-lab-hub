@@ -747,6 +747,9 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ]);
             $campaignId = (int) $pdo->lastInsertId();
             promo_rate_hit($pdo, $userId, 'campaign_create');
+            if (!$house) {
+                acq_ref_record($pdo, 'campaign', $campaignId);   // перша кампанія після переходу з власної реклами
+            }
         } else {
             $pdo->prepare(
                 'UPDATE ad_campaigns SET name = :name, objective = :objective, pricing_model = :model, unit_price = :unit,

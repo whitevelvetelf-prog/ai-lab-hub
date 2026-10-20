@@ -12,6 +12,7 @@ declare(strict_types=1);
  *     product=N | article=slug  (сторінка: перевірка no_promo і правил категорій реклами)
  *     mp=board,board:3  (розділи сторінки маркетплейсу — таргетинг за розділом)
  *     exclude=3,7  (креативи, уже показані на цій сторінці — одна реклама не повторюється)
+ *     nohouse=1    (на сторінці вже є блок власної реклами — не більше одного)
  *     preview=1    (адмін із ?promo_preview=1: креатив тестової кампанії is_test, без обліку)
  *
  * 200 + JSON {creative, labels} — один креатив; 204 — реклами немає
@@ -57,7 +58,7 @@ if (($_GET['preview'] ?? '') === '1') {
         http_response_code(204);
         exit;
     }
-    $payload = promo_public_payload($creative, $placement, true);
+    $payload = promo_public_payload($creative, $placement, true, $pdo);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['creative' => $payload, 'labels' => promo_labels()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
@@ -69,6 +70,9 @@ if ((int) ($_GET['product'] ?? 0) > 0) {
 }
 if (is_string($_GET['article'] ?? null) && preg_match('/^[a-z0-9-]{1,191}$/', $_GET['article'])) {
     $page['article'] = $_GET['article'];
+}
+if (($_GET['nohouse'] ?? '') === '1') {
+    $page['no_house'] = true;   // на сторінці вже є власний блок — лише платна реклама
 }
 if (is_string($_GET['mp'] ?? null) && $_GET['mp'] !== '') {
     $page['mp'] = array_slice(array_values(array_filter(explode(',', $_GET['mp']), 'promo_mp_section_valid')), 0, 5);
@@ -93,6 +97,6 @@ if ($creative === null) {
 
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode(
-    ['creative' => promo_public_payload($creative, $placement), 'labels' => promo_labels()],
+    ['creative' => promo_public_payload($creative, $placement, false, $pdo), 'labels' => promo_labels()],
     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 );
