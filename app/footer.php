@@ -97,7 +97,11 @@ require_once __DIR__ . '/marketplace.php';
         background: linear-gradient(135deg, #ffd27a 0%, #ff9a6b 55%, #ff7aa8 100%);
         border: 1px solid rgba(255, 255, 255, 0.55);
         box-shadow: 0 0 0 0 rgba(255, 170, 110, 0.55), 0 8px 24px rgba(255, 140, 110, 0.45);
-        font-weight: 700;
+        font-size: 1.02rem;
+        font-weight: 800;
+        letter-spacing: 0.01em;
+        /* Підсвітка тексту: світлий ореол навколо літер на теплому фоні. */
+        text-shadow: 0 0 6px rgba(255, 255, 255, 0.85), 0 0 14px rgba(255, 240, 200, 0.7);
         animation: eli-cta-pulse 2.8s ease-out infinite;
         transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
     }
@@ -130,6 +134,51 @@ require_once __DIR__ . '/marketplace.php';
     @media (prefers-reduced-motion: reduce) {
         .site-header .site-nav__link--cta.site-header__cta {
             animation: none;
+        }
+    }
+
+    /* ≤ 768px: довгий підпис із розмітки ховається (font-size: 0), текст показує ::after —
+       тут ту саму специфічність, що й у правила вище, інакше підпис подвоївся б. */
+    @media (max-width: 768px) {
+        .site-header .site-nav__link--cta.site-header__cta {
+            font-size: 0;
+        }
+    }
+
+    /* Телефони: «Виклик Асистента» має вміститися в перший рядок разом із логотипом і «Меню». */
+    @media (max-width: 480px) {
+        .site-header .site-nav__link--cta.site-header__cta {
+            padding: 9px 11px;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta::after {
+            margin-left: 6px;
+            font-size: 0.84rem;
+            letter-spacing: 0;
+        }
+    }
+
+    @media (max-width: 400px) {
+        .site-header {
+            column-gap: 8px;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta {
+            padding: 9px 10px;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta > svg {
+            display: none;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta::after {
+            margin-left: 0;
+            font-size: 0.8rem;
+        }
+
+        .site-header .site-nav__toggle {
+            margin-left: 4px;
+            padding: 0 8px;
         }
     }
 
@@ -269,8 +318,8 @@ require_once __DIR__ . '/marketplace.php';
         .site-header__cta::after {
             content: <?= '"' . addcslashes(t('nav_assistant_short'), '"\\') . '"' ?>;
             margin-left: 8px;
-            font-size: 0.82rem;
-            font-weight: 600;
+            font-size: 0.9rem;
+            font-weight: 800;
             letter-spacing: 0.01em;
             white-space: nowrap;
         }
