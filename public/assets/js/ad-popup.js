@@ -13,7 +13,8 @@
  *   * Відео: само, без звуку (muted, playsinline); коротше за відлік — повторюється.
  *     Кнопка-динамік вмикає/вимикає звук. saveData / prefers-reduced-motion (або браузер заблокував
  *     автозапуск) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
- *   * Облік: impression — вікно видно ≥1 с; skip — «Пропустити»; пакетом через sendBeacon.
+ *   * Оголошення без відео (зображення, картка) — вікно закривається саме через creative.display с (20).
+ *   * Облік: impression — вікно видно ≥1 с; skip — «Пропустити»; close — закрилось саме; через sendBeacon.
  *   * Увесь текст із сервера — через textContent.
  */
 (function () {
@@ -373,12 +374,17 @@
             }
         }, 1000);
 
-        function close() {
+        // Без відео (зображення, картка): вікно закривається саме через creative.display с.
+        var autoClose = creative.display ? window.setTimeout(function () { close(true); }, creative.display * 1000) : null;
+
+        function close(auto) {
             if (!ready) {
                 return;
             }
             window.clearTimeout(shownAt);
-            sendEvents([{ t: creative.token, type: 'skip' }]);
+            window.clearTimeout(autoClose);
+            window.clearInterval(timer);
+            sendEvents([{ t: creative.token, type: auto === true ? 'close' : 'skip' }]);
             lsSet(Math.floor(Date.now() / 1000));
             if (video) {
                 video.pause();

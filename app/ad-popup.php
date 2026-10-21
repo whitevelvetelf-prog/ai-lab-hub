@@ -30,6 +30,8 @@ const AD_POPUP_DEFAULTS = [
     'ad_popup_min_interval_seconds' => '600',
     'ad_popup_visit_delay_seconds' => '30',
     'ad_popup_skip_delay_default' => '12',
+    // Оголошення без відео (зображення, картка) — вікно закривається саме через стільки секунд.
+    'ad_popup_static_display_seconds' => '20',
     'ad_popup_excluded_pages' => "terms.php\nprivacy.php\ncontacts.php\nlogin.php\nlogin-via-token.php\nregister.php\nforgot-password.php\ndonate.php\naccount.php\ncrm-*\nadmin-*\napply-*\n*-edit*\n*-post.php\nmp-add-offer.php\nmarketplace-my.php\nmp-my.php\nmp-moderation.php\nmp-list.php\nsaved.php\nunsubscribe.php\nadvertise.php\nadvertise-guide.php\npromo-rules.php",
 ];
 /** Затримка кнопки «Пропустити» для оголошення — у межах 10–15 с. */

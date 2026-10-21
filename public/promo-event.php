@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — облік показів / переглядів реклами (sendBeacon з sponsored.js).
  *
- * POST events=[{"t":"<токен>","type":"impression|view|skip"}, …] (skip — «Пропустити» у спливаючому вікні) — пакет подій сторінки
+ * POST events=[{"t":"<токен>","type":"impression|view|skip"}, …] (skip — «Пропустити» у спливаючому вікні;
+ *      close — вікно без відео закрилось саме: лише час закриття в сесії, без статистики) — пакет подій сторінки
  *      (до PROMO_EVENT_BATCH_MAX), один запит замість окремого на кожну картку;
  * POST t=<токен>  type=impression|view — одна подія (старий формат).
  *
@@ -53,15 +54,15 @@ if (!promo_video_ready($pdo)) {
 
 $session = analytics_session_hash();
 foreach ($events as [$token, $type]) {
-    if (!in_array($type, ['impression', 'view', 'skip'], true)) {
+    if (!in_array($type, ['impression', 'view', 'skip', 'close'], true)) {
         continue;
     }
-    if ($type === 'skip') {
+    if ($type === 'skip' || $type === 'close') {
         ad_popup_mark_closed();   // проміжок до наступного вікна — від закриття
     }
     $data = promo_token_read($token);
-    if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview']) {
-        continue;
+    if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview'] || $type === 'close') {
+        continue;   // close — вікно закрилось само (час показу минув): лише фіксуємо закриття, без статистики
     }
     try {
         promo_record_event($pdo, $data['c'], $type, $data['p'], $session);

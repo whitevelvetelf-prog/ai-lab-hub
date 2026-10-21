@@ -64,6 +64,9 @@ if ($set === []) {
 $creative = $set[0];
 $payload = promo_public_payload($creative, AD_POPUP_PLACEMENT, false, $pdo);
 $payload['skip'] = ad_popup_skip_delay($pdo, $creative);
+// Без відео (зображення, картка) — вікно закривається саме через ad_popup_static_display_seconds.
+$payload['display'] = in_array($payload['type'], ['image', 'card'], true)
+    ? max($payload['skip'], ad_popup_int($pdo, 'ad_popup_static_display_seconds')) : null;
 $st['last_creative'] = (int) $creative['id'];
 ad_popup_mark_served();
 
