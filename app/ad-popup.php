@@ -11,8 +11,7 @@ declare(strict_types=1);
  *
  * Коли вікно НЕ показується (перевіряється і тут, і в ad-next.php, і в JS):
  *   * система реклами вимкнена, місце 'popup' вимкнене, відомий бот (скрипт не вантажиться);
- *   * сторінка зі списку ad_settings.ad_popup_excluded_pages (умови, конфіденційність,
- *     контакти, вхід/реєстрація, донати, кабінет, CRM/адмінка, редагування);
+ *   * сторінка зі списку ad_settings.ad_popup_excluded_pages (головна й Елі);
  *   * перша сторінка візиту й перші ad_popup_visit_delay_seconds (30) с від початку візиту —
  *     потрібні ОБИДВІ умови: друга сторінка і 30 с;
  *   * не минуло ad_popup_min_interval_seconds (600) від закриття попереднього вікна
@@ -32,7 +31,8 @@ const AD_POPUP_DEFAULTS = [
     'ad_popup_skip_delay_default' => '12',
     // Оголошення без відео (зображення, картка) — вікно закривається саме через стільки секунд.
     'ad_popup_static_display_seconds' => '20',
-    'ad_popup_excluded_pages' => "terms.php\nprivacy.php\ncontacts.php\nlogin.php\nlogin-via-token.php\nregister.php\nforgot-password.php\ndonate.php\naccount.php\ncrm-*\nadmin-*\napply-*\n*-edit*\n*-post.php\nmp-add-offer.php\nmarketplace-my.php\nmp-my.php\nmp-moderation.php\nmp-list.php\nsaved.php\nunsubscribe.php\nadvertise.php\nadvertise-guide.php\npromo-rules.php",
+    // Реклама всюди, крім головної та Елі (з 2026-10-21).
+    'ad_popup_excluded_pages' => "index.php\neli.php",
 ];
 /** Затримка кнопки «Пропустити» для оголошення — у межах 10–15 с. */
 const AD_POPUP_SKIP_MIN = 10;
