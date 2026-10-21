@@ -113,12 +113,13 @@ function promo_cache_remember(string $key, int $ttl, callable $build): mixed
         return $v;
     }
 
+    // Файли: serialize (у 2–3 рази швидше за json_decode), без об'єктів при читанні.
     $dir = promo_cache_dir();
-    $file = $dir . '/' . sha1($full) . '.json';
+    $file = $dir . '/' . sha1($full) . '.cache';
     $mtime = @filemtime($file);
     if ($mtime !== false && $mtime > time() - $ttl) {
         $raw = @file_get_contents($file);
-        $v = $raw !== false ? json_decode($raw, true) : null;
+        $v = $raw !== false ? @unserialize($raw, ['allowed_classes' => false]) : false;
         if (is_array($v) && array_key_exists('v', $v)) {
             return $v['v'];
         }
@@ -128,7 +129,7 @@ function promo_cache_remember(string $key, int $ttl, callable $build): mixed
         @mkdir($dir, 0775, true);
     }
     $tmp = $file . '.' . bin2hex(random_bytes(4)) . '.tmp';
-    if (@file_put_contents($tmp, json_encode(['v' => $v], JSON_UNESCAPED_UNICODE)) !== false) {
+    if (@file_put_contents($tmp, serialize(['v' => $v])) !== false) {
         @rename($tmp, $file);
     }
 
@@ -139,7 +140,7 @@ function promo_cache_remember(string $key, int $ttl, callable $build): mixed
 function promo_cache_gc(): int
 {
     $n = 0;
-    foreach (glob(promo_cache_dir() . '/*.{json,tmp}', GLOB_BRACE) ?: [] as $f) {
+    foreach (glob(promo_cache_dir() . '/*.{cache,tmp}', GLOB_BRACE) ?: [] as $f) {
         if (@filemtime($f) < time() - 3600 && @unlink($f)) {
             $n++;
         }
@@ -174,64 +175,7 @@ function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array
     $key = implode('|', [$placement, implode(',', $cats), implode(',', $subs), $lang, $device, $isMp ? 'mp:' . implode(',', $mp) : '', $today]);
 
     return promo_cache_remember($key, PROMO_CANDIDATES_TTL, static function () use ($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today): array {
-        $params = [':lang' => $lang, ':dev' => $device, ':today1' => $today, ':today2' => $today, ':today3' => $today];
-        $plNames = [];
-        foreach (promo_placement_match_keys($placement) as $i => $k) {
-            $plNames[] = ':pl' . $i;
-            $params[':pl' . $i] = $k;
-        }
-        $inList = static function (string $prefix, array $ids) use (&$params): string {
-            $names = [];
-            foreach ($ids as $i => $id) {
-                $names[] = ':' . $prefix . $i;
-                $params[':' . $prefix . $i] = $id;
-            }
-
-            return implode(',', $names);
-        };
-        $catCond = $cats !== [] ? '(t.category_id IS NULL OR t.category_id IN (' . $inList('c', $cats) . '))' : 't.category_id IS NULL';
-        $subCond = $subs !== [] ? '(t.subcategory_id IS NULL OR t.subcategory_id IN (' . $inList('s', $subs) . '))' : 't.subcategory_id IS NULL';
-        $mpCond = '';
-        if ($isMp) {
-            $mpCond = 'AND ' . ($mp !== [] ? '(t.mp_section IS NULL OR t.mp_section IN (' . $inList('m', $mp) . '))' : 't.mp_section IS NULL');
-        }
-        $house = promo_house_columns($pdo);
-        $houseCols = $house ? ', cr.weight, c.house_rules' : '';
-
-        // Індекси: ad_campaigns (format, status, …) / (status, campaign_type, start_date, end_date),
-        // ad_creatives (campaign_id, status), ad_targets (campaign_id, placement, …), ad_stats_daily (campaign_id, stat_date).
-        $sql = "SELECT cr.id, cr.campaign_id, c.campaign_type, c.total_budget, c.spent, c.end_date,
-                       COALESCE(b.balance, 0) AS balance{$houseCols}
-                FROM ad_campaigns c
-                JOIN ad_creatives cr ON cr.campaign_id = c.id AND cr.status = 'approved'
-                LEFT JOIN ad_balances b ON b.user_id = c.user_id
-                WHERE c.format = 'video'
-                  AND c.status = 'active'
-                  AND (c.start_date IS NULL OR c.start_date <= :today1)
-                  AND (c.end_date IS NULL OR c.end_date >= :today2)
-                  AND (
-                        c.campaign_type = 'internal'
-                     OR (    c.unit_price IS NOT NULL AND c.unit_price > 0
-                         AND c.pricing_model IS NOT NULL
-                         AND COALESCE(b.balance, 0) > 0
-                         AND b.currency = c.currency
-                         AND (c.total_budget IS NULL OR c.spent < c.total_budget)
-                         AND (c.daily_budget IS NULL
-                              OR (SELECT COALESCE(SUM(sd.spend), 0) FROM ad_stats_daily sd
-                                  WHERE sd.campaign_id = c.id AND sd.stat_date = :today3) < c.daily_budget))
-                  )
-                  AND EXISTS (
-                        SELECT 1 FROM ad_targets t
-                        WHERE t.campaign_id = c.id
-                          AND t.placement IN (" . implode(',', $plNames) . ")
-                          AND {$catCond}
-                          AND {$subCond}
-                          {$mpCond}
-                          AND (t.language IS NULL OR t.language = :lang)
-                          AND (t.device IS NULL OR t.device = :dev)
-                  )
-                  AND " . promo_rules_sql($cats, $subs) . '
-                LIMIT ' . PROMO_CANDIDATES_MAX;
+        [$sql, $params] = promo_candidates_sql($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today);
 
         try {
             $stmt = $pdo->prepare($sql);
@@ -259,6 +203,78 @@ function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array
 
         return $out;
     });
+}
+
+/**
+ * SQL і параметри запиту кандидатів (окремо — для EXPLAIN у tools/promo-load-test.php).
+ *
+ * @param list<int> $cats
+ * @param list<int> $subs
+ * @param list<string> $mp
+ * @return array{0:string,1:array<string,mixed>}
+ */
+function promo_candidates_sql(PDO $pdo, string $placement, array $cats, array $subs, string $lang, string $device, array $mp, bool $isMp, string $today): array
+{
+    $params = [':lang' => $lang, ':dev' => $device, ':today1' => $today, ':today2' => $today, ':today3' => $today];
+    $plNames = [];
+    foreach (promo_placement_match_keys($placement) as $i => $k) {
+        $plNames[] = ':pl' . $i;
+        $params[':pl' . $i] = $k;
+    }
+    $inList = static function (string $prefix, array $ids) use (&$params): string {
+        $names = [];
+        foreach ($ids as $i => $id) {
+            $names[] = ':' . $prefix . $i;
+            $params[':' . $prefix . $i] = $id;
+        }
+
+        return implode(',', $names);
+    };
+    $catCond = $cats !== [] ? '(t.category_id IS NULL OR t.category_id IN (' . $inList('c', $cats) . '))' : 't.category_id IS NULL';
+    $subCond = $subs !== [] ? '(t.subcategory_id IS NULL OR t.subcategory_id IN (' . $inList('s', $subs) . '))' : 't.subcategory_id IS NULL';
+    $mpCond = '';
+    if ($isMp) {
+        $mpCond = 'AND ' . ($mp !== [] ? '(t.mp_section IS NULL OR t.mp_section IN (' . $inList('m', $mp) . '))' : 't.mp_section IS NULL');
+    }
+    $house = promo_house_columns($pdo);
+    $houseCols = $house ? ', cr.weight, c.house_rules' : '';
+
+    // Індекси: ad_campaigns (format, status, …) / (status, campaign_type, start_date, end_date),
+    // ad_creatives (campaign_id, status), ad_targets (campaign_id, placement, …), ad_stats_daily (campaign_id, stat_date).
+    $sql = "SELECT cr.id, cr.campaign_id, c.campaign_type, c.total_budget, c.spent, c.end_date,
+                   COALESCE(b.balance, 0) AS balance{$houseCols}
+            FROM ad_campaigns c
+            JOIN ad_creatives cr ON cr.campaign_id = c.id AND cr.status = 'approved'
+            LEFT JOIN ad_balances b ON b.user_id = c.user_id
+            WHERE c.format = 'video'
+              AND c.status = 'active'
+              AND (c.start_date IS NULL OR c.start_date <= :today1)
+              AND (c.end_date IS NULL OR c.end_date >= :today2)
+              AND (
+                    c.campaign_type = 'internal'
+                 OR (    c.unit_price IS NOT NULL AND c.unit_price > 0
+                     AND c.pricing_model IS NOT NULL
+                     AND COALESCE(b.balance, 0) > 0
+                     AND b.currency = c.currency
+                     AND (c.total_budget IS NULL OR c.spent < c.total_budget)
+                     AND (c.daily_budget IS NULL
+                          OR (SELECT COALESCE(SUM(sd.spend), 0) FROM ad_stats_daily sd
+                              WHERE sd.campaign_id = c.id AND sd.stat_date = :today3) < c.daily_budget))
+              )
+              AND EXISTS (
+                    SELECT 1 FROM ad_targets t
+                    WHERE t.campaign_id = c.id
+                      AND t.placement IN (" . implode(',', $plNames) . ")
+                      AND {$catCond}
+                      AND {$subCond}
+                      {$mpCond}
+                      AND (t.language IS NULL OR t.language = :lang)
+                      AND (t.device IS NULL OR t.device = :dev)
+              )
+              AND " . promo_rules_sql($cats, $subs) . '
+            LIMIT ' . PROMO_CANDIDATES_MAX;
+
+    return [$sql, $params];
 }
 
 // --- Стан сеансу ------------------------------------------------------------
