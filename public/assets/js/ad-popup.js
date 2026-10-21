@@ -217,6 +217,26 @@
                 }
             }
             media.appendChild(mediaLink);
+            // YouTube: мініатюра + «відтворити» — програвач youtube-nocookie без звуку вантажиться лише на дію глядача.
+            if (creative.type === 'youtube' && creative.youtube) {
+                var play = el('button', 'adp-play', '▶');
+                play.type = 'button';
+                play.setAttribute('aria-label', labels.play);
+                play.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();   // не відкривати рекламодавця
+                    var frame = el('iframe');
+                    frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(creative.youtube)
+                        + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+                    frame.title = creative.title || labels.label;
+                    frame.allow = 'autoplay; encrypted-media; picture-in-picture';
+                    frame.referrerPolicy = 'strict-origin-when-cross-origin';
+                    media.textContent = '';
+                    media.appendChild(frame);
+                    (dialog.querySelector('.adp-cta') || dialog).focus();
+                });
+                media.appendChild(play);
+            }
             if (video) {
                 var sound = el('button', 'adp-sound');
                 sound.type = 'button';

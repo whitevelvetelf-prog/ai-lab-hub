@@ -80,6 +80,32 @@
     object-fit: cover;
 }
 
+.adp-media iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+.adp-play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+    border: 0;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #ffffff;
+    background: rgba(0, 3, 44, 0.78);
+}
+
+.adp-play:hover {
+    background: #2116ad;
+}
+
 .adp-sound {
     position: absolute;
     right: 10px;
@@ -174,6 +200,7 @@
     background: rgba(255, 255, 255, 0.14);
 }
 
+.adp-play:focus-visible,
 .adp-dialog a:focus-visible,
 .adp-dialog button:focus-visible {
     outline: 2px solid #9fb8ff;
