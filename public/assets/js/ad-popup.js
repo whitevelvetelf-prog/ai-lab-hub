@@ -11,7 +11,8 @@
  *     вікно не закривається ні фоном, ні Esc. Після — «Пропустити» або Esc.
  *   * Клік по рекламі — /promo-click.php у новій вкладці; вікно лишається відкритим.
  *   * Відео: само, без звуку (muted, playsinline); коротше за відлік — повторюється.
- *     Кнопка-динамік вмикає/вимикає звук. saveData / prefers-reduced-motion — лише постер.
+ *     Кнопка-динамік вмикає/вимикає звук. saveData / prefers-reduced-motion (або браузер заблокував
+ *     автозапуск) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
  *   * Облік: impression — вікно видно ≥1 с; skip — «Пропустити»; пакетом через sendBeacon.
  *   * Увесь текст із сервера — через textContent.
  */
@@ -262,6 +263,36 @@
                 video.addEventListener('volumechange', syncSound);
                 syncSound();
                 media.appendChild(sound);
+
+                // «Відтворити»: коли автостарт вимкнено (saveData, reduced-motion) або його заблокував
+                // браузер. Запускає ролик без звуку й не відкриває рекламодавця.
+                var videoPlay = null;
+                var showVideoPlay = function () {
+                    if (videoPlay || !video.paused) {
+                        return;
+                    }
+                    videoPlay = el('button', 'adp-play', '▶');
+                    videoPlay.type = 'button';
+                    videoPlay.setAttribute('aria-label', labels.play);
+                    videoPlay.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (!video.getAttribute('src')) {
+                            video.src = creative.video;
+                        }
+                        video.play().catch(noop);
+                        videoPlay.remove();
+                        videoPlay = null;
+                        sound.focus();
+                    });
+                    media.appendChild(videoPlay);
+                };
+                video.addEventListener('play', function () {
+                    if (videoPlay) {
+                        videoPlay.remove();
+                        videoPlay = null;
+                    }
+                });
             }
             dialog.appendChild(media);
         }
@@ -329,7 +360,9 @@
                 }
             });
             if (allowAutoplay) {
-                video.play().catch(noop);
+                video.play().catch(showVideoPlay);
+            } else {
+                showVideoPlay();
             }
         }
 
