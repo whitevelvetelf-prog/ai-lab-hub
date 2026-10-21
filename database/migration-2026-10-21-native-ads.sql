@@ -58,3 +58,19 @@ UPDATE ad_placements SET position_rule = '{"position":3,"every":8}', slots_per_p
     description_uk = 'Нативна картка в списках розділів (вакансії, курси, послуги, оголошення, готові рішення): 3-тя позиція, далі кожні 8 карток, до 2 на сторінку.',
     description_en = 'A native card in section lists (jobs, courses, services, listings, ready-made solutions): 3rd position, then every 8 cards, up to 2 per page.'
  WHERE placement_key = 'marketplace_category';
+
+-- ---------------------------------------------------------------------
+-- Етап 2. Зображення й короткі відео.
+-- ---------------------------------------------------------------------
+
+-- Тип медіа креативу — наявна колонка ad_creatives.creative_type (VARCHAR):
+-- 'video' (відео: video_type upload/youtube, video_path, video_url, poster_path),
+-- 'image' (зображення в poster_path, без відео), 'card' (власна реклама без медіа).
+-- Вага для зваженого вибору серед платних (на старті всі = 1).
+SET @s := IF((SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ad_creatives' AND COLUMN_NAME = 'weight') = 0,
+  'ALTER TABLE ad_creatives ADD COLUMN weight INT NOT NULL DEFAULT 1 AFTER creative_type', 'DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- Короткі ролики: до 15 с і до 5 МБ (перевірка при завантаженні, app/promo-advertiser.php).
+INSERT INTO ad_settings (setting_key, setting_value) VALUES ('max_video_sec', '15'), ('max_video_mb', '5')
+  ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);

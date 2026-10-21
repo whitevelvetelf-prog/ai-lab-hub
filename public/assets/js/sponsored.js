@@ -4,8 +4,12 @@
  * креатив у /promo-serve.php і будує картку. Немає реклами (204) — слот лишається
  * прихованим, порожнього місця немає.
  *
- *   * Відео: muted + playsinline + preload="metadata"; автозапуск лише коли картка
- *     видима (≥50%), пауза поза екраном. Звук ніколи не вмикається сам — кнопка.
+ *   * Нативні картки в списках (app/ad-card.php, .sponsored-slot[data-native]) приходять
+ *     готовими з сервера разом із JSON креативу; тут лише оживлюються (initNative).
+ *   * Відео: muted + playsinline + loop; у нативній картці src підставляється лише поблизу
+ *     екрана (до того — постер). Автозапуск лише коли картка видима (≥50%), пауза поза
+ *     екраном. Звук ніколи не вмикається сам — кнопка-динамік; звук грає лише в одному
+ *     ролику на сторінці, клік по кнопці не відкриває сторінку рекламодавця.
  *     Без автозапуску при saveData або prefers-reduced-motion: постер + «відтворити».
  *   * YouTube: постер-заглушка, iframe youtube-nocookie.com вантажиться лише після
  *     натискання (без звуку). Для YouTube рахуються лише покази й кліки CTA.
@@ -30,6 +34,8 @@
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var saveData = !!(navigator.connection && navigator.connection.saveData);
     var allowAutoplay = !reduceMotion && !saveData;
+
+    function noop() {}
 
     function deviceType() {
         var mobile = window.matchMedia && (window.matchMedia('(max-width: 768px)').matches || window.matchMedia('(pointer: coarse)').matches);
@@ -57,48 +63,68 @@
         fetch(EVENT, { method: 'POST', body: data, credentials: 'same-origin', keepalive: true }).catch(function () {});
     }
 
-    function buildVideo(media, creative, labels, onStart) {
-        var video = el('video');
-        video.muted = true;
-        video.defaultMuted = true;
-        video.setAttribute('muted', '');
-        video.setAttribute('playsinline', '');
-        video.setAttribute('preload', 'metadata');
-        video.setAttribute('loop', '');
-        video.setAttribute('disablepictureinpicture', '');
-        if (creative.poster) {
-            video.poster = creative.poster;
-        }
-        video.src = creative.video;
-        media.appendChild(video);
+    // --- Звук: лише один ролик на сторінці грає зі звуком -----------------
+    var ICON_MUTED = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3z"/>'
+        + '<path d="M16 9l5 6M21 9l-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    var ICON_SOUND = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">'
+        + '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3z"/>'
+        + '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 
-        var sound = el('button', 'sponsored-card__sound', labels.soundOn);
-        sound.type = 'button';
-        sound.setAttribute('aria-pressed', 'false');
-        sound.addEventListener('click', function () {
-            video.muted = !video.muted;
-            sound.textContent = video.muted ? labels.soundOn : labels.soundOff;
-            sound.setAttribute('aria-pressed', video.muted ? 'false' : 'true');
-            if (!video.muted && video.paused) {
-                video.play().catch(function () {});
+    var soundOwner = null;   // відео, яке зараз зі звуком
+
+    function releaseSound(video) {
+        if (soundOwner === video) {
+            soundOwner = null;
+        }
+        if (!video.muted) {
+            video.muted = true;
+        }
+    }
+
+    /**
+     * Кнопка-динамік: клік вмикає звук (і вимикає його в іншому ролику), повторний —
+     * вимикає. Клік не відкриває сторінку рекламодавця. Звук сам не вмикається ніколи —
+     * браузери блокують автозвук. $beforePlay — підвантажити відео, якщо ще не завантажене.
+     */
+    function soundButton(video, labels, beforePlay) {
+        var btn = el('button', 'sponsored-card__sound');
+        btn.type = 'button';
+        function sync() {
+            var on = !video.muted;
+            btn.innerHTML = on ? ICON_SOUND : ICON_MUTED;
+            btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+            btn.setAttribute('aria-label', on ? labels.soundOff : labels.soundOn);
+            btn.title = on ? labels.soundOff : labels.soundOn;
+        }
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (video.muted) {
+                if (soundOwner && soundOwner !== video) {
+                    soundOwner.muted = true;
+                }
+                soundOwner = video;
+                if (beforePlay) {
+                    beforePlay();
+                }
+                video.muted = false;
+                if (video.paused) {
+                    video.play().catch(noop);
+                }
+            } else {
+                releaseSound(video);
             }
+            sync();
         });
-        media.appendChild(sound);
+        video.addEventListener('volumechange', sync);
+        sync();
 
-        var play = null;
-        if (!allowAutoplay) {
-            play = el('button', 'sponsored-card__play', '▶');
-            play.type = 'button';
-            play.setAttribute('aria-label', labels.play);
-            play.addEventListener('click', function () {
-                play.remove();
-                play = null;
-                video.play().catch(function () {});
-            });
-            media.appendChild(play);
-        }
+        return btn;
+    }
 
-        // ≥3 с реального відтворення → одна подія view.
+    // ≥3 с реального відтворення → одна подія view.
+    function trackView(video, onView) {
         var played = 0;
         var last = null;
         var viewSent = false;
@@ -116,15 +142,52 @@
             last = video.currentTime;
             if (played >= 3) {
                 viewSent = true;
-                onStart('view');
+                onView();
             }
         });
         video.addEventListener('seeking', function () { last = null; });
+    }
+
+    function buildVideo(media, creative, labels, onStart) {
+        var video = el('video');
+        video.muted = true;
+        video.defaultMuted = true;
+        video.setAttribute('muted', '');
+        video.setAttribute('playsinline', '');
+        video.setAttribute('preload', allowAutoplay ? 'metadata' : 'none');
+        video.setAttribute('loop', '');
+        video.setAttribute('disablepictureinpicture', '');
+        if (creative.poster) {
+            video.poster = creative.poster;
+        }
+        video.src = creative.video;
+        media.appendChild(video);
+        media.appendChild(soundButton(video, labels));
+
+        var play = null;
+        function showPlay() {
+            if (play) {
+                return;
+            }
+            play = el('button', 'sponsored-card__play', '▶');
+            play.type = 'button';
+            play.setAttribute('aria-label', labels.play);
+            play.addEventListener('click', function () {
+                play.remove();
+                play = null;
+                video.play().catch(noop);
+            });
+            media.appendChild(play);
+        }
+        if (!allowAutoplay) {
+            showPlay();
+        }
+        trackView(video, function () { onStart('view'); });
 
         return {
             visible: function (isVisible) {
                 if (isVisible && allowAutoplay) {
-                    video.play().catch(function () {});
+                    video.play().catch(showPlay);
                 } else if (!isVisible && !video.paused) {
                     video.pause();
                 }
@@ -217,6 +280,13 @@
             // Картка без відео (власна реклама): градієнт бренду, без медіа.
             card.classList.add('sponsored-card--card', 'sponsored-card--' + (creative.layout === 'compact' ? 'compact' : 'wide'));
             media.remove();
+            player = { visible: function () {} };
+        } else if (creative.type === 'image') {
+            var img = el('img');
+            img.alt = '';
+            img.loading = 'lazy';
+            img.src = creative.poster || '';
+            media.appendChild(img);
             player = { visible: function () {} };
         } else {
             player = creative.type === 'upload' && creative.video
@@ -321,7 +391,92 @@
             .catch(function () {});
     }
 
-    // Нативна картка в списку (app/ad-card.php): розмітка вже з сервера, тут — облік показу й відео.
+    // --- Нативна картка в списку (app/ad-card.php) --------------------------
+    // Розмітка картки вже з сервера; тут — ліниве відео, звук і облік показу.
+
+    // Відео вантажиться заздалегідь, коли картка ближче за цю відстань до екрана.
+    var NEAR_MARGIN = '300px 0px';
+
+    /**
+     * Відео нативної картки: src підставляється лише поблизу екрана (до того — постер),
+     * старт сам без звуку, коли картка видима, пауза поза екраном. saveData /
+     * prefers-reduced-motion — лише постер і кнопка «відтворити».
+     */
+    function wireNativeVideo(video, media, labels, onView) {
+        var loaded = false;
+        var play = null;
+        function load() {
+            if (!loaded) {
+                loaded = true;
+                video.preload = 'metadata';
+                video.src = video.getAttribute('data-src');
+            }
+        }
+        function showPlay() {
+            if (play) {
+                return;
+            }
+            play = el('button', 'sponsored-card__play', '▶');
+            play.type = 'button';
+            play.setAttribute('aria-label', labels.play);
+            play.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                play.remove();
+                play = null;
+                load();
+                video.play().catch(noop);
+            });
+            media.appendChild(play);
+        }
+        video.muted = true;
+        video.defaultMuted = true;
+        media.appendChild(soundButton(video, labels, load));
+        if (!allowAutoplay) {
+            showPlay();
+        }
+        trackView(video, onView);
+
+        return {
+            near: function () {
+                if (allowAutoplay) {
+                    load();
+                }
+            },
+            visible: function (isVisible) {
+                if (isVisible && allowAutoplay) {
+                    load();
+                    // Браузер заборонив автозапуск (енергозбереження) — кнопка «відтворити».
+                    video.play().catch(showPlay);
+                } else if (!isVisible && !video.paused) {
+                    video.pause();
+                }
+            },
+            stop: function () {
+                video.pause();
+                releaseSound(video);
+            }
+        };
+    }
+
+    function nativePlayer(card, creative, labels) {
+        var media = card.querySelector('.sponsored-card__media');
+        var video = media ? media.querySelector('video[data-src]') : null;
+        if (video) {
+            return wireNativeVideo(video, media, labels, function () {
+                if (!creative.preview) {
+                    sendEvent(creative.token, 'view');
+                }
+            });
+        }
+        if (media && creative.type === 'youtube' && creative.youtube) {
+            media.textContent = '';
+            return buildYoutube(media, creative, labels);
+        }
+
+        return { near: noop, visible: noop, stop: noop };
+    }
+
     function initNative(slot) {
         var dataNode = slot.querySelector('.sponsored-slot__data');
         var card = slot.querySelector('.sponsored-card');
@@ -341,25 +496,24 @@
         if (creative.house) {
             houseShown = true;
         }
-        var video = card.querySelector('video[data-src]');
+        var player = nativePlayer(card, creative, payload.labels);
         var impressionSent = !!creative.preview;
         if (!('IntersectionObserver' in window)) {
             return;
         }
+        new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    player.near();
+                }
+            });
+        }, { rootMargin: NEAR_MARGIN }).observe(card);
+
         var timer = null;
         new IntersectionObserver(function (entries) {
             entries.forEach(function (entry) {
                 var visible = entry.isIntersecting && entry.intersectionRatio >= 0.5;
-                if (video) {
-                    if (visible && allowAutoplay) {
-                        if (!video.src) {
-                            video.src = video.dataset.src;
-                        }
-                        video.play().catch(function () {});
-                    } else if (!visible && !video.paused) {
-                        video.pause();
-                    }
-                }
+                player.visible(visible);
                 if (impressionSent) {
                     return;
                 }

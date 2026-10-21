@@ -185,7 +185,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
             "SELECT c.id, c.name, c.status, c.campaign_type, c.is_test FROM ad_campaigns c
              WHERE c.format = 'video' AND EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id
                    AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL)"
-                   . (promo_house_columns($pdo) ? " OR cr.creative_type = 'card'" : '') . "))
+                   . (promo_house_columns($pdo) ? " OR cr.creative_type IN ('card', 'image')" : '') . "))
              ORDER BY c.is_test DESC, c.id DESC LIMIT 100"
         )->fetchAll();
     } catch (Throwable $e) {
@@ -265,6 +265,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                             <div class="sponsored-card__media">
                                                 <?php if ($q['video_type'] === 'upload' && $q['video_path']): ?>
                                                 <video controls muted playsinline preload="metadata"<?= $q['poster_path'] ? ' poster="/' . pc_e($q['poster_path']) . '"' : '' ?> src="/<?= pc_e($q['video_path']) ?>"></video>
+                                                <?php elseif (($q['creative_type'] ?? '') === 'image' && $q['poster_path']): ?>
+                                                <img src="/<?= pc_e($q['poster_path']) ?>" alt="">
                                                 <?php elseif ($q['youtube_id']): ?>
                                                 <iframe src="https://www.youtube-nocookie.com/embed/<?= pc_e($q['youtube_id']) ?>?rel=0" title="YouTube" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
                                                 <?php endif; ?>
@@ -278,9 +280,9 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Кампанія</dt><dd>#<?= (int) $q['cid'] ?> <?= pc_e($q['campaign_name']) ?></dd>
                                         <dt>Рекламодавець</dt><dd><?= pc_e($q['user_name']) ?> · <?= pc_e($q['user_email']) ?> (баланс <?= pc_e(promo_money($q['balance'], $q['balance_currency'] ?: PROMO_CURRENCY)) ?>)</dd>
                                         <dt>Адреса переходу</dt><dd><a href="<?= pc_e($q['destination_url']) ?>" target="_blank" rel="noopener noreferrer nofollow"><?= pc_e($q['destination_url']) ?></a></dd>
-                                        <dt>Відео</dt><dd><?= $q['video_type'] === 'upload'
+                                        <dt>Медіа</dt><dd><?= ($q['creative_type'] ?? '') === 'image' ? 'зображення (без відео)' : '' ?><?= ($q['creative_type'] ?? '') === 'image' ? '' : ($q['video_type'] === 'upload'
                                             ? pc_e(($q['mime'] ?? '') . ' · ' . ($q['duration_sec'] !== null ? $q['duration_sec'] . ' с' : 'тривалість невідома') . ' · ' . round((int) $q['size_bytes'] / 1048576, 1) . ' МБ')
-                                            : 'YouTube: ' . pc_e($q['video_url']) ?></dd>
+                                            : 'YouTube: ' . pc_e($q['video_url'])) ?></dd>
                                         <dt>Категорія реклами</dt><dd><?= pc_e(promo_advertiser_category_label($q['advertiser_category'])) ?><?php if (promo_category_blocked_everywhere($pdo, $q['advertiser_category'])): ?> <strong class="pc-warn-text">— заборонена всюди, відхиліть</strong><?php endif; ?><span class="pc-muted">Перевірте, що відео й сторінка відповідають категорії.</span></dd>
                                         <?php if (trim((string) ($q['cta_text'] ?? '')) !== ''): ?>
                                         <dt>Кнопка</dt><dd><strong class="pc-warn-text">свій текст:</strong> «<?= pc_e($q['cta_text']) ?>»<?= trim((string) ($q['cta_text_en'] ?? '')) !== '' ? ' / EN «' . pc_e($q['cta_text_en']) . '»' : '' ?><span class="pc-muted">Перевірте: текст чесно описує дію на сторінці переходу, без обіцянок результату й маскування.</span></dd>

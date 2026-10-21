@@ -94,7 +94,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
         'name' => $editing['name'] ?? '',
         'objective' => $editing['objective'] ?? 'awareness',
         'advertiser_category' => $editing['advertiser_category'] ?? '',
-        'video_type' => $creative['video_type'] ?? 'upload',
+        'video_type' => ($creative['creative_type'] ?? '') === 'image' ? 'image' : ($creative['video_type'] ?? 'upload'),
         'youtube_url' => $creative['video_url'] ?? '',
         'title' => $creative['title'] ?? '',
         'description' => $creative['description'] ?? '',
@@ -403,7 +403,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                     <div class="pc-grid-2">
                                         <div>
                                             <div class="pc-choice-row">
-                                                <?php foreach (['upload', 'youtube'] as $vt): ?>
+                                                <?php foreach (['upload', 'youtube', 'image'] as $vt): ?>
                                                 <label class="pc-choice pc-choice--compact">
                                                     <input type="radio" name="video_type" value="<?= $vt ?>"<?= $f['video_type'] === $vt ? ' checked' : '' ?>>
                                                     <span><?= pc_e(promo_tr('video_type_' . $vt)) ?></span>
@@ -420,6 +420,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                                 <p class="pc-muted"><?= pc_e(promo_tr('video_current')) ?><?= $creative['duration_sec'] ? ' · ' . (int) $creative['duration_sec'] . ' ' . pc_e(promo_tr('sec')) : '' ?></p>
                                                 <?php endif; ?>
                                             </div>
+                                            <p class="pc-muted" data-pc-show="video_type=image"><?= pc_e(promo_tr('image_hint')) ?></p>
                                             <label class="pc-field" data-pc-show="video_type=youtube">
                                                 <span><?= pc_e(promo_tr('field_youtube')) ?></span>
                                                 <input type="url" name="youtube_url" maxlength="500" placeholder="https://www.youtube.com/watch?v=…" value="<?= pc_e($f['youtube_url']) ?>">

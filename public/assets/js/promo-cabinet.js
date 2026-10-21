@@ -307,7 +307,7 @@
             }
             return;
         }
-        var src = localVideoUrl || media.getAttribute('data-video');
+        var src = val('video_type') === 'image' ? '' : (localVideoUrl || media.getAttribute('data-video'));
         if (!src) {
             if (poster) {
                 var pimg = document.createElement('img');

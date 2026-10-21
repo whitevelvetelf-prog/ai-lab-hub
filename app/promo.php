@@ -502,6 +502,7 @@ function promo_public_payload(array $creative, string $placement, bool $preview 
     if (($creative['creative_type'] ?? 'video') === 'card') {
         return promo_card_payload($creative, $placement, $preview, $pdo);
     }
+    $isImage = ($creative['creative_type'] ?? 'video') === 'image';
     $isUpload = $creative['video_type'] === 'upload';
 
     return [
@@ -513,9 +514,9 @@ function promo_public_payload(array $creative, string $placement, bool $preview 
         'title'       => promo_creative_text($pdo, $creative, 'title'),
         'description' => promo_creative_text($pdo, $creative, 'description'),
         'cta'         => promo_cta_label($creative),
-        'type'        => $isUpload ? 'upload' : 'youtube',
-        'video'       => $isUpload && $creative['video_path'] ? '/' . ltrim((string) $creative['video_path'], '/') : null,
-        'youtube'     => !$isUpload ? (string) $creative['youtube_id'] : null,
+        'type'        => $isImage ? 'image' : ($isUpload ? 'upload' : 'youtube'),
+        'video'       => !$isImage && $isUpload && $creative['video_path'] ? '/' . ltrim((string) $creative['video_path'], '/') : null,
+        'youtube'     => !$isImage && !$isUpload ? (string) $creative['youtube_id'] : null,
         'poster'      => $creative['poster_path'] ? '/' . ltrim((string) $creative['poster_path'], '/') : null,
     ];
 }
@@ -950,14 +951,15 @@ function promo_preview_creative(PDO $pdo): ?array
 {
     try {
         // Тестова кампанія може бути й власною рекламою з картками (без відео).
-        $card = promo_house_columns($pdo) ? " OR cr.creative_type = 'card'" : '';
+        $card = promo_house_columns($pdo) ? " OR cr.creative_type = 'card' OR (cr.creative_type = 'image' AND cr.poster_path IS NOT NULL)" : '';
         $row = $pdo->query(
             "SELECT cr.*, c.campaign_type
              FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
              WHERE c.is_test = 1 AND c.format = 'video'
                AND ((cr.video_type = 'upload' AND cr.video_path IS NOT NULL) OR (cr.video_type = 'youtube' AND cr.youtube_id IS NOT NULL){$card})
-             ORDER BY RAND() LIMIT 1"
-        )->fetch();
+             ORDER BY cr.id"
+        )->fetchAll();
+        $row = $row !== [] ? $row[mt_rand(0, count($row) - 1)] : false;
     } catch (Throwable $e) {
         return null; // міграцію 2026-10-18 ще не застосовано
     }

@@ -587,7 +587,11 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
     if ($destination !== '' && ($e = promo_url_error($destination)) !== null) {
         $errors[] = $e;
     }
-    $videoType = in_array($in['video_type'] ?? '', ['upload', 'youtube'], true) ? $in['video_type'] : 'upload';
+    // image — оголошення-зображення (ad_creatives.creative_type = 'image'): картинка в полі постера, без відео.
+    $videoType = in_array($in['video_type'] ?? '', ['upload', 'youtube', 'image'], true) ? $in['video_type'] : 'upload';
+    if ($videoType === 'image' && !promo_house_columns($pdo)) {
+        $videoType = 'upload';   // без колонки creative_type (міграція 2026-10-23) зображень немає
+    }
     $youtubeId = $creative['youtube_id'] ?? null;
     $youtubeUrl = $creative['video_url'] ?? null;
     if ($videoType === 'youtube' && trim((string) ($in['youtube_url'] ?? '')) !== '') {
@@ -700,6 +704,9 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         if ($videoType === 'youtube' && !$youtubeId) {
             $missing[] = 'err_youtube';
         }
+        if ($videoType === 'image' && !$posterPath) {
+            $missing[] = 'err_image_required';
+        }
         if ($title === '') {
             $missing[] = 'err_title_required';
         }
@@ -794,7 +801,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
             ':desc' => $description,
             ':cta' => $cta,
             ':dest' => $destination,
-            ':vtype' => $videoType,
+            ':vtype' => $videoType === 'image' ? null : $videoType,
             ':vpath' => $videoType === 'upload' ? $videoPath : null,
             ':vurl' => $videoType === 'youtube' ? $youtubeUrl : null,
             ':yt' => $videoType === 'youtube' ? $youtubeId : null,
@@ -810,15 +817,16 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         // Свій текст кнопки (колонки з міграції 2026-10-23); без них — лише кнопка зі списку.
         $ctaCols = promo_house_columns($pdo);
         if ($ctaCols) {
-            $crFields += [':ctat' => $ctaCustom ? $ctaText : null, ':ctate' => $ctaCustom ? $ctaTextEn : null];
+            $crFields += [':ctat' => $ctaCustom ? $ctaText : null, ':ctate' => $ctaCustom ? $ctaTextEn : null,
+                ':ctype' => $videoType === 'image' ? 'image' : 'video'];
         }
         if ($creative === null) {
             $pdo->prepare(
                 'INSERT INTO ad_creatives (campaign_id, title, description, cta_key, destination_url, video_type, video_path,
                      video_url, youtube_id, poster_path, duration_sec, size_bytes, mime, status, reviewed_by, reviewed_at'
-                     . ($ctaCols ? ', cta_text, cta_text_en' : '') . ')
+                     . ($ctaCols ? ', cta_text, cta_text_en, creative_type' : '') . ')
                  VALUES (:cid, :title, :desc, :cta, :dest, :vtype, :vpath, :vurl, :yt, :poster, :dur, :size, :mime, :status, :rby, :rat'
-                     . ($ctaCols ? ', :ctat, :ctate' : '') . ')'
+                     . ($ctaCols ? ', :ctat, :ctate, :ctype' : '') . ')'
             )->execute($crFields + [':cid' => $campaignId]);
             $creativeId = (int) $pdo->lastInsertId();
         } else {
@@ -827,7 +835,7 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
                      video_type = :vtype, video_path = :vpath, video_url = :vurl, youtube_id = :yt, poster_path = :poster,
                      duration_sec = :dur, size_bytes = :size, mime = :mime, status = :status,
                      rejection_reason = NULL, reviewed_by = :rby, reviewed_at = :rat'
-                     . ($ctaCols ? ', cta_text = :ctat, cta_text_en = :ctate' : '') . '
+                     . ($ctaCols ? ", cta_text = :ctat, cta_text_en = :ctate, creative_type = IF(creative_type = 'card', 'card', :ctype)" : '') . '
                  WHERE id = :id'
             )->execute($crFields + [':id' => (int) $creative['id']]);
         }
