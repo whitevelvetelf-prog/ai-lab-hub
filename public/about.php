@@ -142,6 +142,8 @@ require_once __DIR__ . '/../app/translations.php';
 
         <p class="stub__text">Платформа безкоштовна для користувачів і завжди такою залишиться. Ми можемо отримувати партнерську комісію від деяких сервісів, представлених у каталозі — це не впливає на те, які інструменти потрапляють до каталогу чи як їх описано.</p>
 
+        <p class="stub__text"><?= sprintf(htmlspecialchars(t('about_ads_text'), ENT_QUOTES), '<a href="advertise.php">' . htmlspecialchars(t('about_ads_link'), ENT_QUOTES) . '</a>') ?></p>
+
         <h2 class="about-heading">Хто стоїть за проєктом</h2>
 
         <p class="stub__text">AI LAB HUB створює та підтримує Серена Мілова — власниця, розробниця й адміністраторка проєкту.</p>

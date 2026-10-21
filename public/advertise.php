@@ -154,6 +154,7 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
 
         <h2 class="adv-h2"><?= $tr('adv_formats_title') ?></h2>
         <p class="adv-muted"><?= $tr('adv_formats_note') ?></p>
+        <p class="adv-muted"><?= $tr('adv_rotation_note') ?></p>
         <div class="adv-formats">
             <?php foreach ($sitePlaces as $pl): ?>
             <section class="adv-format">
@@ -180,6 +181,7 @@ $canonical = 'https://ailabhub-directory.com/advertise.php';
 
         <h2 class="adv-h2"><?= $tr('adv_spec_title') ?></h2>
         <ul class="adv-list">
+            <li><?= $tr('adv_spec_image') ?></li>
             <li><?= $tr('adv_spec_video', $maxMb, $maxSec) ?></li>
             <li><?= $tr('adv_spec_ratio') ?></li>
             <li><?= $tr('adv_spec_title_len') ?></li>

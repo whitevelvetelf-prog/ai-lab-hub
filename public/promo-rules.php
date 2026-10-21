@@ -36,7 +36,11 @@ $draft = [
         ],
         'sections' => [
             ['1. Загальні положення', [
-                'Реклама на AI LAB HUB розміщується через кабінет рекламодавця. Кожне рекламне оголошення позначається написом «Реклама».',
+                'Реклама на AI LAB HUB розміщується через кабінет рекламодавця. Кожне рекламне місце позначається написом «Реклама».',
+                'Реклама показується нативними картками всередині списків — у категоріях, підкатегоріях, результатах пошуку й у Marketplace, а також окремими блоками на сторінках продуктів і в блозі. Місця рекламодавець обирає в кампанії.',
+                'Допустимі формати: зображення або коротке відео (до 15 с). Відео стартує без звуку; звук відвідувач вмикає сам. Текст оголошення (заголовок і підпис) зберігається окремо від зображення й перекладається мовою відвідувача.',
+                'Оголошення ротуються: в одному місці по черзі показуються оголошення різних рекламодавців; одне оголошення не повторюється на сторінці.',
+                'Приймається реклама будь-якої тематики, якщо вона не порушує законодавство й ці правила.',
                 'Реклама показується за мовою сайту, типом пристрою й тематикою сторінки, на якій її показано. Персональні дані відвідувачів для таргетингу не використовуються.',
                 'Реклама не показується у відповідях асистентки Елі й не впливає на її добірки інструментів.',
             ]],
@@ -54,7 +58,7 @@ $draft = [
                 'Кожен креатив перевіряється модератором до початку показу. Строк модерації не гарантується; поточний статус кампанії видно в кабінеті.',
                 'Після будь-якого редагування кампанія знову проходить модерацію.',
                 'Свій текст кнопки має чесно описувати дію на сторінці переходу; посилання, контакти й обіцянки результату в ньому заборонені.',
-                'Креативи, обрані для місць у маркетплейсі, додатково перевіряються на те, що їх не можна сплутати з оголошенням. Реклама в маркетплейсі завжди показується окремим блоком із позначкою «Реклама».',
+                'Креативи, обрані для місць у маркетплейсі, додатково перевіряються на те, що їх не можна сплутати з оголошенням. Реклама в маркетплейсі завжди показується окремою карткою з позначкою «Реклама» й помітною рамкою.',
                 'AI LAB HUB має право відхилити рекламу або зупинити вже схвалену рекламу (зокрема після скарг відвідувачів), повідомивши причину в кабінеті рекламодавця.',
             ]],
             ['4. Оплата й баланс', [
@@ -86,7 +90,11 @@ $draft = [
         ],
         'sections' => [
             ['1. General', [
-                'Ads on AI LAB HUB are placed through the advertiser account. Every ad is labelled “Sponsored”.',
+                'Ads on AI LAB HUB are placed through the advertiser account. Every ad placement is labelled “Ad”.',
+                'Ads appear as native cards inside lists — in categories, subcategories, search results and the Marketplace — and as separate blocks on product pages and in the blog. The advertiser chooses the placements in the campaign.',
+                'Accepted formats: an image or a short video (up to 15 s). Videos start muted; visitors turn the sound on themselves. The ad text (title and description) is stored separately from the image and is translated into the visitor’s language.',
+                'Ads rotate: ads from different advertisers take turns in the same placement; the same ad is not repeated on a page.',
+                'Ads on any topic are accepted as long as they comply with the law and these rules.',
                 'Ads are shown by site language, device type and the topic of the page where they appear. Visitors’ personal data is not used for targeting.',
                 'Ads are never shown inside the answers of the assistant Elya and do not affect her tool recommendations.',
             ]],
@@ -98,13 +106,13 @@ $draft = [
                 'Copyright and trademark infringement.',
                 'Gambling (prohibited by default).',
                 'Unsubstantiated medical or financial claims.',
-                'Disguising an ad as a marketplace listing or a catalog card: fake prices, fake contacts, looking like a job, course, service or user listing, hiding the “Sponsored” label.',
+                'Disguising an ad as a marketplace listing or a catalog card: fake prices, fake contacts, looking like a job, course, service or user listing, hiding the “Ad” label.',
             ]],
             ['3. Moderation', [
                 'Every creative is reviewed by a moderator before it is shown. Review time is not guaranteed; the current status is shown in the advertiser account.',
                 'Any edit sends the campaign to review again.',
                 'Custom button text must honestly describe the action on the landing page; links, contacts and promises of results are not allowed in it.',
-                'Creatives chosen for marketplace placements are additionally checked so that they cannot be mistaken for a listing. Marketplace ads are always shown as a separate block labelled “Sponsored”.',
+                'Creatives chosen for marketplace placements are additionally checked so that they cannot be mistaken for a listing. Marketplace ads are always shown as a separate card labelled “Ad” with a distinct frame.',
                 'AI LAB HUB may reject an ad or stop an approved ad (including after visitor reports), stating the reason in the advertiser account.',
             ]],
             ['4. Payment and balance', [
