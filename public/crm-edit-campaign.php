@@ -183,12 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Оголошення кампанії з показами/кліками (підзапити — без множення рядків).
+// Оголошення кампанії з показами/кліками — з денних агрегатів ad_zone_stats_daily (підзапити — без множення рядків).
 $adsStmt = $pdo->prepare(
     "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext, a.status, a.category_id, a.subcategory_id,
             z.name AS zone_name, c.name AS category_name, s.name AS subcategory_name,
-            (SELECT COUNT(*) FROM ad_impressions i WHERE i.ad_id = a.id) AS impressions,
-            (SELECT COUNT(*) FROM ad_clicks k WHERE k.ad_id = a.id) AS clicks
+            (SELECT COALESCE(SUM(st.impressions), 0) FROM ad_zone_stats_daily st WHERE st.ad_id = a.id) AS impressions,
+            (SELECT COALESCE(SUM(st.clicks), 0) FROM ad_zone_stats_daily st WHERE st.ad_id = a.id) AS clicks
      FROM ads a
      JOIN ad_zones z ON z.id = a.zone_id
      LEFT JOIN categories c ON c.id = a.category_id

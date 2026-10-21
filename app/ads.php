@@ -51,18 +51,18 @@ function ads_pick_campaign(PDO $pdo, string $placement): ?array
         return $paid;
     }
 
+    // Без ORDER BY RAND(): кілька рядків за індексом, випадковий вибір у PHP.
     $internalStmt = $pdo->prepare(
         "SELECT * FROM campaigns
          WHERE placement = :placement" . $mpSql . "
            AND campaign_type = 'internal'
            AND is_active = 1
-         ORDER BY RAND()
-         LIMIT 1"
+         LIMIT 50"
     );
     $internalStmt->execute([':placement' => $placement]);
-    $internal = $internalStmt->fetch();
+    $internal = $internalStmt->fetchAll();
 
-    return $internal !== false ? $internal : null;
+    return $internal !== [] ? $internal[mt_rand(0, count($internal) - 1)] : null;
 }
 
 /**
@@ -88,7 +88,7 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
         return null; // сторінка «без реклами» (блок H)
     }
 
-    $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext
+    $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext, a.category_id, a.subcategory_id
             FROM ads a
             JOIN ad_campaigns c ON c.id = a.campaign_id
             WHERE a.zone_id = :zone
@@ -103,8 +103,7 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
               AND " . ($subcategoryId !== null
                 ? '(a.subcategory_id IS NULL OR a.subcategory_id = :sub)'
                 : 'a.subcategory_id IS NULL') . "
-            ORDER BY (a.category_id IS NOT NULL) + (a.subcategory_id IS NOT NULL) DESC, RAND()
-            LIMIT 1";
+            LIMIT 200";
     $stmt = $pdo->prepare($sql);
 
     foreach (['paid', 'internal'] as $type) {
@@ -116,9 +115,14 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
             $params[':sub'] = $subcategoryId;
         }
         $stmt->execute($params);
-        $ad = $stmt->fetch();
-        if ($ad !== false) {
-            return $ad;
+        $rows = $stmt->fetchAll();
+        if ($rows !== []) {
+            // Найточніший збіг (категорія + підкатегорія) має пріоритет; серед рівних — випадковий (без RAND() у SQL).
+            $score = static fn(array $r): int => ($r['category_id'] !== null ? 1 : 0) + ($r['subcategory_id'] !== null ? 1 : 0);
+            $best = max(array_map($score, $rows));
+            $top = array_values(array_filter($rows, static fn(array $r): bool => $score($r) === $best));
+
+            return $top[mt_rand(0, count($top) - 1)];
         }
     }
 

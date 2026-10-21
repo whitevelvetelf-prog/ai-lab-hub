@@ -401,3 +401,9 @@
     background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
     border-color: rgba(255, 255, 255, 0.22);
 }
+
+.sponsored-card--native .sponsored-card__report-form,
+.sponsored-card--native .sponsored-card__note {
+    position: relative;
+    z-index: 2;
+}

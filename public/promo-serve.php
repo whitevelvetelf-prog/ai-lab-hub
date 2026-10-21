@@ -15,7 +15,7 @@ declare(strict_types=1);
  *     nohouse=1    (на сторінці вже є блок власної реклами — не більше одного)
  *     preview=1    (адмін із ?promo_preview=1: креатив тестової кампанії is_test, без обліку)
  *
- * 200 + JSON {creative, labels} — один креатив; 204 — реклами немає
+ * 200 + JSON {creative, creatives, labels} — до 5 креативів для ротації (creative — перший); 204 — реклами немає
  * (система вимкнена, сторінку виключено no_promo, немає придатних кампаній, бот). Викликає sponsored.js.
  */
 
@@ -78,7 +78,7 @@ if (is_string($_GET['mp'] ?? null) && $_GET['mp'] !== '') {
     $page['mp'] = array_slice(array_values(array_filter(explode(',', $_GET['mp']), 'promo_mp_section_valid')), 0, 5);
 }
 
-$creative = promo_pick(
+$set = promo_pick_set(
     $pdo,
     $placement,
     $ids('category'),
@@ -90,13 +90,14 @@ $creative = promo_pick(
     $ids('exclude')
 );
 
-if ($creative === null) {
+if ($set === []) {
     http_response_code(204);
     exit;
 }
 
+$creatives = array_map(static fn(array $cr): array => promo_public_payload($cr, $placement, false, $pdo), $set);
 header('Content-Type: application/json; charset=utf-8');
 echo json_encode(
-    ['creative' => promo_public_payload($creative, $placement, false, $pdo), 'labels' => promo_labels()],
+    ['creative' => $creatives[0], 'creatives' => $creatives, 'labels' => promo_labels()],
     JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 );

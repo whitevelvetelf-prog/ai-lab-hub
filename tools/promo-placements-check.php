@@ -94,6 +94,7 @@ $mkCampaign = static function (string $name, array $targets, string $type = 'pai
         $ins->execute([':c' => $cid, ':p' => $pl, ':pr' => $price]);
     }
 
+    promo_cache_flush();   // нова кампанія — кеш кандидатів (app/promo-select.php) застарів
     return [$cid, $crid];
 };
 
@@ -154,6 +155,7 @@ try {
     foreach (PROMO_PLACEMENTS as $i => $pl) {
         [$cats, $subs, $page] = $ctx[$pl];
         $g = $pl;
+        promo_cache_flush();
         $sh = hash('sha256', 'check-' . $pl . '-' . microtime());
         $picked = promo_pick($pdo, $pl, $cats, $subs, 'uk', 'desktop', $sh, $page);
         $check($g, 'відбір повертає креатив', $picked !== null && (int) $picked['id'] === $mainCr);
@@ -161,11 +163,12 @@ try {
         $before = $balanceOf();
         $imp = promo_record_event($pdo, $mainCr, 'impression', $pl, $sh);
         $clk = promo_record_event($pdo, $mainCr, 'click', $pl, $sh);
+        // З 2026-10-21 сирий рядок пишеться лише для кліку; показ — тільки агрегат ad_stats_daily.
         $events = (int) $one('SELECT COUNT(*) FROM ad_events WHERE creative_id = :c AND placement = :p', [':c' => $mainCr, ':p' => $pl]);
         $stats = $pdo->prepare('SELECT impressions, clicks, spend FROM ad_stats_daily WHERE creative_id = :c AND placement = :p AND stat_date = :d');
         $stats->execute([':c' => $mainCr, ':p' => $pl, ':d' => promo_today()]);
         $st = $stats->fetch() ?: ['impressions' => 0, 'clicks' => 0, 'spend' => 0];
-        $check($g, 'облік показу й кліку (ad_events, ad_stats_daily)', $imp && $clk && $events === 2 && (int) $st['impressions'] === 1 && (int) $st['clicks'] === 1,
+        $check($g, 'облік показу (лише ad_stats_daily) і кліку (ad_events + ad_stats_daily)', $imp && $clk && $events === 1 && (int) $st['impressions'] === 1 && (int) $st['clicks'] === 1,
             "events={$events}, stats={$st['impressions']}/{$st['clicks']}");
         $check($g, 'списання CPC 0,25 $ з балансу', $before - $balanceOf() === 25 && (int) $st['spend'] === 25, 'списано ' . ($before - $balanceOf()));
 
@@ -185,7 +188,8 @@ try {
         [$code] = $http('promo-serve.php?placement=' . $pl . '&exclude=' . $mainCr . $serveQs($cats, $subs, $page));
         $check($g, 'той самий креатив не повторюється на сторінці (exclude → 204)', $code === 204, "serve={$code}");
         [$code, $html] = $http($ctx[$pl][3]);
-        $check($g, 'слот на сторінці ' . $ctx[$pl][3], $code === 200 && substr_count($html, 'class="sponsored-slot sponsored-slot--' . $pl . '"') === 1, "http={$code}");
+        // Списки — нативна картка (app/ad-card.php, data-native), блоки — порожній слот promo_slot.
+        $check($g, 'слот на сторінці ' . $ctx[$pl][3], $code === 200 && preg_match_all('~class="sponsored-slot (?:sponsored-slot--native )?sponsored-slot--' . $pl . '"~', $html) === 1, "http={$code}");
 
         // Без ціни місце не обирається (майстер і зміна місць).
         $rates = promo_rate_card($pdo);
@@ -216,13 +220,14 @@ try {
     $pos2 = promo_placement_positions($pdo, 'marketplace_feed', 2);
     $pdo->exec("UPDATE ad_placements SET slots_per_page = 1 WHERE placement_key = 'marketplace_feed'");
     promo_placements($pdo, true);
-    $check('marketplace_feed', 'позиції: 4-та й далі кожні 10 (30 карток → 4, 14, 24; 12 → лише 4; 2 → у кінці)',
-        $pos30 === [3, 13, 23] && $pos12 === [3] && $pos2 === [2], json_encode([$pos30, $pos12, $pos2]));
-    $check('marketplace_feed', 'slots_per_page = 1 → одна картка навіть у довгій стрічці', promo_placement_positions($pdo, 'marketplace_feed', 30) === [3]);
+    $check('marketplace_feed', 'позиції: 3-тя й далі кожні 8 (30 карток → 3, 11, 19; 12 → 3, 11; 2 → у кінці)',
+        $pos30 === [2, 10, 18] && $pos12 === [2, 10] && $pos2 === [2], json_encode([$pos30, $pos12, $pos2]));
+    $check('marketplace_feed', 'slots_per_page = 1 → одна картка навіть у довгій стрічці', promo_placement_positions($pdo, 'marketplace_feed', 30) === [2]);
 
     // --- Маркетплейс: таргетинг за розділом ---------------------------------------
     [$jobCid, $jobCr] = $mkCampaign('CHECK mp job', []);
     $pdo->prepare("INSERT INTO ad_targets (campaign_id, placement, mp_section, unit_price) VALUES (:c, 'marketplace_category', 'job', 25)")->execute([':c' => $jobCid]);
+    promo_cache_flush();
     $pJob = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'job' . microtime()), ['mp' => ['job']], [$mainCr]);
     $pCourse = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'course' . microtime()), ['mp' => ['course']], [$mainCr]);
     $pCat = promo_pick($pdo, 'marketplace_category', [$catId], [], 'uk', 'desktop', hash('sha256', 'cat' . microtime()), ['mp' => ['job']], [$mainCr]);
@@ -232,6 +237,7 @@ try {
     $boardCat = (int) $one("SELECT id FROM mp_categories WHERE section = 'board' AND is_active = 1 ORDER BY id LIMIT 1");
     if ($boardCat > 0) {
         $pdo->prepare("UPDATE ad_targets SET mp_section = :s WHERE campaign_id = :c")->execute([':s' => 'board:' . $boardCat, ':c' => $jobCid]);
+        promo_cache_flush();
         $pIn = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'b1' . microtime()), ['mp' => promo_mp_page_sections('board', $boardCat)], [$mainCr]);
         $pOut = promo_pick($pdo, 'marketplace_category', [], [], 'uk', 'desktop', hash('sha256', 'b2' . microtime()), ['mp' => ['board']], [$mainCr]);
         $check('маркетплейс: розділи', 'категорія оголошень: показ лише в цій категорії', $pIn !== null && (int) $pIn['id'] === $jobCr && $pOut === null);
@@ -261,6 +267,7 @@ try {
         }
     }
     [$okUp, $msgUp] = promo_update_placements($pdo, $userId, $waitCid, ['marketplace_feed', 'marketplace_home']);
+    promo_cache_flush();
     $check('маркетплейс закрито', 'зміна місць на маркетплейс-місця до відкриття дозволена', $okUp, $msgUp);
     $pdo->prepare("UPDATE ad_settings SET setting_value = '0' WHERE setting_key = 'ad_allow_marketplace_preselect'")->execute();
     $check('маркетплейс закрито', 'ad_allow_marketplace_preselect = 0 → місця не обираються', !promo_placement_selectable_now($pdo, 'marketplace_feed'));
@@ -278,7 +285,7 @@ try {
     $before = $balanceOf();
     promo_record_event($pdo, $oldMpCr, 'click', 'marketplace_feed', $sh);
     $check('стара кампанія', 'marketplace_listing показується в стрічці маркетплейсу й списує свою ціну (0,30 $)',
-        $lp !== null && (int) $lp['id'] === $oldMpCr && $before - $balanceOf() === 30, 'списано ' . ($before - $balanceOf()));
+        $lp !== null && (int) $lp['id'] === $oldMpCr && $before - $balanceOf() === 30, 'списано ' . ($before - $balanceOf()) . ' picked=' . ($lp['id'] ?? 'null') . ' want=' . $oldMpCr);
     $check('стара кампанія', 'у майстрі marketplace_listing показується як «Стрічка оголошень»',
         promo_campaign_targeting($pdo, $oldMpCid)['placements'] === ['marketplace_feed']);
 

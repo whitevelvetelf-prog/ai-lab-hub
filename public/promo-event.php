@@ -3,16 +3,22 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — облік показу / перегляду відеореклами (sendBeacon з sponsored.js).
+ * AI LAB HUB — облік показів / переглядів реклами (sendBeacon з sponsored.js).
  *
- * POST t=<токен з promo-serve.php>  type=impression|view
+ * POST events=[{"t":"<токен>","type":"impression|view"}, …] — пакет подій сторінки
+ *      (до PROMO_EVENT_BATCH_MAX), один запит замість окремого на кожну картку;
+ * POST t=<токен>  type=impression|view — одна подія (старий формат).
+ *
  * Токен має бути справжнім (HMAC), не простроченим і виданим цьому ж сеансу.
- * Боти не рахуються. Дублі й частоту відсікає promo_record_event. Завжди 204.
+ * Відомі боти (User-Agent) не рахуються. Дублі й частоту відсікає promo_record_event
+ * (стан сеансу); у БД — лише агрегат ad_stats_daily. Завжди 204.
  * Кліки сюди не приймаються — лише через promo-click.php.
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/promo.php';
+
+const PROMO_EVENT_BATCH_MAX = 20;
 
 http_response_code(204);
 header('Cache-Control: no-store');
@@ -21,14 +27,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || promo_is_bot()) {
     exit;
 }
 
-$type = is_string($_POST['type'] ?? null) ? $_POST['type'] : '';
-$token = is_string($_POST['t'] ?? null) ? $_POST['t'] : '';
-if (!in_array($type, ['impression', 'view'], true)) {
-    exit;
+$events = [];
+if (is_string($_POST['events'] ?? null)) {
+    $decoded = json_decode($_POST['events'], true);
+    foreach (is_array($decoded) ? array_slice($decoded, 0, PROMO_EVENT_BATCH_MAX) : [] as $ev) {
+        if (is_array($ev) && is_string($ev['t'] ?? null) && is_string($ev['type'] ?? null)) {
+            $events[] = [$ev['t'], $ev['type']];
+        }
+    }
+} elseif (is_string($_POST['t'] ?? null) && is_string($_POST['type'] ?? null)) {
+    $events[] = [$_POST['t'], $_POST['type']];
 }
-
-$data = promo_token_read($token);
-if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview']) {
+if ($events === []) {
     exit;
 }
 
@@ -40,8 +50,18 @@ if (!promo_video_ready($pdo)) {
     exit;
 }
 
-try {
-    promo_record_event($pdo, $data['c'], $type, $data['p'], analytics_session_hash());
-} catch (Throwable $e) {
-    error_log('[promo] event: ' . $e->getMessage());
+$session = analytics_session_hash();
+foreach ($events as [$token, $type]) {
+    if (!in_array($type, ['impression', 'view'], true)) {
+        continue;
+    }
+    $data = promo_token_read($token);
+    if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview']) {
+        continue;
+    }
+    try {
+        promo_record_event($pdo, $data['c'], $type, $data['p'], $session);
+    } catch (Throwable $e) {
+        error_log('[promo] event: ' . $e->getMessage());
+    }
 }

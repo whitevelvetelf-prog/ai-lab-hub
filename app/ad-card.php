@@ -12,10 +12,11 @@ declare(strict_types=1);
  * /promo-click.php?t=ТОКЕН (адреса переходу береться з БД; нейтральна назва
  * файлу, бо шляхи з «ad» ріжуть блокувальники реклами).
  *
- * Креатив обирається на сервері (promo_pick, app/promo.php) у момент рендеру
- * сторінки, тож картка одразу на своєму місці — без стрибка сітки й без
- * окремого запиту. Немає реклами — не виводиться нічого (без порожньої рамки).
- * public/assets/js/sponsored.js оживляє картку: облік показу, відео, звук.
+ * До 5 креативів обираються на сервері (promo_pick_set, app/promo-select.php) у момент
+ * рендеру сторінки: перший — одразу в розмітці (без стрибка сітки й без окремого
+ * запиту), усі — JSON поруч. public/assets/js/sponsored.js оживляє картку (облік
+ * показу, відео, звук) і крутить кандидатів. Креативи не повторюються на сторінці.
+ * Немає реклами — не виводиться нічого (без порожньої рамки).
  *
  * Позиції в списку й ліміт карток на сторінку — у правилі місця (ad_placements:
  * position_rule {"position":3,"every":8}, slots_per_page 2; адмінка «Місця показу»),
@@ -69,11 +70,12 @@ function ad_card_slot(PDO $pdo, string $placement, array $categoryIds = [], arra
         return '';
     }
 
+    // До PROMO_ROTATION_SIZE кандидатів — sponsored.js крутить їх у слоті (ротація).
     $state = &promo_page_state();
     if ($preview) {
-        $creative = promo_preview_creative($pdo);
+        $set = array_values(array_filter([promo_preview_creative($pdo)]));
     } else {
-        $creative = promo_pick(
+        $set = promo_pick_set(
             $pdo,
             $placement,
             $categoryIds,
@@ -85,17 +87,20 @@ function ad_card_slot(PDO $pdo, string $placement, array $categoryIds = [], arra
             $state['shown']
         );
     }
-    if ($creative === null) {
+    if ($set === []) {
         return '';
     }
-    $payload = promo_public_payload($creative, $placement, $preview, $pdo);
+    $payloads = array_map(static fn(array $cr): array => promo_public_payload($cr, $placement, $preview, $pdo), $set);
     if (!$preview) {
-        $state['shown'][] = (int) $payload['id'];
-        $state['house'] = $state['house'] || !empty($payload['house']);
+        foreach ($payloads as $p) {
+            $state['shown'][] = (int) $p['id'];
+            $state['house'] = $state['house'] || !empty($p['house']);
+        }
     }
 
     $marketplace = promo_placement_is_marketplace($pdo, $placement);
-    $data = ['creatives' => [$payload], 'labels' => promo_labels()];
+    $data = ['creatives' => $payloads, 'labels' => promo_labels()];
+    $payload = $payloads[0];
 
     return '<div class="sponsored-slot sponsored-slot--native sponsored-slot--' . $placement . '" data-native="1"'
         . ' data-placement="' . $placement . '"' . ($marketplace ? ' data-group="marketplace"' : '')

@@ -68,6 +68,7 @@ $tmpUsers = [];
 $tmpListings = [];
 
 $pickCampaign = static function (string $pl, array $page = [], ?string $s = null) use ($pdo, $sh): ?int {
+    promo_cache_flush();   // тест міняє кампанії напряму в БД — кеш кандидатів (app/promo-select.php) скидаємо
     $r = promo_pick($pdo, $pl, [], [], 'uk', 'desktop', $s ?? $sh(), $page);
 
     return $r === null ? null : (int) $r['campaign_id'];
@@ -143,10 +144,10 @@ try {
     $s = $sh();
     $crA = (int) $one("SELECT id FROM ad_creatives WHERE campaign_id = :c ORDER BY id LIMIT 1", [':c' => $cA]);
     $crB = (int) $one("SELECT id FROM ad_creatives WHERE campaign_id = :c ORDER BY id LIMIT 1", [':c' => $cB]);
-    foreach ([$crA, $crB] as $cr) {
+    // Покази рахуються в стані сеансу (з 2026-10-21 сирих рядків показів у ad_events немає).
+    foreach ([$crA => $cA, $crB => $cB] as $cr => $cid) {
         for ($i = 0; $i < 2; $i++) {
-            $pdo->prepare("INSERT INTO ad_events (creative_id, campaign_id, type, placement, session_hash) VALUES (:cr, (SELECT campaign_id FROM ad_creatives WHERE id = :cr2), 'impression', 'blog_list', :s)")
-                ->execute([':cr' => $cr, ':cr2' => $cr, ':s' => $s]);
+            promo_session_event($s, $cr, $cid, 'impression', 0);
         }
     }
     $check('ліміти', 'після house_frequency_cap = 2 показів сеансу кампанія більше не показується', $pickCampaign('blog_list', [], $s) === null);

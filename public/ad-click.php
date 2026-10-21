@@ -32,6 +32,10 @@ if ($target === '' || preg_match('#^[a-z][a-z0-9+.-]*:#i', $target) && !preg_mat
 try {
     $log = $pdo->prepare('INSERT INTO ad_clicks (ad_id, session_id) VALUES (:id, :sid)');
     $log->execute([':id' => $adId, ':sid' => analytics_session_hash()]);
+    $pdo->prepare(
+        'INSERT INTO ad_zone_stats_daily (ad_id, stat_date, clicks) VALUES (:id, CURDATE(), 1)
+         ON DUPLICATE KEY UPDATE clicks = clicks + 1'
+    )->execute([':id' => $adId]);
 } catch (Throwable $e) {
     error_log('[ads] ' . $e->getMessage());
 }

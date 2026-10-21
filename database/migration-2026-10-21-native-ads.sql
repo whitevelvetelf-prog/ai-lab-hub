@@ -74,3 +74,44 @@ PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
 -- Короткі ролики: до 15 с і до 5 МБ (перевірка при завантаженні, app/promo-advertiser.php).
 INSERT INTO ad_settings (setting_key, setting_value) VALUES ('max_video_sec', '15'), ('max_video_mb', '5')
   ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
+
+-- ---------------------------------------------------------------------
+-- Етап 4. Масштаб: індекси для відбору й агрегати статистики.
+-- ---------------------------------------------------------------------
+
+-- Індекси (додаються лише якщо їх ще немає).
+SET @s := IF((SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ad_campaigns' AND INDEX_NAME = 'idx_ad_campaigns_pick') = 0,
+  'ALTER TABLE ad_campaigns ADD INDEX idx_ad_campaigns_pick (status, campaign_type, start_date, end_date)', 'DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+SET @s := IF((SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ads' AND INDEX_NAME = 'idx_ads_pick') = 0,
+  'ALTER TABLE ads ADD INDEX idx_ads_pick (status, zone_id, category_id, subcategory_id)', 'DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+SET @s := IF((SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ad_creatives' AND INDEX_NAME = 'idx_ad_creatives_campaign_status') = 0,
+  'ALTER TABLE ad_creatives ADD INDEX idx_ad_creatives_campaign_status (campaign_id, status)', 'DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+SET @s := IF((SELECT COUNT(*) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'ad_targets' AND INDEX_NAME = 'idx_ad_targets_campaign_placement') = 0,
+  'ALTER TABLE ad_targets ADD INDEX idx_ad_targets_campaign_placement (campaign_id, placement, category_id, subcategory_id)', 'DO 0');
+PREPARE s FROM @s; EXECUTE s; DEALLOCATE PREPARE s;
+
+-- Агрегати старих банерів зон (ads): ad_stats_daily вже зайнята статистикою promo-системи
+-- (день × кампанія × креатив × місце, з витратами), тож для ads — окрема таблиця тієї ж ідеї.
+-- Сирі покази в ad_impressions більше не пишуться; кліки, як і раніше, — в ad_clicks.
+CREATE TABLE IF NOT EXISTS ad_zone_stats_daily (
+    ad_id       INT NOT NULL,
+    stat_date   DATE NOT NULL,
+    impressions INT UNSIGNED NOT NULL DEFAULT 0,
+    clicks      INT UNSIGNED NOT NULL DEFAULT 0,
+    PRIMARY KEY (ad_id, stat_date)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
+
+-- Перенесення наявних сирих даних агрегатом (повторний запуск нічого не подвоює — GREATEST).
+INSERT INTO ad_zone_stats_daily (ad_id, stat_date, impressions)
+SELECT ad_id, DATE(shown_at), COUNT(*) FROM ad_impressions GROUP BY ad_id, DATE(shown_at)
+ON DUPLICATE KEY UPDATE impressions = GREATEST(impressions, VALUES(impressions));
+
+INSERT INTO ad_zone_stats_daily (ad_id, stat_date, clicks)
+SELECT ad_id, DATE(clicked_at), COUNT(*) FROM ad_clicks GROUP BY ad_id, DATE(clicked_at)
+ON DUPLICATE KEY UPDATE clicks = GREATEST(clicks, VALUES(clicks));

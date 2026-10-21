@@ -35,6 +35,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 promo_db_utc($pdo);
 
 $back = static function (string $tab, array $flash, array $extra = []): never {
+    promo_cache_flush();   // кампанії могли змінитись — кеш кандидатів реклами застарів
     $_SESSION['promo_flash'] = $flash + ['tab' => $tab];
     $query = http_build_query(['promo_tab' => $tab] + $extra);
     header('Location: account.php?' . $query . '#acc-promo', true, 303);

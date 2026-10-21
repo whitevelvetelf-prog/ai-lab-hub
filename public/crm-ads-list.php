@@ -33,11 +33,11 @@ $campaigns = $pdo->query(
         c.end_date,
         c.paid_amount,
         (SELECT COUNT(*) FROM ads a WHERE a.campaign_id = c.id) AS ads_count,
-        (SELECT COUNT(*) FROM ad_impressions i
-           JOIN ads a ON a.id = i.ad_id
+        (SELECT COALESCE(SUM(st.impressions), 0) FROM ad_zone_stats_daily st
+           JOIN ads a ON a.id = st.ad_id
           WHERE a.campaign_id = c.id) AS impressions,
-        (SELECT COUNT(*) FROM ad_clicks k
-           JOIN ads a ON a.id = k.ad_id
+        (SELECT COALESCE(SUM(st.clicks), 0) FROM ad_zone_stats_daily st
+           JOIN ads a ON a.id = st.ad_id
           WHERE a.campaign_id = c.id) AS clicks
      FROM ad_campaigns c
      WHERE c.format = 'banner'   -- відеокампанії (format='video') керуються в кабінеті: «Реклама: адмін»

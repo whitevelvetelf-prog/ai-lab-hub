@@ -25,6 +25,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/promo-exclusions.php';
 require_once __DIR__ . '/promo-placements.php';
+require_once __DIR__ . '/promo-select.php';
 
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';
@@ -45,7 +46,7 @@ const PROMO_TOKEN_TTL = 7200;
 const PROMO_CLICK_DEDUP_SEC = 1800;
 /** Ліміт подій від одного сеансу за хвилину. */
 const PROMO_EVENTS_PER_MINUTE = 30;
-/** Сирі події зберігаються стільки днів (агрегати в ad_stats_daily — назавжди). */
+/** Сирі події (з 2026-10-21 — лише кліки) зберігаються стільки днів (агрегати в ad_stats_daily — назавжди). */
 const PROMO_EVENTS_KEEP_DAYS = 30;
 
 // --- Налаштування й секрети ------------------------------------------------
@@ -305,24 +306,9 @@ function promo_lang(?string $param = null): string
 // --- Відбір креативу -------------------------------------------------------
 
 /**
- * Один креатив для слота або null. Умови: система ввімкнена, кампанія
- * video/active, креатив approved, сьогодні в межах дат, не вичерпано денний і
- * загальний бюджет, є кошти на балансі (власна реклама сайту — без білінгу),
- * збіг таргету, не перевищено ліміт показів кампанії одному сеансу за добу.
- *
- * Сторінка з no_promo (сама, її категорія чи підкатегорія) → null; кампанії з
- * категорією реклами, забороненою на сторінці (promo_category_rules), не беруться.
- *
- * Маркетплейс: $page['mp'] — розділи сторінки (promo_mp_page_sections); таргет підходить,
- * якщо його mp_section порожній (усі розділи) або є серед них.
- *
- * Місце вимкнене адміном чи недоступне (promo_placement_available) → null. Таргет
- * підходить і зі старим ключем місця (catalog_card, blog_inline). $excludeCreatives —
- * креативи, уже показані на цій сторінці (одна реклама не повторюється).
- *
- * Платні кампанії мають пріоритет над власною рекламою сайту. Серед платних —
- * випадковий вибір із вагою «залишок бюджету / днів до завершення»
- * (рівномірне витрачання: кампанія з більшим денним запасом показується частіше).
+ * Один креатив для слота або null — перший із promo_pick_set (app/promo-select.php):
+ * кешований індексований список кандидатів, фільтри сеансу й зважений вибір у PHP.
+ * Платні кампанії мають пріоритет над власною рекламою сайту.
  *
  * @param list<int> $categoryIds
  * @param list<int> $subcategoryIds
@@ -330,170 +316,7 @@ function promo_lang(?string $param = null): string
  */
 function promo_pick(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, string $sessionHash, array $page = [], array $excludeCreatives = []): ?array
 {
-    if (!in_array($placement, PROMO_PLACEMENTS, true) || !promo_video_ready($pdo) || !promo_placement_available($pdo, $placement)) {
-        return null;
-    }
-    if (promo_placement_is_marketplace($pdo, $placement)) {
-        // Категорії каталогу (і правила категорій реклами для них) до маркетплейсу не застосовуються.
-        $categoryIds = [];
-        $subcategoryIds = [];
-    }
-    if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {
-        return null;
-    }
-    if (!empty($page['product'])) {
-        // Правила категорій реклами — за справжньою таксономією продукту з БД.
-        [$pc, $ps] = promo_product_taxonomy($pdo, (int) $page['product']);
-        $categoryIds = array_values(array_unique(array_merge($categoryIds, $pc)));
-        $subcategoryIds = array_values(array_unique(array_merge($subcategoryIds, $ps)));
-    }
-    $rulesCond = promo_rules_sql($categoryIds, $subcategoryIds);
-
-    $params = [':lang' => $lang, ':dev' => $device, ':sh' => $sessionHash,
-        ':today1' => promo_today(), ':today2' => promo_today(), ':today3' => promo_today()];
-    $plNames = [];
-    foreach (promo_placement_match_keys($placement) as $i => $key) {
-        $plNames[] = ':pl' . $i;
-        $params[':pl' . $i] = $key;
-    }
-    $plCond = 't.placement IN (' . implode(',', $plNames) . ')';
-
-    $inList = static function (string $prefix, array $ids) use (&$params): string {
-        $names = [];
-        foreach (array_values(array_unique(array_map('intval', $ids))) as $i => $id) {
-            $names[] = ':' . $prefix . $i;
-            $params[':' . $prefix . $i] = $id;
-        }
-
-        return implode(',', $names);
-    };
-    $catCond = $categoryIds !== [] ? '(t.category_id IS NULL OR t.category_id IN (' . $inList('c', $categoryIds) . '))' : 't.category_id IS NULL';
-    $subCond = $subcategoryIds !== [] ? '(t.subcategory_id IS NULL OR t.subcategory_id IN (' . $inList('s', $subcategoryIds) . '))' : 't.subcategory_id IS NULL';
-    // Маркетплейс: категорії каталогу не застосовуються, збіг за розділом (NULL — усі розділи).
-    $mpCond = '';
-    if (promo_placement_is_marketplace($pdo, $placement)) {
-        $mpNames = [];
-        foreach (array_values(array_filter((array) ($page['mp'] ?? []), static fn($v) => is_string($v) && promo_mp_section_valid($v))) as $i => $sec) {
-            $mpNames[] = ':mp' . $i;
-            $params[':mp' . $i] = $sec;
-        }
-        $mpCond = 'AND ' . ($mpNames !== [] ? '(t.mp_section IS NULL OR t.mp_section IN (' . implode(',', $mpNames) . '))' : 't.mp_section IS NULL');
-    }
-    // Власна реклама: не більше одного блока на сторінку — наступні слоти просять no_house.
-    $houseCond = !empty($page['no_house']) ? "AND c.campaign_type <> 'internal'" : '';
-    $houseCols = promo_house_columns($pdo)
-        ? ', cr.creative_type, cr.card_layout, cr.title_en, cr.description_en, cr.description_fallback, cr.description_fallback_en,
-             cr.cta_text, cr.cta_text_en, cr.ref_code, c.house_key, c.house_rules'
-        : '';
-    $excludeIds = array_values(array_filter(array_map('intval', $excludeCreatives), static fn($id) => $id > 0));
-    $excludeCond = $excludeIds !== [] ? 'AND cr.id NOT IN (' . $inList('x', $excludeIds) . ')' : '';
-
-    // Ліміт показів кампанії одному сеансу за добу: платні — frequency_cap_per_session, власна — house_frequency_cap.
-    $cap = (int) promo_setting($pdo, 'frequency_cap_per_session', '3');
-    $houseCap = (int) promo_setting($pdo, 'house_frequency_cap', '2');
-    $capCond = '';
-    if ($cap > 0 || $houseCap > 0) {
-        $cnt = "(SELECT COUNT(*) FROM ad_events e
-                  WHERE e.session_hash = :sh AND e.campaign_id = c.id AND e.type = 'impression'
-                    AND e.created_at >= NOW() - INTERVAL 1 DAY)";
-        $capCond = "AND IF(c.campaign_type = 'internal', " . ($houseCap > 0 ? "{$cnt} < {$houseCap}" : '1') . ', '
-            . ($cap > 0 ? "{$cnt} < {$cap}" : '1') . ')';
-        // Плейсхолдер :sh використовується двічі — PDO без емуляції цього не дозволяє, тому другий — :sh2.
-        if ($cap > 0 && $houseCap > 0) {
-            $capCond = "AND IF(c.campaign_type = 'internal', {$cnt} < {$houseCap}, " . str_replace(':sh', ':sh2', $cnt) . " < {$cap})";
-            $params[':sh2'] = $sessionHash;
-        }
-    } else {
-        unset($params[':sh']);
-    }
-
-    $sql = "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,
-                   cr.video_path, cr.youtube_id, cr.poster_path,
-                   c.campaign_type, c.total_budget, c.spent, c.end_date, COALESCE(b.balance, 0) AS balance{$houseCols}
-            FROM ad_creatives cr
-            JOIN ad_campaigns c ON c.id = cr.campaign_id
-            LEFT JOIN ad_balances b ON b.user_id = c.user_id
-            WHERE c.format = 'video'
-              AND c.status = 'active'
-              AND cr.status = 'approved'
-              AND (c.start_date IS NULL OR c.start_date <= :today1)
-              AND (c.end_date IS NULL OR c.end_date >= :today2)
-              AND (
-                    c.campaign_type = 'internal'
-                 OR (    c.unit_price IS NOT NULL AND c.unit_price > 0
-                     AND c.pricing_model IS NOT NULL
-                     AND COALESCE(b.balance, 0) > 0
-                     AND b.currency = c.currency
-                     AND (c.total_budget IS NULL OR c.spent < c.total_budget)
-                     AND (c.daily_budget IS NULL
-                          OR (SELECT COALESCE(SUM(sd.spend), 0) FROM ad_stats_daily sd
-                              WHERE sd.campaign_id = c.id AND sd.stat_date = :today3) < c.daily_budget))
-              )
-              AND EXISTS (
-                    SELECT 1 FROM ad_targets t
-                    WHERE t.campaign_id = c.id
-                      AND {$plCond}
-                      AND {$catCond}
-                      AND {$subCond}
-                      {$mpCond}
-                      AND (t.language IS NULL OR t.language = :lang)
-                      AND (t.device IS NULL OR t.device = :dev)
-              )
-              AND {$rulesCond}
-              {$excludeCond}
-              {$houseCond}
-              {$capCond}
-            LIMIT 100";
-
-    try {
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $rows = $stmt->fetchAll();
-    } catch (Throwable $e) {
-        error_log('[promo] pick: ' . $e->getMessage());
-
-        return null;
-    }
-    if ($rows === []) {
-        return null;
-    }
-
-    // Платні кампанії завжди перші; власна реклама — лише коли платної немає й виконані її умови.
-    $paid = array_values(array_filter($rows, static fn($r) => $r['campaign_type'] !== 'internal'));
-    $pool = $paid !== [] ? $paid : array_values(array_filter($rows, static fn($r) => promo_house_allowed($pdo, $r, $placement, $page)));
-    if ($pool === []) {
-        return null;
-    }
-    // Варіанти однієї власної кампанії — рівномірно (A/B): вага кампанії ділиться між її креативами.
-    $perCampaign = array_count_values(array_map(static fn($r) => (int) $r['campaign_id'], $pool));
-
-    $today = new DateTimeImmutable(promo_today());
-    $weights = [];
-    foreach ($pool as $i => $r) {
-        if ($r['campaign_type'] === 'internal') {
-            $weights[$i] = 1.0 / max(1, $perCampaign[(int) $r['campaign_id']] ?? 1);
-            continue;
-        }
-        $remaining = (int) $r['balance'];
-        if ($r['total_budget'] !== null) {
-            $remaining = min($remaining, (int) $r['total_budget'] - (int) $r['spent']);
-        }
-        $daysLeft = 30;
-        if ($r['end_date'] !== null) {
-            $daysLeft = max(1, (int) $today->diff(new DateTimeImmutable((string) $r['end_date']))->format('%r%a') + 1);
-        }
-        $weights[$i] = max(1, $remaining) / $daysLeft;
-    }
-
-    $roll = mt_rand() / mt_getrandmax() * array_sum($weights);
-    foreach ($weights as $i => $w) {
-        $roll -= $w;
-        if ($roll <= 0) {
-            return $pool[$i];
-        }
-    }
-
-    return $pool[array_key_last($pool)];
+    return promo_pick_set($pdo, $placement, $categoryIds, $subcategoryIds, $lang, $device, $sessionHash, $page, $excludeCreatives, 1)[0] ?? null;
 }
 
 /** Публічні дані креативу для промальовування (JSON для sponsored.js). $preview — адмін-перегляд без обліку. */
@@ -574,11 +397,13 @@ function promo_labels(): array
  * Записати подію (impression / view / click) з перевірками на дублі та частоту,
  * оновити ad_stats_daily і списати кошти. true — подію зараховано.
  *
- * Правила: impression — не частіше раза на 10 с для пари сеанс+креатив
- * (JS шле одну на завантаження сторінки); view — лише для upload-відео і лише
- * після зарахованого показу цьому сеансу; click — повтор того ж сеансу протягом
- * PROMO_CLICK_DEDUP_SEC не рахується. Понад PROMO_EVENTS_PER_MINUTE подій
- * сеансу за хвилину — ігнор.
+ * Покази й перегляди НЕ пишуться сирими рядками (таблиця росла б безмежно): дублі,
+ * частота й ліміт показів кампанії — у стані сеансу (promo_session_event), у БД —
+ * лише агрегат ad_stats_daily (INSERT … ON DUPLICATE KEY UPDATE у promo_charge).
+ * Правила: impression — не частіше раза на 10 с для пари сеанс+креатив; view — лише
+ * для upload-відео й лише після зарахованого показу цьому сеансу. Кліки, як і раніше,
+ * пишуться в ad_events (захист від накрутки): повтор того ж сеансу протягом
+ * PROMO_CLICK_DEDUP_SEC не рахується. Понад PROMO_EVENTS_PER_MINUTE подій сеансу за хвилину — ігнор.
  */
 function promo_record_event(PDO $pdo, int $creativeId, string $type, string $placement, string $sessionHash): bool
 {
@@ -594,37 +419,28 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
     }
     $campaignId = (int) $creative['campaign_id'];
 
+    if ($type !== 'click') {
+        if (!promo_session_event($sessionHash, $creativeId, $campaignId, $type, 10)) {
+            return false;
+        }
+        promo_charge($pdo, $campaignId, $type, $placement, $creativeId);
+
+        return true;
+    }
+
     $rate = $pdo->prepare('SELECT COUNT(*) FROM ad_events WHERE session_hash = :sh AND created_at >= NOW() - INTERVAL 1 MINUTE');
     $rate->execute([':sh' => $sessionHash]);
     if ((int) $rate->fetchColumn() >= PROMO_EVENTS_PER_MINUTE) {
         return false;
     }
-
-    $window = match ($type) {
-        'impression' => 10,
-        'view' => 10,
-        'click' => PROMO_CLICK_DEDUP_SEC,
-    };
     $dup = $pdo->prepare(
-        'SELECT COUNT(*) FROM ad_events
-         WHERE session_hash = :sh AND creative_id = :cr AND type = :type
-           AND created_at >= NOW() - INTERVAL ' . $window . ' SECOND'
+        "SELECT COUNT(*) FROM ad_events
+         WHERE session_hash = :sh AND creative_id = :cr AND type = 'click'
+           AND created_at >= NOW() - INTERVAL " . PROMO_CLICK_DEDUP_SEC . ' SECOND'
     );
-    $dup->execute([':sh' => $sessionHash, ':cr' => $creativeId, ':type' => $type]);
+    $dup->execute([':sh' => $sessionHash, ':cr' => $creativeId]);
     if ((int) $dup->fetchColumn() > 0) {
         return false;
-    }
-
-    if ($type === 'view') {
-        $seen = $pdo->prepare(
-            "SELECT COUNT(*) FROM ad_events
-             WHERE session_hash = :sh AND creative_id = :cr AND type = 'impression'
-               AND created_at >= NOW() - INTERVAL " . PROMO_TOKEN_TTL . ' SECOND'
-        );
-        $seen->execute([':sh' => $sessionHash, ':cr' => $creativeId]);
-        if ((int) $seen->fetchColumn() === 0) {
-            return false;
-        }
     }
 
     $pdo->prepare(
@@ -793,6 +609,10 @@ function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placemen
         if ($ownTx) {
             $pdo->commit();
         }
+        // Кампанія вибула з показу (зупинена чи вичерпано денний бюджет) — кеш кандидатів застарів.
+        if ($status !== 'active' || ($c['daily_budget'] !== null && $spentToday + $amount >= (int) $c['daily_budget'])) {
+            promo_cache_flush();
+        }
         // Система зупинила кампанію (кошти чи бюджет) — лист рекламодавцю.
         if ($ownTx && $status !== 'active') {
             promo_event_notify($pdo, $status === 'completed' ? 'campaign_completed' : 'campaign_paused_system',
@@ -835,6 +655,10 @@ function promo_maintenance(PDO $pdo): array
             promo_event_notify($pdo, 'campaign_completed', ['campaign_id' => (int) $id, 'reason_key' => 'end_date']);
         }
     }
+    if ($completed > 0) {
+        promo_cache_flush();
+    }
+    promo_cache_gc();
     $purge = $pdo->prepare('DELETE FROM ad_events WHERE created_at < :before');
     $purge->execute([':before' => gmdate('Y-m-d H:i:s', time() - PROMO_EVENTS_KEEP_DAYS * 86400)]);
 

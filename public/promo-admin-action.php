@@ -47,6 +47,7 @@ if (!promo_is_admin($pdo, $adminId) || ($_SERVER['REQUEST_METHOD'] ?? '') !== 'P
 }
 
 $back = static function (string $tab, bool $ok, array $msgs): never {
+    promo_cache_flush();   // кампанії могли змінитись — кеш кандидатів реклами застарів
     $_SESSION['padm_flash'] = ['ok' => $ok, 'msgs' => $msgs];
     header('Location: account.php?padm_tab=' . rawurlencode($tab) . '#acc-promo-admin', true, 303);
     exit;
