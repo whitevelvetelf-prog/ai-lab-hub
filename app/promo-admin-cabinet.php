@@ -95,10 +95,14 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
     $journal = $pdo->query(
         'SELECT t.*, u.email FROM ad_transactions t LEFT JOIN users u ON u.id = t.user_id ORDER BY t.id DESC LIMIT 200'
     )->fetchAll();
+    // Пропуски й затримка «Пропустити» (міграція 2026-10-21-ad-popup); без неї — як раніше.
+    $popupCols = promo_has_column($pdo, 'ad_stats_daily', 'skips') && promo_has_column($pdo, 'ad_creatives', 'skip_delay_seconds');
     $allCampaigns = $pdo->query(
         "SELECT c.*, u.email AS user_email, COALESCE(b.balance, 0) AS balance, b.currency AS balance_currency,
                 (SELECT SUM(impressions) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS impressions,
-                (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks
+                (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks" . ($popupCols ? ",
+                (SELECT SUM(skips) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS skips,
+                (SELECT MIN(cr.skip_delay_seconds) FROM ad_creatives cr WHERE cr.campaign_id = c.id) AS skip_delay" : '') . "
          FROM ad_campaigns c
          LEFT JOIN users u ON u.id = c.user_id
          LEFT JOIN ad_balances b ON b.user_id = c.user_id
@@ -108,7 +112,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
     )->fetchAll();
     $house = array_values(array_filter(
         $pdo->query("SELECT c.*, (SELECT SUM(impressions) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS impressions,
-                            (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks
+                            (SELECT SUM(clicks) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS clicks"
+                            . ($popupCols ? ', (SELECT SUM(skips) FROM ad_stats_daily s WHERE s.campaign_id = c.id) AS skips' : '') . "
                      FROM ad_campaigns c WHERE c.format = 'video' AND c.campaign_type = 'internal'"
                      . (promo_house_columns($pdo) ? " AND c.house_key IS NULL AND NOT EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id AND cr.creative_type = 'card')" : '')
                      . ' ORDER BY c.id DESC')->fetchAll()
@@ -366,7 +371,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <?php else: ?>
                             <div class="pc-table-wrap">
                                 <table class="pc-table">
-                                    <thead><tr><th>Кампанія</th><th>Власник</th><th>Статус</th><th>Витрачено</th><th>Покази / кліки</th><th>Дії</th></tr></thead>
+                                    <thead><tr><th>Кампанія</th><th>Власник</th><th>Статус</th><th>Витрачено</th><th>Покази / кліки / пропуски · CTR</th><th>Пропуск вікна</th><th>Дії</th></tr></thead>
                                     <tbody>
                                     <?php foreach ($allCampaigns as $c): $cid = (int) $c['id']; ?>
                                     <tr>
@@ -374,7 +379,23 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="Власник"><?= $c['campaign_type'] === 'internal' ? 'AI LAB HUB' : pc_e($c['user_email']) ?><?php if ($c['campaign_type'] !== 'internal'): ?><span class="pc-muted">баланс <?= pc_e(promo_money($c['balance'], $c['balance_currency'] ?: PROMO_CURRENCY)) ?></span><?php endif; ?></td>
                                         <td data-label="Статус"><?= $badge((string) $c['status']) ?><?php if ($c['stop_reason'] && in_array($c['status'], ['paused', 'completed'], true)): ?><span class="pc-muted"><?= pc_e($stopUk[$c['stop_reason']] ?? $c['stop_reason']) ?></span><?php endif; ?></td>
                                         <td data-label="Витрачено"><?= pc_e(promo_money($c['spent'], $c['currency'])) ?><?= $c['total_budget'] !== null ? ' / ' . pc_e(promo_money($c['total_budget'], $c['currency'])) : '' ?></td>
-                                        <td data-label="Покази / кліки"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?></td>
+                                        <td data-label="Покази / кліки / пропуски · CTR"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?> / <?= (int) ($c['skips'] ?? 0) ?> · <?= pc_e(promo_ctr((int) $c['clicks'], (int) $c['impressions'])) ?></td>
+                                        <td data-label="Пропуск вікна">
+                                            <?php if ($popupCols): ?>
+                                            <form method="post" action="promo-admin-action.php" class="pc-inline-form">
+                                                <?= $csrf ?>
+                                                <input type="hidden" name="action" value="skip_delay">
+                                                <input type="hidden" name="campaign_id" value="<?= $cid ?>">
+                                                <select name="skip" aria-label="Затримка «Пропустити», с" onchange="this.form.submit()">
+                                                    <option value="">за замовч.</option>
+                                                    <?php for ($sec = 10; $sec <= 15; $sec++): ?>
+                                                    <option value="<?= $sec ?>"<?= (string) ($c['skip_delay'] ?? '') === (string) $sec ? ' selected' : '' ?>><?= $sec ?> с</option>
+                                                    <?php endfor; ?>
+                                                </select>
+                                                <noscript><button type="submit" class="pc-btn pc-btn--small">OK</button></noscript>
+                                            </form>
+                                            <?php else: ?>—<?php endif; ?>
+                                        </td>
                                         <td data-label="Дії" class="pc-actions">
                                             <?php foreach (array_filter([
                                                 in_array($c['status'], ['active', 'pending_review'], true) ? 'stop' : null,
@@ -1035,13 +1056,13 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <?php else: ?>
                             <div class="pc-table-wrap">
                                 <table class="pc-table">
-                                    <thead><tr><th>Кампанія</th><th>Статус</th><th>Покази / кліки</th><th>Дії</th></tr></thead>
+                                    <thead><tr><th>Кампанія</th><th>Статус</th><th>Покази / кліки / пропуски · CTR</th><th>Дії</th></tr></thead>
                                     <tbody>
                                     <?php foreach ($house as $c): $cid = (int) $c['id']; ?>
                                     <tr>
                                         <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= pc_e((string) $c['start_date']) ?><?= $c['end_date'] ? ' — ' . pc_e($c['end_date']) : '' ?></span></td>
                                         <td data-label="Статус"><?= $badge((string) $c['status']) ?></td>
-                                        <td data-label="Покази / кліки"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?></td>
+                                        <td data-label="Покази / кліки / пропуски · CTR"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?> / <?= (int) ($c['skips'] ?? 0) ?> · <?= pc_e(promo_ctr((int) $c['clicks'], (int) $c['impressions'])) ?></td>
                                         <td data-label="Дії" class="pc-actions">
                                             <?php if (in_array($c['status'], PROMO_EDITABLE, true) && (int) $c['user_id'] === (int) $user['id']): ?>
                                             <a class="pc-btn pc-btn--small" href="account.php?promo_tab=create&amp;promo_house=1&amp;promo_edit=<?= $cid ?>#acc-promo">Редагувати</a>

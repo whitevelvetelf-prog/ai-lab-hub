@@ -693,6 +693,30 @@ function promo_admin_preview_article(PDO $pdo): ?string
 
 // --- Кампанії: екстрена зупинка -------------------------------------------
 
+/**
+ * Затримка кнопки «Пропустити» спливаючого вікна для всіх креативів кампанії:
+ * '' — за замовчуванням (ad_settings.ad_popup_skip_delay_default), інакше 10–15 с.
+ *
+ * @return array{0:bool,1:string}
+ */
+function promo_admin_skip_delay(PDO $pdo, int $campaignId, string $value): array
+{
+    $value = trim($value);
+    $sec = $value === '' ? null : (int) $value;
+    if ($sec !== null && ($sec < 10 || $sec > 15)) {
+        return [false, 'Затримка пропуску — від 10 до 15 секунд або «за замовчуванням».'];
+    }
+    try {
+        $st = $pdo->prepare('UPDATE ad_creatives SET skip_delay_seconds = :s WHERE campaign_id = :c');
+        $st->execute([':s' => $sec, ':c' => $campaignId]);
+    } catch (Throwable $e) {
+        return [false, 'Немає колонки skip_delay_seconds — застосуйте міграцію 2026-10-21-ad-popup.'];
+    }
+    promo_cache_flush();
+
+    return [true, 'Кампанія #' . $campaignId . ': пропуск ' . ($sec === null ? 'за замовчуванням' : 'через ' . $sec . ' с') . '.'];
+}
+
 function promo_admin_campaign_status(PDO $pdo, int $campaignId, string $action): array
 {
     $st = $pdo->prepare("SELECT * FROM ad_campaigns WHERE id = :id AND format = 'video'");

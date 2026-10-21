@@ -1196,7 +1196,7 @@ function promo_payment_instructions(PDO $pdo): string
 function promo_campaign_totals(PDO $pdo, int $userId): array
 {
     $st = $pdo->prepare(
-        "SELECT s.campaign_id, SUM(s.impressions) impressions, SUM(s.views) views, SUM(s.clicks) clicks, SUM(s.spend) spend
+        "SELECT s.campaign_id, SUM(s.impressions) impressions, SUM(s.views) views, SUM(s.clicks) clicks, " . (promo_has_column($pdo, 'ad_stats_daily', 'skips') ? 'SUM(s.skips) skips' : '0 skips') . ", SUM(s.spend) spend
          FROM ad_stats_daily s JOIN ad_campaigns c ON c.id = s.campaign_id
          WHERE c.user_id = :u AND c.format = 'video' AND c.campaign_type = 'paid'
          GROUP BY s.campaign_id"
@@ -1226,7 +1226,7 @@ function promo_stats_rows(PDO $pdo, int $userId, ?int $campaignId, string $from,
         'day_campaign_placement' => 's.stat_date, s.campaign_id, c.name, s.placement',
         default => 's.stat_date',
     };
-    $sql = "SELECT {$select}, SUM(s.impressions) impressions, SUM(s.views) views, SUM(s.clicks) clicks, SUM(s.spend) spend
+    $sql = "SELECT {$select}, SUM(s.impressions) impressions, SUM(s.views) views, SUM(s.clicks) clicks, " . (promo_has_column($pdo, 'ad_stats_daily', 'skips') ? 'SUM(s.skips) skips' : '0 skips') . ", SUM(s.spend) spend
             FROM ad_stats_daily s JOIN ad_campaigns c ON c.id = s.campaign_id
             WHERE c.user_id = :u AND c.format = 'video' AND s.stat_date BETWEEN :f AND :t"
         . ($campaignId ? ' AND s.campaign_id = :c' : '')

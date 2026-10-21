@@ -17,6 +17,7 @@ declare(strict_types=1);
  *   settings          поля ad_settings
  *   toggle_system     enabled=0|1 — увімкнути/вимкнути ВСЮ рекламу сайту
  *   campaign_status   campaign_id, op=stop|resume|complete
+ *   skip_delay        campaign_id, skip=10..15 | '' (за замовчуванням) — «Пропустити» у спливаючому вікні
  *   suspend_creative  creative_id, reason
  *   reports_reviewed  creative_id
  *   link_recheck      creative_id — перевірити адресу переходу ще раз (блок G)
@@ -153,6 +154,11 @@ switch ($action) {
             $msgs[] = 'Увага: немає config/promo.php із секретом — відеореклама не показуватиметься (старі банери працюють).';
         }
         $back($str('return_tab') ?: 'settings', true, $msgs);
+
+    case 'skip_delay':
+        // Затримка «Пропустити» спливаючого вікна для креативів кампанії: 10–15 с або за замовчуванням.
+        [$ok, $msg] = promo_admin_skip_delay($pdo, (int) $str('campaign_id'), $str('skip'));
+        $back('campaigns', $ok, [$msg]);
 
     case 'campaign_status':
         $op = $str('op');
