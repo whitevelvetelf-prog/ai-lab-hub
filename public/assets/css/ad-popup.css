@@ -127,6 +127,31 @@
     background: #2116ad;
 }
 
+/* Підказка «Увімкнути звук» ліворуч від динаміка — коли браузер не дав стартувати зі звуком. */
+.adp-sound-hint {
+    position: absolute;
+    right: 62px;
+    bottom: 18px;
+    max-width: calc(100% - 80px);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    pointer-events: none;
+    color: #ffffff;
+    background: rgba(0, 3, 44, 0.75);
+    animation: adp-hint-in 0.3s ease-out;
+}
+
+@keyframes adp-hint-in {
+    from {
+        opacity: 0;
+    }
+}
+
 .adp-title {
     margin: 16px 0 8px;
     font-size: 1.25rem;
@@ -233,7 +258,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .adp-overlay {
+    .adp-overlay,
+    .adp-sound-hint {
         animation: none;
     }
 }

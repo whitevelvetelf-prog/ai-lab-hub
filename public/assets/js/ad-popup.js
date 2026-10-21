@@ -10,11 +10,19 @@
  *     недоступна skip с (10–15) зі зворотним відліком (aria-live polite); до кінця відліку
  *     вікно не закривається ні фоном, ні Esc. Після — «Пропустити» або Esc.
  *   * Клік по рекламі — /promo-click.php у новій вкладці; вікно лишається відкритим.
- *   * Відео: само, без звуку (muted, playsinline); коротше за відлік — повторюється.
- *     Кнопка-динамік вмикає/вимикає звук. saveData / prefers-reduced-motion (або браузер заблокував
- *     автозапуск) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
- *   * Оголошення без відео (зображення, картка) — вікно закривається саме через creative.display с (20).
- *   * Облік: impression — вікно видно ≥1 с; skip — «Пропустити»; close — закрилось саме; через sendBeacon.
+ *   * Відео стартує само. Зі звуком — лише якщо глядач уже взаємодіяв зі сторінкою
+ *     (navigator.userActivation.hasBeenActive) і не вимикав звук раніше; браузер не дав —
+ *     одразу без звуку (muted, playsinline) і підказка «Увімкнути звук» біля динаміка.
+ *     Кнопка-динамік завжди є; вибір глядача — у localStorage (alh_ad_popup_sound: on|off),
+ *     вимкнув — автоматично звук більше не вмикається. Звучить лише одне відео на сторінці.
+ *     Коротше за відлік — повторюється. saveData / prefers-reduced-motion (або браузер не дав
+ *     навіть без звуку) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
+ *   * Відлік «Пропустити» йде з події playing (зображення, картка, постер — одразу; відео не
+ *     стартувало за 3 с — теж). У прихованій вкладці відлік і відео на паузі.
+ *   * Оголошення без відео (зображення, картка) — вікно закривається саме через creative.display с (20)
+ *     видимого часу.
+ *   * Облік: impression — відео видно й воно грає ≥1 с (без відео — вікно видно ≥1 с);
+ *     skip — «Пропустити»; close — закрилось саме; через sendBeacon.
  *   * Увесь текст із сервера — через textContent.
  */
 (function () {
@@ -35,6 +43,8 @@
     var EVENT = '/promo-event.php';
     var CLICK = '/promo-click.php';
     var LS_KEY = 'alh_ad_popup_closed';
+    var LS_SOUND = 'alh_ad_popup_sound';
+    var START_FALLBACK_MS = 3000;   // відео не стартувало — відлік однаково йде
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var saveData = !!(navigator.connection && navigator.connection.saveData);
@@ -66,6 +76,23 @@
             window.localStorage.setItem(LS_KEY, String(ts));
         } catch (e) {
             // без localStorage працює лише серверна сесія
+        }
+    }
+
+    /** Вибір глядача щодо звуку: 'on', 'off' або '' (ще не обирав). */
+    function soundPref() {
+        try {
+            return window.localStorage.getItem(LS_SOUND) || '';
+        } catch (e) {
+            return '';
+        }
+    }
+
+    function soundPrefSet(value) {
+        try {
+            window.localStorage.setItem(LS_SOUND, value);
+        } catch (e) {
+            // вибір діє лише в цьому вікні
         }
     }
 
@@ -206,7 +233,6 @@
                 }
                 if (allowAutoplay) {
                     video.src = creative.video;
-                    video.autoplay = true;
                 }
                 mediaLink.appendChild(video);
             } else {
@@ -252,18 +278,41 @@
                 sound.addEventListener('click', function (e) {
                     e.preventDefault();
                     e.stopPropagation();   // не відкривати рекламодавця
+                    hideSoundHint();
                     if (!video.getAttribute('src')) {
                         video.src = creative.video;
                     }
                     video.muted = !video.muted;
-                    if (!video.muted && video.paused) {
-                        video.play().catch(noop);
+                    soundPrefSet(video.muted ? 'off' : 'on');
+                    if (!video.muted) {
+                        silenceOthers();
+                        if (video.paused) {
+                            video.play().catch(noop);
+                        }
                     }
                     syncSound();
                 });
                 video.addEventListener('volumechange', syncSound);
                 syncSound();
                 media.appendChild(sound);
+
+                // Підказка «Увімкнути звук», коли браузер не дав стартувати зі звуком.
+                var soundHint = null;
+                var hideSoundHint = function () {
+                    if (soundHint) {
+                        soundHint.remove();
+                        soundHint = null;
+                    }
+                };
+                var showSoundHint = function () {
+                    if (soundHint || !video.muted) {
+                        return;
+                    }
+                    soundHint = el('span', 'adp-sound-hint', labels.soundOn);
+                    soundHint.setAttribute('aria-hidden', 'true');   // читачам екрана — aria-label кнопки
+                    media.appendChild(soundHint);
+                    window.setTimeout(hideSoundHint, 6000);
+                };
 
                 // «Відтворити»: коли автостарт вимкнено (saveData, reduced-motion) або його заблокував
                 // браузер. Запускає ролик без звуку й не відкриває рекламодавця.
@@ -281,6 +330,7 @@
                         if (!video.getAttribute('src')) {
                             video.src = creative.video;
                         }
+                        video.muted = true;
                         video.play().catch(noop);
                         videoPlay.remove();
                         videoPlay = null;
@@ -330,65 +380,159 @@
         document.body.appendChild(overlay);
         dialog.focus();
 
-        // Відлік.
+        // Відлік «Пропустити»: стартує з відтворенням медіа, рахує лише видимий час вкладки.
         var left = skipDelay;
+        var leftMs = skipDelay * 1000;
         var ready = false;
+        var started = false;
+        var shownMs = 0;          // видимий час від старту відліку (автозакриття без відео)
+        var impressionMs = 0;     // видимий час відтворення (без відео — видимий час вікна)
+        var impressionSent = false;
+        // 'video' — показ рахується, поки ролик грає; 'still' — поки вікно видно.
+        var impressionMode = video && allowAutoplay ? 'video' : 'still';
         function renderSkip() {
             skip.textContent = ready ? labels.skip : labels.skipIn.replace('%d', String(left));
         }
         renderSkip();
         live.textContent = labels.skipIn.replace('%d', String(left));
+        function startCountdown() {
+            started = true;
+        }
+        var lastTick = Date.now();
         var timer = window.setInterval(function () {
-            left--;
-            if (left <= 0) {
-                window.clearInterval(timer);
-                ready = true;
-                skip.disabled = false;
-                skip.removeAttribute('aria-disabled');
-                live.textContent = labels.skipReady;
-            } else if (left === 5) {
-                live.textContent = labels.skipIn.replace('%d', String(left));
+            var now = Date.now();
+            var dt = now - lastTick;
+            lastTick = now;
+            if (document.visibilityState !== 'visible') {
+                return;
             }
-            renderSkip();
-        }, 1000);
+            if (!impressionSent) {
+                var playingNow = video && !video.paused && !video.ended && video.readyState > 2;
+                if (impressionMode === 'still' || playingNow) {
+                    impressionMs += dt;
+                    if (impressionMs >= 1000) {
+                        impressionSent = true;
+                        sendEvents([{ t: creative.token, type: 'impression' }]);
+                    }
+                }
+            }
+            if (!started) {
+                return;
+            }
+            if (!ready) {
+                leftMs -= dt;
+                var sec = Math.max(0, Math.ceil(leftMs / 1000));
+                if (sec !== left) {
+                    left = sec;
+                    if (left <= 0) {
+                        ready = true;
+                        skip.disabled = false;
+                        skip.removeAttribute('aria-disabled');
+                        live.textContent = labels.skipReady;
+                    } else if (left === 5) {
+                        live.textContent = labels.skipIn.replace('%d', String(left));
+                    }
+                    renderSkip();
+                }
+            }
+            // Без відео (зображення, картка): вікно закривається саме через creative.display с.
+            shownMs += dt;
+            if (ready && creative.display && shownMs >= creative.display * 1000) {
+                close(true);
+            }
+        }, 250);
 
-        // Відео коротше за відлік — повторюється; після відліку — дограє й зупиняється.
+        // Прихована вкладка: відео на паузі (відлік стоїть сам), повернулись — грає далі.
+        var pausedByHide = false;
+        function onVisibility() {
+            lastTick = Date.now();
+            if (!video) {
+                return;
+            }
+            if (document.visibilityState !== 'visible') {
+                if (!video.paused) {
+                    pausedByHide = true;
+                    video.pause();
+                }
+            } else if (pausedByHide) {
+                pausedByHide = false;
+                video.play().catch(noop);
+            }
+        }
+        document.addEventListener('visibilitychange', onVisibility);
+
+        // Звучить лише одне відео: інші медіа зі звуком — на паузу; почало звучати інше — наше без звуку.
+        function silenceOthers() {
+            Array.prototype.forEach.call(document.querySelectorAll('video, audio'), function (m) {
+                if (m !== video && !m.paused && !m.muted) {
+                    m.pause();
+                }
+            });
+        }
+        function onOtherPlay(e) {
+            var m = e.target;
+            if (video && m !== video && !m.muted && !video.muted) {
+                video.muted = true;
+            }
+        }
+        document.addEventListener('play', onOtherPlay, true);
+
         if (video) {
+            // Коротше за відлік — повторюється; після відліку — дограє й зупиняється.
             video.addEventListener('ended', function () {
                 if (!ready) {
                     video.currentTime = 0;
                     video.play().catch(noop);
                 }
             });
+            video.addEventListener('playing', startCountdown);
             if (allowAutoplay) {
-                video.play().catch(showVideoPlay);
+                window.setTimeout(function () {
+                    if (!started) {
+                        startCountdown();
+                        showVideoPlay();   // так і не стартувало — глядач може запустити сам
+                    }
+                }, START_FALLBACK_MS);
+                var failed = function () {
+                    // Не дали навіть без звуку — постер і «▶»; показ і відлік — як для зображення.
+                    impressionMode = 'still';
+                    startCountdown();
+                    showVideoPlay();
+                };
+                var playMuted = function () {
+                    video.muted = true;
+                    return video.play();
+                };
+                var activated = !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
+                if (activated && soundPref() !== 'off') {
+                    video.muted = false;
+                    silenceOthers();
+                    video.play().catch(function () {
+                        playMuted().then(showSoundHint, failed);
+                    });
+                } else {
+                    playMuted().catch(failed);
+                }
             } else {
                 showVideoPlay();
+                startCountdown();
             }
+        } else {
+            startCountdown();
         }
-
-        // Показ: вікно видно ≥1 с.
-        var shownAt = window.setTimeout(function () {
-            if (document.visibilityState === 'visible') {
-                sendEvents([{ t: creative.token, type: 'impression' }]);
-            }
-        }, 1000);
-
-        // Без відео (зображення, картка): вікно закривається саме через creative.display с.
-        var autoClose = creative.display ? window.setTimeout(function () { close(true); }, creative.display * 1000) : null;
 
         function close(auto) {
             if (!ready) {
                 return;
             }
-            window.clearTimeout(shownAt);
-            window.clearTimeout(autoClose);
             window.clearInterval(timer);
             sendEvents([{ t: creative.token, type: auto === true ? 'close' : 'skip' }]);
             lsSet(Math.floor(Date.now() / 1000));
             if (video) {
                 video.pause();
             }
+            document.removeEventListener('visibilitychange', onVisibility);
+            document.removeEventListener('play', onOtherPlay, true);
             document.removeEventListener('keydown', onKey, true);
             overlay.remove();
             restoreScroll();
