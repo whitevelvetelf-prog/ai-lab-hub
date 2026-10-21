@@ -158,3 +158,25 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 - Джерело: `?ref=house-…` → сесія (`app/acquisition.php`) → `acquisition_ref` першої кампанії чи оголошення.
   Звіт — «Звіти» → «Власна реклама за варіантами»; порівняння CTR після 100 показів кожного варіанта (без автовимкнення).
 - Перевірка: `php tools/promo-house-check.php`.
+
+## Нативна реклама в списках (2026-10-21)
+
+- Міграція `database/migration-2026-10-21-native-ads.sql` (= `increment_latest.sql`).
+- **Картка** `app/ad-card.php` (`ad_card_slot`, `ad_card_positions`): у сітці категорії, підкатегорії, пошуку,
+  стрічки/розділів/пошуку Marketplace — того самого розміру, що картка продукту, позначка «Реклама»/«Ad», уся
+  картка — посилання на `promo-click.php`. Позиції й ліміт — `ad_placements.position_rule` `{"position":3,"every":8}`,
+  `slots_per_page = 2`. Банери зон 1–2 (`app/ad-banner.php`) зі сторінок прибрано; таблиці `ads`/`ad_zones` лишились.
+- **Формати**: `ad_creatives.creative_type` = `video` | `image` (картинка в `poster_path`) | `card` (власна);
+  `weight` (усі 1). Ліміти ролика `max_video_sec = 15`, `max_video_mb = 5`; тривалість — ffprobe, якщо є, інакше
+  розбір заголовка MP4 (WebM — лише тривалість із браузера). Файли — `public/uploads/promo/` (шлях з «ads»
+  ріжуть блокувальники).
+- **Відео**: src лише поблизу екрана, старт без звуку за IntersectionObserver, кнопка-динамік (звук лише в одному
+  ролику), saveData / reduced-motion — постер + «відтворити».
+- **Ротація**: до 5 креативів на слот (`promo_pick_set`, `app/promo-select.php`); відео — 2 відтворення, зображення —
+  15 с видимого часу; не повторюються на сторінці; останні 20 показаних сеансу — у кінці черги.
+- **Масштаб**: без `ORDER BY RAND()`; кеш кандидатів 60 с (APCu або `storage/cache/promo`, скидання —
+  `promo_cache_flush()` після дій у кабінеті/адмінці та зупинки кампанії системою); покази й перегляди — лише
+  `ad_stats_daily`, дублі/ліміти — у сесії; кліки — `ad_events`; події пакетом через sendBeacon.
+  Старі зони — `ad_zone_stats_daily`. Тест: `php tools/promo-load-test.php 5000`.
+- **Тексти**: «Умови» 3.3, «Конфіденційність» 3.3, «Про проєкт» — ключі `legal_*`, `about_ads_*` (EN у ui_translations).
+- Перевірка вручну: `php tools/promo-demo-ads.php create` / `delete`.
