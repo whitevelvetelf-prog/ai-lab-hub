@@ -14,7 +14,6 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/promo.php';
-require_once __DIR__ . '/../app/ad-card.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -546,14 +545,9 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
         <?php if ($subcategories === []): ?>
         <p class="category__empty"><?= htmlspecialchars(t('category_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
-        <?php
-        // Нативна реклама (місце category_page, app/ad-card.php): картка в сітці підкатегорій,
-        // позиції й ліміт — з правила місця. Немає реклами — нічого не виводиться.
-        $promoAt = ad_card_positions($pdo, 'category_page', count($subcategories));
-        ?>
+        <?php $adPopupCats = [(int) $category['id']]; /* таргетинг спливаючої реклами (app/ad-popup.php) */ ?>
         <div class="subcategory-grid">
             <?php foreach (array_values($subcategories) as $i => $subcategory): ?>
-                <?php if (in_array($i, $promoAt, true)) { echo ad_card_slot($pdo, 'category_page', [(int) $category['id']]); } ?>
                 <?php
                 $sid = (int) $subcategory['id'];
                 $icon = $subcategoryIcons[$subcategory['slug']]
@@ -567,7 +561,6 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
                     <h2 class="subcategory-card__name"><?= htmlspecialchars(localized_name($subcategory), ENT_QUOTES) ?></h2>
                 </a>
             <?php endforeach; ?>
-            <?php if (in_array(count($subcategories), $promoAt, true)) { echo ad_card_slot($pdo, 'category_page', [(int) $category['id']]); } ?>
         </div>
         <?php endif; ?>
 

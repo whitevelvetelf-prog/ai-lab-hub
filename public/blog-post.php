@@ -41,6 +41,7 @@ if ($article !== null) {
     // Немає такого розділу або реклами — стаття без змін.
     [$promoCats, $promoSubs] = promo_blog_article_taxonomy($pdo, $slug);
     $promoSlotHtml = promo_slot($pdo, 'blog_article', $promoCats, $promoSubs, ['article' => $slug]);
+    [$adPopupCats, $adPopupSubs, $adPopupPage] = [$promoCats, $promoSubs, ['article' => $slug]];   // для спливаючої реклами
     if ($promoSlotHtml !== '') {
         $minBefore = promo_placement_rule_int($pdo, 'blog_article', 'min_chars_before', 600);
         $minAfter = promo_placement_rule_int($pdo, 'blog_article', 'min_chars_after', 400);

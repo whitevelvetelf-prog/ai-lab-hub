@@ -33,6 +33,24 @@ const PROMO_ROTATION_SIZE = 5;
 /** Скільки останніх показаних креативів сеансу мають знижений пріоритет. */
 const PROMO_RECENT_KEEP = 20;
 
+/** Колонка є в таблиці (міграції застосовуються на хостингу окремо) — кеш на запит. */
+function promo_has_column(PDO $pdo, string $table, string $column): bool
+{
+    static $cache = [];
+    $key = $table . '.' . $column;
+    if (!isset($cache[$key])) {
+        try {
+            $st = $pdo->prepare('SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c');
+            $st->execute([':t' => $table, ':c' => $column]);
+            $cache[$key] = (int) $st->fetchColumn() > 0;
+        } catch (Throwable $e) {
+            $cache[$key] = false;
+        }
+    }
+
+    return $cache[$key];
+}
+
 // --- Кеш -------------------------------------------------------------------
 
 function promo_cache_dir(): string
@@ -524,6 +542,9 @@ function promo_creatives_full(PDO $pdo, array $ids): array
         ? ', cr.creative_type, cr.card_layout, cr.title_en, cr.description_en, cr.description_fallback, cr.description_fallback_en,
              cr.cta_text, cr.cta_text_en, cr.ref_code, c.house_key, c.house_rules'
         : '';
+    if (promo_has_column($pdo, 'ad_creatives', 'skip_delay_seconds')) {
+        $houseCols .= ', cr.skip_delay_seconds';
+    }
     try {
         $st = $pdo->prepare(
             "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,

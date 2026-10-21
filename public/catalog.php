@@ -22,7 +22,6 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/promo.php';
-require_once __DIR__ . '/../app/ad-card.php';
 require_once __DIR__ . '/../app/search.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
@@ -426,25 +425,16 @@ $cardColors = [
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <?php
-        // Нативна реклама (app/ad-card.php): підкатегорія — місце subcategory_list, пошук і
-        // добірки (усі продукти, усі продукти категорії) — search_results. Позиції й ліміт
-        // карток — з правила місця (ad_placements); карток менше за позицію — одна в кінці.
-        // Немає реклами — нічого не виводиться.
-        $promoCats = [];
-        $promoSubs = [];
-        $promoPlacement = 'search_results';
+        // Реклама — спливаючим вікном (app/ad-popup.php з підвалу); тут лише категорії сторінки для таргетингу.
         if (!$isSearch && !empty($subcategory)) {
-            $promoCats = [(int) $subcategory['category_id']];
-            $promoSubs = [(int) $subcategory['id']];
-            $promoPlacement = 'subcategory_list';
+            $adPopupCats = [(int) $subcategory['category_id']];
+            $adPopupSubs = [(int) $subcategory['id']];
         } elseif (!$isSearch && !empty($category)) {
-            $promoCats = [(int) $category['id']];
+            $adPopupCats = [(int) $category['id']];
         }
-        $promoAt = ad_card_positions($pdo, $promoPlacement, count($products));
         ?>
         <div class="catalog-grid">
             <?php foreach ($products as $i => $product): ?>
-                <?php if (in_array($i, $promoAt, true)) { echo ad_card_slot($pdo, $promoPlacement, $promoCats, $promoSubs); } ?>
                 <?php
                 $pid = (int) $product['id'];
                 [$priceText, $isFree] = price_badge($plansByProduct[$pid] ?? []);
@@ -471,7 +461,6 @@ $cardColors = [
                     </div>
                 </article>
             <?php endforeach; ?>
-            <?php if (in_array(count($products), $promoAt, true)) { echo ad_card_slot($pdo, $promoPlacement, $promoCats, $promoSubs); } ?>
         </div>
         <?php endif; ?>
     </div>

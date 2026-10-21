@@ -1229,3 +1229,7 @@ require_once __DIR__ . '/marketplace.php';
     })();
 </script>
 <?php endif; ?>
+<?php
+// Реклама спливаючим вікном: лише правила й скрипт (вікно показує JS, не сервер) — app/ad-popup.php.
+require_once __DIR__ . '/ad-popup.php';
+echo ad_popup_bootstrap(translation_pdo());

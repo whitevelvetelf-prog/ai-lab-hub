@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — облік показів / переглядів реклами (sendBeacon з sponsored.js).
  *
- * POST events=[{"t":"<токен>","type":"impression|view"}, …] — пакет подій сторінки
+ * POST events=[{"t":"<токен>","type":"impression|view|skip"}, …] (skip — «Пропустити» у спливаючому вікні) — пакет подій сторінки
  *      (до PROMO_EVENT_BATCH_MAX), один запит замість окремого на кожну картку;
  * POST t=<токен>  type=impression|view — одна подія (старий формат).
  *
@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/ad-popup.php';
 
 const PROMO_EVENT_BATCH_MAX = 20;
 
@@ -52,8 +53,11 @@ if (!promo_video_ready($pdo)) {
 
 $session = analytics_session_hash();
 foreach ($events as [$token, $type]) {
-    if (!in_array($type, ['impression', 'view'], true)) {
+    if (!in_array($type, ['impression', 'view', 'skip'], true)) {
         continue;
+    }
+    if ($type === 'skip') {
+        ad_popup_mark_closed();   // проміжок до наступного вікна — від закриття
     }
     $data = promo_token_read($token);
     if ($data === null || !$data['fresh'] || !$data['own'] || $data['preview']) {

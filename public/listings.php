@@ -15,7 +15,6 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
 require_once __DIR__ . '/../app/promo.php';
-require_once __DIR__ . '/../app/ad-card.php';
 
 mp_public_require();
 
@@ -144,20 +143,10 @@ lst_open($heading, !mp_public_enabled(), $head, 'lst_' . $type);
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= lst_e(lst_tr($hasFilters ? 'list_empty_search' : 'list_empty')) ?></p>
         <?php else: ?>
-            <?php
-            // Нативна картка в списку (app/ad-card.php): розділ без фільтрів — marketplace_category,
-            // пошук і фільтри — marketplace_search; позиції й ліміт — з правила місця.
-            $promoKey = $hasFilters ? 'marketplace_search' : 'marketplace_category';
-            $promoAt = ad_card_positions($pdo, $promoKey, count($result['rows']));
-            ?>
             <div class="mp-grid">
-                <?php foreach ($result['rows'] as $i => $row) {
-                    if (in_array($i, $promoAt, true)) {
-                        echo ad_card_slot($pdo, $promoKey, [], [], ['mp' => [$type]]);
-                    }
+                <?php foreach ($result['rows'] as $row) {
                     echo lst_card_html($row);
                 } ?>
-                <?php if (in_array(count($result['rows']), $promoAt, true)) { echo ad_card_slot($pdo, $promoKey, [], [], ['mp' => [$type]]); } ?>
             </div>
             <?php if ($result['pages'] > 1): ?>
                 <nav class="mp-pager" aria-label="<?= lst_e(lst_tr('pages')) ?>">

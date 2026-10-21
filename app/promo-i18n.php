@@ -166,6 +166,7 @@ const PROMO_I18N = [
     'places_all' => ['Усі доступні місця', 'All available placements'],
     'places_all_hint' => ['недоступні й без ціни не позначаються', 'unavailable ones and those without a price are skipped'],
     'places_required' => ['Оберіть хоча б одне місце показу — тоді кампанію можна буде зберегти.', 'Choose at least one placement — then the campaign can be saved.'],
+    'group_popup' => ['Спливаюче вікно', 'Pop-up window'],
     'group_catalog' => ['Каталог', 'Catalog'],
     'group_blog' => ['Блог', 'Blog'],
     'group_marketplace' => ['Маркетплейс', 'Marketplace'],

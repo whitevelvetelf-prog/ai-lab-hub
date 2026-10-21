@@ -17,7 +17,6 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
 require_once __DIR__ . '/../app/promo.php';
-require_once __DIR__ . '/../app/ad-card.php';
 
 mp_public_require();
 
@@ -188,19 +187,10 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>
         <?php else: ?>
-            <?php
-            // Нативна картка в списку (app/ad-card.php): стрічка, розділ чи пошук — позиції й ліміт
-            // з правила місця (ad_placements).
-            $promoListKey = 'marketplace_' . $mpMode;
-            $promoAt = ad_card_positions($pdo, $promoListKey, count($result['rows']));
-            $promoCard = static fn(): string => ad_card_slot($pdo, $promoListKey, [], [], ['mp' => $mpSections]);
-            ?>
             <div class="mp-grid">
                 <?php foreach ($result['rows'] as $i => $card): ?>
-                    <?php if (in_array($i, $promoAt, true)) { echo $promoCard(); } ?>
                     <?php include __DIR__ . '/../app/mpb-card.php'; ?>
                 <?php endforeach; ?>
-                <?php if (in_array(count($result['rows']), $promoAt, true)) { echo $promoCard(); } ?>
             </div>
 
             <?php if ($result['pages'] > 1): ?>

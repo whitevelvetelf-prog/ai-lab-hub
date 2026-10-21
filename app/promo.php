@@ -31,7 +31,7 @@ require_once __DIR__ . '/promo-select.php';
 const PROMO_CURRENCY = 'USD';
 /** Місця показу (ad_placements, app/promo-placements.php); старі ключі — PROMO_LEGACY_PLACEMENTS. */
 const PROMO_PLACEMENTS = ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article',
-    'marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page'];
+    'marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page', 'popup'];
 
 /** Баланс в іншій валюті, ніж операція (повідомлення — код валюти балансу). */
 final class PromoCurrencyMismatch extends RuntimeException
@@ -394,7 +394,7 @@ function promo_labels(): array
 // --- Облік подій і списання ------------------------------------------------
 
 /**
- * Записати подію (impression / view / click) з перевірками на дублі та частоту,
+ * Записати подію (impression / view / click / skip — «Пропустити» у спливаючому вікні) з перевірками на дублі та частоту,
  * оновити ad_stats_daily і списати кошти. true — подію зараховано.
  *
  * Покази й перегляди НЕ пишуться сирими рядками (таблиця росла б безмежно): дублі,
@@ -407,7 +407,7 @@ function promo_labels(): array
  */
 function promo_record_event(PDO $pdo, int $creativeId, string $type, string $placement, string $sessionHash): bool
 {
-    if (!in_array($type, ['impression', 'view', 'click'], true) || !promo_placement_valid($placement)) {
+    if (!in_array($type, ['impression', 'view', 'click', 'skip'], true) || !promo_placement_valid($placement)) {
         return false;
     }
 
@@ -475,7 +475,7 @@ function promo_record_event(PDO $pdo, int $creativeId, string $type, string $pla
 function promo_charge(PDO $pdo, int $campaignId, string $type, ?string $placement = null, ?int $creativeId = null): int
 {
     $today = promo_today();
-    $col = ['impression' => 'impressions', 'view' => 'views', 'click' => 'clicks'][$type] ?? null;
+    $col = ['impression' => 'impressions', 'view' => 'views', 'click' => 'clicks', 'skip' => 'skips'][$type] ?? null;
     $addStats = static function (int $amount) use ($pdo, $today, $col, $campaignId, $creativeId, $placement): void {
         if ($col === null || $creativeId === null || $placement === null) {
             return;
@@ -729,7 +729,7 @@ function promo_assets_html(): string
 }
 
 /**
- * Стан реклами поточної сторінки (спільний для нативних карток, app/ad-card.php):
+ * Стан реклами поточної сторінки (спільний для слотів сторінки):
  * shown — креативи, уже поставлені на сторінку (не повторюються); house — уже є блок
  * власної реклами (не більше одного на сторінку).
  *
