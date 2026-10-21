@@ -95,7 +95,7 @@ $posterSvg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720">'
 $poster = 'data:image/svg+xml;base64,' . base64_encode($posterSvg);
 $demoCard = static function () use ($tr, $e, $poster): string {
     return '<article class="sponsored-card adv-demo" aria-label="' . $tr('adv_demo_title') . '">'
-        . '<span class="sponsored-card__label">' . $e(t('promo_label')) . '</span>'
+        . '<span class="sponsored-card__label">' . $e(t('ad_label')) . '</span>'
         . '<div class="sponsored-card__media"><img src="' . $poster . '" alt="" width="1280" height="720" loading="lazy"></div>'
         . '<h3 class="sponsored-card__title">' . $tr('adv_demo_title') . '</h3>'
         . '<p class="sponsored-card__desc">' . $tr('adv_demo_desc') . '</p>'

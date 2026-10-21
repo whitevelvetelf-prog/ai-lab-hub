@@ -321,9 +321,65 @@
             .catch(function () {});
     }
 
+    // Нативна картка в списку (app/ad-card.php): розмітка вже з сервера, тут — облік показу й відео.
+    function initNative(slot) {
+        var dataNode = slot.querySelector('.sponsored-slot__data');
+        var card = slot.querySelector('.sponsored-card');
+        var payload = null;
+        try {
+            payload = dataNode ? JSON.parse(dataNode.textContent) : null;
+        } catch (e) {
+            payload = null;
+        }
+        if (!card || !payload || !payload.creatives || !payload.creatives.length) {
+            return;
+        }
+        var creative = payload.creatives[0];
+        if (!creative.preview) {
+            shown.push(creative.id);
+        }
+        if (creative.house) {
+            houseShown = true;
+        }
+        var video = card.querySelector('video[data-src]');
+        var impressionSent = !!creative.preview;
+        if (!('IntersectionObserver' in window)) {
+            return;
+        }
+        var timer = null;
+        new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                var visible = entry.isIntersecting && entry.intersectionRatio >= 0.5;
+                if (video) {
+                    if (visible && allowAutoplay) {
+                        if (!video.src) {
+                            video.src = video.dataset.src;
+                        }
+                        video.play().catch(function () {});
+                    } else if (!visible && !video.paused) {
+                        video.pause();
+                    }
+                }
+                if (impressionSent) {
+                    return;
+                }
+                if (visible && timer === null && document.visibilityState === 'visible') {
+                    timer = window.setTimeout(function () {
+                        impressionSent = true;
+                        sendEvent(creative.token, 'impression');
+                    }, 1000);
+                } else if (!visible && timer !== null) {
+                    window.clearTimeout(timer);
+                    timer = null;
+                }
+            });
+        }, { threshold: [0, 0.5, 1] }).observe(card);
+    }
+
     function init() {
+        Array.prototype.forEach.call(document.querySelectorAll('.sponsored-slot[data-native]'), initNative);
         // По черзі: наступний слот знає, що вже показано (exclude).
-        Array.prototype.reduce.call(document.querySelectorAll('.sponsored-slot[data-placement]'), function (chain, slot) {
+        Array.prototype.reduce.call(document.querySelectorAll('.sponsored-slot[data-placement]:not([data-native])'), function (chain, slot) {
             return chain.then(function () { return fill(slot); });
         }, Promise.resolve());
     }

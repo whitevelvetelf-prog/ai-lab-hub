@@ -301,3 +301,103 @@
 .sponsored-slot[data-group="marketplace"] .sponsored-card--card {
     background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
 }
+
+/* Нативна картка в списку (app/ad-card.php, з 2026-10-21): клітинка сітки каталогу,
+   категорії чи маркетплейсу того самого розміру й вигляду, що й картка продукту.
+   Уся картка — одне посилання (розтягнутий ::after заголовка); кнопки звуку й скарги — над ним. */
+.sponsored-slot--native {
+    display: flex;
+    min-width: 0;
+}
+
+.sponsored-card--native {
+    flex: 1 1 auto;
+    padding: 22px;
+    background: var(--card-bg, rgba(255, 255, 255, 0.06));
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.18));
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.sponsored-card--native:hover,
+.sponsored-card--native:focus-within {
+    transform: translateY(-3px);
+    border-color: rgba(91, 140, 255, 0.5);
+}
+
+.sponsored-card--native .sponsored-card__label {
+    margin-bottom: 12px;
+}
+
+.sponsored-card--native .sponsored-card__title {
+    margin: 14px 0 8px;
+    font-size: 1.1rem;
+    line-height: 1.3;
+}
+
+.sponsored-card--native.sponsored-card--card .sponsored-card__title {
+    margin-top: 4px;
+}
+
+.sponsored-card__link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.sponsored-card__link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+
+.sponsored-card__link:focus-visible {
+    outline: none;
+}
+
+.sponsored-card--native:has(.sponsored-card__link:focus-visible) {
+    outline: 2px solid #9fb8ff;
+    outline-offset: 2px;
+}
+
+.sponsored-card--native .sponsored-card__desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.sponsored-card--native .sponsored-card__cta {
+    pointer-events: none;
+}
+
+.sponsored-card--native .sponsored-card__sound,
+.sponsored-card--native .sponsored-card__play,
+.sponsored-card--native .sponsored-card__report {
+    z-index: 2;
+}
+
+.sponsored-card--native .sponsored-card__report {
+    position: relative;
+}
+
+/* Маркетплейс: та сама помітна рамка й позначка, що й у решти реклами маркетплейсу. */
+.sponsored-slot--native[data-group="marketplace"] .sponsored-card--native {
+    border: 2px dashed rgba(255, 210, 122, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .sponsored-card--native {
+        transition: none;
+    }
+
+    .sponsored-card--native:hover,
+    .sponsored-card--native:focus-within {
+        transform: none;
+    }
+}
+
+.sponsored-card--native.sponsored-card--card {
+    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
+    border-color: rgba(255, 255, 255, 0.22);
+}

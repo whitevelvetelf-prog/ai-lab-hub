@@ -510,14 +510,40 @@ function promo_public_payload(array $creative, string $placement, bool $preview 
         'token'       => promo_token_make(['c' => (int) $creative['id'], 'k' => (int) $creative['campaign_id'], 'p' => $placement, 'x' => $preview ? 1 : 0]),
         'preview'     => $preview,
         'placement'   => $placement,
-        'title'       => (string) $creative['title'],
-        'description' => (string) $creative['description'],
+        'title'       => promo_creative_text($pdo, $creative, 'title'),
+        'description' => promo_creative_text($pdo, $creative, 'description'),
         'cta'         => promo_cta_label($creative),
         'type'        => $isUpload ? 'upload' : 'youtube',
         'video'       => $isUpload && $creative['video_path'] ? '/' . ltrim((string) $creative['video_path'], '/') : null,
         'youtube'     => !$isUpload ? (string) $creative['youtube_id'] : null,
         'poster'      => $creative['poster_path'] ? '/' . ltrim((string) $creative['poster_path'], '/') : null,
     ];
+}
+
+/**
+ * Заголовок / підпис креативу мовою інтерфейсу. Текст живе в БД (ad_creatives), у
+ * зображенні чи відео його немає. Не мова оригіналу: ручний переклад (*_en), інакше —
+ * система перекладу сайту (cached_translation → ad_creative_translations, автопереклад
+ * кешується; manual-рядки не перезаписуються). Без таблиці чи ключа — оригінал.
+ */
+function promo_creative_text(?PDO $pdo, array $creative, string $field): string
+{
+    $source = (string) ($creative[$field] ?? '');
+    $lang = function_exists('current_lang') ? current_lang() : 'uk';
+    if ($pdo === null || trim($source) === '' || !function_exists('translation_source_lang') || $lang === translation_source_lang()) {
+        return $source;
+    }
+    $manual = trim((string) ($creative[$field . '_en'] ?? ''));
+    if ($lang === 'en' && $manual !== '') {
+        return $manual;
+    }
+    try {
+        return cached_translation($pdo, 'ad_creative_translations', ['creative_id' => (int) $creative['id'], 'field_name' => $field], $lang, $source);
+    } catch (Throwable $e) {
+        error_log('[promo] creative translation: ' . $e->getMessage());
+
+        return $source;
+    }
 }
 
 /** Написи картки мовою інтерфейсу. */
@@ -529,7 +555,7 @@ function promo_labels(): array
     }
 
     return [
-        'label'        => t('promo_label'),
+        'label'        => t('ad_label'),
         'soundOn'      => t('promo_sound_on'),
         'soundOff'     => t('promo_sound_off'),
         'play'         => t('promo_play'),
@@ -832,7 +858,6 @@ function promo_maintenance(PDO $pdo): array
  */
 function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array $subcategoryIds = [], array $page = []): string
 {
-    static $assetsPrinted = false;
     static $perPage = [];
     if (!in_array($placement, PROMO_PLACEMENTS, true)) {
         return '';
@@ -861,14 +886,35 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
         . ($preview ? ' data-preview="1"' : '')
         . ' data-lang="' . promo_lang() . '"></div>';
 
-    if (!$assetsPrinted) {
-        $assetsPrinted = true;
-        $ver = static fn(string $f): string => (string) (@filemtime(__DIR__ . '/../public/assets/' . $f) ?: 1);
-        $html .= '<link rel="stylesheet" href="/assets/css/sponsored.css?v=' . $ver('css/sponsored.css') . '">'
-            . '<script src="/assets/js/sponsored.js?v=' . $ver('js/sponsored.js') . '" defer></script>';
-    }
+    return $html . promo_assets_html();
+}
 
-    return $html;
+/** CSS і JS реклами — один раз на сторінку (перший слот чи картка), далі ''. */
+function promo_assets_html(): string
+{
+    static $printed = false;
+    if ($printed) {
+        return '';
+    }
+    $printed = true;
+    $ver = static fn(string $f): string => (string) (@filemtime(__DIR__ . '/../public/assets/' . $f) ?: 1);
+
+    return '<link rel="stylesheet" href="/assets/css/sponsored.css?v=' . $ver('css/sponsored.css') . '">'
+        . '<script src="/assets/js/sponsored.js?v=' . $ver('js/sponsored.js') . '" defer></script>';
+}
+
+/**
+ * Стан реклами поточної сторінки (спільний для нативних карток, app/ad-card.php):
+ * shown — креативи, уже поставлені на сторінку (не повторюються); house — уже є блок
+ * власної реклами (не більше одного на сторінку).
+ *
+ * @return array{shown:list<int>,house:bool}
+ */
+function &promo_page_state(): array
+{
+    static $state = ['shown' => [], 'house' => false];
+
+    return $state;
 }
 
 // --- Адмін-перегляд місць --------------------------------------------------

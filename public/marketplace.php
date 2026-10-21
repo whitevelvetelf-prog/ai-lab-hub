@@ -17,6 +17,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/ad-card.php';
 
 mp_public_require();
 
@@ -188,13 +189,11 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>
         <?php else: ?>
             <?php
-            if ($mpMode === 'category') {
-                echo promo_slot($pdo, 'marketplace_category', [], [], ['mp' => $mpSections]);
-            }
-            // Картка в списку: стрічка — 4-та позиція й далі кожні 10 карток; пошук — 4-та позиція.
-            $promoListKey = $mpMode === 'category' ? null : 'marketplace_' . $mpMode;
-            $promoAt = $promoListKey !== null ? promo_placement_positions($pdo, $promoListKey, count($result['rows'])) : [];
-            $promoCard = static fn(): string => promo_slot($pdo, (string) $promoListKey, [], [], ['mp' => $mpSections]);
+            // Нативна картка в списку (app/ad-card.php): стрічка, розділ чи пошук — позиції й ліміт
+            // з правила місця (ad_placements).
+            $promoListKey = 'marketplace_' . $mpMode;
+            $promoAt = ad_card_positions($pdo, $promoListKey, count($result['rows']));
+            $promoCard = static fn(): string => ad_card_slot($pdo, $promoListKey, [], [], ['mp' => $mpSections]);
             ?>
             <div class="mp-grid">
                 <?php foreach ($result['rows'] as $i => $card): ?>

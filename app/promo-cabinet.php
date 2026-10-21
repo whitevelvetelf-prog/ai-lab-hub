@@ -470,7 +470,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         <div>
                                             <p class="pc-preview-title"><?= pc_e(promo_tr('preview')) ?></p>
                                             <article class="sponsored-card pc-preview" aria-label="<?= pc_e(promo_tr('preview')) ?>">
-                                                <span class="sponsored-card__label"><?= pc_e(t('promo_label')) ?></span>
+                                                <span class="sponsored-card__label"><?= pc_e(t('ad_label')) ?></span>
                                                 <div class="sponsored-card__media" data-pc-preview-media
                                                      data-video="<?= !empty($creative['video_path']) ? '/' . pc_e($creative['video_path']) : '' ?>"
                                                      data-poster="<?= !empty($creative['poster_path']) ? '/' . pc_e($creative['poster_path']) : '' ?>"

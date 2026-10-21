@@ -22,6 +22,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/ad-card.php';
 require_once __DIR__ . '/../app/search.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
@@ -415,16 +416,6 @@ $cardColors = [
         <?= subcategory_note_html([(string) $subcategory['slug']]) ?>
         <?php endif; ?>
 
-        <?php
-        // Реклама лише на сторінці підкатегорії (не пошук, не «всі продукти»).
-        if (!$isSearch && !empty($subcategory)) {
-            $zoneId = 2; /* «Сторінка підкатегорії - верх» */
-            $categoryId = (int) $subcategory['category_id'];
-            $subcategoryId = (int) $subcategory['id'];
-            include __DIR__ . '/../app/ad-banner.php';
-        }
-        ?>
-
         <?php if ($products === [] && $isSearch): ?>
         <p class="catalog__empty">
             <?= htmlspecialchars(t('search_no_results'), ENT_QUOTES) ?><br>
@@ -435,10 +426,10 @@ $cardColors = [
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
         <?php
-        // Відеореклама: підкатегорія — місце subcategory_list, пошук і добірки (усі
-        // продукти, усі продукти категорії) — search_results. Одна картка на сторінку
-        // на позиції з правила місця (3-я; або в кінці, якщо продуктів менше).
-        // Без реклами слот прихований.
+        // Нативна реклама (app/ad-card.php): підкатегорія — місце subcategory_list, пошук і
+        // добірки (усі продукти, усі продукти категорії) — search_results. Позиції й ліміт
+        // карток — з правила місця (ad_placements); карток менше за позицію — одна в кінці.
+        // Немає реклами — нічого не виводиться.
         $promoCats = [];
         $promoSubs = [];
         $promoPlacement = 'search_results';
@@ -449,12 +440,11 @@ $cardColors = [
         } elseif (!$isSearch && !empty($category)) {
             $promoCats = [(int) $category['id']];
         }
-        $promoSlotHtml = promo_slot($pdo, $promoPlacement, $promoCats, $promoSubs);
-        $promoSlotAt = min(promo_placement_rule_int($pdo, $promoPlacement, 'position', 3) - 1, count($products));
+        $promoAt = ad_card_positions($pdo, $promoPlacement, count($products));
         ?>
         <div class="catalog-grid">
             <?php foreach ($products as $i => $product): ?>
-                <?php if ($i === $promoSlotAt) { echo $promoSlotHtml; } ?>
+                <?php if (in_array($i, $promoAt, true)) { echo ad_card_slot($pdo, $promoPlacement, $promoCats, $promoSubs); } ?>
                 <?php
                 $pid = (int) $product['id'];
                 [$priceText, $isFree] = price_badge($plansByProduct[$pid] ?? []);
@@ -481,7 +471,7 @@ $cardColors = [
                     </div>
                 </article>
             <?php endforeach; ?>
-            <?php if ($promoSlotAt === count($products)) { echo $promoSlotHtml; } ?>
+            <?php if (in_array(count($products), $promoAt, true)) { echo ad_card_slot($pdo, $promoPlacement, $promoCats, $promoSubs); } ?>
         </div>
         <?php endif; ?>
     </div>
