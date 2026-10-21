@@ -88,7 +88,7 @@ try {
     $subs = $pdo->query('SELECT id, category_id FROM subcategories ORDER BY id')->fetchAll(PDO::FETCH_KEY_PAIR);
     $subIds = array_keys($subs);
     $catIds = array_values(array_unique(array_values($subs)));
-    $placements = ['subcategory_list', 'search_results', 'category_page', 'product_page', 'blog_list', 'marketplace_feed', 'marketplace_search'];
+    $placements = ['popup', 'product_page', 'blog_list', 'blog_article', 'marketplace_listing_page', 'marketplace_home'];
 
     // --- Генерація -------------------------------------------------------------
     $t0 = microtime(true);
@@ -109,8 +109,9 @@ try {
         $tg = [];
         for ($i = 0; $i < $batch; $i++) {
             $cid = $first + $i;
+            $tg[] = sprintf("(%d,'popup',NULL,NULL,25)", $cid);   // кожна кампанія — у спливаючому вікні
             $cr[] = sprintf("(%d,%s,'load test','learn_more','https://example.com/','youtube','dQw4w9WgXcQ','approved','video',1)", $cid, $pdo->quote($marker . ' ' . $cid));
-            foreach ((array) array_rand(array_flip($placements), mt_rand(2, 5)) as $pl) {
+            foreach ((array) array_rand(array_flip(array_slice($placements, 1)), mt_rand(1, 4)) as $pl) {
                 $r = mt_rand(1, 100);
                 if ($r <= 60) {
                     $tg[] = sprintf("(%d,'%s',NULL,NULL,25)", $cid, $pl);
@@ -135,13 +136,12 @@ try {
     // --- Виміри ----------------------------------------------------------------
     $sub = $subIds[intdiv(count($subIds), 2)];
     $contexts = [
-        'підкатегорія (subcategory_list)' => ['subcategory_list', [$subs[$sub]], [$sub], []],
-        'категорія (category_page)' => ['category_page', [$catIds[0]], [], []],
-        'пошук (search_results)' => ['search_results', [], [], []],
-        'Marketplace (marketplace_feed)' => ['marketplace_feed', [], [], ['mp' => ['board', 'solutions']]],
+        'спливаюче вікно, підкатегорія (popup)' => ['popup', [$subs[$sub]], [$sub], []],
+        'спливаюче вікно, без категорії (popup)' => ['popup', [], [], []],
+        'спливаюче вікно, категорія (popup)' => ['popup', [$catIds[0]], [], []],
     ];
     // План запиту кандидатів (підкатегорія).
-    [$pl0, $c0, $s0] = $contexts['підкатегорія (subcategory_list)'];
+    [$pl0, $c0, $s0] = $contexts['спливаюче вікно, підкатегорія (popup)'];
     [$sql, $params] = promo_candidates_sql($pdo, $pl0, $c0, $s0, 'uk', 'desktop', [], false, promo_today());
     $ex = $pdo->prepare('EXPLAIN ' . $sql);
     $ex->execute($params);
@@ -174,19 +174,19 @@ try {
             $sh = hash('sha256', 'load' . $i . $label);
             promo_cache_flush();
             $t = hrtime(true);
-            $set = promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page);
+            $set = promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page, [], 1);
             $setCold[] = (hrtime(true) - $t) / 1e6;
-            promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page);   // перше читання файлу — не міряємо
+            promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page, [], 1);   // перше читання файлу — не міряємо
             $t = hrtime(true);
-            promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page, array_map(static fn($r) => (int) $r['id'], $set));
+            promo_pick_set($pdo, $pl, $cats, $ss, 'uk', 'desktop', $sh, $page, array_map(static fn($r) => (int) $r['id'], $set), 1);
             $setWarm[] = (hrtime(true) - $t) / 1e6;
         }
         printf("%s — допустимих кандидатів: %d, обрано %d (%d вимірів)\n", $label, $count, count($set), $runs);
         printf("  кандидати без кешу:          %s\n", $stats($cold));
         printf("  кеш, 1-ше читання файлу:     %s\n", $stats($first));
         printf("  кандидати з кешем:           %s\n", $stats($warm));
-        printf("  повний вибір 5, без кешу:    %s\n", $stats($setCold));
-        printf("  повний вибір 5, з кешем:     %s\n\n", $stats($setWarm));
+        printf("  вибір 1 (як ad-next), без кешу: %s\n", $stats($setCold));
+        printf("  вибір 1 (як ad-next), з кешем: %s\n\n", $stats($setWarm));
     }
 } catch (Throwable $e) {
     if ($pdo->inTransaction()) {

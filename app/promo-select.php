@@ -390,8 +390,8 @@ function promo_weighted_sample(array $pool, int $n, callable $weightOf): array
 {
     $out = [];
     $weights = array_map(static fn($r) => max(0.0, (float) $weightOf($r)), $pool);
+    $sum = array_sum($weights);
     while ($pool !== [] && count($out) < $n) {
-        $sum = array_sum($weights);
         if ($sum <= 0) {
             // Усі ваги нульові — рівномірно.
             $weights = array_fill_keys(array_keys($pool), 1.0);
@@ -407,6 +407,7 @@ function promo_weighted_sample(array $pool, int $n, callable $weightOf): array
             }
         }
         $out[] = $pool[$pick];
+        $sum -= $weights[$pick];   // сума ваг не перераховується щоразу (тисячі кандидатів)
         unset($pool[$pick], $weights[$pick]);
     }
 

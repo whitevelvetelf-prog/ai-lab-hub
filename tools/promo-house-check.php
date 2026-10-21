@@ -118,7 +118,7 @@ try {
     // Кампанія B: не в маркетплейсі й не при marketplace_public = 0.
     $inMp = [];
     for ($i = 0; $i < 12; $i++) {
-        $inMp[] = $pickCampaign('marketplace_feed', ['mp' => ['board']]);
+        $inMp[] = $pickCampaign('marketplace_listing_page', ['mp' => ['board']]);   // списки маркетплейсу вимкнено (2026-10-21)
     }
     $check('умови', 'у маркетплейсі B не показується (лише A)', !in_array($cB, $inMp, true) && in_array($cA, $inMp, true));
     site_settings_save($pdo, ['marketplace_public' => '0']);
@@ -130,7 +130,7 @@ try {
     site_settings_save($pdo, ['marketplace_public' => '1']);
     $siteB = [];
     for ($i = 0; $i < 20; $i++) {
-        $siteB[] = $pickCampaign('category_page');
+        $siteB[] = $pickCampaign('popup');   // спливаюче вікно (з 2026-10-21 замість карток у списках)
     }
     $check('умови', 'на сторінках сайту показуються обидві (A і B)', in_array($cA, $siteB, true) && in_array($cB, $siteB, true));
     $check('умови', 'сторінки advertise і кабінет виключені для A (exclude_pages)',

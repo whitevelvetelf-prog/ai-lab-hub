@@ -34,7 +34,7 @@ promo_db_utc($pdo);
 const DEMO_MARKER = 'DEMO';
 const DEMO_STATE = __DIR__ . '/../storage/cache/promo-demo-state.json';
 $uploadDir = __DIR__ . '/../public/uploads/promo';
-$placements = ['subcategory_list', 'search_results', 'category_page', 'marketplace_feed', 'marketplace_search', 'marketplace_category'];
+$placements = ['popup'];   // з 2026-10-21 реклама — спливаюче вікно
 
 $one = static function (string $sql, array $p = []) use ($pdo): mixed {
     $st = $pdo->prepare($sql);

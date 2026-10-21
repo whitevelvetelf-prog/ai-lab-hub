@@ -139,7 +139,11 @@ try {
         'marketplace_category' => [[], [], ['mp' => ['course']], 'listings.php?type=course'],
         'marketplace_search' => [[], [], ['mp' => ['board', 'solutions']], 'marketplace.php?q=a'],
         'marketplace_listing_page' => [[], [], ['mp' => [$lstSec]], $lstUrl],
+        'popup' => [[], [], [], 'catalog.php?subcategory=' . $subId],
     ];
+    // З 2026-10-21 реклама в списках — спливаюче вікно: місця-списки вимкнені й слотів на сторінках не мають,
+    // а 'popup' підключає лише скрипт (вікно показує JS через /ad-next.php).
+    $noSlot = ['category_page', 'subcategory_list', 'search_results', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'popup'];
     $serveQs = static fn(array $cats, array $subs, array $page): string => '&category=' . implode(',', $cats) . '&subcategory=' . implode(',', $subs)
         . (!empty($page['product']) ? '&product=' . $page['product'] : '') . (!empty($page['article']) ? '&article=' . $page['article'] : '')
         . (!empty($page['mp']) ? '&mp=' . implode(',', $page['mp']) : '');
@@ -189,7 +193,13 @@ try {
         $check($g, 'той самий креатив не повторюється на сторінці (exclude → 204)', $code === 204, "serve={$code}");
         [$code, $html] = $http($ctx[$pl][3]);
         // Списки — нативна картка (app/ad-card.php, data-native), блоки — порожній слот promo_slot.
-        $check($g, 'слот на сторінці ' . $ctx[$pl][3], $code === 200 && preg_match_all('~class="sponsored-slot (?:sponsored-slot--native )?sponsored-slot--' . $pl . '"~', $html) === 1, "http={$code}");
+        if ($pl === 'popup') {
+            $check($g, 'скрипт вікна на сторінці ' . $ctx[$pl][3], $code === 200 && str_contains($html, 'id="ad-popup-config"'), "http={$code}");
+        } elseif (in_array($pl, $noSlot, true)) {
+            $check($g, 'у списку на ' . $ctx[$pl][3] . ' рекламних карток немає', $code === 200 && !str_contains($html, 'sponsored-slot--' . $pl), "http={$code}");
+        } else {
+            $check($g, 'слот на сторінці ' . $ctx[$pl][3], $code === 200 && preg_match_all('~class="sponsored-slot sponsored-slot--' . $pl . '"~', $html) === 1, "http={$code}");
+        }
 
         // Без ціни місце не обирається (майстер і зміна місць).
         $rates = promo_rate_card($pdo);
