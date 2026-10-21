@@ -180,3 +180,17 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
   Старі зони — `ad_zone_stats_daily`. Тест: `php tools/promo-load-test.php 5000`.
 - **Тексти**: «Умови» 3.3, «Конфіденційність» 3.3, «Про проєкт» — ключі `legal_*`, `about_ads_*` (EN у ui_translations).
 - Перевірка вручну: `php tools/promo-demo-ads.php create` / `delete`.
+
+## Спливаюче вікно (2026-10-21, замінює нативні картки в списках)
+
+- Міграція `database/migration-2026-10-21-ad-popup.sql` (= `increment_latest.sql`). Нативні картки зі списків прибрано
+  (`app/ad-card.php` видалено; місця category_page, subcategory_list, search_results, marketplace_feed/search/category вимкнено).
+- Місце `popup` (ad_placements, група popup; зона «Спливаюча реклама» в ad_zones — довідково). `app/ad-popup.php` з підвалу
+  підключає лише скрипт і правила; вікно малює `public/assets/js/ad-popup.js` + `css/ad-popup.css`, оголошення — `public/ad-next.php`
+  (JSON або 204, X-Popup-Wait).
+- Правила: друга сторінка візиту І ≥ `ad_popup_visit_delay_seconds` (30) від його початку; інтервал `ad_popup_min_interval_seconds`
+  (600) від закриття (localStorage `alh_ad_popup_closed` + сесія `ad_popup`); не під час набору тексту; сторінки
+  `ad_popup_excluded_pages` (fnmatch); боти — скрипт не підключається; no_promo.
+- «Пропустити»: `ad_creatives.skip_delay_seconds` (10–15, NULL → `ad_popup_skip_delay_default` = 12); адмінка «Кампанії» → «Пропуск вікна».
+- Статистика: `ad_stats_daily.skips`; impression — вікно видно ≥1 с; skip — «Пропустити»/Esc після відліку (і фіксує закриття в сесії).
+- Перевірка: `php tools/promo-demo-ads.php create|delete`, `php tools/promo-load-test.php 5000`, тести promo-*-check.
