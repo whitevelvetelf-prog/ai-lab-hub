@@ -546,9 +546,12 @@ function promo_creatives_full(PDO $pdo, array $ids): array
     if (promo_has_column($pdo, 'ad_creatives', 'skip_delay_seconds')) {
         $houseCols .= ', cr.skip_delay_seconds';
     }
+    if (promo_has_column($pdo, 'ad_creatives', 'theme')) {
+        $houseCols .= ', cr.theme';
+    }
     try {
         $st = $pdo->prepare(
-            "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.video_type,
+            "SELECT cr.id, cr.campaign_id, cr.title, cr.description, cr.cta_key, cr.destination_url, cr.video_type,
                     cr.video_path, cr.youtube_id, cr.poster_path, c.campaign_type{$houseCols}
              FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
              WHERE cr.id IN (" . implode(',', array_fill(0, count($ids), '?')) . ')'

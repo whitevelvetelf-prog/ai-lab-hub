@@ -38,6 +38,8 @@ final class PromoCurrencyMismatch extends RuntimeException
 {
 }
 const PROMO_CTA_KEYS = ['learn_more', 'try', 'go', 'download'];
+/** Кольорові теми карток власної реклами (ad_creatives.theme); NULL — чергуються за id. */
+const PROMO_CARD_THEMES = ['sky', 'mint', 'sun'];
 const PROMO_REPORT_REASONS = ['misleading', 'inappropriate', 'scam', 'irrelevant', 'other'];
 
 /** Скільки живе токен показу (сек): події з давнішим токеном не рахуються. */
@@ -925,8 +927,19 @@ function promo_card_payload(array $cr, string $placement, bool $preview, ?PDO $p
         'title'       => promo_card_text($cr, 'title', $lang, $pdo),
         'description' => promo_card_text($cr, 'description', $lang, $pdo),
         'cta'         => $cta,
+        'theme'       => promo_card_theme($cr),
+        // Іконка оформлення: сумка — Marketplace, мегафон — решта (запрошення рекламуватись).
+        'icon'        => str_contains((string) ($cr['destination_url'] ?? ''), 'marketplace') ? 'bag' : 'megaphone',
         'video'       => null,
         'youtube'     => null,
         'poster'      => null,
     ];
+}
+
+/** Тема картки: збережена (sky / mint / sun) або за id, щоб сусідні оголошення різнились. */
+function promo_card_theme(array $cr): string
+{
+    $own = (string) ($cr['theme'] ?? '');
+
+    return in_array($own, PROMO_CARD_THEMES, true) ? $own : PROMO_CARD_THEMES[(int) ($cr['id'] ?? 0) % count(PROMO_CARD_THEMES)];
 }

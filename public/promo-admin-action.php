@@ -27,7 +27,7 @@ declare(strict_types=1);
  *   rule_add          advertiser_category, scope=all:0|category:N|subcategory:N, note;  rule_delete  id
  *   diagnose_page     url — «перевірити сторінку»: чи буде реклама й чому ні
  *   house_campaign_save  campaign_id, name, placements[], rules[…] — власна кампанія (місця, умови)
- *   house_variant_save   creative_id, тексти UA/EN, cta, destination_url, ref_code, card_layout
+ *   house_variant_save   creative_id, тексти UA/EN, cta, destination_url, ref_code, card_layout, theme
  *   house_add_variant | house_duplicate | house_preview   campaign_id
  * Після дії — редирект у кабінет (account.php?padm_tab=…#acc-promo-admin).
  */

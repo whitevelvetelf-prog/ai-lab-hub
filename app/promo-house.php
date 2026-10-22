@@ -217,6 +217,11 @@ function promo_house_save_variant(PDO $pdo, int $adminId, array $in): array
         ':f' => $t('description_fallback', 150) ?: null, ':fe' => $t('description_fallback_en', 150) ?: null,
         ':c' => $t('cta_text', 40), ':ce' => $t('cta_text_en', 40) ?: null, ':u' => $url, ':r' => $ref ?: null,
         ':l' => ($in['card_layout'] ?? '') === 'compact' ? 'compact' : 'wide', ':id' => $id]);
+    if (promo_has_column($pdo, 'ad_creatives', 'theme')) {
+        $theme = (string) ($in['theme'] ?? '');
+        $pdo->prepare('UPDATE ad_creatives SET theme = :th WHERE id = :id')
+            ->execute([':th' => in_array($theme, PROMO_CARD_THEMES, true) ? $theme : null, ':id' => $id]);
+    }
     promo_log_event($pdo, 'house_variant_saved', $id, (int) $cr['campaign_id'], (string) $ref, $adminId);
 
     return [true, 'Варіант ' . ($ref ?: '#' . $id) . ' збережено.'];
@@ -391,7 +396,12 @@ function promo_house_admin_html(PDO $pdo, string $csrf, callable $badge): string
                 . $f('destination_url', 'Адреса переходу (/… або https://)', 480) . $f('ref_code', 'Код ref (house-A1)', 20)
                 . '<label class="pc-field"><span>Макет</span><select name="card_layout"><option value="wide"' . ($cr['card_layout'] !== 'compact' ? ' selected' : '') . '>Широкий (стрічка/блок)</option>'
                 . '<option value="compact"' . ($cr['card_layout'] === 'compact' ? ' selected' : '') . '>Компактний (картка в списку)</option></select></label>'
-                . '</div><p class="pc-muted">У сітках списків картка завжди компактна. ref додається до адреси автоматично.</p>'
+                . (array_key_exists('theme', $cr) ? '<label class="pc-field"><span>Кольорова тема</span><select name="theme">'
+                    . '<option value=""' . (!in_array($cr['theme'], PROMO_CARD_THEMES, true) ? ' selected' : '') . '>Автоматично (чергуються)</option>'
+                    . implode('', array_map(static fn(string $k, string $label) => '<option value="' . $k . '"' . ($cr['theme'] === $k ? ' selected' : '') . '>' . $label . '</option>',
+                        PROMO_CARD_THEMES, ['Блакитна (sky)', 'М’ятна (mint)', 'Сонячна (sun)']))
+                    . '</select></label>' : '')
+                . '</div><p class="pc-muted">У сітках списків картка завжди компактна. ref додається до адреси автоматично. Кнопка — 1–3 слова, заголовок до ~45 символів, опис до ~90.</p>'
                 . '<button type="submit" class="pc-btn pc-btn--primary">Зберегти варіант</button></form></details>';
         }
         $h .= '</article>';

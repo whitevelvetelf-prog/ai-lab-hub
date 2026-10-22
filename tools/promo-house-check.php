@@ -165,7 +165,15 @@ try {
     unset($_SESSION['user_id']);
 
     // Тексти: {free_until}, запасні, EN.
-    $b1 = $pdo->query("SELECT cr.*, 'internal' AS campaign_type FROM ad_creatives cr WHERE ref_code = 'house-B1'")->fetch();
+    // Тексти — власні тестові (реальні тексти house-B1 редагуються в адмінці й міграціями).
+    $b1 = array_merge($pdo->query("SELECT cr.*, 'internal' AS campaign_type FROM ad_creatives cr WHERE ref_code = 'house-B1'")->fetch(), [
+        'title_en' => 'Marketplace: post your listing',
+        'description' => 'Розміщення безкоштовне до {free_until}.',
+        'description_en' => 'Free to post until {free_until}.',
+        'description_fallback' => 'Розміщення безкоштовне на старті.',
+        'description_fallback_en' => 'Free to post at launch.',
+        'cta_text' => 'Розмістити оголошення',
+    ]);
     $p = promo_card_payload($b1, 'blog_list', false, $pdo);
     $check('тексти', '{free_until} підставляється датою українською', !str_contains($p['description'], '{free_until}') && preg_match('/до \d{1,2} [а-яії]+ \d{4}/u', $p['description']) === 1, $p['description']);
     site_settings_save($pdo, ['marketplace_free_until' => '']);
