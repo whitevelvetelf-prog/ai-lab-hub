@@ -4,7 +4,7 @@
  *     сервера разом із JSON до 5 креативів; тут лише оживлюються. Інші слоти (app/promo.php
  *     → promo_slot) порожні й приховані: креативи питаються в /promo-serve.php; немає
  *     реклами (204) — слот лишається прихованим, порожнього місця немає.
- *   * Ротація: слот крутить свої креативи — відео змінюється після VIDEO_PLAYS відтворень
+ *   * Ротація: слот крутить свої креативи — відео змінюється після першого (єдиного) відтворення
  *     (якщо глядач не ввімкнув звук), зображення й картки — кожні ROTATE_MS видимого часу.
  *     Креативи не повторюються на сторінці (exclude для наступних запитів).
  *   * Відео: muted + playsinline; src підставляється лише поблизу екрана (до того —
@@ -34,7 +34,6 @@
     /** Зображення й картки змінюються кожні ROTATE_MS видимого часу. */
     var ROTATE_MS = 15000;
     /** Відео змінюється після стількох відтворень (перше + повтор). */
-    var VIDEO_PLAYS = 2;
     /** Відео вантажиться заздалегідь, коли картка ближче за цю відстань до екрана. */
     var NEAR_MARGIN = '300px 0px';
     /** Пакет подій відправляється не рідше ніж раз на FLUSH_MS (і при закритті вкладки). */
@@ -188,13 +187,14 @@
 
     /**
      * Відео: src лише поблизу екрана (near) або при діях глядача, до того — постер; старт
-     * без звуку, коли картка видима; пауза поза екраном. Кілька креативів у слоті — після
-     * VIDEO_PLAYS відтворень onDone() (ротація), якщо глядач не ввімкнув звук.
+     * без звуку, коли картка видима; пауза поза екраном (повернулась — продовжує з того місця).
+     * Ролик грає ОДИН раз: без loop, після завершення автоматично не стартує, навіть коли картка
+     * знову видима. Кілька креативів у слоті — після завершення onDone() (ротація), якщо глядач
+     * не ввімкнув звук; інакше — кнопка «Переглянути ще раз» (лише кліком, без звуку).
      */
     function wireVideo(video, media, labels, rotating, onView, onDone) {
         var loaded = false;
         var play = null;
-        var plays = 0;
         function load() {
             if (!loaded) {
                 loaded = true;
@@ -223,19 +223,36 @@
         video.defaultMuted = true;
         video.setAttribute('muted', '');
         video.setAttribute('playsinline', '');
-        if (rotating) {
-            video.removeAttribute('loop');
-            video.addEventListener('ended', function () {
-                plays++;
-                if (plays >= VIDEO_PLAYS && video.muted) {
-                    onDone();
-                } else {
-                    video.currentTime = 0;
-                    video.play().catch(noop);
-                }
+        var done = false;
+        video.loop = false;
+        video.removeAttribute('loop');
+        video.addEventListener('ended', function () {
+            done = true;
+            if (rotating && video.muted) {
+                onDone();
+                return;
+            }
+            showReplay();
+        });
+        function showReplay() {
+            if (play) {
+                return;
+            }
+            play = el('button', 'sponsored-card__play', '↻');
+            play.type = 'button';
+            play.setAttribute('aria-label', labels.replay || labels.play);
+            play.title = labels.replay || labels.play;
+            play.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                play.remove();
+                play = null;
+                done = false;
+                video.muted = true;
+                video.currentTime = 0;
+                video.play().catch(noop);
             });
-        } else {
-            video.setAttribute('loop', '');
+            media.appendChild(play);
         }
         media.appendChild(soundButton(video, labels, load));
         if (!allowAutoplay) {
@@ -250,7 +267,7 @@
                 }
             },
             visible: function (isVisible) {
-                if (isVisible && allowAutoplay) {
+                if (isVisible && allowAutoplay && !done) {
                     load();
                     // Браузер заборонив автозапуск (енергозбереження) — кнопка «відтворити».
                     video.play().catch(showPlay);

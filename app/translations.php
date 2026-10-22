@@ -623,6 +623,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'ad_popup_skip_in'    => 'Пропустити через %d с',
     'ad_popup_skip'       => 'Пропустити',
     'ad_popup_skip_ready' => 'Рекламу можна пропустити',
+    'ad_popup_replay'     => '↻ Переглянути ще раз',
     'ad_popup_dialog'     => 'Рекламне оголошення',
 
     // --- Тексти про рекламу в «Умовах», «Політиці конфіденційності» й «Про проєкт» (EN — ui_translations, manual) ---

@@ -387,6 +387,7 @@ function promo_labels(): array
         'soundOn'      => t('promo_sound_on'),
         'soundOff'     => t('promo_sound_off'),
         'play'         => t('promo_play'),
+        'replay'       => t('ad_popup_replay'),
         'report'       => t('promo_report'),
         'reportSend'   => t('promo_report_send'),
         'reportCancel' => t('promo_report_cancel'),

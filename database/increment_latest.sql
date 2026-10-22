@@ -1,17 +1,11 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — реклама лише спливаючим вікном (місце 'popup').
--- Вимикаємо всі старі вбудовані місця показу (картки/відео в тексті сторінок: сторінка продукту,
--- список і стаття блогу, головна й сторінки оголошень маркетплейсу тощо). promo_slot() для
--- вимкненого місця нічого не виводить, майстер кампанії їх не пропонує. Код місць лишається —
--- будь-яке можна знову ввімкнути в адмінці («Реклама: адмін» → «Місця»).
--- Лише UPDATE прапорця enabled. Без DROP / DELETE. Повторний запуск безпечний.
+-- AI LAB HUB — реклама: відео не повторюється після завершення, кінцева картка.
+-- Лише переклад кнопки «Переглянути ще раз» (ключ ad_popup_replay) англійською.
+-- Нових подій чи колонок немає: повтор за кнопкою нічого не надсилає в облік.
+-- INSERT … ON DUPLICATE KEY UPDATE. Без DROP / DELETE. Повторний запуск безпечний.
 -- =====================================================================
 
-UPDATE ad_placements SET enabled = 0, updated_at = UTC_TIMESTAMP()
- WHERE placement_key <> 'popup' AND enabled = 1;
-
--- Спливаюче вікно лишається ввімкненим.
-UPDATE ad_placements SET enabled = 1, updated_at = UTC_TIMESTAMP()
- WHERE placement_key = 'popup' AND enabled = 0;
+INSERT INTO ui_translations (key_name, lang, translated_text, source) VALUES ('ad_popup_replay', 'en', '↻ Watch again', 'manual')
+ON DUPLICATE KEY UPDATE translated_text = VALUES(translated_text), source = 'manual';

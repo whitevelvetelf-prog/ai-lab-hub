@@ -18,8 +18,12 @@
  *     одразу без звуку (muted, playsinline) і підказка «Увімкнути звук» біля динаміка.
  *     Кнопка-динамік завжди є; вибір глядача — у localStorage (alh_ad_popup_sound: on|off),
  *     вимкнув — автоматично звук більше не вмикається. Звучить лише одне відео на сторінці.
- *     Коротше за відлік — повторюється. saveData / prefers-reduced-motion (або браузер не дав
- *     навіть без звуку) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
+ *     Ролик грає ОДИН раз (без циклу й без повторного автозапуску): після завершення — кінцева
+ *     картка поверх кадру («Реклама», кнопка рекламодавця, «Переглянути ще раз» — лише кліком і без
+ *     звуку; повтор не рахується ні як показ, ні як перегляд). YouTube після завершення прибирається,
+ *     щоб не показувати чужі рекомендовані відео. Відлік «Пропустити» йде своїм ходом.
+ *     saveData / prefers-reduced-motion (або браузер не дав навіть без звуку) — постер і «▶»:
+ *     ролик стартує без звуку лише на дію глядача.
  *   * YouTube: плеєр через IFrame Player API (хост youtube-nocookie.com, скрипт API вантажиться лише
  *     коли відкривається вікно з YouTube), стартує сам БЕЗ звуку; звук — лише кнопкою-динаміком.
  *     Браузер заблокував автозапуск / скрипт YouTube заблоковано / reduced-motion чи saveData —
@@ -316,8 +320,9 @@
         // Медіа: зображення / відео / постер YouTube; уся область — посилання на рекламодавця.
         var video = null;
         var ytBox = null;
+        var media = null;
         if (creative.type !== 'card') {
-            var media = el('div', 'adp-media');
+            media = el('div', 'adp-media');
             var mediaLink = el('a', 'adp-media__link');
             mediaLink.href = href;
             mediaLink.target = '_blank';
@@ -458,6 +463,38 @@
         var live = el('p', 'adp-sr');
         live.setAttribute('aria-live', 'polite');
         dialog.appendChild(live);
+
+        // Кінцева картка після завершення ролика (і для файлу, і для YouTube).
+        var endCard = null;
+        function showEndCard(onReplay) {
+            if (endCard || !media) {
+                return;
+            }
+            endCard = el('div', 'adp-end');
+            endCard.appendChild(el('span', 'adp-end__label', labels.label));
+            var endCta = el('a', 'adp-end__cta', creative.cta);
+            endCta.href = href;
+            endCta.target = '_blank';
+            endCta.rel = 'noopener sponsored';
+            endCard.appendChild(endCta);
+            var replay = el('button', 'adp-end__replay', labels.replay || '↻');
+            replay.type = 'button';
+            replay.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();   // не відкривати рекламодавця
+                hideEndCard();
+                onReplay();
+            });
+            endCard.appendChild(replay);
+            media.appendChild(endCard);
+            debug('відео завершено — кінцева картка');
+        }
+        function hideEndCard() {
+            if (endCard) {
+                endCard.remove();
+                endCard = null;
+            }
+        }
 
         var restoreScroll = lockScroll();
         document.body.appendChild(overlay);
@@ -654,6 +691,27 @@
             });
             ytBox.appendChild(ytPlayBtn);
         }
+        function ytRemove() {
+            window.clearTimeout(ytBlockedTimer);
+            try {
+                if (yt && yt.destroy) {
+                    yt.destroy();
+                }
+            } catch (e) {
+                // плеєр уже непридатний
+            }
+            if (ytFrame && ytFrame.parentNode) {
+                ytFrame.remove();
+            }
+            yt = null;
+            ytFrame = null;
+            ytPlaying = false;
+            ytState = -1;
+            if (ytSound) {
+                ytSound.remove();
+                ytSound = null;
+            }
+        }
         function ytFail(reason, canPlay) {
             debug('YouTube: без плеєра —', reason);
             window.clearTimeout(ytBlockedTimer);
@@ -700,6 +758,9 @@
                     events: {
                         onReady: function () {
                             debug('YouTube: onReady, запуск без звуку');
+                            if (cfg.debug) {
+                                window.__adpYt = yt;   // діагностика адміна: керувати плеєром з консолі
+                            }
                             yt.mute();
                             yt.playVideo();
                             ytReadyAt = Date.now();
@@ -732,10 +793,12 @@
                                 }
                                 startCountdown();
                                 ytEnsureSound();
-                            } else if (ev.data === YT.PlayerState.ENDED && !ready) {
-                                // Коротше за відлік — повторюється; після відліку — дограє й зупиняється.
-                                yt.seekTo(0, true);
-                                yt.playVideo();
+                            } else if (ev.data === YT.PlayerState.ENDED) {
+                                // Один раз: плеєр прибираємо (без рекомендацій YouTube), лишається мініатюра.
+                                ytRemove();
+                                showEndCard(function () {
+                                    ytStart();   // лише кліком, без звуку
+                                });
                             }
                         },
                         onAutoplayBlocked: function () {
@@ -774,13 +837,16 @@
                 startCountdown();
             }
         } else if (video) {
-            // Коротше за відлік — повторюється; після відліку — дограє й зупиняється.
+            // Один раз: після завершення — кінцева картка, жодного автоматичного повтору.
             video.addEventListener('ended', function () {
-                if (!ready) {
+                hideSoundHint();
+                showEndCard(function () {
+                    video.muted = true;   // повтор без звуку; звук — динаміком
                     video.currentTime = 0;
                     video.play().catch(noop);
-                }
+                });
             });
+            video.addEventListener('play', hideEndCard);
             video.addEventListener('playing', startCountdown);
             if (allowAutoplay) {
                 window.setTimeout(function () {
