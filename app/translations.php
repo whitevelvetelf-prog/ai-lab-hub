@@ -317,7 +317,6 @@ $GLOBALS['TRANSLATIONS'] = [
     'footer_promo_rules' => 'Правила реклами',
     'footer_advertise' => 'Реклама на сайті',
     'footer_support'  => 'Підтримати проєкт',
-    'footer_social'   => 'Соцмережі',
 
     // --- blog.php / blog-post.php: блог ---
     'title_blog'         => 'AI LAB HUB — Блог',
