@@ -136,6 +136,8 @@ function ad_popup_bootstrap(PDO $pdo): string
             'cats' => $cats,
             'subs' => $subs,
             'lang' => promo_lang(),
+            // Діагностика плеєра в консолі — лише адміну з ?promo_debug=1 (на облік не впливає).
+            'debug' => !empty($_GET['promo_debug']) && function_exists('auth_has_role') && auth_has_role('admin'),
         ];
     } catch (Throwable $e) {
         error_log('[ad-popup] bootstrap: ' . $e->getMessage());

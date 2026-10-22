@@ -166,6 +166,20 @@
     border: 0;
 }
 
+/* Плеєр YouTube лягає поверх мініатюри; кнопки «▶» і динамік — поверх плеєра. */
+.adp-media .adp-yt {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: #000000;
+}
+
+.adp-media .adp-play,
+.adp-media .adp-sound,
+.adp-media .adp-sound-hint {
+    z-index: 2;
+}
+
 .adp-play {
     position: absolute;
     top: 50%;

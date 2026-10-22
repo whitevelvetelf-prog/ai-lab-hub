@@ -20,8 +20,14 @@
  *     вимкнув — автоматично звук більше не вмикається. Звучить лише одне відео на сторінці.
  *     Коротше за відлік — повторюється. saveData / prefers-reduced-motion (або браузер не дав
  *     навіть без звуку) — постер і «▶»: ролик стартує без звуку лише на дію глядача.
- *   * Відлік «Пропустити» йде з події playing (зображення, картка, постер — одразу; відео не
- *     стартувало за 3 с — теж). У прихованій вкладці відлік і відео на паузі.
+ *   * YouTube: плеєр через IFrame Player API (хост youtube-nocookie.com, скрипт API вантажиться лише
+ *     коли відкривається вікно з YouTube), стартує сам БЕЗ звуку; звук — лише кнопкою-динаміком.
+ *     Браузер заблокував автозапуск / скрипт YouTube заблоковано / reduced-motion чи saveData —
+ *     мініатюра й «▶». Помилка відео (2, 5, 100, 101, 150 — приватне, видалене, вбудовування
+ *     заборонене) — лише мініатюра, вікно працює як із зображенням.
+ *   * Відлік «Пропустити» йде з початку відтворення (зображення, картка, постер — одразу; відео не
+ *     стартувало за 3–5 с — теж). У прихованій вкладці відлік і відео на паузі.
+ *   * Адмін з ?promo_debug=1 (cfg.debug) бачить у консолі стан плеєра, події й помилки.
  *   * Оголошення без відео (зображення, картка) — вікно закривається саме через creative.display с (20)
  *     видимого часу.
  *   * Облік: impression — відео видно й воно грає ≥1 с (без відео — вікно видно ≥1 с);
@@ -48,12 +54,57 @@
     var LS_KEY = 'alh_ad_popup_closed';
     var LS_SOUND = 'alh_ad_popup_sound';
     var START_FALLBACK_MS = 3000;   // відео не стартувало — відлік однаково йде
+    var YT_HOST = 'https://www.youtube-nocookie.com';
+    var YT_START_FALLBACK_MS = 5000;   // YouTube: API ще вантажиться — відлік однаково йде
+    var YT_BLOCKED_MS = 2500;          // плеєр готовий, але не заграв — автозапуск заблоковано
+    var YT_BUFFER_MAX_MS = 8000;       // …якщо ще буферизується — чекаємо до стількох
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var saveData = !!(navigator.connection && navigator.connection.saveData);
     var allowAutoplay = !reduceMotion && !saveData;
 
     function noop() {}
+
+    function debug() {
+        if (cfg && cfg.debug && window.console) {
+            console.log.apply(console, ['[ad-popup]'].concat(Array.prototype.slice.call(arguments)));
+        }
+    }
+
+    // YouTube IFrame Player API — один раз на сторінку й лише коли потрібен.
+    var ytApi = null;
+    function loadYouTubeApi() {
+        if (ytApi) {
+            return ytApi;
+        }
+        ytApi = new Promise(function (resolve, reject) {
+            if (window.YT && window.YT.Player) {
+                resolve(window.YT);
+                return;
+            }
+            var prev = window.onYouTubeIframeAPIReady;
+            window.onYouTubeIframeAPIReady = function () {
+                if (typeof prev === 'function') {
+                    prev();
+                }
+                resolve(window.YT);
+            };
+            var s = document.createElement('script');
+            s.src = 'https://www.youtube.com/iframe_api';
+            s.async = true;
+            s.onerror = function () {
+                reject(new Error('YouTube API не завантажився'));
+            };
+            document.head.appendChild(s);
+            window.setTimeout(function () {
+                reject(new Error('YouTube API: тайм-аут'));
+            }, 8000);
+        });
+        ytApi.catch(function () {
+            ytApi = null;   // наступне вікно спробує ще раз
+        });
+        return ytApi;
+    }
 
     function el(tag, className, text) {
         var node = document.createElement(tag);
@@ -264,6 +315,7 @@
 
         // Медіа: зображення / відео / постер YouTube; уся область — посилання на рекламодавця.
         var video = null;
+        var ytBox = null;
         if (creative.type !== 'card') {
             var media = el('div', 'adp-media');
             var mediaLink = el('a', 'adp-media__link');
@@ -297,25 +349,9 @@
                 }
             }
             media.appendChild(mediaLink);
-            // YouTube: мініатюра + «відтворити» — програвач youtube-nocookie без звуку вантажиться лише на дію глядача.
+            // YouTube: поки що мініатюра; плеєр (нижче, після відліку) кладеться поверх неї.
             if (creative.type === 'youtube' && creative.youtube) {
-                var play = el('button', 'adp-play', '▶');
-                play.type = 'button';
-                play.setAttribute('aria-label', labels.play);
-                play.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();   // не відкривати рекламодавця
-                    var frame = el('iframe');
-                    frame.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(creative.youtube)
-                        + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
-                    frame.title = creative.title || labels.label;
-                    frame.allow = 'autoplay; encrypted-media; picture-in-picture';
-                    frame.referrerPolicy = 'strict-origin-when-cross-origin';
-                    media.textContent = '';
-                    media.appendChild(frame);
-                    (dialog.querySelector('.adp-cta') || dialog).focus();
-                });
-                media.appendChild(play);
+                ytBox = media;
             }
             if (video) {
                 var sound = el('button', 'adp-sound');
@@ -436,7 +472,7 @@
         var impressionMs = 0;     // видимий час відтворення (без відео — видимий час вікна)
         var impressionSent = false;
         // 'video' — показ рахується, поки ролик грає; 'still' — поки вікно видно.
-        var impressionMode = video && allowAutoplay ? 'video' : 'still';
+        var impressionMode = (video || ytBox) && allowAutoplay ? 'video' : 'still';
         function renderSkip() {
             skip.textContent = ready ? labels.skip : labels.skipIn.replace('%d', String(left));
         }
@@ -454,7 +490,7 @@
                 return;
             }
             if (!impressionSent) {
-                var playingNow = video && !video.paused && !video.ended && video.readyState > 2;
+                var playingNow = (video && !video.paused && !video.ended && video.readyState > 2) || ytPlaying;
                 if (impressionMode === 'still' || playingNow) {
                     impressionMs += dt;
                     if (impressionMs >= 1000) {
@@ -493,6 +529,18 @@
         var pausedByHide = false;
         function onVisibility() {
             lastTick = Date.now();
+            if (yt && yt.pauseVideo) {
+                if (document.visibilityState !== 'visible') {
+                    if (ytPlaying) {
+                        pausedByHide = true;
+                        yt.pauseVideo();
+                    }
+                } else if (pausedByHide) {
+                    pausedByHide = false;
+                    yt.playVideo();
+                }
+                return;
+            }
             if (!video) {
                 return;
             }
@@ -521,10 +569,211 @@
             if (video && m !== video && !m.muted && !video.muted) {
                 video.muted = true;
             }
+            if (yt && yt.isMuted && !m.muted && !yt.isMuted()) {
+                yt.mute();
+                ytSyncSound();
+            }
         }
         document.addEventListener('play', onOtherPlay, true);
 
-        if (video) {
+        // --- YouTube (IFrame Player API) --------------------------------------------
+        var yt = null;
+        var ytPlaying = false;
+        var ytFrame = null;
+        var ytPlayBtn = null;
+        var ytSound = null;
+        var ytApiFailed = false;
+        var ytBlockedTimer = 0;
+        var ytState = -1;
+        var ytReadyAt = 0;
+
+        function ytSyncSound() {
+            if (!ytSound || !yt || !yt.isMuted) {
+                return;
+            }
+            var on = !yt.isMuted();
+            ytSound.innerHTML = on ? ICON_SOUND : ICON_MUTED;
+            ytSound.setAttribute('aria-pressed', on ? 'true' : 'false');
+            ytSound.setAttribute('aria-label', on ? labels.soundOff : labels.soundOn);
+            ytSound.title = on ? labels.soundOff : labels.soundOn;
+        }
+        function ytEnsureSound() {
+            if (ytSound) {
+                return;
+            }
+            ytSound = el('button', 'adp-sound');
+            ytSound.type = 'button';
+            ytSound.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!yt || !yt.isMuted) {
+                    return;
+                }
+                if (yt.isMuted()) {
+                    silenceOthers();
+                    yt.unMute();
+                    soundPrefSet('on');
+                } else {
+                    yt.mute();
+                    soundPrefSet('off');
+                }
+                window.setTimeout(ytSyncSound, 150);
+            });
+            ytBox.appendChild(ytSound);
+            ytSyncSound();
+        }
+        function ytPlainFrame() {
+            // Скрипт YouTube заблоковано: простий програвач без звуку (як раніше), лише на дію глядача.
+            var frame = el('iframe', 'adp-yt');
+            frame.src = YT_HOST + '/embed/' + encodeURIComponent(creative.youtube) + '?autoplay=1&mute=1&playsinline=1&rel=0&modestbranding=1';
+            frame.title = creative.title || labels.label;
+            frame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+            frame.referrerPolicy = 'strict-origin-when-cross-origin';
+            ytBox.appendChild(frame);
+        }
+        function ytShowPlay() {
+            if (ytPlayBtn || ytPlaying) {
+                return;
+            }
+            ytPlayBtn = el('button', 'adp-play', '▶');
+            ytPlayBtn.type = 'button';
+            ytPlayBtn.setAttribute('aria-label', labels.play);
+            ytPlayBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();   // не відкривати рекламодавця
+                ytPlayBtn.remove();
+                ytPlayBtn = null;
+                if (yt && yt.playVideo) {
+                    yt.mute();
+                    yt.playVideo();
+                } else if (ytApiFailed) {
+                    ytPlainFrame();
+                } else {
+                    ytStart();
+                }
+            });
+            ytBox.appendChild(ytPlayBtn);
+        }
+        function ytFail(reason, canPlay) {
+            debug('YouTube: без плеєра —', reason);
+            window.clearTimeout(ytBlockedTimer);
+            try {
+                if (yt && yt.destroy) {
+                    yt.destroy();
+                }
+            } catch (e) {
+                // плеєр і так непридатний
+            }
+            if (ytFrame && ytFrame.parentNode) {
+                ytFrame.remove();
+            }
+            yt = null;
+            ytFrame = null;
+            ytPlaying = false;
+            if (ytSound) {
+                ytSound.remove();
+                ytSound = null;
+            }
+            impressionMode = 'still';
+            startCountdown();
+            if (canPlay) {
+                ytShowPlay();
+            }
+        }
+        function ytStart() {
+            loadYouTubeApi().then(function (YT) {
+                if (closing || yt) {
+                    return;
+                }
+                debug('YouTube API готовий, відео', creative.youtube);
+                ytFrame = el('iframe', 'adp-yt');
+                ytFrame.src = YT_HOST + '/embed/' + encodeURIComponent(creative.youtube) + '?' + new URLSearchParams({
+                    autoplay: '0', mute: '1', playsinline: '1', controls: '1', rel: '0', modestbranding: '1',
+                    iv_load_policy: '3', fs: '1', enablejsapi: '1', origin: window.location.origin
+                }).toString();
+                ytFrame.title = creative.title || labels.label;
+                ytFrame.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+                ytFrame.referrerPolicy = 'strict-origin-when-cross-origin';
+                ytFrame.setAttribute('allowfullscreen', '');
+                ytBox.appendChild(ytFrame);
+                yt = new YT.Player(ytFrame, {
+                    events: {
+                        onReady: function () {
+                            debug('YouTube: onReady, запуск без звуку');
+                            yt.mute();
+                            yt.playVideo();
+                            ytReadyAt = Date.now();
+                            var checkBlocked = function () {
+                                if (ytPlaying) {
+                                    return;
+                                }
+                                // Буферизується (повільна мережа) — це не блокування, чекаємо ще.
+                                if (ytState === YT.PlayerState.BUFFERING && Date.now() - ytReadyAt < YT_BUFFER_MAX_MS) {
+                                    ytBlockedTimer = window.setTimeout(checkBlocked, 500);
+                                    return;
+                                }
+                                debug('YouTube: не заграв (стан', ytState, ') — автозапуск заблоковано');
+                                impressionMode = 'still';
+                                startCountdown();
+                                ytShowPlay();
+                            };
+                            ytBlockedTimer = window.setTimeout(checkBlocked, YT_BLOCKED_MS);
+                        },
+                        onStateChange: function (ev) {
+                            debug('YouTube: стан', ev.data);
+                            ytState = ev.data;
+                            ytPlaying = ev.data === YT.PlayerState.PLAYING;
+                            if (ytPlaying) {
+                                window.clearTimeout(ytBlockedTimer);
+                                impressionMode = 'video';
+                                if (ytPlayBtn) {
+                                    ytPlayBtn.remove();
+                                    ytPlayBtn = null;
+                                }
+                                startCountdown();
+                                ytEnsureSound();
+                            } else if (ev.data === YT.PlayerState.ENDED && !ready) {
+                                // Коротше за відлік — повторюється; після відліку — дограє й зупиняється.
+                                yt.seekTo(0, true);
+                                yt.playVideo();
+                            }
+                        },
+                        onAutoplayBlocked: function () {
+                            debug('YouTube: onAutoplayBlocked');
+                            window.clearTimeout(ytBlockedTimer);
+                            impressionMode = 'still';
+                            startCountdown();
+                            ytShowPlay();
+                        },
+                        onError: function (ev) {
+                            // 2 — некоректний ID, 5 — помилка HTML5-плеєра, 100 — видалене / приватне,
+                            // 101 / 150 — автор заборонив вбудовування.
+                            ytFail('помилка плеєра ' + ev.data, ev.data === 5);
+                        }
+                    }
+                });
+            }, function (err) {
+                ytApiFailed = true;
+                ytFail(err && err.message ? err.message : 'API', true);
+            });
+        }
+
+        if (ytBox) {
+            if (allowAutoplay) {
+                window.setTimeout(function () {
+                    if (!started) {
+                        debug('YouTube: не стартував за', YT_START_FALLBACK_MS, 'мс — відлік іде');
+                        impressionMode = 'still';
+                        startCountdown();
+                    }
+                }, YT_START_FALLBACK_MS);
+                ytStart();
+            } else {
+                // reduced-motion / saveData — плеєр лише на дію глядача.
+                ytShowPlay();
+                startCountdown();
+            }
+        } else if (video) {
             // Коротше за відлік — повторюється; після відліку — дограє й зупиняється.
             video.addEventListener('ended', function () {
                 if (!ready) {
@@ -579,6 +828,10 @@
             lsSet(Math.floor(Date.now() / 1000));
             if (video) {
                 video.pause();
+            }
+            window.clearTimeout(ytBlockedTimer);
+            if (yt && yt.pauseVideo) {
+                yt.pauseVideo();
             }
             document.removeEventListener('visibilitychange', onVisibility);
             document.removeEventListener('play', onOtherPlay, true);
