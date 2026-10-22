@@ -148,6 +148,8 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $instructions = promo_payment_instructions($pdo);
     $jarUrl = promo_payment_jar_url($pdo);
     $canTopup = $instructions !== '' || $jarUrl !== '';
+    // Курс НБУ для форми (лише коли поповнення взагалі можливе); null — оплата тимчасово недоступна.
+    $topupRate = $canTopup ? promo_topup_rate($pdo) : null;
     $prohibited = trim(promo_setting($pdo, 'prohibited_categories_text_' . $lang, '')) ?: trim(promo_setting($pdo, 'prohibited_categories_text_uk', ''));
 
     $txSt = $pdo->prepare('SELECT * FROM ad_transactions WHERE user_id = :u ORDER BY id DESC LIMIT 100');
@@ -630,11 +632,15 @@ function promo_cabinet_render(PDO $pdo, array $user): void
 
                             <?php if (is_array($flash) && !empty($flash['topup']) && $canTopup): $req = $flash['topup']; ?>
                             <div class="pc-box pc-box--accent">
-                                <p><strong><?= pc_e(promo_tr('topup_created', (int) $req['id'], promo_money($req['amount']))) ?></strong></p>
+                                <?php $reqPay = !empty($req['original_currency']) ? promo_money((int) $req['original_amount'], (string) $req['original_currency']) : promo_money($req['amount']); ?>
+                                <p><strong><?= pc_e(promo_tr('topup_created', (int) $req['id'], $reqPay)) ?></strong></p>
+                                <?php if (!empty($req['original_currency'])): ?>
+                                <p><?= pc_e(promo_tr('topup_you_pay', $reqPay, promo_money($req['amount']), formatRate((string) $req['fx_rate']), promo_date((string) $req['fx_rate_at']))) ?></p>
+                                <?php endif; ?>
                                 <p><?= pc_e(promo_tr('payment_purpose')) ?> <code><?= pc_e($req['reference']) ?></code></p>
                                 <?php if ($jarUrl !== ''): ?>
                                 <p><a class="pc-btn pc-btn--primary" href="<?= pc_e($jarUrl) ?>" target="_blank" rel="noopener noreferrer"><?= pc_e(promo_tr('pay_jar_btn')) ?></a></p>
-                                <p class="pc-muted"><?= pc_e(promo_tr('pay_jar_hint', promo_money($req['amount']), $req['reference'])) ?></p>
+                                <p class="pc-muted"><?= pc_e(promo_tr('pay_jar_hint', $reqPay, $req['reference'])) ?></p>
                                 <?php endif; ?>
                                 <?php if ($instructions !== ''): ?>
                                 <div class="pc-instructions"><?= nl2br(pc_e($instructions)) ?></div>
@@ -645,15 +651,18 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                             <h3 class="pc-h3"><?= pc_e(promo_tr('topup_title')) ?></h3>
                             <?php if (!$canTopup): ?>
                             <p class="pc-note"><?= pc_e(promo_tr('topup_unavailable')) ?></p>
+                            <?php elseif ($topupRate === null): ?>
+                            <p class="pc-note pc-note--warn"><?= pc_e(promo_tr('topup_rate_unavailable')) ?></p>
                             <?php else: ?>
                             <form method="post" action="promo-action.php" class="pc-topup">
                                 <?= promo_csrf_field() ?>
                                 <label class="pc-field">
-                                    <span><?= pc_e(promo_tr('topup_amount')) ?><?= $minTopup ? ' · ' . pc_e(promo_tr('topup_min', promo_money($minTopup))) : '' ?></span>
+                                    <span><?= pc_e(promo_tr('topup_amount')) ?><?= $minTopup ? ' · ' . pc_e(promo_tr('topup_min', promo_money($minTopup) . ' ≈ ' . promo_money(fx_from_usd_cents($minTopup, $topupRate['micro']), PROMO_TOPUP_CURRENCY))) : '' ?></span>
                                     <input type="text" inputmode="decimal" name="amount" required placeholder="0.00">
                                 </label>
                                 <button type="submit" name="action" value="topup" class="pc-btn pc-btn--primary"><?= pc_e(promo_tr('topup_submit')) ?></button>
                             </form>
+                            <p class="pc-muted"><?= pc_e(promo_tr('topup_rate_note', promo_fx_source_label($topupRate['source']), formatRate($topupRate['rate']), promo_date($topupRate['date']))) ?></p>
                             <?php endif; ?>
 
                             <details class="pc-box">
@@ -701,10 +710,12 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                     <tr>
                                         <td data-label="<?= pc_e(promo_tr('col_date')) ?>"><?= pc_e(substr((string) $tx['created_at'], 0, 16)) ?></td>
                                         <td data-label="<?= pc_e(promo_tr('col_type')) ?>"><?= pc_e(promo_tr('tx_' . $tx['type'])) ?></td>
-                                        <td data-label="<?= pc_e(promo_tr('col_amount')) ?>"><?= pc_e(promo_money($tx['amount'], (string) $tx['currency'])) ?></td>
+                                        <?php $txm = promo_tx_money($tx); ?>
+                                        <td data-label="<?= pc_e(promo_tr('col_amount')) ?>"><?= pc_e($txm['main']) ?></td>
                                         <td data-label="<?= pc_e(promo_tr('col_status')) ?>"><span class="pc-badge pc-badge--tx-<?= pc_e($tx['status']) ?>"><?= pc_e(promo_tr('txs_' . $tx['status'])) ?></span></td>
                                         <td data-label="<?= pc_e(promo_tr('col_details')) ?>">
                                             <?php if ($tx['type'] === 'topup' && $tx['reference']): ?><code><?= pc_e($tx['reference']) ?></code><?php endif; ?>
+                                            <?php if ($txm['original'] !== null): ?><span class="pc-muted"><?= pc_e($txm['original']) ?></span><?php endif; ?>
                                             <?php if ($tx['type'] === 'spend' && $tx['campaign_id']): ?><?= pc_e(promo_tr('tx_spend_for', (int) $tx['campaign_id'], substr((string) $tx['reference'], -10))) ?><?php endif; ?>
                                             <?php if ($tx['status'] === 'rejected' && $tx['reject_reason']): ?><span class="pc-reason"><?= pc_e($tx['reject_reason']) ?></span><?php endif; ?>
                                             <?php if (in_array($tx['type'], ['adjust', 'refund'], true) && $tx['note']): ?><?= pc_e($tx['note']) ?><?php endif; ?>

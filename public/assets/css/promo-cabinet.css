@@ -171,7 +171,7 @@
 }
 
 .pc form[data-pc-confirm] .pc-btn::before {
-    content: "A0";
+    content: "\26A0\00A0"; /* ⚠ і нерозривний пробіл — escape лише ASCII-символами, від кодування не залежить */
     color: #fbbf24;
 }
 

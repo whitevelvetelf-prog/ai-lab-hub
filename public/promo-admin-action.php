@@ -7,7 +7,7 @@ declare(strict_types=1);
  *
  * Лише POST, CSRF обов'язковий, роль admin перевіряється за БД.
  *   moderate          creative_id, decision=approve|reject, reason
- *   topup_decide      tx_id, decision=confirm|reject, reason
+ *   topup_decide      tx_id, decision=confirm|reject, reason, received (фактично надійшло, ₴), accept_diff=1
  *   adjust            who (email|ID), type=adjust|refund, amount (±$), note
  *   rates             price[placement][cpm|cpc] ($; порожньо — ціна неактивна)
  *   placements_save   enabled[key]=1, slots[key]=1..3 — місця показу (ad_placements)
@@ -104,7 +104,8 @@ switch ($action) {
         $back('links', $ok, [$msg]);
 
     case 'topup_decide':
-        [$ok, $msg] = promo_admin_topup_decide($pdo, $adminId, (int) $str('tx_id'), $str('decision') === 'confirm', $str('reason'));
+        [$ok, $msg] = promo_admin_topup_decide($pdo, $adminId, (int) $str('tx_id'), $str('decision') === 'confirm', $str('reason'),
+            $str('received'), $str('accept_diff') === '1');
         $back('payments', $ok, [$msg]);
 
     case 'adjust':

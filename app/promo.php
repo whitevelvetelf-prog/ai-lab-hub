@@ -29,6 +29,8 @@ require_once __DIR__ . '/promo-select.php';
 
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';
+/** Валюта, в якій рекламодавець платить за поповнення (банка monobank — лише гривні); конвертується в USD (app/fx.php). */
+const PROMO_TOPUP_CURRENCY = 'UAH';
 /** Місця показу (ad_placements, app/promo-placements.php); старі ключі — PROMO_LEGACY_PLACEMENTS. */
 const PROMO_PLACEMENTS = ['category_page', 'subcategory_list', 'search_results', 'product_page', 'blog_list', 'blog_article',
     'marketplace_home', 'marketplace_feed', 'marketplace_category', 'marketplace_search', 'marketplace_listing_page', 'popup'];

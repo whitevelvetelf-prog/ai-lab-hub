@@ -23,13 +23,15 @@ interface PaymentProvider
     public function code(): string;
 
     /**
-     * Створити рахунок / заявку на поповнення. Повертає дані для показу
-     * рекламодавцю: id заявки, reference (призначення платежу), а для онлайн-
-     * провайдерів — redirect_url на сторінку оплати.
+     * Створити рахунок / заявку на поповнення. $amountKop / $currency — сума на баланс (центи USD);
+     * $fx — сплачена сума й зафіксований курс (original_amount, original_currency, fx_rate,
+     * fx_rate_source, fx_rate_at), саме за ним зараховується поповнення. Повертає дані для показу
+     * рекламодавцю: id заявки, reference (призначення платежу), а для онлайн-провайдерів —
+     * redirect_url на сторінку оплати.
      *
      * @return array{id:int,reference:string,redirect_url:?string}
      */
-    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency): array;
+    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency, array $fx = []): array;
 
     /** Поточний статус заявки: pending / confirmed / rejected. */
     public function status(PDO $pdo, int $transactionId): string;
@@ -49,12 +51,21 @@ final class ManualBankTransfer implements PaymentProvider
         return 'manual';
     }
 
-    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency): array
+    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency, array $fx = []): array
     {
-        $pdo->prepare(
-            "INSERT INTO ad_transactions (user_id, type, amount, currency, status, method, provider, note)
-             VALUES (:u, 'topup', :a, :cur, 'pending', 'manual', 'manual', 'Заявка на поповнення (банківський переказ)')"
-        )->execute([':u' => $userId, ':a' => $amountKop, ':cur' => $currency]);
+        if ($fx !== []) {
+            $pdo->prepare(
+                "INSERT INTO ad_transactions (user_id, type, amount, currency, original_amount, original_currency, fx_rate, fx_rate_source, fx_rate_at,
+                                              credited_usd, status, method, provider, note)
+                 VALUES (:u, 'topup', :a, :cur, :oa, :oc, :r, :rs, :ra, :a2, 'pending', 'manual', 'manual', 'Заявка на поповнення (банківський переказ)')"
+            )->execute([':u' => $userId, ':a' => $amountKop, ':cur' => $currency, ':oa' => (int) $fx['original_amount'], ':oc' => (string) $fx['original_currency'],
+                ':r' => (string) $fx['fx_rate'], ':rs' => (string) $fx['fx_rate_source'], ':ra' => (string) $fx['fx_rate_at'], ':a2' => $amountKop]);
+        } else {
+            $pdo->prepare(
+                "INSERT INTO ad_transactions (user_id, type, amount, currency, status, method, provider, note)
+                 VALUES (:u, 'topup', :a, :cur, 'pending', 'manual', 'manual', 'Заявка на поповнення (банківський переказ)')"
+            )->execute([':u' => $userId, ':a' => $amountKop, ':cur' => $currency]);
+        }
         $id = (int) $pdo->lastInsertId();
 
         $reference = promo_payment_reference($id);
@@ -90,16 +101,17 @@ final class ManualBankTransfer implements PaymentProvider
  *      на його сторінку оплати. Картку вводить покупець на сторінці провайдера —
  *      сайт номерів карток НЕ отримує й не зберігає.
  *   3. handleCallback(): перевірити підпис провайдера, знайти заявку за reference,
- *      ідемпотентно підтвердити її (status='confirmed', confirmed_at) і зарахувати
- *      суму на баланс — тією ж транзакцією, що й ручне підтвердження в адмінці
- *      (promo_admin_balance_add у app/promo-admin.php).
+ *      порівняти фактично сплачену суму й валюту з original_amount / original_currency заявки,
+ *      ідемпотентно підтвердити її (лише status='pending' … FOR UPDATE; повторний callback
+ *      нічого не зараховує) і зарахувати credited_usd (курс зафіксовано в заявці) — тією ж
+ *      транзакцією, що й ручне підтвердження (promo_admin_topup_decide у app/promo-admin.php).
  *   4. Публічний endpoint зворотного виклику (напр. public/promo-pay-callback.php)
  *      і перемикання promo_payment_provider() на нового провайдера.
  * Кабінет і баланс переробляти не треба: вони працюють лише через PaymentProvider.
  */
 abstract class PromoProviderStub implements PaymentProvider
 {
-    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency): array
+    public function createTopup(PDO $pdo, int $userId, int $amountKop, string $currency, array $fx = []): array
     {
         throw new LogicException(static::class . ': онлайн-оплата не підключена (немає мерчант-акаунта).');
     }

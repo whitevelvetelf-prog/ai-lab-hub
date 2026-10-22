@@ -19,6 +19,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/promo.php';
 require_once __DIR__ . '/promo-i18n.php';
 require_once __DIR__ . '/promo-payments.php';
+require_once __DIR__ . '/money.php';
+require_once __DIR__ . '/fx.php';
 require_once __DIR__ . '/promo-linkcheck.php';
 
 const PROMO_UPLOAD_DIR = __DIR__ . '/../public/uploads/promo';
@@ -74,19 +76,47 @@ function promo_parse_money(mixed $value): ?int
     return (int) $whole * 100 + (int) str_pad(substr($frac, 0, 2), 2, '0');
 }
 
+/** Сума реклами мовою інтерфейсу — через єдине formatMoney() (app/money.php). */
 function promo_money(int|string|null $kop, string $currency = PROMO_CURRENCY): string
 {
-    $kop = (int) $kop;
-    $sign = $kop < 0 ? '−' : '';
-    $en = promo_lang() === 'en';
-    $num = $en ? number_format(abs($kop) / 100, 2, '.', ',') : number_format(abs($kop) / 100, 2, ',', ' ');
+    return formatMoney($kop, $currency, promo_lang());
+}
 
-    return match ($currency) {
-        // Старі записи (до переходу на долари) лишаються в гривнях.
-        'UAH' => $sign . $num . ' ' . promo_tr('currency_uah'),
-        'USD' => $en ? $sign . '$' . $num : $sign . $num . ' $',
-        default => $sign . $num . ' ' . $currency,
-    };
+/**
+ * Сума запису ad_transactions для показу: main — що лягло / ляже на баланс (USD), original — сплачена
+ * сума з курсом («1 000,00 ₴ за курсом НБУ 44,8526 на 22.10.2026»), якщо поповнення було в іншій валюті.
+ * Старі записи без fx-полів — сума у власній валюті запису.
+ *
+ * @return array{main:string,original:?string}
+ */
+function promo_tx_money(array $tx): array
+{
+    $credited = $tx['credited_usd'] ?? null;
+    $main = $credited !== null && $credited !== ''
+        ? promo_money((int) $credited, PROMO_CURRENCY)
+        : promo_money((int) $tx['amount'], (string) ($tx['currency'] ?? PROMO_CURRENCY));
+    $orig = null;
+    if (!empty($tx['original_currency']) && ($tx['original_amount'] ?? null) !== null) {
+        $orig = promo_money((int) $tx['original_amount'], (string) $tx['original_currency']);
+        if (!empty($tx['fx_rate'])) {
+            $orig = promo_tr('tx_fx_detail', $orig, promo_fx_source_label((string) ($tx['fx_rate_source'] ?? '')), formatRate((string) $tx['fx_rate'], promo_lang()),
+                promo_date((string) ($tx['fx_rate_at'] ?? '')));
+        }
+    }
+
+    return ['main' => $main, 'original' => $orig];
+}
+
+/** Назва джерела курсу мовою інтерфейсу (NBU → «НБУ»). */
+function promo_fx_source_label(string $source): string
+{
+    return $source === 'NBU' && promo_lang() !== 'en' ? 'НБУ' : $source;
+}
+
+/** «2026-10-22» → «22.10.2026». */
+function promo_date(string $ymd): string
+{
+    return preg_match('/^(\d{4})-(\d{2})-(\d{2})/', $ymd, $m) ? $m[3] . '.' . $m[2] . '.' . $m[1] : $ymd;
 }
 
 /** Значення копійок для поля форми («123.45»). */
@@ -1147,27 +1177,50 @@ function promo_campaign_action(PDO $pdo, int $userId, int $campaignId, string $a
 // --- Поповнення ------------------------------------------------------------
 
 /** Заявка на поповнення. Повертає [ok, ключ, дані заявки]. */
+/**
+ * Заявка на поповнення. Рекламодавець вводить суму у валюті оплати (PROMO_TOPUP_CURRENCY, гривні —
+ * стільки він переказує на банку). Сервер бере курс НБУ (app/fx.php; не з запиту), рахує центи USD
+ * (вниз) і фіксує все в заявці — саме ця сума ляже на баланс після підтвердження. Курсу немає —
+ * «оплата тимчасово недоступна». Мінімум (ad_settings.min_topup) — у доларах.
+ */
 function promo_request_topup(PDO $pdo, int $userId, mixed $amountInput): array
 {
     if (promo_payment_instructions($pdo) === '' && promo_payment_jar_url($pdo) === '') {
         return [false, 'err_topup_unavailable', null];
     }
-    $amount = promo_parse_money($amountInput);
-    $min = promo_parse_money(promo_setting($pdo, 'min_topup', '')) ?? 0;
-    if ($amount === null || $amount <= 0 || $amount > 100000000) {
+    $paid = promo_parse_money($amountInput);
+    if ($paid === null || $paid <= 0 || $paid > 10000000000) {
         return [false, 'err_topup_amount', null];
     }
-    if ($min > 0 && $amount < $min) {
+    $rate = promo_has_column($pdo, 'ad_transactions', 'original_amount') ? fx_usd_rate($pdo, PROMO_TOPUP_CURRENCY) : null;
+    if ($rate === null) {
+        return [false, 'err_topup_rate', null];
+    }
+    $usd = fx_to_usd_cents($paid, $rate['micro']);
+    $min = promo_parse_money(promo_setting($pdo, 'min_topup', '')) ?? 0;
+    if ($usd <= 0) {
+        return [false, 'err_topup_amount', null];
+    }
+    if ($min > 0 && $usd < $min) {
         return [false, 'err_topup_min', null];
     }
     if (!promo_rate_ok($pdo, $userId, 'topup_request')) {
         return [false, 'err_rate_topups', null];
     }
-    $request = promo_payment_provider()->createTopup($pdo, $userId, $amount, PROMO_CURRENCY);
+    $fx = ['original_amount' => $paid, 'original_currency' => PROMO_TOPUP_CURRENCY, 'fx_rate' => $rate['rate'],
+        'fx_rate_source' => $rate['source'], 'fx_rate_at' => $rate['date']];
+    $request = promo_payment_provider()->createTopup($pdo, $userId, $usd, PROMO_CURRENCY, $fx);
     promo_rate_hit($pdo, $userId, 'topup_request');
-    promo_event_notify($pdo, 'topup_requested', ['user_id' => $userId, 'tx_id' => (int) ($request['id'] ?? 0), 'amount' => $amount]);
+    promo_event_notify($pdo, 'topup_requested', ['user_id' => $userId, 'tx_id' => (int) ($request['id'] ?? 0), 'amount' => $usd,
+        'original_amount' => $paid, 'original_currency' => PROMO_TOPUP_CURRENCY]);
 
-    return [true, 'ok_topup_created', $request + ['amount' => $amount]];
+    return [true, 'ok_topup_created', $request + ['amount' => $usd, 'credited_usd' => $usd, 'currency' => PROMO_CURRENCY] + $fx];
+}
+
+/** Курс для форми поповнення (null — оплата тимчасово недоступна). */
+function promo_topup_rate(PDO $pdo): ?array
+{
+    return promo_has_column($pdo, 'ad_transactions', 'original_amount') ? fx_usd_rate($pdo, PROMO_TOPUP_CURRENCY) : null;
 }
 
 /**

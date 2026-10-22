@@ -419,14 +419,14 @@ function promo_notify(PDO $pdo, string $event, array $d): void
                 break;
             case 'low_balance':
                 if ($user !== null && promo_notify_prefs($pdo, (int) $user['id'])['low_balance']) {
-                    $toAdvertiser('low_balance', [], [promo_mail_money((int) ($d['balance'] ?? 0))]);
+                    $toAdvertiser('low_balance', [], [promo_mail_money((int) ($d['balance'] ?? 0), (string) ($d['currency'] ?? PROMO_CURRENCY), $lang)]);
                 }
                 break;
             case 'topup_confirmed':
-                $toAdvertiser('topup_confirmed', [], [(string) $d['tx_id'], promo_mail_money((int) $d['amount'])]);
+                $toAdvertiser('topup_confirmed', [], [(string) $d['tx_id'], promo_mail_money((int) $d['amount'], (string) ($d['currency'] ?? PROMO_CURRENCY), $lang)]);
                 break;
             case 'topup_rejected':
-                $toAdvertiser('topup_rejected', [], [(string) $d['tx_id'], promo_mail_money((int) $d['amount']), (string) ($d['reason'] ?? '')]);
+                $toAdvertiser('topup_rejected', [], [(string) $d['tx_id'], promo_mail_money((int) $d['amount'], (string) ($d['currency'] ?? PROMO_CURRENCY), $lang), (string) ($d['reason'] ?? '')]);
                 break;
 
             case 'creative_pending':
@@ -434,7 +434,8 @@ function promo_notify(PDO $pdo, string $event, array $d): void
                     'Рекламодавець: ' . ($user['email'] ?? '—')], 'moderation');
                 break;
             case 'topup_requested':
-                promo_mail_admin($pdo, 'Нова заявка на поповнення', ['Заявка №' . (int) $d['tx_id'] . ' на ' . promo_mail_money((int) $d['amount']) . '.',
+                promo_mail_admin($pdo, 'Нова заявка на поповнення', ['Заявка №' . (int) $d['tx_id'] . ' на '
+                    . (!empty($d['original_currency']) ? promo_mail_money((int) $d['original_amount'], (string) $d['original_currency']) . ' (≈ ' . promo_mail_money((int) $d['amount']) . ')' : promo_mail_money((int) $d['amount'])) . '.',
                     'Рекламодавець: ' . ($user['email'] ?? '—'), 'Підтвердьте після надходження коштів.'], 'payments');
                 break;
             case 'report_new':
@@ -451,9 +452,14 @@ function promo_notify(PDO $pdo, string $event, array $d): void
     }
 }
 
-function promo_mail_money(int $kop): string
+/** Сума в листі — через єдине formatMoney() (app/money.php), мовою листа. */
+function promo_mail_money(int $kop, string $currency = PROMO_CURRENCY, string $lang = 'uk'): string
 {
-    return number_format($kop / 100, 2, ',', ' ') . ' $';
+    if (!function_exists('formatMoney')) {
+        require_once __DIR__ . '/money.php';
+    }
+
+    return formatMoney($kop, $currency, $lang);
 }
 
 /** promo_log_event без залежності від порядку підключення файлів. */

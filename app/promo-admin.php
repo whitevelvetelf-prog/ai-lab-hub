@@ -348,8 +348,16 @@ function promo_admin_save_shorteners(PDO $pdo, string $raw): array
 
 // --- Платежі ---------------------------------------------------------------
 
-/** Підтвердити або відхилити заявку на поповнення. */
-function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confirm, string $reason): array
+/**
+ * Підтвердити або відхилити заявку на поповнення.
+ *
+ * Заявка з конвертацією (original_currency): адмін вводить суму, що фактично надійшла ($receivedInput,
+ * у валюті оплати). Збігається з очікуваною — на баланс іде зафіксований у заявці credited_usd.
+ * Не збігається — нічого не зараховується, доки адмін не поставить «зарахувати за фактичною сумою»
+ * ($acceptDiff): тоді центи рахуються з фактичної суми за тим самим зафіксованим курсом (вниз).
+ * Повторне підтвердження неможливе: заявка блокується (FOR UPDATE) і має бути pending.
+ */
+function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confirm, string $reason, string $receivedInput = '', bool $acceptDiff = false): array
 {
     $reason = trim(promo_clean_text($reason));
     if (!$confirm && $reason === '') {
@@ -371,11 +379,43 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
 
             return [false, 'Заявка в ' . $tx['currency'] . ' (створена до переходу на ' . PROMO_CURRENCY . '): відхиліть її й попросіть рекламодавця створити нову або зарахуйте суму вручну через «Коригування» в ' . PROMO_CURRENCY . '.'];
         }
+        $credit = (int) $tx['amount'];
+        $fxNote = null;
+        if ($confirm && !empty($tx['original_currency'])) {
+            $received = promo_parse_money($receivedInput);
+            $expected = (int) $tx['original_amount'];
+            $cur = (string) $tx['original_currency'];
+            if ($received === null || $received <= 0) {
+                $pdo->rollBack();
+
+                return [false, 'Вкажіть суму, що фактично надійшла за заявкою №' . $txId . ' (' . $cur . ', очікується ' . formatMoney($expected, $cur, 'uk') . ').'];
+            }
+            if ($received !== $expected) {
+                $byReceived = fx_to_usd_cents($received, fx_rate_micro((string) $tx['fx_rate']));
+                if (!$acceptDiff) {
+                    $pdo->rollBack();
+
+                    return [false, 'Надійшло ' . formatMoney($received, $cur, 'uk') . ', а очікувалось ' . formatMoney($expected, $cur, 'uk')
+                        . ' — нічого не зараховано. Перевірте надходження або поставте «зарахувати за фактичною сумою»: буде зараховано '
+                        . formatMoney($byReceived, PROMO_CURRENCY, 'uk') . ' (за курсом заявки ' . formatRate((string) $tx['fx_rate'], 'uk') . ').'];
+                }
+                if ($byReceived <= 0) {
+                    $pdo->rollBack();
+
+                    return [false, 'Фактична сума замала: після конвертації це 0 центів.'];
+                }
+                $credit = $byReceived;
+                $fxNote = 'очікувалось ' . formatMoney($expected, $cur, 'uk') . ', надійшло ' . formatMoney($received, $cur, 'uk');
+            }
+            $pdo->prepare(
+                'UPDATE ad_transactions SET original_amount = :oa, amount = :a, credited_usd = :a2, note = COALESCE(CONCAT(note, :n), note) WHERE id = :id'
+            )->execute([':oa' => $received, ':a' => $credit, ':a2' => $credit, ':n' => $fxNote !== null ? ' · ' . $fxNote : null, ':id' => $txId]);
+        }
         $pdo->prepare(
             'UPDATE ad_transactions SET status = :s, reject_reason = :r, confirmed_by = :a, confirmed_at = NOW() WHERE id = :id'
         )->execute([':s' => $confirm ? 'confirmed' : 'rejected', ':r' => $confirm ? null : mb_substr($reason, 0, 500), ':a' => $adminId, ':id' => $txId]);
         if ($confirm) {
-            promo_admin_balance_add($pdo, (int) $tx['user_id'], (int) $tx['amount'], (string) $tx['currency']);
+            promo_admin_balance_add($pdo, (int) $tx['user_id'], $credit, (string) $tx['currency']);
         }
         $pdo->commit();
     } catch (PromoCurrencyMismatch $e) {
@@ -390,10 +430,10 @@ function promo_admin_topup_decide(PDO $pdo, int $adminId, int $txId, bool $confi
     }
 
     promo_event_notify($pdo, $confirm ? 'topup_confirmed' : 'topup_rejected',
-        ['user_id' => (int) $tx['user_id'], 'tx_id' => $txId, 'amount' => (int) $tx['amount'], 'reason' => $reason]);
+        ['user_id' => (int) $tx['user_id'], 'tx_id' => $txId, 'amount' => $credit, 'currency' => (string) $tx['currency'], 'reason' => $reason]);
 
     return [true, $confirm
-        ? 'Поповнення підтверджено, суму зараховано на баланс ' . promo_money($tx['amount']) . '.'
+        ? 'Поповнення підтверджено, на баланс зараховано ' . formatMoney($credit, (string) $tx['currency'], 'uk') . ($fxNote !== null ? ' (' . $fxNote . ')' : '') . '.'
         : 'Заявку відхилено.'];
 }
 
@@ -484,7 +524,7 @@ function promo_admin_adjust(PDO $pdo, int $adminId, string $who, string $type, s
         return [false, 'Не вдалося змінити баланс.'];
     }
 
-    return [true, 'Баланс ' . $user['email'] . ' змінено на ' . promo_money($amount, $currency) . '.'];
+    return [true, 'Баланс ' . $user['email'] . ' змінено на ' . formatMoney($amount, $currency, 'uk') . '.'];
 }
 
 // --- Прайс -----------------------------------------------------------------

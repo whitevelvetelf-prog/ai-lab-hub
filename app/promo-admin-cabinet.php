@@ -293,7 +293,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <dt>Кнопка</dt><dd><strong class="pc-warn-text">свій текст:</strong> «<?= pc_e($q['cta_text']) ?>»<?= trim((string) ($q['cta_text_en'] ?? '')) !== '' ? ' / EN «' . pc_e($q['cta_text_en']) . '»' : '' ?><span class="pc-muted">Перевірте: текст чесно описує дію на сторінці переходу, без обіцянок результату й маскування.</span></dd>
                                         <?php endif; ?>
                                         <dt>Модель</dt><dd><?= $q['pricing_model'] === 'cpc' ? 'CPC (за клік)' : 'CPM (за 1000 показів)' ?></dd>
-                                        <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price)) ?><br><?php endforeach; ?></dd>
+                                        <dt>Ціни (знімок)</dt><dd><?php foreach ($tg['placements'] as $pl => $price): ?><?= pc_e($plLabel[$pl] ?? $pl) ?>: <?= pc_e(promo_money($price, (string) ($q['campaign_currency'] ?? PROMO_CURRENCY))) ?><br><?php endforeach; ?></dd>
                                         <dt>Аудиторія</dt><dd><?= pc_e(['all' => 'усі мови', 'uk' => 'українська', 'en' => 'англійська'][$tg['language']] ?? $tg['language']) ?> · <?= pc_e(['all' => 'усі пристрої', 'mobile' => 'мобільні', 'desktop' => 'комп’ютери'][$tg['device']] ?? $tg['device']) ?><br><?= pc_e(implode(', ', $tg['categories'])) ?><?php if ($tg['has_marketplace']): ?><br>Маркетплейс: <?= pc_e($tg['mp_sections']) ?><?php endif; ?></dd>
                                         <dt>Бюджет</dt><dd>загальний <?= pc_e(promo_money($q['total_budget'], $q['campaign_currency'])) ?><?= $q['daily_budget'] !== null ? ', денний ' . pc_e(promo_money($q['daily_budget'], $q['campaign_currency'])) : '' ?></dd>
                                         <dt>Дати</dt><dd><?= pc_e($q['start_date']) ?><?= $q['end_date'] ? ' — ' . pc_e($q['end_date']) : ' (без кінця)' ?></dd>
@@ -430,23 +430,31 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 <table class="pc-table">
                                     <thead><tr><th>Заявка</th><th>Рекламодавець</th><th>Сума</th><th>Призначення</th><th>Рішення</th></tr></thead>
                                     <tbody>
-                                    <?php foreach ($pendingTopups as $tx): ?>
+                                    <?php foreach ($pendingTopups as $tx):
+                                        $txm = promo_tx_money($tx);
+                                        $fxTx = !empty($tx['original_currency']);
+                                        $expect = $fxTx ? formatMoney((int) $tx['original_amount'], (string) $tx['original_currency'], 'uk') : null; ?>
                                     <tr>
                                         <td data-label="Заявка">№<?= (int) $tx['id'] ?><span class="pc-muted"><?= pc_e(substr((string) $tx['created_at'], 0, 16)) ?></span></td>
                                         <td data-label="Рекламодавець"><?= pc_e($tx['name']) ?><span class="pc-muted"><?= pc_e($tx['email']) ?></span></td>
-                                        <td data-label="Сума"><strong><?= pc_e(promo_money($tx['amount'])) ?></strong></td>
+                                        <td data-label="Сума"><?php if ($fxTx): ?>очікується <strong><?= pc_e($expect) ?></strong><span class="pc-muted">→ на баланс <?= pc_e($txm['main']) ?>; <?= pc_e($txm['original']) ?></span><?php else: ?><strong><?= pc_e($txm['main']) ?></strong><?php endif; ?></td>
                                         <td data-label="Призначення"><code><?= pc_e($tx['reference']) ?></code></td>
                                         <td data-label="Рішення" class="pc-actions">
                                             <form method="post" action="promo-admin-action.php" class="pc-inline-form"
-                                                  data-pc-confirm="Підтвердити надходження <?= pc_e(promo_money($tx['amount'])) ?> за заявкою №<?= (int) $tx['id'] ?>? Сума буде зарахована на баланс.">
+                                                  data-pc-confirm="Підтвердити заявку №<?= (int) $tx['id'] ?>? На баланс буде зараховано <?= pc_e($txm['main']) ?><?= $fxTx ? ' (якщо надійшла сума збігається з очікуваною ' . pc_e($expect) . ')' : '' ?>.">
                                                 <?= $csrf ?>
                                                 <input type="hidden" name="action" value="topup_decide">
                                                 <input type="hidden" name="tx_id" value="<?= (int) $tx['id'] ?>">
                                                 <input type="hidden" name="decision" value="confirm">
+                                                <?php if ($fxTx): ?>
+                                                <label class="pc-field"><span>Фактично надійшло, <?= pc_e((string) $tx['original_currency']) ?></span>
+                                                    <input type="text" name="received" inputmode="decimal" required placeholder="<?= pc_e(promo_money_input($tx['original_amount'])) ?>"></label>
+                                                <label class="pc-check"><input type="checkbox" name="accept_diff" value="1"> <span>Зарахувати за фактичною сумою, якщо вона інша (за курсом заявки)</span></label>
+                                                <?php endif; ?>
                                                 <button type="submit" class="pc-btn pc-btn--small pc-btn--primary">Підтвердити</button>
                                             </form>
                                             <form method="post" action="promo-admin-action.php" class="pc-reject pc-reject--inline"
-                                                  data-pc-confirm="Відхилити заявку №<?= (int) $tx['id'] ?> на <?= pc_e(promo_money($tx['amount'])) ?>?">
+                                                  data-pc-confirm="Відхилити заявку №<?= (int) $tx['id'] ?> на <?= pc_e($fxTx ? $expect : $txm['main']) ?>?">
                                                 <?= $csrf ?>
                                                 <input type="hidden" name="action" value="topup_decide">
                                                 <input type="hidden" name="tx_id" value="<?= (int) $tx['id'] ?>">
@@ -470,7 +478,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                 <label class="pc-field"><span>Email або ID користувача</span><input type="text" name="who" required></label>
                                 <label class="pc-field"><span>Тип</span>
                                     <select name="type"><option value="adjust">Коригування (±)</option><option value="refund">Повернення на баланс (+)</option></select></label>
-                                <label class="pc-field"><span>Сума у валюті балансу — $; старий ненульовий баланс у грн (мінус — списати)</span><input type="text" name="amount" inputmode="decimal" required placeholder="напр. 100 або -25.50"></label>
+                                <label class="pc-field"><span>Сума, $ (мінус — списати)</span><input type="text" name="amount" inputmode="decimal" required placeholder="напр. 100 або -25.50"></label>
                                 <label class="pc-field"><span>Примітка (обов'язково)</span><input type="text" name="note" maxlength="500" required></label>
                                 <button type="submit" class="pc-btn pc-btn--primary">Застосувати</button>
                             </form>
@@ -486,7 +494,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="Дата"><?= pc_e(substr((string) $tx['created_at'], 0, 16)) ?></td>
                                         <td data-label="Користувач"><?= pc_e($tx['email']) ?></td>
                                         <td data-label="Тип"><?= pc_e($txUk[$tx['type']] ?? $tx['type']) ?></td>
-                                        <td data-label="Сума"><?= pc_e(promo_money($tx['amount'])) ?></td>
+                                        <?php $txm = promo_tx_money($tx); ?>
+                                        <td data-label="Сума"><?= pc_e($txm['main']) ?><?php if ($txm['original'] !== null): ?><span class="pc-muted"><?= pc_e($txm['original']) ?></span><?php endif; ?></td>
                                         <td data-label="Статус"><span class="pc-badge pc-badge--tx-<?= pc_e($tx['status']) ?>"><?= pc_e($txsUk[$tx['status']] ?? $tx['status']) ?></span></td>
                                         <td data-label="Деталі"><?= pc_e(trim(($tx['reference'] ?? '') . ' ' . ($tx['note'] ?? '') . ' ' . ($tx['reject_reason'] ?? ''))) ?><?= $tx['confirmed_by'] ? '<span class="pc-muted">адмін #' . (int) $tx['confirmed_by'] . ', ' . pc_e(substr((string) $tx['confirmed_at'], 0, 16)) . '</span>' : '' ?></td>
                                     </tr>
