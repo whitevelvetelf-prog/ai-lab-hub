@@ -6,9 +6,12 @@
  *     localStorage недоступний — лише серверна сесія.
  *   * Поки фокус у полі вводу або в полі є текст (пошук, чат Елі) — чекаємо.
  *   * Вікно: role="dialog", aria-modal, фокус усередині (Tab циклічно), фон затемнено й
- *     не прокручується (позиція прокрутки повертається після закриття). «Пропустити»
- *     недоступна skip с (10–15) зі зворотним відліком (aria-live polite); до кінця відліку
- *     вікно не закривається ні фоном, ні Esc. Після — «Пропустити» або Esc.
+ *     не прокручується (позиція прокрутки повертається після закриття). Угорі — бейдж
+ *     «Реклама» і «Пропустити» (правий кут): недоступна skip с (10–15) зі зворотним відліком
+ *     (aria-live polite); до кінця відліку вікно не закривається ні фоном, ні Esc. Після —
+ *     «Пропустити» або Esc. Поява й зникнення — CSS-анімація (reduced-motion — без неї).
+ *   * Власна реклама (картка) — без зображення з текстом: блок оформлення (градієнт теми
+ *     creative.theme sky|mint|sun + inline SVG, іконка creative.icon megaphone|bag).
  *   * Клік по рекламі — /promo-click.php у новій вкладці; вікно лишається відкритим.
  *   * Відео стартує само. Зі звуком — лише якщо глядач уже взаємодіяв зі сторінкою
  *     (navigator.userActivation.hasBeenActive) і не вимикав звук раніше; браузер не дав —
@@ -176,6 +179,34 @@
     var ICON_SOUND = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">'
         + '<path fill="currentColor" d="M3 9v6h4l5 5V4L7 9H3z"/>'
         + '<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+    var THEMES = ['sky', 'mint', 'sun'];
+    var HERO_ICONS = {
+        megaphone: '<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+        bag: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
+    };
+
+    /** Зірочка-іскра з центром (x, y) і «радіусом» r. */
+    function sparkle(x, y, r, fill, opacity) {
+        return '<path fill="' + fill + '" opacity="' + opacity + '" d="M' + x + ' ' + (y - r) + 'Q' + x + ' ' + y + ' ' + (x + r) + ' ' + y
+            + 'Q' + x + ' ' + y + ' ' + x + ' ' + (y + r) + 'Q' + x + ' ' + y + ' ' + (x - r) + ' ' + y + 'Q' + x + ' ' + y + ' ' + x + ' ' + (y - r) + 'Z"/>';
+    }
+
+    /** Блок оформлення картки: м'які кола й зірочки (без тексту) та іконка, що повільно «пливе». */
+    function heroBlock(theme, icon) {
+        var star = theme === 'sun' ? '#ffffff' : '#ffc83d';
+        var hero = el('div', 'adp-hero');
+        hero.innerHTML = '<svg class="adp-hero__decor" viewBox="0 0 480 148" preserveAspectRatio="xMidYMid slice" focusable="false">'
+            + '<circle cx="54" cy="136" r="92" fill="#fff" opacity=".22"/>'
+            + '<circle cx="438" cy="6" r="84" fill="#fff" opacity=".2"/>'
+            + '<circle cx="392" cy="128" r="36" fill="#fff" opacity=".18"/>'
+            + '<circle cx="158" cy="24" r="18" fill="#fff" opacity=".24"/>'
+            + sparkle(112, 62, 11, star, '.95') + sparkle(340, 46, 9, '#fff', '.9')
+            + sparkle(306, 114, 6, star, '.85') + sparkle(196, 116, 5, '#fff', '.8')
+            + '</svg>'
+            + '<span class="adp-hero__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+            + 'stroke-linecap="round" stroke-linejoin="round" focusable="false">' + (HERO_ICONS[icon] || HERO_ICONS.megaphone) + '</svg></span>';
+        return hero;
+    }
 
     function lockScroll() {
         var y = window.scrollY || window.pageYOffset || 0;
@@ -199,8 +230,9 @@
         var skipDelay = Math.max(10, Math.min(15, parseInt(creative.skip, 10) || 12));
         var opener = document.activeElement;
 
-        var overlay = el('div', 'adp-overlay' + (reduceMotion ? ' adp-overlay--still' : ''));
-        var dialog = el('div', 'adp-dialog' + (creative.type === 'card' ? ' adp-dialog--card' : ''));
+        var overlay = el('div', 'adp-overlay');
+        var theme = THEMES.indexOf(creative.theme) >= 0 ? creative.theme : THEMES[(parseInt(creative.id, 10) || 0) % THEMES.length];
+        var dialog = el('div', 'adp-dialog' + (creative.type === 'card' ? ' adp-dialog--card adp-theme--' + theme : ''));
         dialog.setAttribute('role', 'dialog');
         dialog.setAttribute('aria-modal', 'true');
         dialog.setAttribute('aria-labelledby', 'adp-title');
@@ -208,7 +240,27 @@
         dialog.tabIndex = -1;
         overlay.appendChild(dialog);
 
-        dialog.appendChild(el('span', 'adp-label', labels.label));
+        // Угорі: бейдж «Реклама» ліворуч, «Пропустити» в правому куті (видно завжди).
+        var head = el('div', 'adp-head');
+        head.appendChild(el('span', 'adp-label', labels.label));
+        var skip = el('button', 'adp-skip');
+        skip.type = 'button';
+        skip.disabled = true;
+        skip.setAttribute('aria-disabled', 'true');
+        head.appendChild(skip);
+        dialog.appendChild(head);
+
+        // Власна реклама: блок оформлення без тексту; клік по ньому — як по рекламі.
+        if (creative.type === 'card') {
+            var heroLink = el('a', 'adp-hero-link');
+            heroLink.href = href;
+            heroLink.target = '_blank';
+            heroLink.rel = 'noopener sponsored';
+            heroLink.tabIndex = -1;
+            heroLink.setAttribute('aria-hidden', 'true');
+            heroLink.appendChild(heroBlock(theme, creative.icon));
+            dialog.appendChild(heroLink);
+        }
 
         // Медіа: зображення / відео / постер YouTube; уся область — посилання на рекламодавця.
         var video = null;
@@ -366,11 +418,6 @@
         cta.target = '_blank';
         cta.rel = 'noopener sponsored';
         actions.appendChild(cta);
-        var skip = el('button', 'adp-skip');
-        skip.type = 'button';
-        skip.disabled = true;
-        skip.setAttribute('aria-disabled', 'true');
-        actions.appendChild(skip);
         dialog.appendChild(actions);
         var live = el('p', 'adp-sr');
         live.setAttribute('aria-live', 'polite');
@@ -521,10 +568,12 @@
             startCountdown();
         }
 
+        var closing = false;
         function close(auto) {
-            if (!ready) {
+            if (!ready || closing) {
                 return;
             }
+            closing = true;
             window.clearInterval(timer);
             sendEvents([{ t: creative.token, type: auto === true ? 'close' : 'skip' }]);
             lsSet(Math.floor(Date.now() / 1000));
@@ -534,11 +583,28 @@
             document.removeEventListener('visibilitychange', onVisibility);
             document.removeEventListener('play', onOtherPlay, true);
             document.removeEventListener('keydown', onKey, true);
-            overlay.remove();
-            restoreScroll();
-            if (opener && opener.focus && document.contains(opener)) {
-                opener.focus();
+            var finish = function () {
+                if (!overlay.parentNode) {
+                    return;
+                }
+                overlay.remove();
+                restoreScroll();
+                if (opener && opener.focus && document.contains(opener)) {
+                    opener.focus();
+                }
+            };
+            if (reduceMotion) {
+                finish();
+                return;
             }
+            // Зникнення 150 мс (CSS); запасний таймер — якщо animationend не прийде.
+            overlay.classList.add('adp-overlay--out');
+            overlay.addEventListener('animationend', function (e) {
+                if (e.target === overlay) {
+                    finish();
+                }
+            });
+            window.setTimeout(finish, 200);
         }
 
         function onKey(e) {

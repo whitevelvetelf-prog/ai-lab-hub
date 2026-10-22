@@ -1,6 +1,9 @@
 /* AI LAB HUB — реклама спливаючим вікном (public/assets/js/ad-popup.js).
-   Бренд: #00032c → #2116ad, білий текст. Вікно вміщається в екран (390 px теж),
-   без горизонтальної прокрутки; кнопки щонайменше 44 px. */
+   Рамка світла й спокійна (діє для всіх оголошень, платних теж): біле вікно, м'яке затемнення,
+   бейдж «Реклама» пігулкою, «Пропустити» — у правому верхньому куті. Власна реклама (картка) —
+   HTML + CSS: кольоровий блок оформлення без тексту (градієнт + inline SVG) і теми sky / mint / sun.
+   Вікно вміщається в екран (390 px теж), без горизонтальної прокрутки; кнопки щонайменше 44 px.
+   Анімуються лише transform і opacity; prefers-reduced-motion — жодної анімації. */
 
 .adp-overlay {
     position: fixed;
@@ -11,34 +14,63 @@
     justify-content: center;
     padding: 16px;
     box-sizing: border-box;
-    background: rgba(0, 3, 44, 0.78);
-    animation: adp-fade 0.2s ease-out;
+    background: rgba(0, 3, 44, 0.55);
+    animation: adp-fade-in 0.22s ease-out both;
 }
 
-.adp-overlay--still {
-    animation: none;
+@supports ((-webkit-backdrop-filter: blur(4px)) or (backdrop-filter: blur(4px))) {
+    .adp-overlay {
+        background: rgba(0, 3, 44, 0.45);
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+    }
 }
 
-@keyframes adp-fade {
+.adp-overlay--out {
+    pointer-events: none;
+    animation: adp-fade-out 0.15s ease-in both;
+}
+
+.adp-overlay--out .adp-dialog {
+    animation: adp-rise-out 0.15s ease-in both;
+}
+
+@keyframes adp-fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+@keyframes adp-fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes adp-rise-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes adp-rise-out {
+    from { opacity: 1; transform: none; }
+    to { opacity: 0; transform: translateY(12px); }
 }
 
 .adp-dialog {
     position: relative;
     display: flex;
     flex-direction: column;
-    width: min(560px, 100%);
+    width: min(520px, 100%);
     max-height: calc(100vh - 32px);
     overflow-y: auto;
+    overflow-x: hidden;
     box-sizing: border-box;
-    padding: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: 18px;
-    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-    color: #ffffff;
+    padding: 24px;
+    border-radius: 24px;
+    background: #ffffff;
+    box-shadow: 0 20px 50px rgba(0, 3, 44, 0.18), 0 2px 8px rgba(0, 3, 44, 0.08);
+    color: #00032c;
     outline: none;
+    animation: adp-rise-in 0.24s ease-out both;
 }
 
 @supports (height: 100dvh) {
@@ -47,27 +79,74 @@
     }
 }
 
-.adp-label {
-    align-self: flex-start;
-    margin-bottom: 12px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: #00032c;
-    background: #ffffff;
+/* Верхній рядок: бейдж ліворуч, «Пропустити» праворуч. */
+.adp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
 }
+
+.adp-label {
+    flex: 0 0 auto;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #2116ad;
+    background: #eef2ff;
+}
+
+.adp-skip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0 16px;
+    border: 1px solid rgba(33, 22, 173, 0.14);
+    border-radius: 999px;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    color: #3b4270;
+    background: rgba(238, 242, 255, 0.7);
+    cursor: pointer;
+}
+
+.adp-skip:disabled {
+    cursor: default;
+}
+
+/* Після відліку — чітко активна. */
+.adp-skip:not(:disabled) {
+    border-color: #2116ad;
+    color: #ffffff;
+    background: #2116ad;
+}
+
+.adp-skip:not(:disabled):hover {
+    background: #1a1190;
+}
+
+
+/* --- Медіа (зображення / відео рекламодавця) -------------------------------- */
 
 .adp-media {
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
     flex: 0 0 auto;
-    border-radius: 12px;
+    border-radius: 16px;
     overflow: hidden;
-    background: #00032c;
+    background: #eef2ff;
 }
 
 .adp-media__link,
@@ -94,18 +173,21 @@
     width: 64px;
     height: 64px;
     margin: -32px 0 0 -32px;
+    padding: 0 0 0 4px;
     border: 0;
     border-radius: 50%;
     font-size: 1.5rem;
     cursor: pointer;
-    color: #ffffff;
-    background: rgba(0, 3, 44, 0.78);
+    color: #2116ad;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 6px 18px rgba(0, 3, 44, 0.18);
 }
 
 .adp-play:hover {
-    background: #2116ad;
+    background: #ffffff;
 }
 
+/* Динамік — м'який, у кутку відео. */
 .adp-sound {
     position: absolute;
     right: 10px;
@@ -119,12 +201,13 @@
     border: 0;
     border-radius: 50%;
     cursor: pointer;
-    color: #ffffff;
-    background: rgba(0, 3, 44, 0.75);
+    color: #2116ad;
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 2px 8px rgba(0, 3, 44, 0.15);
 }
 
 .adp-sound:hover {
-    background: #2116ad;
+    background: #ffffff;
 }
 
 /* Підказка «Увімкнути звук» ліворуч від динаміка — коли браузер не дав стартувати зі звуком. */
@@ -133,34 +216,104 @@
     right: 62px;
     bottom: 18px;
     max-width: calc(100% - 80px);
-    padding: 4px 10px;
+    padding: 4px 12px;
     border-radius: 999px;
     font-size: 0.8125rem;
+    font-weight: 600;
     line-height: 1.4;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     pointer-events: none;
-    color: #ffffff;
-    background: rgba(0, 3, 44, 0.75);
-    animation: adp-hint-in 0.3s ease-out;
+    color: #2116ad;
+    background: rgba(255, 255, 255, 0.92);
+    animation: adp-fade-in 0.3s ease-out both;
 }
 
-@keyframes adp-hint-in {
-    from {
-        opacity: 0;
-    }
+/* --- Власна реклама: блок оформлення (без тексту) і теми ------------------- */
+
+.adp-hero-link {
+    display: block;
+    flex: 0 0 auto;
+    border-radius: 18px;
+    text-decoration: none;
 }
+
+.adp-hero {
+    position: relative;
+    display: block;
+    flex: 0 0 auto;
+    height: 148px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: linear-gradient(135deg, var(--adp-a) 0%, var(--adp-b) 100%);
+}
+
+.adp-hero__decor {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.adp-hero__icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    margin: -42px 0 0 -42px;
+    border-radius: 50%;
+    color: var(--adp-ink);
+    background: #ffffff;
+    box-shadow: 0 10px 24px rgba(0, 3, 44, 0.14);
+    animation: adp-float 5.5s ease-in-out infinite alternate;
+}
+
+.adp-hero__icon svg {
+    width: 44px;
+    height: 44px;
+}
+
+@keyframes adp-float {
+    from { transform: translateY(3px); }
+    to { transform: translateY(-3px); }
+}
+
+.adp-theme--sky {
+    --adp-a: #6b8cff;
+    --adp-b: #8fb4ff;
+    --adp-ink: #2116ad;
+}
+
+.adp-theme--mint {
+    --adp-a: #5ee6c0;
+    --adp-b: #b8f5e4;
+    --adp-ink: #0b6b55;
+}
+
+.adp-theme--sun {
+    --adp-a: #ffd36b;
+    --adp-b: #fff0c2;
+    --adp-ink: #8a5a00;
+}
+
+/* --- Текст і кнопка дії --------------------------------------------------- */
 
 .adp-title {
-    margin: 16px 0 8px;
-    font-size: 1.25rem;
-    line-height: 1.3;
+    margin: 18px 0 8px;
+    font-size: clamp(1.375rem, 1.2rem + 0.8vw, 1.625rem);
+    font-weight: 800;
+    line-height: 1.25;
+    color: #00032c;
     overflow-wrap: anywhere;
 }
 
 .adp-title a {
-    color: #ffffff;
+    color: inherit;
     text-decoration: none;
 }
 
@@ -169,8 +322,10 @@
 }
 
 .adp-desc {
-    margin: 0 0 16px;
-    color: rgba(255, 255, 255, 0.86);
+    margin: 0 0 20px;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #3b4270;
     overflow-wrap: anywhere;
 }
 
@@ -183,52 +338,65 @@
     flex-wrap: wrap;
     gap: 10px;
     align-items: center;
-    justify-content: space-between;
-}
-
-.adp-cta,
-.adp-skip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    padding: 0 20px;
-    border-radius: 999px;
-    font-size: 0.95rem;
-    font-weight: 700;
-    box-sizing: border-box;
 }
 
 .adp-cta {
-    color: #00032c;
-    background: #ffffff;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    max-width: 100%;
+    padding: 0 28px;
+    border-radius: 999px;
+    box-sizing: border-box;
+    font-size: 1rem;
+    font-weight: 700;
+    text-align: center;
     text-decoration: none;
-}
-
-.adp-cta:hover {
-    background: #dbe5ff;
-}
-
-.adp-skip {
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    overflow-wrap: anywhere;
     color: #ffffff;
-    background: transparent;
-    cursor: pointer;
+    background: #2116ad;
+    isolation: isolate;
+    transition: transform 0.18s ease-out;
 }
 
-.adp-skip:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+/* Тінь під кнопкою — окремим шаром, щоб анімувалась лише opacity. */
+.adp-cta::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: 0 8px 18px rgba(0, 3, 44, 0.22);
+    opacity: 0;
+    transition: opacity 0.18s ease-out;
 }
 
-.adp-skip:not(:disabled):hover {
-    background: rgba(255, 255, 255, 0.14);
+.adp-cta:hover,
+.adp-cta:active {
+    transform: translateY(-2px);
+}
+
+.adp-cta:hover::after,
+.adp-cta:active::after {
+    opacity: 1;
+}
+
+/* Власна реклама — теплий акцент, текст #00032c (контраст ≈ 14:1). */
+.adp-dialog--card .adp-cta {
+    color: #00032c;
+    background: #ffc83d;
+}
+
+.adp-dialog--card .adp-cta::after {
+    box-shadow: 0 8px 18px rgba(190, 130, 0, 0.3);
 }
 
 .adp-play:focus-visible,
 .adp-dialog a:focus-visible,
 .adp-dialog button:focus-visible {
-    outline: 2px solid #9fb8ff;
+    outline: 3px solid #6b8cff;
     outline-offset: 2px;
 }
 
@@ -244,22 +412,60 @@
 
 @media (max-width: 480px) {
     .adp-overlay {
-        padding: 12px;
-    }
-
-    .adp-dialog {
         padding: 16px;
     }
 
-    .adp-cta,
+    .adp-dialog {
+        padding: 20px;
+        border-radius: 22px;
+    }
+
+    .adp-head {
+        margin-bottom: 14px;
+    }
+
     .adp-skip {
+        padding: 0 14px;
+        font-size: 0.8125rem;
+    }
+
+    .adp-hero {
+        height: 124px;
+    }
+
+    .adp-hero__icon {
+        width: 72px;
+        height: 72px;
+        margin: -36px 0 0 -36px;
+    }
+
+    .adp-hero__icon svg {
+        width: 38px;
+        height: 38px;
+    }
+
+    .adp-cta {
         flex: 1 1 100%;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .adp-overlay,
-    .adp-sound-hint {
+    .adp-overlay--out,
+    .adp-dialog,
+    .adp-overlay--out .adp-dialog,
+    .adp-sound-hint,
+    .adp-hero__icon {
         animation: none;
+    }
+
+    .adp-cta,
+    .adp-cta::after {
+        transition: none;
+    }
+
+    .adp-cta:hover,
+    .adp-cta:active {
+        transform: none;
     }
 }
