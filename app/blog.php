@@ -75,6 +75,9 @@ const BLOG_ARTICLES = [
     'ai-for-working-and-service-dogs' => [
         'uk' => 'ai-dlya-robochykh-i-sluzhbovykh-sobak-ua.md',
         'en' => 'ai-for-working-and-service-dogs-en.md',
+    ],    'ai-digital-memory-loved-ones' => [
+        'uk' => 'shi-ta-pamyat-pro-pomerlykh-ua.md',
+        'en' => 'ai-and-remembering-the-dead-en.md',
     ],
 ];
 
@@ -84,10 +87,6 @@ const BLOG_ARTICLES = [
  * Публікація = перенести запис у кінець BLOG_ARTICLES (і теми — у BLOG_ARTICLE_TOPICS).
  */
 const BLOG_DRAFTS = [
-    'ai-digital-memory-loved-ones' => [
-        'uk' => 'shi-ta-pamyat-pro-pomerlykh-ua.md',
-        'en' => 'ai-and-remembering-the-dead-en.md',
-    ],
 ];
 
 /**
@@ -110,6 +109,7 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-for-parenting' => ['my-home/parenting'],
     'ai-for-dog-training' => ['my-home/dog-training', 'my-home/pets'],
     'ai-for-working-and-service-dogs' => ['my-home/working-dogs', 'my-home/pet-grooming-vet'],
+    'ai-digital-memory-loved-ones' => ['my-home/digital-memory-legacy'],
 ];
 
 /**
