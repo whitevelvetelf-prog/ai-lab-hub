@@ -7,7 +7,7 @@ description: "Photo restoration, voice, digital twins and chatbots of the dead: 
 
 > **Before you read.** This article is about grief and the memory of people who have died. It does not replace a psychologist, a psychotherapist or a doctor, and it is not medical advice.
 >
-> If your loss is recent and your feelings are very intense, if grief has not eased for months and gets in the way of your life, if you feel very lonely, or if you have noticed a dependence on virtual communication before, it is better to talk to a specialist first and only then try any “conversational” services. These services are not suitable for children and teenagers.
+> If your loss is recent and your feelings are very intense, if grief has not eased for months and gets in the way of your life, if you feel very lonely, or if you have noticed a dependence on virtual communication before, it is better to talk to a specialist first and only then try any “conversational” services. Researchers advise against giving these services to children and teenagers.
 >
 > If you have thoughts of harming yourself, contact the emergency services or a support line. Contacts are in the “Where to find help” section at the end of the article.
 
@@ -30,7 +30,7 @@ The first two levels mostly do not raise ethical disputes, as long as privacy is
 
 ## Why people turn to this and what research says
 
-Wanting to hear your mother’s voice once more or see your grandfather’s smile is understandable. Grief is a natural reaction to loss, and people have always looked for ways to keep a connection with those they loved. Psychologists have long described “continuing bonds” with the dead: memories, rituals, inner dialogue. AI offers new, technological forms of such a connection.
+Wanting to hear your mother’s voice once more or see your grandfather’s smile is understandable. People have always looked for ways to keep a connection with those they loved: memories, rituals, inner dialogue. AI offers new, technological forms of such a connection.
 
 ### What people see as benefits
 
@@ -56,7 +56,7 @@ The authors concluded that, in participants’ view, such systems are “neither
 
 An important limitation: participants in this study reasoned about imagined use, not about months of experience with real services. There are very few long-term studies showing how such services affect grief years later. So the honest answer to “does it help or harm?” is, for now: it differs from person to person, and science lacks data.
 
-Palliative care and bereavement specialists quoted by Hospice News also speak of a new complexity ([Hospice News, 2026](https://hospicenews.com/2026/04/09/ai-grief-bots-present-new-complexities-in-bereavement-care/)). They point to the risk of blurring the boundary between memory and presence, to confusion about what is real when someone is vulnerable, and to the need for the person’s explicit consent while they are alive. One grief counselor summed it up: “It is important to maintain balance.”
+Palliative care and bereavement specialists quoted by Hospice News also speak of a new complexity ([Hospice News, 2026](https://hospicenews.com/2026/04/09/ai-grief-bots-present-new-complexities-in-bereavement-care/)). They point to the risk of blurring the boundary between memory and presence, to confusion about what is real when someone is vulnerable, and to the need for the person’s explicit consent while they are alive. As one of the specialists’ comments puts it: “It is important to maintain balance.”
 
 The industry is growing nonetheless. According to an estimate cited by the same outlet, the “digital afterlife” market was about 22 billion dollars in 2024 and may reach about 80 billion by 2034. This is a forecast from one research publication, not precise data, so treat it with caution.
 
@@ -194,7 +194,7 @@ For some people, a photo that “moves” or even a short conversation with a si
 
 ### The risk of replacing grieving
 
-Grief is a process in which a person gradually accepts that a loved one is physically gone and builds a new, inner connection with them. A simulation that “answers” every day can slow this process down: it feels as if the person is somehow still here, so accepting the loss is harder. Study participants directly named the disruption of natural grieving among the main risks.
+Grief is often described as a process in which a person gradually accepts that a loved one is physically gone and builds a new, inner connection with them. A simulation that “answers” every day can slow this process down: it feels as if the person is somehow still here, so accepting the loss is harder. Study participants directly named the disruption of natural grieving among the main risks.
 
 ### A sense of presence and a blurred boundary
 
@@ -206,11 +206,11 @@ A bot is available around the clock, never gets tired and is always “happy” 
 
 ### Distorted memories
 
-Human memory is flexible: new impressions mix with old ones. If a simulation regularly “says” something new, over time those words may weave themselves into memories. After a few years it can be hard to tell what mom really said and what the bot “said”. Study participants mentioned the risk of inauthenticity and a distorted image of the deceased.
+If a simulation regularly “says” something new, there is a risk that over time those words will weave themselves into memories. After a few years it can be hard to tell what mom really said and what the bot “said”. Study participants mentioned the risk of inauthenticity and a distorted image of the deceased.
 
 ### Prolonged grief
 
-For most people the intensity of grief eases over time, although sadness may return. For some people grief remains extremely strong for a long time and gets in the way of life. Study participants feared that simulations could prolong grief. If you notice that months pass and the pain does not ease and gets in the way of work, relationships or taking care of yourself, it is a reason to see a specialist.
+Study participants feared that simulations could prolong grief. If you notice that months pass and the pain does not ease and gets in the way of work, relationships or taking care of yourself, it is a reason to see a specialist.
 
 ### Particular vulnerability
 
@@ -248,7 +248,7 @@ These are not medical instructions but ideas proposed by researchers and special
 
 ### Who has the right to create a copy
 
-The simplest ethical rule: a digital copy of a person is created only with their consent. Best of all is when the person decided during their lifetime whether they want their voice, face or way of speaking to be re-created, for whom and for how long. If the person left nothing and those close to them do not know their wishes, many ethicists advise refraining.
+The simplest ethical rule: a digital copy of a person is created only with their consent. Best of all is when the person decided during their lifetime whether they want their voice, face or way of speaking to be re-created, for whom and for how long. If the person left nothing and those close to them do not know their wishes, we believe it is better to refrain.
 
 Consent is needed not only from the deceased. The Cambridge researchers propose a principle of mutual consent: taking into account both the wishes of the person whose data are used and the wishes of those who will interact with the copy. For example, a son may want a bot of his father, while his mother is firmly against it. It is especially delicate when a copy is created as a “gift”: the person receiving it may not be ready for it.
 
@@ -283,7 +283,7 @@ The Civil Code of Ukraine (Articles 303 and 308) provides that after a person’
 ### United States
 
 - In Tennessee, the ELVIS Act has been in force since 2024 and protects a person’s voice as part of their rights to their likeness, including against AI imitation.
-- In California, since 2025, law AB 1836 prohibits using digital replicas of the voice or likeness of deceased performers in audiovisual works and sound recordings without the consent of their rights holders.
+- In California, since 2025, law AB 1836 prohibits using digital replicas of the voice or likeness of deceased performers in audiovisual works and sound recordings without the consent of their rights holders (usually their heirs).
 - The federal NO FAKES Act on rights to digital replicas had not been passed as of October 2026.
 
 ### Platform rules
@@ -329,7 +329,7 @@ Many ways of keeping a connection with loved ones need no technology at all. The
 - **A photo album.** An ordinary printed album with captions saying who, where and when.
 - **Rituals.** Days of remembrance, the person’s favorite dish on a holiday, a walk along their favorite route, a candle.
 - **Support groups.** Talking with people who have experienced a similar loss.
-- **Psychotherapy.** A grief specialist helps you go through the loss at a safe pace.
+- **Psychotherapy.** A specialist who works with grief can help you go through the loss at a pace that is safe for you.
 
 Technology can complement these things, for example by helping to make a memorial video or organize photos, but it does not replace them.
 
