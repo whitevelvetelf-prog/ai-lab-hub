@@ -152,6 +152,9 @@ const ELI_INTENTS = [
     ['інтерєр, interior', 'my-home', 'interior-design', 1.0],
     ['ремонт, будівництво, renovation, repair', 'my-home', 'renovation', 1.0],
     ['розумний, smart', 'my-home', 'smart-home', 0.7],
+    // чутлива підкатегорія (search_only_on_match): лише прямі слова про померлих і пам'ять про них
+    ["помер, померла, померли, померлий, померлого, померлої, померлих, покійний, покійна, покійного, загиблий, загиблих, меморіал, меморіальний, поминки, горювання, оживити, оживлення, deceased, died, memorial, griefbot, griefbots, deadbot, deadbots, afterlife, bereavement, bereaved, mourning", 'my-home', 'digital-memory-legacy', 1.0],
+    ["пам'ять, пам'яті, памяті, двійник, двійника, remembrance, memories", 'my-home', 'digital-memory-legacy', 0.5],
     ['діти, дитина, дитини, дітей, батьки, виховання, kids, child, children, parenting', 'my-home', 'parenting', 1.0],
     ['покупки, магазин, shopping, shop', 'my-home', 'shopping', 0.8],
     ['енергія, сонячні, генератор, energy, solar', 'my-home', 'home-energy', 1.0],

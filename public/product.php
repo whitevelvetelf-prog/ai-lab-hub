@@ -612,6 +612,7 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         </div>
 
         <?= subcategory_note_html(array_column($subcategories, 'slug')) ?>
+        <?= product_note_html($pdo, (int) $product['id']) ?>
 
         <!-- Відеореклама (product_page): під описом; без реклами нічого не видно -->
         <?php

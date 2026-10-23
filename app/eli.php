@@ -174,24 +174,39 @@ function eli_index(PDO $pdo, bool $refresh = false): array
     $file = __DIR__ . '/../storage/cache/eli-index.json';
     if (!$refresh && is_file($file) && (time() - (int) @filemtime($file)) < ELI_INDEX_TTL) {
         $data = json_decode((string) @file_get_contents($file), true);
-        if (is_array($data) && ($data['v'] ?? 0) === 2 && isset($data['products'], $data['subcats'])) {
+        if (is_array($data) && ($data['v'] ?? 0) === 3 && isset($data['products'], $data['subcats'])) {
             return $mem = $data;
         }
     }
 
     $subcats = [];
-    $rows = $pdo->query(
-        "SELECT s.id, s.name, s.name_en, s.category_id, c.name AS cat_name, c.name_en AS cat_name_en,
+    $sql = "SELECT s.id, s.name, s.name_en, s.category_id, c.name AS cat_name, c.name_en AS cat_name_en, %s AS sens,
                 (SELECT COUNT(*) FROM product_subcategories ps JOIN products p ON p.id = ps.product_id
                   WHERE ps.subcategory_id = s.id AND p.status = 'published') AS cnt
-           FROM subcategories s JOIN categories c ON c.id = s.category_id"
-    )->fetchAll();
+           FROM subcategories s JOIN categories c ON c.id = s.category_id";
+    try {
+        $rows = $pdo->query(sprintf($sql, 's.search_only_on_match'))->fetchAll();
+    } catch (Throwable $e) {
+        $rows = $pdo->query(sprintf($sql, '0'))->fetchAll(); // міграцію 2026-10-23 ще не застосовано
+    }
     foreach ($rows as $r) {
         $subcats[(int) $r['id']] = [
             'name' => (string) $r['name'], 'name_en' => (string) ($r['name_en'] ?? ''),
             'cat' => (int) $r['category_id'], 'cnt' => (int) $r['cnt'],
             'k' => eli_haystack($r['name'] . ' ' . ($r['name_en'] ?? '') . ' ' . $r['cat_name'] . ' ' . ($r['cat_name_en'] ?? '')),
+            'sens' => (int) $r['sens'] === 1,
+            'trig' => [],
         ];
+    }
+    // Чутлива підкатегорія відкривається лише своїми інтентами (search_intents, ті самі основи, що в запасному пошуку).
+    try {
+        foreach ($pdo->query('SELECT term_stem, subcategory_id FROM search_intents WHERE subcategory_id IS NOT NULL')->fetchAll(PDO::FETCH_NUM) as [$stem, $sid]) {
+            if (($subcats[(int) $sid]['sens'] ?? false) && trim((string) $stem) !== '') {
+                $subcats[(int) $sid]['trig'][] = mb_strtolower(trim((string) $stem));
+            }
+        }
+    } catch (Throwable $e) {
+        // таблиці інтентів ще немає — чутливі підкатегорії не відкриваються запитом
     }
 
     $enDesc = [];
@@ -268,7 +283,7 @@ function eli_index(PDO $pdo, bool $refresh = false): array
         ];
     }
 
-    $mem = ['v' => 2, 'products' => $products, 'subcats' => $subcats];
+    $mem = ['v' => 3, 'products' => $products, 'subcats' => $subcats];
     $dir = dirname($file);
     if (is_dir($dir) || @mkdir($dir, 0775, true)) {
         @file_put_contents($file . '.tmp', json_encode($mem, JSON_UNESCAPED_UNICODE), LOCK_EX);
@@ -310,7 +325,7 @@ function eli_first_sentence(string $text): string
 function eli_candidates(array $index, string $message, int $limit): array
 {
     $kw = eli_keywords($message);
-    $products = $index['products'];
+    $products = eli_ungated_products($index, $message);
 
     $subScore = [];
     foreach ($index['subcats'] as $sid => $s) {
@@ -392,6 +407,45 @@ function eli_candidates(array $index, string $message, int $limit): array
     }
 
     return ['ids' => $ids, 'matched' => $matched, 'subcats' => $relSubs];
+}
+
+/**
+ * Продукти без «закритих» чутливих: продукт, усі підкатегорії якого мають search_only_on_match = 1
+ * (напр. «Цифрова пам'ять і спадщина»), лишається, лише якщо запит зачіпає інтент однієї з них
+ * (основи — тим самим стемером, що й у запасному пошуку app/eli-search.php).
+ */
+function eli_ungated_products(array $index, string $message): array
+{
+    $sens = array_filter($index['subcats'], static fn($s) => $s['sens'] ?? false);
+    if ($sens === []) {
+        return $index['products'];
+    }
+    require_once __DIR__ . '/eli-search.php';
+    $terms = eli_search_terms($message);
+    $open = [];
+    foreach ($sens as $sid => $s) {
+        foreach ($s['trig'] as $stem) {
+            foreach ($terms as $t) {
+                if (eli_search_stem_match($t, $stem) > 0) {
+                    $open[$sid] = true;
+                    break 2;
+                }
+            }
+        }
+    }
+
+    return array_filter($index['products'], static function (array $p) use ($sens, $open): bool {
+        if ($p['s'] === []) {
+            return true;
+        }
+        foreach ($p['s'] as $sid) {
+            if (!isset($sens[$sid]) || isset($open[$sid])) {
+                return true;
+            }
+        }
+
+        return false;
+    });
 }
 
 // ---------------------------------------------------------------------------

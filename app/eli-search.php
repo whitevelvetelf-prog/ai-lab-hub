@@ -15,7 +15,9 @@ declare(strict_types=1);
  * 4. Продукт у видачі лише якщо є збіг негеографічної основи чи інтенту й сума ≥ threshold.
  * 5. Чутливі розділи (categories.search_only_on_match = 1, напр. «Релігія»): продукт, усі
  *    категорії якого чутливі, потрапляє у видачу лише коли запит прямо стосується розділу
- *    (інтент цього розділу або слово з назви його категорії / підкатегорії).
+ *    (інтент цього розділу або слово з назви його категорії / підкатегорії). Так само на рівні
+ *    підкатегорії (subcategories.search_only_on_match = 1, напр. «Цифрова пам'ять і спадщина»):
+ *    продукт, усі підкатегорії якого чутливі, — лише коли запит зачіпає одну з них.
  * 6. Нічого впевненого — не випадкові картки, а 4–6 найближчих за інтентами підкатегорій
  *    (або найбільших категорій).
  *
@@ -25,7 +27,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/translations.php';
 
 const ELI_SEARCH_INDEX_TTL = 21600;
-const ELI_SEARCH_INDEX_VERSION = 1;
+const ELI_SEARCH_INDEX_VERSION = 2;
 
 /** @return array{threshold: float, max_cards: int, stop: array<string,true>, geo: list<string>} */
 function eli_search_config(): array
@@ -196,10 +198,16 @@ function eli_search_index(PDO $pdo, bool $refresh = false): array
             'h' => eli_search_haystack($r['name'] . ' ' . ($r['name_en'] ?? '')), 'cnt' => 0,
         ];
     }
+    try {
+        $subRows = $pdo->query('SELECT id, category_id, name, name_en, search_only_on_match FROM subcategories')->fetchAll();
+    } catch (Throwable $e) {
+        $subRows = $pdo->query('SELECT id, category_id, name, name_en FROM subcategories')->fetchAll(); // міграцію 2026-10-23 ще не застосовано
+    }
     $subs = [];
-    foreach ($pdo->query('SELECT id, category_id, name, name_en FROM subcategories')->fetchAll() as $r) {
+    foreach ($subRows as $r) {
         $subs[(int) $r['id']] = [
             'cat' => (int) $r['category_id'], 'name' => (string) $r['name'], 'name_en' => (string) ($r['name_en'] ?? ''),
+            'sensitive' => (int) ($r['search_only_on_match'] ?? 0) === 1,
             'h' => eli_search_haystack($r['name'] . ' ' . ($r['name_en'] ?? '')), 'cnt' => 0,
         ];
     }
@@ -300,6 +308,7 @@ function eli_search(array $index, string $query, ?array $cfg = null): array
     $termSubs = [];
     $termCats = [];
     $triggeredCats = [];
+    $triggeredSubs = [];
     $sectionScore = [];
     foreach ($terms as $t) {
         foreach ($index['intents'] as $in) {
@@ -311,6 +320,7 @@ function eli_search(array $index, string $query, ?array $cfg = null): array
             if ($in['s'] !== null && isset($index['subs'][$in['s']])) {
                 $termSubs[$t][$in['s']] = max($termSubs[$t][$in['s']] ?? 0, $in['w']);
                 $triggeredCats[$index['subs'][$in['s']]['cat']] = true;
+                $triggeredSubs[$in['s']] = true;
                 $sectionScore['s' . $in['s']] = ($sectionScore['s' . $in['s']] ?? 0) + $in['w'];
             } elseif ($in['c'] !== null && isset($index['cats'][$in['c']])) {
                 $termCats[$t][$in['c']] = max($termCats[$t][$in['c']] ?? 0, $in['w']);
@@ -323,8 +333,10 @@ function eli_search(array $index, string $query, ?array $cfg = null): array
         }
         // Слово з назви розділу теж «відкриває» чутливий розділ і підказує найближчі підкатегорії.
         foreach ($index['subs'] as $sid => $s) {
-            if (mb_strlen($t) >= 4 && eli_search_in($s['h'], $t)) {
+            // чутливу підкатегорію відкривають лише її інтенти: у назві є загальні слова («цифрова», «digital»)
+            if (mb_strlen($t) >= 4 && !$s['sensitive'] && eli_search_in($s['h'], $t)) {
                 $triggeredCats[$s['cat']] = true;
+                $triggeredSubs[$sid] = true;
                 $sectionScore['s' . $sid] = ($sectionScore['s' . $sid] ?? 0) + 0.8;
             }
         }
@@ -343,6 +355,19 @@ function eli_search(array $index, string $query, ?array $cfg = null): array
                 $gated = true;
                 foreach ($p['c'] as $cid) {
                     if (!($index['cats'][$cid]['sensitive'] ?? false) || isset($triggeredCats[$cid])) {
+                        $gated = false;
+                        break;
+                    }
+                }
+                if ($gated) {
+                    continue;
+                }
+            }
+            // Те саме для підкатегорій: усі підкатегорії продукту чутливі й жодну не зачеплено.
+            if ($p['s'] !== []) {
+                $gated = true;
+                foreach ($p['s'] as $sid) {
+                    if (!($index['subs'][$sid]['sensitive'] ?? false) || isset($triggeredSubs[$sid])) {
                         $gated = false;
                         break;
                     }

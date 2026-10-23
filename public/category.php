@@ -244,6 +244,7 @@ $subcategoryIcons = [
     'parenting'          => 'baby',
     'dog-training'       => 'bone',
     'working-dogs'       => 'shield-half',
+    'digital-memory-legacy' => 'book-heart',
     // Інструменти та автоматизація
     'plugins'            => 'puzzle',
     'automation'         => 'zap',
