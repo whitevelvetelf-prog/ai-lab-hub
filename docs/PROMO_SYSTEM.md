@@ -188,9 +188,9 @@ HMAC-токеном (креатив, кампанія, розміщення, с�
 - Місце `popup` (ad_placements, група popup; зона «Спливаюча реклама» в ad_zones — довідково). `app/ad-popup.php` з підвалу
   підключає лише скрипт і правила; вікно малює `public/assets/js/ad-popup.js` + `css/ad-popup.css`, оголошення — `public/ad-next.php`
   (JSON або 204, X-Popup-Wait).
-- Правила: друга сторінка візиту І ≥ `ad_popup_visit_delay_seconds` (30) від його початку; інтервал `ad_popup_min_interval_seconds`
+- Правила: друга сторінка візиту І ≥ `ad_popup_visit_delay_seconds` (300 = 5 хв, з 2026-10-23) від його початку; інтервал `ad_popup_min_interval_seconds`
   (600) від закриття (localStorage `alh_ad_popup_closed` + сесія `ad_popup`); не під час набору тексту; сторінки
   `ad_popup_excluded_pages` (fnmatch; з 2026-10-21 лише index.php і eli.php — реклама на всіх інших сторінках); боти — скрипт не підключається; no_promo.
-- «Пропустити»: `ad_creatives.skip_delay_seconds` (10–15, NULL → `ad_popup_skip_delay_default` = 12); адмінка «Кампанії» → «Пропуск вікна».
+- «Пропустити»: `ad_creatives.skip_delay_seconds` (5–15, NULL → `ad_popup_skip_delay_default` = 5, з 2026-10-23); адмінка «Кампанії» → «Пропуск вікна».
 - Статистика: `ad_stats_daily.skips`; impression — вікно видно ≥1 с; skip — «Пропустити»/Esc після відліку (і фіксує закриття в сесії).
 - Перевірка: `php tools/promo-demo-ads.php create|delete`, `php tools/promo-load-test.php 5000`, тести promo-*-check.

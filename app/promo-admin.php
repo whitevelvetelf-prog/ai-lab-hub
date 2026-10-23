@@ -736,7 +736,7 @@ function promo_admin_preview_article(PDO $pdo): ?string
 
 /**
  * Затримка кнопки «Пропустити» спливаючого вікна для всіх креативів кампанії:
- * '' — за замовчуванням (ad_settings.ad_popup_skip_delay_default), інакше 10–15 с.
+ * '' — за замовчуванням (ad_settings.ad_popup_skip_delay_default), інакше 5–15 с.
  *
  * @return array{0:bool,1:string}
  */
@@ -744,8 +744,8 @@ function promo_admin_skip_delay(PDO $pdo, int $campaignId, string $value): array
 {
     $value = trim($value);
     $sec = $value === '' ? null : (int) $value;
-    if ($sec !== null && ($sec < 10 || $sec > 15)) {
-        return [false, 'Затримка пропуску — від 10 до 15 секунд або «за замовчуванням».'];
+    if ($sec !== null && ($sec < AD_POPUP_SKIP_MIN || $sec > AD_POPUP_SKIP_MAX)) {
+        return [false, 'Затримка пропуску — від ' . AD_POPUP_SKIP_MIN . ' до ' . AD_POPUP_SKIP_MAX . ' секунд або «за замовчуванням».'];
     }
     try {
         $st = $pdo->prepare('UPDATE ad_creatives SET skip_delay_seconds = :s WHERE campaign_id = :c');

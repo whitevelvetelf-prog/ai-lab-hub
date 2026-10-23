@@ -388,7 +388,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                                 <input type="hidden" name="campaign_id" value="<?= $cid ?>">
                                                 <select name="skip" aria-label="Затримка «Пропустити», с" onchange="this.form.submit()">
                                                     <option value="">за замовч.</option>
-                                                    <?php for ($sec = 10; $sec <= 15; $sec++): ?>
+                                                    <?php for ($sec = AD_POPUP_SKIP_MIN; $sec <= AD_POPUP_SKIP_MAX; $sec++): ?>
                                                     <option value="<?= $sec ?>"<?= (string) ($c['skip_delay'] ?? '') === (string) $sec ? ' selected' : '' ?>><?= $sec ?> с</option>
                                                     <?php endfor; ?>
                                                 </select>

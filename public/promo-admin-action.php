@@ -157,7 +157,7 @@ switch ($action) {
         $back($str('return_tab') ?: 'settings', true, $msgs);
 
     case 'skip_delay':
-        // Затримка «Пропустити» спливаючого вікна для креативів кампанії: 10–15 с або за замовчуванням.
+        // Затримка «Пропустити» спливаючого вікна для креативів кампанії: 5–15 с або за замовчуванням.
         [$ok, $msg] = promo_admin_skip_delay($pdo, (int) $str('campaign_id'), $str('skip'));
         $back('campaigns', $ok, [$msg]);
 

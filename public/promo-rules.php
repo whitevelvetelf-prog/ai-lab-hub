@@ -37,7 +37,7 @@ $draft = [
         'sections' => [
             ['1. Загальні положення', [
                 'Реклама на AI LAB HUB розміщується через кабінет рекламодавця. Кожне рекламне місце позначається написом «Реклама».',
-                'Реклама показується у спливаючому вікні поверх сторінки (а також окремими блоками на сторінках продуктів і в блозі, якщо їх обрано в кампанії). Кнопка «Пропустити» стає доступною через 10–15 секунд. Одному відвідувачу вікно показується не частіше ніж раз на 10 хвилин, не на першій сторінці візиту й не раніше ніж через 30 секунд; на сторінках умов, конфіденційності, контактів, входу, донатів і в кабінеті його немає.',
+                'Реклама показується у спливаючому вікні поверх сторінки (а також окремими блоками на сторінках продуктів і в блозі, якщо їх обрано в кампанії). Кнопка «Пропустити» стає доступною через 5 секунд. Одному відвідувачу вікно показується не частіше ніж раз на 10 хвилин, не на першій сторінці візиту й не раніше ніж через 5 хвилин на сайті; на сторінках умов, конфіденційності, контактів, входу, донатів і в кабінеті його немає.',
                 'Допустимі формати: зображення або коротке відео (до 15 с). Відео стартує без звуку; звук відвідувач вмикає сам. Текст оголошення (заголовок і підпис) зберігається окремо від зображення й перекладається мовою відвідувача.',
                 'Оголошення чергуються між рекламодавцями: наступне вікно показує інше оголошення.',
                 'Приймається реклама будь-якої тематики, якщо вона не порушує законодавство й ці правила.',
@@ -91,7 +91,7 @@ $draft = [
         'sections' => [
             ['1. General', [
                 'Ads on AI LAB HUB are placed through the advertiser account. Every ad placement is labelled “Ad”.',
-                'Ads are shown in a pop-up window over the page (and as separate blocks on product pages and in the blog if chosen in the campaign). The “Skip” button becomes available after 10–15 seconds. Each visitor sees the window no more than once every 10 minutes, never on the first page of a visit and not earlier than 30 seconds in; it never appears on the terms, privacy, contacts, login and donation pages or in the account.',
+                'Ads are shown in a pop-up window over the page (and as separate blocks on product pages and in the blog if chosen in the campaign). The “Skip” button becomes available after 5 seconds. Each visitor sees the window no more than once every 10 minutes, never on the first page of a visit and not earlier than 5 minutes into the visit; it never appears on the terms, privacy, contacts, login and donation pages or in the account.',
                 'Accepted formats: an image or a short video (up to 15 s). Videos start muted; visitors turn the sound on themselves. The ad text (title and description) is stored separately from the image and is translated into the visitor’s language.',
                 'Ads rotate between advertisers: the next window shows a different ad.',
                 'Ads on any topic are accepted as long as they comply with the law and these rules.',

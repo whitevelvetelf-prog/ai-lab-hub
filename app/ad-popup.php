@@ -12,8 +12,8 @@ declare(strict_types=1);
  * Коли вікно НЕ показується (перевіряється і тут, і в ad-next.php, і в JS):
  *   * система реклами вимкнена, місце 'popup' вимкнене, відомий бот (скрипт не вантажиться);
  *   * сторінка зі списку ad_settings.ad_popup_excluded_pages (головна й Елі);
- *   * перша сторінка візиту й перші ad_popup_visit_delay_seconds (30) с від початку візиту —
- *     потрібні ОБИДВІ умови: друга сторінка і 30 с;
+ *   * перша сторінка візиту й перші ad_popup_visit_delay_seconds (300 = 5 хв) с від початку візиту —
+ *     потрібні ОБИДВІ умови: друга сторінка і 5 хв на сайті;
  *   * не минуло ad_popup_min_interval_seconds (600) від закриття попереднього вікна
  *     (час — у сесії PHP і в localStorage; спрацьовує суворіше);
  *   * у відвідувача фокус у полі вводу або там набраний текст, на сторінці видиме поле пароля,
@@ -30,15 +30,15 @@ const AD_POPUP_PLACEMENT = 'popup';
 /** Значення за замовчуванням (ad_settings перекриває). */
 const AD_POPUP_DEFAULTS = [
     'ad_popup_min_interval_seconds' => '600',
-    'ad_popup_visit_delay_seconds' => '30',
-    'ad_popup_skip_delay_default' => '12',
+    'ad_popup_visit_delay_seconds' => '300',
+    'ad_popup_skip_delay_default' => '5',
     // Оголошення без відео (зображення, картка) — вікно закривається саме через стільки секунд.
     'ad_popup_static_display_seconds' => '20',
     // Реклама всюди, крім головної та Елі (з 2026-10-21).
     'ad_popup_excluded_pages' => "index.php\neli.php",
 ];
-/** Затримка кнопки «Пропустити» для оголошення — у межах 10–15 с. */
-const AD_POPUP_SKIP_MIN = 10;
+/** Затримка кнопки «Пропустити» для оголошення — у межах 5–15 с (за замовчуванням 5, з 2026-10-23). */
+const AD_POPUP_SKIP_MIN = 5;
 const AD_POPUP_SKIP_MAX = 15;
 
 function ad_popup_setting(PDO $pdo, string $key): string
@@ -158,7 +158,7 @@ function ad_popup_bootstrap(PDO $pdo): string
         . '<script src="/assets/js/ad-popup.js?v=' . $ver('js/ad-popup.js') . '" defer></script>';
 }
 
-/** Затримка «Пропустити» для креативу: власна (10–15) або за замовчуванням. */
+/** Затримка «Пропустити» для креативу: власна (5–15) або за замовчуванням. */
 function ad_popup_skip_delay(PDO $pdo, array $creative): int
 {
     $own = $creative['skip_delay_seconds'] ?? null;
