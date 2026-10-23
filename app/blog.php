@@ -12,8 +12,11 @@ declare(strict_types=1);
  * Формат файлу: YAML-подібний frontmatter (--- title / description ---)
  * і далі Markdown-тіло. Підтримується підмножина Markdown, якої досить для
  * статей-порівнянь: заголовки #/##/###, **жирний**, *курсив*, [текст](url), списки
- * "- пункт", таблиці "| ... | ... |", роздільник "---". Розширювати конвертер лише під
- * реальну потребу нової статті — не про запас.
+ * "- пункт", таблиці "| ... | ... |", роздільник "---", виділений блок-застереження "> текст".
+ * Посилання на картки й підкатегорії каталогу без id: [текст](product:Назва продукту),
+ * [текст](subcategory:slug) — id розв'язується за назвою / slug у БД того сервера, де відкрито
+ * сторінку (локально й на хостингу id різні). Розширювати конвертер лише під реальну потребу
+ * нової статті — не про запас.
  */
 
 const BLOG_CONTENT_DIR = __DIR__ . '/../content/blog';
@@ -76,6 +79,18 @@ const BLOG_ARTICLES = [
 ];
 
 /**
+ * Чернетки: той самий формат, що й BLOG_ARTICLES, але стаття не потрапляє в список блогу,
+ * sitemap і фільтри, а сторінку бачать лише працівники й адміністратори (з noindex).
+ * Публікація = перенести запис у кінець BLOG_ARTICLES (і теми — у BLOG_ARTICLE_TOPICS).
+ */
+const BLOG_DRAFTS = [
+    'ai-digital-memory-loved-ones' => [
+        'uk' => 'shi-ta-pamyat-pro-pomerlykh-ua.md',
+        'en' => 'ai-and-remembering-the-dead-en.md',
+    ],
+];
+
+/**
  * Тематика статей для фільтра на сторінці блогу: slug статті => теми
  * «категорія» або «категорія/підкатегорія» (slug-и з таблиць categories і
  * subcategories — ті самі, що в каталозі). Стаття з темою-підкатегорією
@@ -115,7 +130,7 @@ const BLOG_SITE_URL = 'https://ailabhub-directory.com';
 /** Мови, для яких у статті є файл (порядок — як у реєстрі). @return list<string> */
 function blog_article_langs(string $slug): array
 {
-    return array_keys(BLOG_ARTICLES[$slug] ?? []);
+    return array_keys(BLOG_ARTICLES[$slug] ?? BLOG_DRAFTS[$slug] ?? []);
 }
 
 /** URL мовної версії статті (відносний або абсолютний на канонічному домені). */
@@ -174,11 +189,14 @@ function blog_file_lang(array $files, string $lang): string
  * ще немає) — заголовок, мета-опис, готовий HTML і мова файлу, з якого
  * їх узято (lang ≠ $lang означає «переклад ще готується»).
  *
- * @return array{title: string, description: string, html: string, lang: string}|null
+ * $withDrafts — чи віддавати чернетки з BLOG_DRAFTS (лише для працівників / адміністраторів).
+ *
+ * @return array{title: string, description: string, html: string, lang: string, draft: bool}|null
  */
-function blog_load_article(string $slug, string $lang): ?array
+function blog_load_article(string $slug, string $lang, bool $withDrafts = false): ?array
 {
-    $files = BLOG_ARTICLES[$slug] ?? null;
+    $draft = !isset(BLOG_ARTICLES[$slug]) && isset(BLOG_DRAFTS[$slug]);
+    $files = BLOG_ARTICLES[$slug] ?? ($withDrafts ? BLOG_DRAFTS[$slug] ?? null : null);
     if ($files === null) {
         return null;
     }
@@ -199,6 +217,7 @@ function blog_load_article(string $slug, string $lang): ?array
         'description' => $article['description'],
         'html' => blog_markdown_to_html($article['body']),
         'lang' => $fileLang,
+        'draft' => $draft,
     ];
 }
 
@@ -323,6 +342,47 @@ function blog_topic_url(string $cat = '', string $sub = ''): string
  * Посилання на інші сайти відкриваються в новій вкладці (rel="noopener noreferrer");
  * відносні й на власний домен — у тій самій.
  */
+/**
+ * URL внутрішнього посилання статті: product:Назва → product.php?id=N, subcategory:slug →
+ * catalog.php?subcategory=N (id — з БД цього сервера). null — не знайдено (посилання стане текстом).
+ */
+function blog_internal_url(string $target): ?string
+{
+    static $pdo = null;
+    static $cache = [];
+    if (!preg_match('/^(product|subcategory):(.+)$/', $target, $m)) {
+        return null;
+    }
+    if (array_key_exists($target, $cache)) {
+        return $cache[$target];
+    }
+    try {
+        $pdo ??= require __DIR__ . '/../config/database.php';
+        if ($m[1] === 'product') {
+            $st = $pdo->prepare("SELECT id FROM products WHERE LOWER(name) = LOWER(:n) AND status = 'published' ORDER BY id LIMIT 1");
+            $st->execute([':n' => trim($m[2])]);
+            $id = $st->fetchColumn();
+            if ($id === false) {
+                // назва з дужками не вміщується в синтаксис посилання: product:You, Only Virtual → «You, Only Virtual (YOV)»
+                $st = $pdo->prepare("SELECT id FROM products WHERE LOWER(name) LIKE CONCAT(LOWER(:n), ' (%') AND status = 'published' ORDER BY id LIMIT 1");
+                $st->execute([':n' => trim($m[2])]);
+                $id = $st->fetchColumn();
+            }
+            $url = $id !== false ? 'product.php?id=' . (int) $id : null;
+        } else {
+            $st = $pdo->prepare('SELECT id FROM subcategories WHERE slug = :s ORDER BY id LIMIT 1');
+            $st->execute([':s' => trim($m[2])]);
+            $id = $st->fetchColumn();
+            $url = $id !== false ? 'catalog.php?subcategory=' . (int) $id : null;
+        }
+    } catch (Throwable $e) {
+        error_log('[blog] internal link ' . $target . ': ' . $e->getMessage());
+        $url = null;
+    }
+
+    return $cache[$target] = $url;
+}
+
 function blog_inline_html(string $text): string
 {
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -333,6 +393,12 @@ function blog_inline_html(string $text): string
     return preg_replace_callback(
         '/\[([^\]]+)\]\(([^)]+)\)/',
         static function (array $m): string {
+            $target = html_entity_decode($m[2], ENT_QUOTES, 'UTF-8');
+            if (preg_match('/^(product|subcategory):/', $target)) {
+                $url = blog_internal_url($target);
+
+                return $url === null ? $m[1] : '<a href="' . htmlspecialchars($url, ENT_QUOTES, 'UTF-8') . '">' . $m[1] . '</a>';
+            }
             $host = strtolower((string) parse_url(html_entity_decode($m[2], ENT_QUOTES, 'UTF-8'), PHP_URL_HOST));
             $external = $host !== '' && !in_array(preg_replace('/^www\./', '', $host), ['ailabhub-directory.com'], true);
 
@@ -357,6 +423,7 @@ function blog_markdown_to_html(string $markdown): string
 
     $listBuffer = [];
     $tableBuffer = [];
+    $noteBuffer = [];
     $skippedH1 = false;
 
     $flushList = static function () use (&$listBuffer, &$html): void {
@@ -369,6 +436,27 @@ function blog_markdown_to_html(string $markdown): string
         }
         $html[] = '</ul>';
         $listBuffer = [];
+    };
+
+    // Блок-застереження: рядки "> …" поспіль; рядок ">" без тексту — новий абзац усередині блоку.
+    $flushNote = static function () use (&$noteBuffer, &$html): void {
+        if ($noteBuffer === []) {
+            return;
+        }
+        $paras = [''];
+        foreach ($noteBuffer as $row) {
+            if ($row === '') {
+                $paras[] = '';
+            } else {
+                $paras[count($paras) - 1] .= ($paras[count($paras) - 1] === '' ? '' : ' ') . $row;
+            }
+        }
+        $html[] = '<aside class="blog-note" role="note">';
+        foreach (array_filter($paras, static fn($p) => $p !== '') as $para) {
+            $html[] = '<p>' . blog_inline_html($para) . '</p>';
+        }
+        $html[] = '</aside>';
+        $noteBuffer = [];
     };
 
     $flushTable = static function () use (&$tableBuffer, &$html): void {
@@ -402,6 +490,14 @@ function blog_markdown_to_html(string $markdown): string
 
     foreach ($lines as $line) {
         $trimmed = trim($line);
+
+        if ($trimmed === '>' || str_starts_with($trimmed, '> ')) {
+            $flushList();
+            $flushTable();
+            $noteBuffer[] = trim(substr($trimmed, 1));
+            continue;
+        }
+        $flushNote();
 
         if ($trimmed === '') {
             $flushList();
@@ -451,6 +547,7 @@ function blog_markdown_to_html(string $markdown): string
 
     $flushList();
     $flushTable();
+    $flushNote();
 
     return implode("\n", $html);
 }

@@ -22,7 +22,8 @@ if (isset($_GET['hl'])) {
 }
 
 $pageLang = current_lang();
-$article = $slug !== '' ? blog_load_article($slug, $pageLang) : null;
+// Чернетки (BLOG_DRAFTS) бачать лише працівники й адміністратори — для вичитки перед публікацією.
+$article = $slug !== '' ? blog_load_article($slug, $pageLang, auth_has_role('employee', 'admin')) : null;
 // Перекладу цією мовою ще немає — показуємо оригінал із позначкою.
 $translationPending = $article !== null && $article['lang'] !== $pageLang;
 
@@ -40,7 +41,7 @@ if ($article !== null) {
     // й не в кінці. Таргетинг — за категоріями статті (теми з коду + призначені в адмінці).
     // Немає такого розділу або реклами — стаття без змін.
     [$promoCats, $promoSubs] = promo_blog_article_taxonomy($pdo, $slug);
-    $promoSlotHtml = promo_slot($pdo, 'blog_article', $promoCats, $promoSubs, ['article' => $slug]);
+    $promoSlotHtml = $article['draft'] ? '' : promo_slot($pdo, 'blog_article', $promoCats, $promoSubs, ['article' => $slug]);
     [$adPopupCats, $adPopupSubs, $adPopupPage] = [$promoCats, $promoSubs, ['article' => $slug]];   // для спливаючої реклами
     if ($promoSlotHtml !== '') {
         $minBefore = promo_placement_rule_int($pdo, 'blog_article', 'min_chars_before', 600);
@@ -68,6 +69,9 @@ if ($article !== null) {
     <?php if ($article !== null): ?>
         <title><?= htmlspecialchars($article['title'], ENT_QUOTES) ?> — AI LAB HUB</title>
         <meta name="description" content="<?= htmlspecialchars($article['description'], ENT_QUOTES) ?>">
+        <?php if ($article['draft']): ?>
+            <meta name="robots" content="noindex, nofollow">
+        <?php endif; ?>
         <link rel="canonical" href="<?= htmlspecialchars(blog_article_url($slug, $article['lang'], true), ENT_QUOTES) ?>">
         <?php foreach (blog_article_langs($slug) as $altLang): ?>
             <link rel="alternate" hreflang="<?= htmlspecialchars($altLang, ENT_QUOTES) ?>" href="<?= htmlspecialchars(blog_article_url($slug, $altLang, true), ENT_QUOTES) ?>">
@@ -245,6 +249,33 @@ if ($article !== null) {
             border-bottom: none;
         }
 
+        .blog-note {
+            margin: 0 0 24px;
+            padding: 16px 20px;
+            border: 1px solid rgba(188, 208, 255, 0.35);
+            border-left: 4px solid #bcd0ff;
+            border-radius: 12px;
+            background: rgba(0, 3, 44, 0.45);
+        }
+
+        .article .blog-note p {
+            margin: 0 0 10px;
+            color: rgba(255, 255, 255, 0.92);
+        }
+
+        .article .blog-note p:last-child {
+            margin-bottom: 0;
+        }
+
+        .blog-draft {
+            margin: 0 0 16px;
+            padding: 10px 14px;
+            border: 1px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
         .blog-not-found {
             color: var(--text-muted);
         }
@@ -262,6 +293,9 @@ if ($article !== null) {
             <h1 class="stub__title"><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?></h1>
             <p class="blog-not-found"><?= htmlspecialchars(t('blog_not_found_text'), ENT_QUOTES) ?></p>
         <?php else: ?>
+            <?php if ($article['draft']): ?>
+                <p class="blog-draft">Чернетка: стаття ще не опублікована, її бачать лише працівники й адміністратори.</p>
+            <?php endif; ?>
             <?php if ($translationPending): ?>
                 <p class="translation-pending"><?= htmlspecialchars(t('blog_translation_pending'), ENT_QUOTES) ?></p>
             <?php endif; ?>
