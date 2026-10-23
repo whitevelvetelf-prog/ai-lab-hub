@@ -325,9 +325,13 @@ function eli_first_sentence(string $text): string
 function eli_candidates(array $index, string $message, int $limit): array
 {
     $kw = eli_keywords($message);
-    $products = eli_ungated_products($index, $message);
+    $open = eli_sensitive_open($index, $message);
+    $products = eli_ungated_products($index, $open);
 
     $subScore = [];
+    foreach (array_keys($open) as $sid) {
+        $subScore[$sid] = 1; // запит прямо про чутливу підкатегорію — її продукти серед релевантних
+    }
     foreach ($index['subcats'] as $sid => $s) {
         foreach ($kw as $k) {
             if (str_contains($s['k'], ' ' . $k)) {
@@ -410,15 +414,16 @@ function eli_candidates(array $index, string $message, int $limit): array
 }
 
 /**
- * Продукти без «закритих» чутливих: продукт, усі підкатегорії якого мають search_only_on_match = 1
- * (напр. «Цифрова пам'ять і спадщина»), лишається, лише якщо запит зачіпає інтент однієї з них
- * (основи — тим самим стемером, що й у запасному пошуку app/eli-search.php).
+ * Чутливі підкатегорії (search_only_on_match = 1, напр. «Цифрова пам'ять і спадщина»), які запит
+ * «відкриває» своїми інтентами (основи — тим самим стемером, що й у запасному пошуку app/eli-search.php).
+ *
+ * @return array<int, true>
  */
-function eli_ungated_products(array $index, string $message): array
+function eli_sensitive_open(array $index, string $message): array
 {
     $sens = array_filter($index['subcats'], static fn($s) => $s['sens'] ?? false);
     if ($sens === []) {
-        return $index['products'];
+        return [];
     }
     require_once __DIR__ . '/eli-search.php';
     $terms = eli_search_terms($message);
@@ -432,6 +437,20 @@ function eli_ungated_products(array $index, string $message): array
                 }
             }
         }
+    }
+
+    return $open;
+}
+
+/**
+ * Продукти без «закритих» чутливих: продукт, усі підкатегорії якого чутливі, лишається, лише якщо
+ * запит відкрив одну з них ($open з eli_sensitive_open()).
+ */
+function eli_ungated_products(array $index, array $open): array
+{
+    $sens = array_filter($index['subcats'], static fn($s) => $s['sens'] ?? false);
+    if ($sens === []) {
+        return $index['products'];
     }
 
     return array_filter($index['products'], static function (array $p) use ($sens, $open): bool {
