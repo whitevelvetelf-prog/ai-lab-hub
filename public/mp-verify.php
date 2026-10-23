@@ -30,6 +30,9 @@ $token = is_string($src['token'] ?? null) ? trim((string) $src['token']) : '';
 if ($isPost) {
     mpb_require_post();
     $res = mpv_confirm($pdo, $token);
+    if ($res === 'ok') {
+        auth_promo_quiet_mark();   // пошту підтверджено — кілька хвилин без реклами (app/promo-quiet.php)
+    }
 } else {
     $res = mpv_check($pdo, $token)['status'];   // лише перевірка, без витрачання
 }

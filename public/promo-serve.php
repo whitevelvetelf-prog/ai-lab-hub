@@ -14,6 +14,7 @@ declare(strict_types=1);
  *     exclude=3,7  (креативи, уже показані на цій сторінці — одна реклама не повторюється)
  *     nohouse=1    (на сторінці вже є блок власної реклами — не більше одного)
  *     preview=1    (адмін із ?promo_preview=1: креатив тестової кампанії is_test, без обліку)
+ *     page=login.php (ім'я сторінки: сторінки автентифікації — 204, як і тиша після входу)
  *
  * 200 + JSON {creative, creatives, labels} — до 5 креативів для ротації (creative — перший); 204 — реклами немає
  * (система вимкнена, сторінку виключено no_promo, немає придатних кампаній, бот). Викликає sponsored.js.
@@ -61,6 +62,13 @@ if (($_GET['preview'] ?? '') === '1') {
     $payload = promo_public_payload($creative, $placement, true, $pdo);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['creative' => $payload, 'labels' => promo_labels()], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
+// Тиша після входу / реєстрації / виходу (app/promo-quiet.php) — захист і на сервері, не лише в JS.
+if (promo_quiet($pdo, is_string($_GET['page'] ?? null) ? $_GET['page'] : null)) {
+    header('X-Promo-Quiet: 1');
+    http_response_code(204);
     exit;
 }
 

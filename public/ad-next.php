@@ -9,7 +9,8 @@ declare(strict_types=1);
  *
  * Серверна частина правил (app/ad-popup.php): система й місце 'popup' ввімкнені, не бот,
  * сторінка не в списку виключень, уже друга сторінка візиту й минуло 30 с від його початку,
- * минув мінімальний проміжок від закриття (чи видачі) попереднього вікна. Інакше — 204
+ * минув мінімальний проміжок від закриття (чи видачі) попереднього вікна, не діє тиша після
+ * автентифікації (app/promo-quiet.php). Інакше — 204
  * (заголовок X-Popup-Wait: скільки секунд чекати; -1 — не на цій сторінці).
  *
  * 200 + JSON {creative, labels}: одне оголошення (promo_pick_set: спершу платні за вагою,
@@ -35,6 +36,13 @@ promo_db_utc($pdo);
 
 $page = is_string($_GET['page'] ?? null) ? $_GET['page'] : '';
 if (!ad_popup_available($pdo) || ($page !== '' && ad_popup_page_excluded($pdo, $page))) {
+    http_response_code(204);
+    exit;
+}
+// Сторінка автентифікації (-1) або тиша після входу / реєстрації / виходу (секунд до кінця) — app/promo-quiet.php.
+$quietUntil = promo_suppress_until($pdo);
+if (($page !== '' && promo_is_auth_page($page)) || $quietUntil > 0) {
+    header('X-Popup-Wait: ' . ($quietUntil > 0 && !promo_is_auth_page($page) ? max(1, $quietUntil - time()) : -1));
     http_response_code(204);
     exit;
 }

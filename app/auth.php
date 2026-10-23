@@ -84,6 +84,18 @@ function auth_login(array $user): void
     session_regenerate_id(true);
     $_SESSION['user_id'] = (int) $user['id'];
     $_SESSION['role'] = (string) $user['role'];
+    auth_promo_quiet_mark();
+}
+
+/**
+ * Подія автентифікації (вхід, реєстрація, вихід, підтвердження пошти): кілька хвилин після неї
+ * реклами немає — app/promo-quiet.php рахує promo_suppress_until з цієї мітки.
+ */
+function auth_promo_quiet_mark(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        $_SESSION['promo_auth_at'] = time();
+    }
 }
 
 /**
@@ -103,6 +115,20 @@ function auth_after_login_url(): string
 function auth_logout(): void
 {
     $_SESSION = [];
+
+    // Нова порожня сесія з новим ID лише з міткою «тиші реклами» (app/promo-quiet.php) —
+    // інакше наступна сторінка після виходу була б «другою сторінкою візиту» для спливаючого вікна.
+    if (!headers_sent() && ini_get('session.use_cookies')) {
+        session_destroy();
+        $newId = session_create_id();
+        if ($newId !== false) {
+            session_id($newId);
+        }
+        session_start();
+        auth_promo_quiet_mark();
+
+        return;
+    }
 
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();

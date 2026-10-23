@@ -4,7 +4,9 @@
  *     візиту й 30 с від його початку, не частіше ніж раз на interval с від закриття
  *     попереднього (час закриття — у localStorage і в сесії на сервері; береться пізніший).
  *     localStorage недоступний — лише серверна сесія.
- *   * Поки фокус у полі вводу або в полі є текст (пошук, чат Елі) — чекаємо.
+ *   * Поки фокус у полі вводу або в полі є текст (пошук, чат Елі) — чекаємо. На сторінці з видимим
+ *     полем пароля, після надсилання форми і поки body[data-promo-suppress] (сторінки входу,
+ *     тиша після входу / реєстрації / виходу — app/promo-quiet.php) — вікна немає зовсім.
  *   * Вікно: role="dialog", aria-modal, фокус усередині (Tab циклічно), фон затемнено й
  *     не прокручується (позиція прокрутки повертається після закриття). Угорі — бейдж
  *     «Реклама» і «Пропустити» (правий кут): недоступна skip с (10–15) зі зворотним відліком
@@ -184,7 +186,7 @@
             && !/^(button|submit|checkbox|radio|range|color|file|reset|image|hidden)$/i.test(a.type || '')) {
             return true;
         }
-        var fields = document.querySelectorAll('input[type="search"], input[type="text"], input:not([type]), textarea');
+        var fields = document.querySelectorAll('input[type="search"], input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input:not([type]), textarea');
         for (var i = 0; i < fields.length; i++) {
             if (fields[i].value && fields[i].value.trim() !== '' && fields[i].offsetParent !== null) {
                 return true;
@@ -194,9 +196,25 @@
     }
 
     var shown = false;
+    var submitting = false;
+    // Форму надсилають — сторінка от-от зміниться, вікно не потрібне (вхід, реєстрація, будь-яка форма).
+    document.addEventListener('submit', function () { submitting = true; }, true);
+
+    function suppressed() {
+        if (submitting || (document.body && document.body.hasAttribute('data-promo-suppress'))) {
+            return true;
+        }
+        var pw = document.querySelectorAll('input[type="password"]');
+        for (var i = 0; i < pw.length; i++) {
+            if (pw[i].offsetParent !== null) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     function attempt() {
-        if (shown) {
+        if (shown || suppressed()) {
             return;
         }
         var wait = secondsToWait();
@@ -219,7 +237,7 @@
         fetch(NEXT + '?' + params.toString(), { credentials: 'same-origin' })
             .then(function (res) { return res.status === 200 ? res.json() : null; })
             .then(function (payload) {
-                if (payload && payload.creative && payload.labels) {
+                if (payload && payload.creative && payload.labels && !suppressed() && !typing()) {
                     open(payload.creative, payload.labels);
                 }
             })

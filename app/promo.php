@@ -26,6 +26,7 @@ require_once __DIR__ . '/analytics.php';
 require_once __DIR__ . '/promo-exclusions.php';
 require_once __DIR__ . '/promo-placements.php';
 require_once __DIR__ . '/promo-select.php';
+require_once __DIR__ . '/promo-quiet.php';
 
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';
@@ -693,8 +694,8 @@ function promo_slot(PDO $pdo, string $placement, array $categoryIds = [], array 
         return '';
     }
     $preview = promo_preview_active($pdo);
-    if (!$preview && (!promo_video_ready($pdo) || !promo_placement_available($pdo, $placement))) {
-        return '';
+    if (!$preview && (!promo_video_ready($pdo) || !promo_placement_available($pdo, $placement) || promo_quiet($pdo))) {
+        return '';   // вимкнено, або сторінка автентифікації / тиша після входу (app/promo-quiet.php)
     }
     // Чутлива сторінка (no_promo) — жодного слота, жодного порожнього місця (і в перегляді).
     if (promo_page_excluded($pdo, $categoryIds, $subcategoryIds, $page) !== null) {

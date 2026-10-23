@@ -16,7 +16,10 @@ declare(strict_types=1);
  *     потрібні ОБИДВІ умови: друга сторінка і 30 с;
  *   * не минуло ad_popup_min_interval_seconds (600) від закриття попереднього вікна
  *     (час — у сесії PHP і в localStorage; спрацьовує суворіше);
- *   * у відвідувача фокус у полі вводу або там набраний текст (це перевіряє JS).
+ *   * у відвідувача фокус у полі вводу або там набраний текст, на сторінці видиме поле пароля,
+ *     форму вже надсилають (це перевіряє JS);
+ *   * сторінка автентифікації або тиша після входу / реєстрації / виходу (app/promo-quiet.php);
+ *     сторінки автентифікації не рахуються в pages.
  *
  * Стан у сесії: $_SESSION['ad_popup'] = [visit_start, pages, last_served, last_close].
  */
@@ -114,9 +117,12 @@ function ad_popup_bootstrap(PDO $pdo): string
     }
     $done = true;
     try {
+        if (promo_is_auth_page()) {
+            return '';   // вхід, реєстрація тощо — не реклама й не перегляд візиту
+        }
         $st = &ad_popup_state();
         $st['pages'] = (int) $st['pages'] + 1;
-        if (!ad_popup_available($pdo) || ad_popup_page_excluded($pdo)) {
+        if (!ad_popup_available($pdo) || ad_popup_page_excluded($pdo) || promo_quiet($pdo)) {
             return '';
         }
         $cats = array_values(array_filter(array_map('intval', (array) ($GLOBALS['adPopupCats'] ?? []))));

@@ -1185,4 +1185,5 @@ require_once __DIR__ . '/marketplace.php';
 <?php
 // Реклама спливаючим вікном: лише правила й скрипт (вікно показує JS, не сервер) — app/ad-popup.php.
 require_once __DIR__ . '/ad-popup.php';
+echo promo_quiet_html(translation_pdo());   // body[data-promo-suppress] — тиша на сторінках входу й після нього
 echo ad_popup_bootstrap(translation_pdo());

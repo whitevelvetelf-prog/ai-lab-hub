@@ -624,7 +624,8 @@
             category: slot.dataset.category || '',
             subcategory: slot.dataset.subcategory || '',
             lang: slot.dataset.lang || '',
-            device: deviceType()
+            device: deviceType(),
+            page: location.pathname.split('/').pop() || 'index.php'
         });
         if (slot.dataset.product) {
             params.set('product', slot.dataset.product);
@@ -670,6 +671,10 @@
     }
 
     function init() {
+        // Сторінка входу / тиша після входу, реєстрації чи виходу (app/promo-quiet.php) — жодної реклами.
+        if (document.body && document.body.hasAttribute('data-promo-suppress')) {
+            return;
+        }
         Array.prototype.forEach.call(document.querySelectorAll('.sponsored-slot[data-native]'), initNative);
         // По черзі: наступний слот знає, що вже показано (exclude).
         Array.prototype.reduce.call(document.querySelectorAll('.sponsored-slot[data-placement]:not([data-native])'), function (chain, slot) {

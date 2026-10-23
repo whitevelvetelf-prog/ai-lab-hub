@@ -30,6 +30,7 @@ const PROMO_SETTING_RULES = [
     'max_video_mb' => ['int', 1, 500],
     'max_video_sec' => ['int', 1, 300],
     'frequency_cap_per_session' => ['int', 0, 50],
+    'promo_suppress_after_auth_minutes' => ['int', 0, 1440],   // app/promo-quiet.php
     'min_topup' => ['money'],
     'payment_jar_url' => ['url'],
     'payment_instructions_uk' => ['text', 5000],
