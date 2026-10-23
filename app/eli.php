@@ -28,7 +28,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/translations.php';
 
 /** Змінюється разом із системним промптом — старий кеш тоді не використовується. */
-const ELI_PROMPT_VERSION = 'v2-2026-10-16';
+const ELI_PROMPT_VERSION = 'v3-2026-10-23'; // v3: запит про чутливу тему — лише продукти її підкатегорії
 
 /** Файл-кеш індексу продуктів для відбору кандидатів (секунд). */
 const ELI_INDEX_TTL = 600;
@@ -174,7 +174,7 @@ function eli_index(PDO $pdo, bool $refresh = false): array
     $file = __DIR__ . '/../storage/cache/eli-index.json';
     if (!$refresh && is_file($file) && (time() - (int) @filemtime($file)) < ELI_INDEX_TTL) {
         $data = json_decode((string) @file_get_contents($file), true);
-        if (is_array($data) && ($data['v'] ?? 0) === 3 && isset($data['products'], $data['subcats'])) {
+        if (is_array($data) && ($data['v'] ?? 0) === 4 && isset($data['products'], $data['subcats'])) {
             return $mem = $data;
         }
     }
@@ -195,14 +195,18 @@ function eli_index(PDO $pdo, bool $refresh = false): array
             'cat' => (int) $r['category_id'], 'cnt' => (int) $r['cnt'],
             'k' => eli_haystack($r['name'] . ' ' . ($r['name_en'] ?? '') . ' ' . $r['cat_name'] . ' ' . ($r['cat_name_en'] ?? '')),
             'sens' => (int) $r['sens'] === 1,
-            'trig' => [],
+            'trig' => [], 'focus' => [],
         ];
     }
     // Чутлива підкатегорія відкривається лише своїми інтентами (search_intents, ті самі основи, що в запасному пошуку).
     try {
-        foreach ($pdo->query('SELECT term_stem, subcategory_id FROM search_intents WHERE subcategory_id IS NOT NULL')->fetchAll(PDO::FETCH_NUM) as [$stem, $sid]) {
+        foreach ($pdo->query('SELECT term_stem, subcategory_id, weight FROM search_intents WHERE subcategory_id IS NOT NULL')->fetchAll(PDO::FETCH_NUM) as [$stem, $sid, $w]) {
             if (($subcats[(int) $sid]['sens'] ?? false) && trim((string) $stem) !== '') {
                 $subcats[(int) $sid]['trig'][] = mb_strtolower(trim((string) $stem));
+                if ((float) $w >= 1) {
+                    // сильна основа («померл», «griefbot») — запит саме про тему, див. eli_sensitive_focus()
+                    $subcats[(int) $sid]['focus'][] = mb_strtolower(trim((string) $stem));
+                }
             }
         }
     } catch (Throwable $e) {
@@ -283,7 +287,7 @@ function eli_index(PDO $pdo, bool $refresh = false): array
         ];
     }
 
-    $mem = ['v' => 3, 'products' => $products, 'subcats' => $subcats];
+    $mem = ['v' => 4, 'products' => $products, 'subcats' => $subcats];
     $dir = dirname($file);
     if (is_dir($dir) || @mkdir($dir, 0775, true)) {
         @file_put_contents($file . '.tmp', json_encode($mem, JSON_UNESCAPED_UNICODE), LOCK_EX);
@@ -327,6 +331,12 @@ function eli_candidates(array $index, string $message, int $limit): array
     $kw = eli_keywords($message);
     $open = eli_sensitive_open($index, $message);
     $products = eli_ungated_products($index, $open);
+    $focus = eli_sensitive_focus($index, $message);
+    if ($focus !== []) {
+        // Запит прямо про чутливу тему (наприклад, про померлих) — лише продукти її підкатегорії
+        // з примітками-застереженнями, без випадкових компаньйонів і чат-ботів з інших розділів.
+        $products = array_filter($products, static fn(array $p): bool => array_intersect_key(array_flip($p['s']), $focus) !== []);
+    }
 
     $subScore = [];
     foreach (array_keys($open) as $sid) {
@@ -419,7 +429,7 @@ function eli_candidates(array $index, string $message, int $limit): array
  *
  * @return array<int, true>
  */
-function eli_sensitive_open(array $index, string $message): array
+function eli_sensitive_open(array $index, string $message, string $field = 'trig'): array
 {
     $sens = array_filter($index['subcats'], static fn($s) => $s['sens'] ?? false);
     if ($sens === []) {
@@ -429,7 +439,7 @@ function eli_sensitive_open(array $index, string $message): array
     $terms = eli_search_terms($message);
     $open = [];
     foreach ($sens as $sid => $s) {
-        foreach ($s['trig'] as $stem) {
+        foreach ($s[$field] ?? [] as $stem) {
             foreach ($terms as $t) {
                 if (eli_search_stem_match($t, $stem) > 0) {
                     $open[$sid] = true;
@@ -440,6 +450,17 @@ function eli_sensitive_open(array $index, string $message): array
     }
 
     return $open;
+}
+
+/**
+ * Чутливі підкатегорії, про які запит саме (сильні інтенти з вагою ≥ 1: «померл», «griefbot»);
+ * слабкі основи («пам'ять», «memor») лише відкривають підкатегорію, але не звужують видачу.
+ *
+ * @return array<int, true>
+ */
+function eli_sensitive_focus(array $index, string $message): array
+{
+    return eli_sensitive_open($index, $message, 'focus');
 }
 
 /**

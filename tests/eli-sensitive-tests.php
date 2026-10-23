@@ -33,17 +33,20 @@ function check(bool $cond, string $label): void
 // Підкатегорії: 1 — «Фотографія» (звичайна), 2 — «Цифрова пам'ять і спадщина» (чутлива). Категорії 1, 2 — звичайні.
 $stems = static fn(string $words): array => array_map(static fn($w) => eli_search_stem(eli_search_clean($w)), explode(',', $words));
 $trig = $stems("помер,померлих,меморіал,оживити,deceased,memorial,griefbot");
+$weak = $stems("пам'ять,memory"); // слабкі основи (вага 0.5): відкривають підкатегорію, але не звужують видачу
 
 // --- AI-кандидати (eli_ungated_products)
 $aiIndex = [
     'subcats' => [
         1 => ['name' => 'Фотографія', 'name_en' => 'Photography', 'cat' => 1, 'cnt' => 2, 'k' => ' фотограф photograph ', 'sens' => false, 'trig' => []],
-        2 => ['name' => "Цифрова пам'ять і спадщина", 'name_en' => 'Digital memory and legacy', 'cat' => 2, 'cnt' => 2, 'k' => ' цифров памят спадщин digital memory legacy ', 'sens' => true, 'trig' => $trig],
+        2 => ['name' => "Цифрова пам'ять і спадщина", 'name_en' => 'Digital memory and legacy', 'cat' => 2, 'cnt' => 2, 'k' => ' цифров памят спадщин digital memory legacy ', 'sens' => true, 'trig' => array_merge($trig, $weak), 'focus' => $trig],
+        3 => ['name' => 'Компаньйони', 'name_en' => 'Companions', 'cat' => 1, 'cnt' => 1, 'k' => ' компаньйон companion ', 'sens' => false, 'trig' => []],
     ],
     'products' => [
         10 => ['n' => 'Remini', 's' => [1, 2], 'c' => [1, 2], 'p' => 5, 'kn' => ' remini ', 'kd' => ' фото photo '],
         11 => ['n' => 'Project December', 's' => [2], 'c' => [2], 'p' => 0, 'kn' => ' project december ', 'kd' => ' чат chat '],
         12 => ['n' => 'Canva', 's' => [], 'c' => [1], 'p' => 9, 'kn' => ' canva ', 'kd' => ' дизайн design '],
+        13 => ['n' => 'Kindroid', 's' => [3], 'c' => [1], 'p' => 50, 'kn' => ' kindroid ', 'kd' => ' поговорити розмов батьком компаньйон '],
     ],
 ];
 $ids = static fn(string $q): array => array_keys(eli_ungated_products($aiIndex, eli_sensitive_open($aiIndex, $q)));
@@ -56,6 +59,12 @@ check(in_array(11, $ids('чат із померлим батьком'), true), '
 check(in_array(11, $ids('griefbot app'), true), 'AI: «griefbot» відкриває підкатегорію');
 check(in_array(11, eli_candidates($aiIndex, 'поговорити з померлим батьком', 3)['ids'], true), 'AI: на прямий запит продукт підкатегорії серед кандидатів');
 check(!in_array(11, eli_candidates($aiIndex, 'чат для розмов', 3)['ids'], true), 'AI: на загальний запит — ні (і не як доповнення популярними)');
+$c = eli_candidates($aiIndex, 'хочу поговорити з померлим батьком', 3)['ids'];
+check(!in_array(13, $c, true), 'AI: запит про померлих — компаньйон з іншого розділу не серед кандидатів (навіть як доповнення)');
+check(!in_array(12, $c, true), 'AI: запит про померлих — лише продукти чутливої підкатегорії');
+check(in_array(13, eli_candidates($aiIndex, 'поговорити з компаньйоном', 3)['ids'], true), 'AI: звичайний запит — компаньйон на місці');
+check(eli_sensitive_focus($aiIndex, "пам'ять комп'ютера") === [], "AI: слабка основа «пам'ять» не звужує видачу");
+check(in_array(13, eli_candidates($aiIndex, "поговорити про пам'ять", 3)['ids'], true), "AI: «пам'ять» не прибирає інші продукти");
 $aiIndex['subcats'][2]['sens'] = false;
 $ids = static fn(string $q): array => array_keys(eli_ungated_products($aiIndex, eli_sensitive_open($aiIndex, $q)));   // стрілкова функція захоплює індекс за значенням
 check(in_array(11, $ids('чат-бот для бізнесу'), true), 'AI: без прапорця нічого не приховується');
@@ -73,10 +82,12 @@ $sIndex = [
         2 => ['cat' => 2, 'name' => "Цифрова пам'ять і спадщина", 'name_en' => 'Digital memory and legacy', 'sensitive' => true,
               'h' => $h("Цифрова пам'ять і спадщина Digital memory and legacy"), 'cnt' => 2],
     ],
-    'intents' => array_map(static fn($t) => ['t' => $t, 'c' => 2, 's' => 2, 'w' => 1.0], $trig),
+    'intents' => array_merge(array_map(static fn($t) => ['t' => $t, 'c' => 2, 's' => 2, 'w' => 1.0], $trig),
+                             array_map(static fn($t) => ['t' => $t, 'c' => 2, 's' => 2, 'w' => 0.5], $weak)),
     'products' => [
         20 => ['n' => $h('Deep Nostalgia'), 'd' => $h('анімація фото облич animate photo faces'), 'f' => $h('відео з фото'), 'c' => [2], 's' => [2], 'p' => 0],
         21 => ['n' => $h('Remini'), 'd' => $h('поліпшення фото photo enhancer'), 'f' => '', 'c' => [1, 2], 's' => [1, 2], 'p' => 3],
+        22 => ['n' => $h('Kindroid'), 'd' => $h('поговорити з AI-компаньйоном про фото'), 'f' => '', 'c' => [1], 's' => [1], 'p' => 9],
     ],
 ];
 $found = static fn(string $q): array => array_column(eli_search($sIndex, $q, ['threshold' => 3.0, 'max_cards' => 6, 'stop' => [], 'geo' => []])['results'], 'id');
@@ -84,6 +95,9 @@ check(!in_array(20, $found('анімація фото для реклами'), t
 check(in_array(21, $found('поліпшення фото'), true), 'Пошук: Remini (є нечутлива підкатегорія) знаходиться');
 check(!in_array(20, $found('digital фото'), true), 'Пошук: «digital» не відкриває чутливу підкатегорію');
 check(in_array(20, $found('оживити фото померлої бабусі'), true), 'Пошук: «оживити фото померлої» знаходить чутливий продукт');
+check(!in_array(22, $found('поговорити з померлим батьком про фото'), true), 'Пошук: запит про померлих — компаньйон з іншого розділу прихований');
+check(in_array(22, $found('поговорити про фото'), true), 'Пошук: звичайний запит — компаньйон знаходиться');
+check(in_array(22, $found("поговорити про фото і пам'ять"), true), "Пошук: слабка основа «пам'ять» не звужує видачу");
 $sec = eli_search($sIndex, 'digital legacy', ['threshold' => 3.0, 'max_cards' => 6, 'stop' => [], 'geo' => []])['sections'];
 check(!in_array(['type' => 'sub', 'id' => 2], $sec, true), 'Пошук: чутлива підкатегорія не пропонується як розділ на «digital legacy»');
 
