@@ -73,6 +73,7 @@ $categoryIcons = [
     'career'                => 'briefcase',
     'cybersecurity'         => 'shield',
     'accessibility'         => 'accessibility',
+    'entertainment'         => 'party-popper',
 ];
 
 $subcategoryIcons = [
@@ -182,6 +183,14 @@ $subcategoryIcons = [
     'reading-neurodiversity' => 'book-open-text',
     'hands-free'             => 'mouse-pointer-click',
     'digital-accessibility'  => 'globe',
+    // Розважальні
+    'funny-filters'          => 'smile-plus',
+    'dancing-animals'        => 'paw-print',
+    'age-transform'          => 'hourglass',
+    'cartoon-avatars'        => 'smile',
+    'photo-animation'        => 'image-play',
+    'voice-changers'         => 'mic-vocal',
+    'memes'                  => 'laugh',
     // Розробка та IT: LLM-інструменти
     'local-llm'          => 'cpu',
     'llm-inference'      => 'server',

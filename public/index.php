@@ -48,6 +48,7 @@ $categoryIcons = [
     'career'                => 'briefcase',
     'cybersecurity'         => 'shield',
     'accessibility'         => 'accessibility',
+    'entertainment'         => 'party-popper',
 ];
 
 ?>
