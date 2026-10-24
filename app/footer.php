@@ -248,8 +248,9 @@ require_once __DIR__ . '/marketplace.php';
         justify-content: center;
         height: 44px;
         padding: 0 14px;
-        background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.35);
+        gap: 6px;
+        background: #2116ad;
+        border: 1px solid rgba(255, 255, 255, 0.25);
         border-radius: 10px;
         color: #ffffff;
         font: inherit;
@@ -259,8 +260,16 @@ require_once __DIR__ . '/marketplace.php';
         cursor: pointer;
     }
 
+    .site-nav__toggle:hover,
     .site-nav__toggle[aria-expanded="true"] {
-        background: rgba(255, 255, 255, 0.12);
+        background: #00032c;
+        border-color: #2116ad;
+    }
+
+    .site-nav__toggle svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
     }
 
     /* Мобільна шапка (< 768px): «Головна / Кабінет / Увійти» — у гамбургер.

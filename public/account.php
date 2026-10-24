@@ -1169,10 +1169,22 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             grid-template-rows: 1fr;
         }
 
+        /* Згорнутий розділ: рядок 0fr, але нижній відступ сам по собі тримав би
+           20px висоти й показував верх вмісту — тому в закритому стані відступ 0
+           і вміст прихований (visibility: ще й не потрапляє у Tab). Ховаємо
+           після завершення анімації згортання. */
         .accordion__panel-inner {
             min-height: 0;
             overflow: hidden;
-            padding: 0 20px 20px;
+            padding: 0 20px;
+            visibility: hidden;
+            transition: padding-bottom 0.28s ease, visibility 0s linear 0.28s;
+        }
+
+        .accordion.is-open > .accordion__panel > .accordion__panel-inner {
+            padding-bottom: 20px;
+            visibility: visible;
+            transition: padding-bottom 0.28s ease, visibility 0s;
         }
 
         /* Закріплена кнопка «згорнути назад» — фіксована відносно вікна
@@ -1229,7 +1241,11 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             }
 
             .accordion__panel-inner {
-                padding: 0 16px 16px;
+                padding: 0 16px;
+            }
+
+            .accordion.is-open > .accordion__panel > .accordion__panel-inner {
+                padding-bottom: 16px;
             }
 
             .accordion-back {

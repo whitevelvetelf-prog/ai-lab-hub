@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/promo-advertiser.php';
+require_once __DIR__ . '/ad-popup.php'; // AD_POPUP_SKIP_MIN/MAX: межі затримки «Пропустити» (кабінет і promo-admin-action.php)
 
 /** Актуальна роль admin за БД. */
 function promo_is_admin(PDO $pdo, ?int $userId): bool

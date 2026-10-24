@@ -40,6 +40,7 @@ require_once __DIR__ . '/marketplace.php';
         <?= htmlspecialchars(t('nav_assistant'), ENT_QUOTES) ?>
     </a>
     <button class="site-nav__toggle" type="button" aria-expanded="false" aria-controls="siteNav">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h16"/></svg>
         <?= htmlspecialchars(t('nav_menu_toggle'), ENT_QUOTES) ?>
     </button>
 </header>
