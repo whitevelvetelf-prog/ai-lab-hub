@@ -188,6 +188,25 @@ const ELI_INTENTS = [
     ['релігія, церква, церкви, молитва, молитви, помолитися, помолитись, молитися, бог, віра, духовний, духовність, біблія, коран, храм, мечеть, православя, християнство, religion, church, prayer, god, faith, bible, quran, mosque, temple', 'religion', null, 1.0],
     ['медитація, meditation', 'religion', null, 0.4],
     ['медитація, meditation', 'health-beauty', 'mental-health', 0.6],
+
+    // --- Езотерика (чутливий розділ: лише за прямими словами)
+    ['езотерика, езотеричний, окультизм, окультний, містика, містичний, esoteric, esoterics, occult, mystic, mysticism, metaphysical', 'esoterics', null, 1.0],
+    ['гороскоп, гороскопи, астрологія, астролог, зодіак, знак зодіаку, ретроградний, horoscope, horoscopes, astrology, astrologer, zodiac', 'esoterics', 'astrology', 1.0],
+    ['натальна, натальну, натальна карта, асцендент, синастрія, ефемериди, natal, ascendant, synastry, ephemeris', 'esoterics', 'astro-software', 1.0],
+    ['джйотіш, кундлі, кундалі, панчанг, ведична астрологія, jyotish, kundli, kundali, panchang, vedic astrology', 'esoterics', 'vedic-astrology', 1.0],
+    ['фен-шуй, феншуй, бацзи, ба цзи, feng shui, bazi', 'esoterics', 'feng-shui', 1.0],
+    ['таро, тарот, оракул, оракули, ленорман, tarot, oracle, lenormand', 'esoterics', 'tarot', 1.0],
+    ['нумерологія, нумеролог, ангельські числа, numerology, numerologist, angel numbers', 'esoterics', 'numerology', 1.0],
+    ['ворожіння, ворожити, гадання, гадати, руни, рунічний, хіромантія, долоня, і-цзин, маятник, divination, runes, palmistry, palm reading, i ching, pendulum, dowsing', 'esoterics', 'divination', 1.0],
+    ['екстрасенс, екстрасенси, медіум, медіуми, ясновидець, psychic, psychics, clairvoyant', 'esoterics', 'psychics', 1.0],
+    ['чаклунство, відьма, відьми, відьомство, вікка, язичництво, заклинання, witch, witchcraft, wicca, pagan', 'esoterics', 'witchcraft', 1.0],
+    ['оберіг, обереги, амулет, амулети, талісман, зле око, зурочення, пристріт, захист від зла, amulet, amulets, talisman, evil eye, hamsa', 'esoterics', 'protection', 1.0],
+    ['кристал, кристали, мінерал, мінерали, crystal, crystals, gemstone, gemstones', 'esoterics', 'crystals', 0.9],
+    ['пахощі, ладан, шавлія, пало санто, ритуальні свічки, incense, frankincense, sage, palo santo, smudge', 'esoterics', 'incense-candles', 1.0],
+    ['рейкі, чакра, чакри, аура, цигун, reiki, chakra, chakras, aura, qigong', 'esoterics', 'energy-practices', 1.0],
+    ['дизайн людини, бодіграф, human design, bodygraph, gene keys', 'esoterics', 'human-design', 1.0],
+    ['сонник, наснилося, снилося, усвідомлені сни, dream, dreams, lucid dreaming', 'esoterics', 'dreams', 1.0],
+    ['місячний календар, фаза місяця, молодик, moon calendar, moon phase, full moon, new moon', 'esoterics', 'moon-calendars', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */

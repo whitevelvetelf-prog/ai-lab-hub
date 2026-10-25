@@ -49,6 +49,7 @@ $categoryIcons = [
     'cybersecurity'         => 'shield',
     'accessibility'         => 'accessibility',
     'entertainment'         => 'party-popper',
+    'esoterics'             => 'sparkles',
 ];
 
 ?>

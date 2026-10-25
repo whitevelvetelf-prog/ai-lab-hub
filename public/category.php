@@ -74,6 +74,7 @@ $categoryIcons = [
     'cybersecurity'         => 'shield',
     'accessibility'         => 'accessibility',
     'entertainment'         => 'party-popper',
+    'esoterics'             => 'sparkles',
 ];
 
 $subcategoryIcons = [
@@ -183,6 +184,25 @@ $subcategoryIcons = [
     'reading-neurodiversity' => 'book-open-text',
     'hands-free'             => 'mouse-pointer-click',
     'digital-accessibility'  => 'globe',
+    // Езотерика
+    'astrology'              => 'star',
+    'astro-software'         => 'orbit',
+    'vedic-astrology'        => 'sun',
+    'feng-shui'              => 'compass',
+    'tarot'                  => 'layers',
+    'tarot-decks'            => 'library',
+    'numerology'             => 'hash',
+    'divination'             => 'dices',
+    'psychics'               => 'eye',
+    'witchcraft'             => 'wand-sparkles',
+    'protection'             => 'shield-check',
+    'crystals'               => 'gem',
+    'incense-candles'        => 'flame',
+    'energy-practices'       => 'zap',
+    'human-design'           => 'fingerprint',
+    'dreams'                 => 'cloud-moon',
+    'moon-calendars'         => 'moon',
+    'esoteric-learning'      => 'book-open-text',
     // Розважальні
     'funny-filters'          => 'smile-plus',
     'dancing-animals'        => 'paw-print',
