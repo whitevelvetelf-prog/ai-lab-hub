@@ -19,6 +19,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/eli.php';
+require_once __DIR__ . '/../app/search-log.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -89,4 +90,5 @@ try {
 }
 
 eli_log($pdo, $result['log']);
+search_log_query($pdo, $message, 'eli', is_array($result['response']['products'] ?? null) ? count($result['response']['products']) : 0);
 eli_respond($result['response']);

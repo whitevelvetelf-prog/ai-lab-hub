@@ -24,6 +24,7 @@ require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/search.php';
 require_once __DIR__ . '/../app/analytics.php';
+require_once __DIR__ . '/../app/search-log.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
 
 /** @var PDO $pdo */
@@ -45,6 +46,7 @@ $backLink    = null;
 if ($isSearch) {
     $pageHeading = sprintf(t('search_results_heading'), $searchQuery);
     $products = search_products_by_name($pdo, $searchQuery, 'id, name, short_description');
+    search_log_query($pdo, $searchQuery, 'catalog', count($products));
 } elseif ($subcategoryId > 0) {
     $subStmt = $pdo->prepare("SELECT id, name, name_en, slug, category_id FROM subcategories WHERE id = :id");
     $subStmt->execute([':id' => $subcategoryId]);

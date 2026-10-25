@@ -118,6 +118,45 @@ $topClicked->execute([':since1' => $periodSince, ':since2' => $periodSince]);
 $topClicked = $topClicked->fetchAll();
 
 /**
+ * Пошукові запити (search_queries, міграція 2026-10-25): що шукають у шапці, на сторінці результатів
+ * і в Елі. Групування за нормалізованим текстом, рахуються різні сеанси. «Без результатів» —
+ * запити, на які пошук сайту не знайшов жодного продукту: кандидати на поповнення каталогу.
+ * Без міграції — null і підказка замість таблиць.
+ */
+$topQueries = null;
+$zeroQueries = null;
+try {
+    $stmt = $pdo->prepare(
+        "SELECT query_norm, MAX(query_text) AS sample, COUNT(DISTINCT session_hash) AS sessions,
+                GROUP_CONCAT(DISTINCT source ORDER BY source SEPARATOR ', ') AS sources,
+                MAX(results_count) AS max_results
+         FROM search_queries
+         WHERE (:since1 IS NULL OR created_at >= :since2)
+         GROUP BY query_norm
+         ORDER BY sessions DESC, MAX(created_at) DESC
+         LIMIT 30"
+    );
+    $stmt->execute([':since1' => $periodSince, ':since2' => $periodSince]);
+    $topQueries = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare(
+        "SELECT query_norm, MAX(query_text) AS sample, COUNT(DISTINCT session_hash) AS sessions,
+                GROUP_CONCAT(DISTINCT source ORDER BY source SEPARATOR ', ') AS sources
+         FROM search_queries
+         WHERE source <> 'eli' AND (:since1 IS NULL OR created_at >= :since2)
+         GROUP BY query_norm
+         HAVING MAX(results_count) = 0
+         ORDER BY sessions DESC, MAX(created_at) DESC
+         LIMIT 20"
+    );
+    $stmt->execute([':since1' => $periodSince, ':since2' => $periodSince]);
+    $zeroQueries = $stmt->fetchAll();
+} catch (Throwable $e) {
+    $topQueries = null;
+    $zeroQueries = null;
+}
+
+/**
  * Топ статей блогу: page_slug з міграції 2026-09-27 (усі мовні версії статті
  * разом). Без міграції — null і підказка замість таблиці.
  */
@@ -470,6 +509,67 @@ try {
                                     <td class="table__num table__muted"><?= (int) $row['official_clicks'] ?></td>
                                     <td class="table__num table__muted"><?= (int) $row['affiliate_clicks'] ?></td>
                                     <td class="table__num"><?= (int) $row['total_clicks'] ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="section" id="search-queries">
+            <h2 class="section__title">Пошукові запити</h2>
+            <p class="stat-card__sub" style="margin-bottom: 16px;">Період: <?= e($periodLabels[$period]) ?> · шапка (header), сторінка результатів (catalog) і Еля (eli) · без ботів і співробітників · рахуються різні сеанси</p>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Запит</th>
+                            <th>Сеансів</th>
+                            <th>Де</th>
+                            <th>Знайдено продуктів</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($topQueries === null): ?>
+                            <tr><td class="empty-state" colspan="4">Застосуйте міграцію database/migration-2026-10-25-search-queries.sql.</td></tr>
+                        <?php elseif ($topQueries === []): ?>
+                            <tr><td class="empty-state" colspan="4">Запитів ще немає.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($topQueries as $row): ?>
+                                <tr>
+                                    <td><?= e($row['sample']) ?></td>
+                                    <td class="table__num"><?= (int) $row['sessions'] ?></td>
+                                    <td class="table__muted"><?= e($row['sources']) ?></td>
+                                    <td class="table__num table__muted"><?= (int) $row['max_results'] ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 class="section__title" style="font-size: 1.05rem; margin-top: 24px;">Запити без результатів — чого бракує в каталозі</h3>
+            <div class="table-wrap">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Запит</th>
+                            <th>Сеансів</th>
+                            <th>Де</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($zeroQueries === null): ?>
+                            <tr><td class="empty-state" colspan="3">Застосуйте міграцію database/migration-2026-10-25-search-queries.sql.</td></tr>
+                        <?php elseif ($zeroQueries === []): ?>
+                            <tr><td class="empty-state" colspan="3">Усі запити знаходили продукти.</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($zeroQueries as $row): ?>
+                                <tr>
+                                    <td><?= e($row['sample']) ?></td>
+                                    <td class="table__num"><?= (int) $row['sessions'] ?></td>
+                                    <td class="table__muted"><?= e($row['sources']) ?></td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>

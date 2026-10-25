@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/search.php';
+require_once __DIR__ . '/../app/search-log.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -108,5 +109,11 @@ foreach ($results as $row) {
         'subcategory' => $subcategoryByProduct[$pid] ?? null,
     ];
 }
+
+// Журнал запитів: сесію лише читаємо (без блокування паралельних запитів під час набору).
+if (session_status() === PHP_SESSION_NONE && isset($_COOKIE[session_name()])) {
+    session_start(['read_and_close' => true]);
+}
+search_log_query($pdo, $query, 'header', count($items));
 
 search_respond(['ok' => true, 'query' => $query, 'results' => $items]);
