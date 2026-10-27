@@ -11,7 +11,7 @@ declare(strict_types=1);
  *
  * Формат файлу: YAML-подібний frontmatter (--- title / description ---)
  * і далі Markdown-тіло. Підтримується підмножина Markdown, якої досить для
- * статей-порівнянь: заголовки #/##/###, **жирний**, *курсив*, [текст](url), списки
+ * статей-порівнянь: заголовки #/##/###, **жирний**, *курсив*, `код`, [текст](url), списки
  * "- пункт", таблиці "| ... | ... |", роздільник "---", виділений блок-застереження "> текст".
  * Посилання на картки й підкатегорії каталогу без id: [текст](product:Назва продукту),
  * [текст](subcategory:slug) — id розв'язується за назвою / slug у БД того сервера, де відкрито
@@ -79,6 +79,10 @@ const BLOG_ARTICLES = [
         'uk' => 'shi-ta-pamyat-pro-pomerlykh-ua.md',
         'en' => 'ai-and-remembering-the-dead-en.md',
     ],
+    'ai-fraud-deepfakes-protection' => [
+        'uk' => 'yak-uberegtys-vid-shakhraystva-i-dypfeykiv-ua.md',
+        'en' => 'ai-fraud-and-deepfakes-protection-en.md',
+    ],
 ];
 
 /**
@@ -110,6 +114,7 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-for-dog-training' => ['my-home/dog-training', 'my-home/pets'],
     'ai-for-working-and-service-dogs' => ['my-home/working-dogs', 'my-home/pet-grooming-vet'],
     'ai-digital-memory-loved-ones' => ['my-home/digital-memory-legacy'],
+    'ai-fraud-deepfakes-protection' => ['cybersecurity/anti-scam-deepfakes', 'education-knowledge/detectors', 'cybersecurity/identity-protection'],
 ];
 
 /**
@@ -387,10 +392,18 @@ function blog_inline_html(string $text): string
 {
     $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
 
+    // `код` — без іншої розмітки всередині (USSD-коди на кшталт **21*номер# інакше стали б курсивом)
+    $code = [];
+    $escaped = preg_replace_callback('/`([^`]+)`/', static function (array $m) use (&$code): string {
+        $code[] = '<code>' . $m[1] . '</code>';
+
+        return "\x00" . (count($code) - 1) . "\x00";
+    }, $escaped);
+
     $escaped = preg_replace('/\*\*(.+?)\*\*/', '<strong>$1</strong>', $escaped);
     $escaped = preg_replace('/\*(.+?)\*/', '<em>$1</em>', $escaped);
 
-    return preg_replace_callback(
+    $html = preg_replace_callback(
         '/\[([^\]]+)\]\(([^)]+)\)/',
         static function (array $m): string {
             $target = html_entity_decode($m[2], ENT_QUOTES, 'UTF-8');
@@ -408,6 +421,8 @@ function blog_inline_html(string $text): string
         },
         $escaped
     );
+
+    return preg_replace_callback('/\x00(\d+)\x00/', static fn (array $m): string => $code[(int) $m[1]], $html);
 }
 
 /**

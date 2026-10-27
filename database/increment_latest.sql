@@ -1,549 +1,754 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-10-25: популярні АІ-інструменти, партія 3: дім, здоров’я, фінанси, подорожі, переклад і мови (18 продуктів).
--- Відбір: популярні у світі запити в темах, які найчастіше переглядають відвідувачі (Мій дім, Здоров’я, Освіта, переклад і мови).
--- Тексти UA/EN написано з офіційних сайтів, звірено 2026-10-25. Ціни не вказано: «Ціна: див. сайт»; Free — де підтверджено.
--- Пропущено: REimagineHome і Pl@ntNet (уже є), Lingvanex (походження не підтверджено), Rendair, Cleo, RoamAround (сайти недоступні для перевірки).
+-- AI LAB HUB — партія 2026-10-27: «Захист від шахрайства й дипфейків» + стаття ai-fraud-deepfakes-protection.
+--   1) нова підкатегорія cybersecurity / anti-scam-deepfakes (іконка shield-alert у public/category.php) + інтенти Елі;
+--   2) 24 нових продуктів (детектори для освіти й науки, перевірка фото/відео, дзвінки, 2FA);
+--   3) прив'язка 15 наявних продуктів до нової підкатегорії (за назвою).
+-- Тексти UA/EN написано з офіційних сайтів, звірено 2026-10-27. Пропущено: Unicheck (закрито 01.01.2025), Trend Micro ScamCheck (сторінка 404),
+-- Deepware Scanner (сайт не відкрився), Kaspersky (санкції в Україні).
 -- Категорії й підкатегорії — за slug (без фіксованих id). @new рахується ДО INSERT. Повторний запуск безпечний.
 -- Застосування: phpMyAdmin → БД → «Импорт».
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
 
--- HomeByMe — my-home/interior-design, my-home/renovation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'home.by.me/en' OR LOWER(`name`) = 'homebyme')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'HomeByMe', NULL, 'https://home.by.me/en/', NULL, NULL, 'Безкоштовний планувальник оселі: план у 2D, облаштування в 3D реальними меблями брендів і рендери в 4K.', 'A free home planner: floor plan in 2D, furnishing in 3D with real branded furniture and 4K renders.', 'HomeByMe — онлайн-сервіс для проєктування житла. Ви креслите план квартири чи будинку у 2D, облаштовуєте його в 3D меблями реальних брендів і отримуєте фотореалістичні зображення в 4K. Є відеоінструкції для початку роботи та статті про тренди інтер’єру. Базове користування безкоштовне.', 'HomeByMe is an online home design service. You draw a floor plan of a flat or house in 2D, furnish it in 3D with real branded furniture and get photorealistic 4K images. There are video tutorials to get started and articles on interior trends. Basic use is free.', 'План приміщення у 2D
-Облаштування в 3D
-Меблі реальних брендів
-Рендери в 4K', '2D floor plan
-3D furnishing
-Real branded furniture
-4K renders', 'Тим, хто планує ремонт чи облаштування житла.', 'People planning a renovation or furnishing a home.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'home.by.me/en' OR LOWER(`name`) = 'homebyme') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'my-home' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'interior-design' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'renovation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free home planner: floor plan in 2D, furnishing in 3D with real branded furniture and 4K renders.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'HomeByMe is an online home design service. You draw a floor plan of a flat or house in 2D, furnish it in 3D with real branded furniture and get photorealistic 4K images. There are video tutorials to get started and articles on interior trends. Basic use is free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '2D floor plan
-3D furnishing
-Real branded furniture
-4K renders', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People planning a renovation or furnishing a home.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Захист від шахрайства й дипфейків', 'Scam and deepfake protection', 'anti-scam-deepfakes' FROM DUAL
+WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes');
 
--- Yuka — health-beauty/nutrition, health-beauty/skin-care
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'yuka.io/en' OR LOWER(`name`) = 'yuka')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Yuka', NULL, 'https://yuka.io/en/', NULL, NULL, 'Застосунок-сканер продуктів і косметики: оцінює склад і вплив на здоров’я, без реклами й впливу брендів.', 'A scanner app for food and cosmetics: rates ingredients and health impact, with no ads or brand influence.', 'Yuka сканує штрихкоди харчових продуктів і косметики, розшифровує етикетки й показує оцінку від 0 до 100: добавки, надлишок цукру, калорійність. Сервіс підкреслює незалежність: бренди не можуть впливати на оцінки чи платити за рекламу в застосунку. Базові функції безкоштовні.', 'Yuka scans barcodes of food and cosmetic products, decodes labels and shows a 0–100 score covering additives, excess sugar and calories. The service stresses independence: brands cannot influence scores or pay for ads in the app. Basic features are free.', 'Сканування штрихкодів
-Оцінка складу 0–100
-Харчі й косметика
-Без реклами', 'Barcode scanning
-0–100 ingredient score
-Food and cosmetics
-No ads', 'Тим, хто стежить за складом їжі та косметики.', 'People who check what is in their food and cosmetics.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'yuka.io/en' OR LOWER(`name`) = 'yuka') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'health-beauty' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'nutrition' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'skin-care' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A scanner app for food and cosmetics: rates ingredients and health impact, with no ads or brand influence.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Yuka scans barcodes of food and cosmetic products, decodes labels and shows a 0–100 score covering additives, excess sugar and calories. The service stresses independence: brands cannot influence scores or pay for ads in the app. Basic features are free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Barcode scanning
-0–100 ingredient score
-Food and cosmetics
-No ads', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who check what is in their food and cosmetics.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+-- Інтенти Елі (php tools/eli-intents.php sql | grep anti-scam-deepfakes).
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'шахра', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'шахра' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'шахрайств', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'шахрайств' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'шахрайськ', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'шахрайськ' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'дипфейк', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'дипфейк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'діпфейк', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'діпфейк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'підробк', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'підробк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'підроблен', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'підроблен' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'фейк', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'фейк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'фейков', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'фейков' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'переадресац', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 0.6 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'переадресац' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'scam', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'scam' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'scamm', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'scamm' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'fraud', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'fraud' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'deepfak', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'deepfak' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'fake', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'fake' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'phish', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'phish' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'фішинг', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'фішинг' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'клон', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 0.6 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'клон' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'клонован', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 0.6 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'клонован' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'spoof', (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1), 0.6 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'spoof' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'cybersecurity' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'cybersecurity' AND s.slug = 'anti-scam-deepfakes' LIMIT 1));
 
--- Albert — finance-legal/finance
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'albert.com' OR LOWER(`name`) = 'albert')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Albert', NULL, 'https://albert.com', NULL, NULL, 'Фінансовий асистент: бюджет, витрати, рахунки, заощадження та інвестиції, асистент Genius (для США).', 'A financial assistant: budget, spending, bills, savings and investing, with the Genius assistant (US).', 'Albert збирає повну картину ваших фінансів: створює бюджет, відстежує витрати й рахунки, шукає, де заощадити, пропонує банківський рахунок, заощадження та інвестиції. Підписка Genius додає асистента, фінансовий план, допомогу з покупками, сповіщення й сховище документів. Сервіс орієнтований на США.', 'Albert builds a full picture of your finances: it creates a budget, tracks spending and bills, finds savings and offers banking, saving and investing. The Genius subscription adds an assistant, a financial plan, shopping help, alerts and a document vault. The service is aimed at the US.', 'Бюджет і витрати
-Відстеження рахунків
-Заощадження та інвестиції
-Асистент Genius', 'Budget and spending
-Bill tracking
-Saving and investing
-Genius assistant', 'Користувачам у США, які хочуть упорядкувати фінанси.', 'US users who want to organise their finances.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'albert.com' OR LOWER(`name`) = 'albert') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'finance-legal' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'finance' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A financial assistant: budget, spending, bills, savings and investing, with the Genius assistant (US).', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Albert builds a full picture of your finances: it creates a budget, tracks spending and bills, finds savings and offers banking, saving and investing. The Genius subscription adds an assistant, a financial plan, shopping help, alerts and a document vault. The service is aimed at the US.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Budget and spending
-Bill tracking
-Saving and investing
-Genius assistant', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'US users who want to organise their finances.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Ironclad — finance-legal/documents, finance-legal/legal-services
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ironcladapp.com' OR LOWER(`name`) = 'ironclad')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Ironclad', NULL, 'https://ironcladapp.com', NULL, NULL, 'АІ-платформа управління життєвим циклом договорів: створення, погодження, підпис, зберігання й аналіз.', 'An AI contract lifecycle management platform: create, review, sign, store and analyse contracts.', 'Ironclad — корпоративна CLM-платформа для юридичних і бізнес-команд. Вона допомагає створювати договори за шаблонами, погоджувати й підписувати їх, зберігати в репозиторії та витягувати з угод дані й ризики за допомогою АІ. Інтегрується з робочими системами компаній; ціну визначають після демо.', 'Ironclad is an enterprise CLM platform for legal and business teams. It helps create contracts from templates, review and sign them, store them in a repository and use AI to surface data and risks from agreements. It integrates with company systems; pricing follows a demo.', 'Шаблони договорів
-Погодження й підпис
-Репозиторій угод
-АІ-аналіз ризиків', 'Contract templates
-Review and signing
-Contract repository
-AI risk insights', 'Юридичним відділам і великим компаніям.', 'Legal departments and large companies.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ironcladapp.com' OR LOWER(`name`) = 'ironclad') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'finance-legal' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'documents' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'legal-services' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An AI contract lifecycle management platform: create, review, sign, store and analyse contracts.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Ironclad is an enterprise CLM platform for legal and business teams. It helps create contracts from templates, review and sign them, store them in a repository and use AI to surface data and risks from agreements. It integrates with company systems; pricing follows a demo.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Contract templates
-Review and signing
-Contract repository
-AI risk insights', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Legal departments and large companies.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- iplan.ai — productivity/travel
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'iplan.ai' OR LOWER(`name`) = 'iplan.ai')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'iplan.ai', NULL, 'https://iplan.ai', NULL, NULL, 'АІ-планувальник подорожей: маршрут за кілька секунд з урахуванням мети, інтересів, компанії й бюджету.', 'An AI travel planner: an itinerary in seconds based on purpose, interests, companions and budget.', 'iplan.ai складає план поїздки за кілька секунд. Ви вказуєте напрям, мету подорожі, інтереси, з ким їдете, тривалість і бюджет — АІ підбирає маршрут під ці побажання. План доступний з будь-якого пристрою, є застосунок для Android.', 'iplan.ai builds a trip plan in seconds. You enter the destination, trip purpose, interests, who you travel with, length of stay and budget, and the AI curates an itinerary to match. The plan is available on any device, and there is an Android app.', 'Маршрут за секунди
-Урахування інтересів і бюджету
-Доступ з будь-якого пристрою
-Застосунок для Android', 'Itinerary in seconds
-Interests and budget
-Access on any device
-Android app', 'Мандрівникам, які планують поїздку самостійно.', 'Travellers planning trips on their own.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'iplan.ai' OR LOWER(`name`) = 'iplan.ai') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'productivity' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'travel' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An AI travel planner: an itinerary in seconds based on purpose, interests, companions and budget.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'iplan.ai builds a trip plan in seconds. You enter the destination, trip purpose, interests, who you travel with, length of stay and budget, and the AI curates an itinerary to match. The plan is available on any device, and there is an Android app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Itinerary in seconds
-Interests and budget
-Access on any device
-Android app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers planning trips on their own.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Lokalise — translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lokalise.com' OR LOWER(`name`) = 'lokalise')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Lokalise', NULL, 'https://lokalise.com', NULL, NULL, 'Платформа безперервної локалізації з АІ: переклад застосунків, сайтів і контенту, інтеграції з Figma та GitHub.', 'A continuous localization platform with AI: translating apps, websites and content, with Figma and GitHub integrations.', 'Lokalise — платформа управління перекладами для продуктових команд. Вона вбудовується в процес розробки, дає АІ-переклад з власними профілями та оцінкою якості, автоматичні робочі процеси, контекст для перекладачів, API і MCP-сервер. Інтегрується з Figma, GitHub, GitLab, Jira, Contentful, Webflow і WordPress; є пробний період.', 'Lokalise is a translation management platform for product teams. It plugs into the development workflow and offers AI translation with custom profiles and quality scoring, automated workflows, context for translators, an API and an MCP server. It integrates with Figma, GitHub, GitLab, Jira, Contentful, Webflow and WordPress; there is a free trial.', 'АІ-переклад і оцінка якості
-Автоматичні робочі процеси
-Інтеграції Figma, GitHub, Jira
-API та MCP-сервер', 'AI translation and scoring
-Automated workflows
-Figma, GitHub, Jira integrations
-API and MCP server', 'Командам, що локалізують застосунки й сайти.', 'Teams localizing apps and websites.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lokalise.com' OR LOWER(`name`) = 'lokalise') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A continuous localization platform with AI: translating apps, websites and content, with Figma and GitHub integrations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Lokalise is a translation management platform for product teams. It plugs into the development workflow and offers AI translation with custom profiles and quality scoring, automated workflows, context for translators, an API and an MCP server. It integrates with Figma, GitHub, GitLab, Jira, Contentful, Webflow and WordPress; there is a free trial.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI translation and scoring
-Automated workflows
-Figma, GitHub, Jira integrations
-API and MCP server', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Teams localizing apps and websites.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Crowdin — translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'crowdin.com' OR LOWER(`name`) = 'crowdin')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Crowdin', NULL, 'https://crowdin.com', NULL, NULL, 'АІ-платформа локалізації: автоматизація перекладу контенту та 700+ застосунків та інтеграцій.', 'An AI-powered localization platform: automated content translation and 700+ apps and integrations.', 'Crowdin — платформа локалізації та управління перекладами для команд і бізнесу. Вона автоматизує переклад програм, сайтів, документації й іншого контенту з допомогою АІ, поєднує роботу перекладачів і машинний переклад та має понад 700 застосунків та інтеграцій. Є безкоштовний старт і 30-денний пробний період Enterprise.', 'Crowdin is a localization and translation management platform for teams and businesses. It automates translation of software, websites, documentation and other content with AI, combines human and machine translation and offers 700+ apps and integrations. There is a free start and a 30-day Enterprise trial.', 'АІ-переклад контенту
-700+ інтеграцій
-Робота з перекладачами
-Пробний Enterprise', 'AI content translation
-700+ integrations
-Work with translators
-Enterprise trial', 'Розробникам і командам локалізації.', 'Developers and localization teams.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'crowdin.com' OR LOWER(`name`) = 'crowdin') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An AI-powered localization platform: automated content translation and 700+ apps and integrations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Crowdin is a localization and translation management platform for teams and businesses. It automates translation of software, websites, documentation and other content with AI, combines human and machine translation and offers 700+ apps and integrations. There is a free start and a 30-day Enterprise trial.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI content translation
-700+ integrations
-Work with translators
-Enterprise trial', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Developers and localization teams.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Dubverse — multimedia/voiceover, translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dubverse.ai' OR LOWER(`name`) = 'dubverse')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Dubverse', NULL, 'https://dubverse.ai', NULL, NULL, 'Генеративна АІ-платформа: дубляж відео, синтез мовлення, автосубтитри, переклад відео та API.', 'A generative AI platform: video dubbing, text to speech, auto subtitles, video translation and an API.', 'Dubverse перекладає й дублює відео іншими мовами за допомогою АІ, озвучує тексти природними голосами, створює субтитри й транскрипти. Є калькулятор кредитів, каталог мов і дикторів, корпоративні рішення та API. Можна спробувати безкоштовно.', 'Dubverse translates and dubs videos into other languages with AI, voices text with natural-sounding speakers and creates subtitles and transcripts. It has a credits calculator, a catalogue of languages and speakers, enterprise plans and an API. You can try it for free.', 'АІ-дубляж відео
-Синтез мовлення
-Автосубтитри й транскрипти
-API', 'AI video dubbing
-Text to speech
-Auto subtitles and transcripts
-API', 'Авторам відео та маркетологам.', 'Video creators and marketers.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dubverse.ai' OR LOWER(`name`) = 'dubverse') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'multimedia' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'voiceover' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A generative AI platform: video dubbing, text to speech, auto subtitles, video translation and an API.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Dubverse translates and dubs videos into other languages with AI, voices text with natural-sounding speakers and creates subtitles and transcripts. It has a credits calculator, a catalogue of languages and speakers, enterprise plans and an API. You can try it for free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI video dubbing
-Text to speech
-Auto subtitles and transcripts
-API', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Video creators and marketers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Vozo — multimedia/video-editing, translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vozo.ai' OR LOWER(`name`) = 'vozo')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Vozo', NULL, 'https://www.vozo.ai', NULL, NULL, 'АІ-переклад відео: субтитри, дубляж, синхронізація губ і текст на екрані для 160+ мов.', 'AI video translation: subtitles, dubbing, lip sync and on-screen text for 160+ languages.', 'Vozo локалізує відео за допомогою АІ: перекладає мовлення, робить дубляж зі збереженням голосу, синхронізує рухи губ, додає субтитри та перекладає текст на екрані — понад 160 мов. Орієнтований на авторів, маркетологів і викладачів; є API і безкоштовна реєстрація.', 'Vozo localizes video with AI: it translates speech, dubs while keeping the voice, syncs lip movements, adds subtitles and translates on-screen text in 160+ languages. It targets creators, marketers and educators; there is an API and free sign-up.', 'Переклад відео 160+ мов
-Дубляж і синхронізація губ
-Субтитри
-API', 'Video translation, 160+ languages
-Dubbing and lip sync
-Subtitles
-API', 'Авторам, маркетологам і викладачам.', 'Creators, marketers and educators.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vozo.ai' OR LOWER(`name`) = 'vozo') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'multimedia' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'video-editing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'AI video translation: subtitles, dubbing, lip sync and on-screen text for 160+ languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Vozo localizes video with AI: it translates speech, dubs while keeping the voice, syncs lip movements, adds subtitles and translates on-screen text in 160+ languages. It targets creators, marketers and educators; there is an API and free sign-up.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Video translation, 160+ languages
-Dubbing and lip sync
-Subtitles
-API', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Creators, marketers and educators.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Interprefy — translation-languages/translation, translation-languages/speech-recognition
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'interprefy.com' OR LOWER(`name`) = 'interprefy')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Interprefy', NULL, 'https://www.interprefy.com', NULL, NULL, 'Багатомовні події: дистанційний синхронний переклад, АІ-переклад мовлення та живі субтитри.', 'Multilingual events: remote simultaneous interpretation, AI speech translation and live captions.', 'Interprefy забезпечує багатомовність конференцій, вебінарів і зустрічей: професійний дистанційний синхронний переклад, АІ-переклад мовлення та живі субтитри. Працює для офлайн-, гібридних і онлайн-подій, через вебплатформу, мобільний застосунок та інтеграції з платформами зустрічей; є супровід проєктів.', 'Interprefy makes conferences, webinars and meetings multilingual with professional remote simultaneous interpretation, AI speech translation and live captions. It works for in-person, hybrid and virtual events via a web platform, a mobile app and integrations with meeting platforms, with project support.', 'Синхронний переклад
-АІ-переклад мовлення
-Живі субтитри
-Інтеграції з платформами зустрічей', 'Simultaneous interpretation
-AI speech translation
-Live captions
-Meeting platform integrations', 'Організаторам подій і міжнародним компаніям.', 'Event organisers and international companies.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'interprefy.com' OR LOWER(`name`) = 'interprefy') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'speech-recognition' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Multilingual events: remote simultaneous interpretation, AI speech translation and live captions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Interprefy makes conferences, webinars and meetings multilingual with professional remote simultaneous interpretation, AI speech translation and live captions. It works for in-person, hybrid and virtual events via a web platform, a mobile app and integrations with meeting platforms, with project support.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Simultaneous interpretation
-AI speech translation
-Live captions
-Meeting platform integrations', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Event organisers and international companies.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- KUDO — translation-languages/translation, translation-languages/speech-recognition
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kudo.ai' OR LOWER(`name`) = 'kudo')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'KUDO', NULL, 'https://kudo.ai', NULL, NULL, 'Живий переклад мовлення та субтитри 200 мовами — АІ або професійні перекладачі, для будь-якої платформи.', 'Live speech translation and captions in 200 languages — AI or human interpreters, on any platform.', 'KUDO перекладає мовлення наживо на зустрічах, навчаннях і подіях: на вибір АІ-переклад із субтитрами або професійні усні перекладачі, до 200 мов. Підключається до будь-якої платформи зустрічей чи подій — онлайн, гібридно або в залі; є рішення для освіти, державних установ і релігійних громад.', 'KUDO translates speech live at meetings, trainings and events, with a choice of AI translation with captions or professional interpreters, in up to 200 languages. It connects to any meeting or event platform — remote, hybrid or in-person — with solutions for education, government and houses of worship.', 'Переклад мовлення 200 мовами
-АІ або живі перекладачі
-Субтитри
-Будь-яка платформа зустрічей', 'Speech translation, 200 languages
-AI or human interpreters
-Captions
-Any meeting platform', 'Компаніям і організаторам міжнародних подій.', 'Companies and international event organisers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kudo.ai' OR LOWER(`name`) = 'kudo') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'speech-recognition' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Live speech translation and captions in 200 languages — AI or human interpreters, on any platform.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'KUDO translates speech live at meetings, trainings and events, with a choice of AI translation with captions or professional interpreters, in up to 200 languages. It connects to any meeting or event platform — remote, hybrid or in-person — with solutions for education, government and houses of worship.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Speech translation, 200 languages
-AI or human interpreters
-Captions
-Any meeting platform', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Companies and international event organisers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Timekettle — translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'timekettle.co' OR LOWER(`name`) = 'timekettle')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Timekettle', NULL, 'https://www.timekettle.co', NULL, NULL, 'Навушники-перекладачі з АІ: синхронний переклад розмов для подорожей і спілкування різними мовами.', 'AI translator earbuds: real-time conversation translation for travel and cross-language communication.', 'Timekettle виробляє навушники та пристрої для перекладу розмов у реальному часі на базі АІ. Вони працюють разом із застосунком і допомагають мандрівникам, діловим людям і парам, що говорять різними мовами. Це апаратний продукт: пристрої купують в інтернет-магазині, є сторінка для України.', 'Timekettle makes AI-powered earbuds and devices that translate conversations in real time. They work with a companion app and help travellers, business people and couples who speak different languages. It is a hardware product sold through an online store, including a Ukrainian storefront.', 'Переклад розмов у реальному часі
-Навушники-перекладачі
-Застосунок-компаньйон
-Для подорожей', 'Real-time conversation translation
-Translator earbuds
-Companion app
-For travel', 'Мандрівникам і людям, що спілкуються різними мовами.', 'Travellers and people talking across languages.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'timekettle.co' OR LOWER(`name`) = 'timekettle') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'AI translator earbuds: real-time conversation translation for travel and cross-language communication.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Timekettle makes AI-powered earbuds and devices that translate conversations in real time. They work with a companion app and help travellers, business people and couples who speak different languages. It is a hardware product sold through an online store, including a Ukrainian storefront.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Real-time conversation translation
-Translator earbuds
-Companion app
-For travel', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers and people talking across languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Pocketalk — translation-languages/translation
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pocketalk.com' OR LOWER(`name`) = 'pocketalk')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Pocketalk', NULL, 'https://www.pocketalk.com', NULL, NULL, 'Кишеньковий голосовий перекладач і корпоративний застосунок для перекладу розмов.', 'A pocket voice translator device and an enterprise app for translating conversations.', 'Pocketalk — портативний пристрій для голосового перекладу розмов, а також застосунок Pocketalk Enterprise для організацій. Рішення використовують в освіті, медицині, державних установах, службах безпеки та логістиці; є калькулятор економії на перекладі та портал керування пристроями.', 'Pocketalk is a portable voice translation device for conversations, plus the Pocketalk Enterprise app for organisations. It is used in education, healthcare, government, public safety and logistics, with a translation cost-savings calculator and a device management portal.', 'Портативний голосовий перекладач
-Корпоративний застосунок
-Для медицини й освіти
-Керування пристроями', 'Portable voice translator
-Enterprise app
-For healthcare and education
-Device management', 'Мандрівникам і організаціям, що працюють з іноземцями.', 'Travellers and organisations serving foreign speakers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pocketalk.com' OR LOWER(`name`) = 'pocketalk') ORDER BY `id` LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'translation' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A pocket voice translator device and an enterprise app for translating conversations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Pocketalk is a portable voice translation device for conversations, plus the Pocketalk Enterprise app for organisations. It is used in education, healthcare, government, public safety and logistics, with a translation cost-savings calculator and a device management portal.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Portable voice translator
-Enterprise app
-For healthcare and education
-Device management', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers and organisations serving foreign speakers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Promova — education-knowledge/courses, translation-languages
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'promova.com' OR LOWER(`name`) = 'promova')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Promova', NULL, 'https://promova.com', NULL, NULL, 'Застосунок для вивчення мов з українським корінням: короткі уроки, курси, репетитори та АІ-тьютор для розмовної практики.', 'A language learning app with Ukrainian roots: bite-sized lessons, courses, tutors and an AI Tutor for speaking practice.', 'Promova допомагає вивчати 12 мов, серед них англійську, іспанську, німецьку, японську й українську. Є короткі уроки, інтерактивні курси, заняття з репетиторами та АІ-тьютор, з яким можна практикувати розмову з першого дня. Застосунок має понад 400 тем і рейтинг 4,6; почати можна безкоштовно.', 'Promova helps you learn 12 languages, including English, Spanish, German, Japanese and Ukrainian. It offers bite-sized lessons, interactive courses, sessions with tutors and an AI Tutor for speaking practice from day one. The app has 400+ topics and a 4.6 rating; you can start for free.', '12 мов
-АІ-тьютор для розмови
-Курси й репетитори
-400+ тем', '12 languages
-AI Tutor for speaking
-Courses and tutors
-400+ topics', 'Тим, хто вивчає іноземну мову.', 'Language learners.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'promova.com' OR LOWER(`name`) = 'promova') ORDER BY `id` LIMIT 1);
+-- StrikePlagiarism.com — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'strikeplagiarism.com/en' OR LOWER(`name`) = 'strikeplagiarism.com')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'StrikePlagiarism.com', NULL, 'https://strikeplagiarism.com/en/', NULL, NULL, 'Перевірка робіт на плагіат і АІ-текст для університетів, видавців і установ, з базами 30+ мов.', 'Plagiarism and AI-text checking for universities, publishers and institutions, AI detection in 30+ languages.', 'StrikePlagiarism.com — система перевірки оригінальності для навчальних закладів і видавців. Вона порівнює роботу з науковими журналами, репозиторіями установ, базами видавців та інтернетом, перехресно звіряє подані роботи між собою й шукає фрагменти, ймовірно згенеровані АІ. Звіт показує коефіцієнти схожості, джерела, перефразування й ознаки маніпуляцій із текстом. Є інтеграції з Moodle, Canvas, Blackboard, OJS, дані зберігаються на серверах у ЄС. Купують установи, ціна — за запитом.', 'StrikePlagiarism.com is an originality checking system for educational institutions and publishers. It compares a work with scientific journals, institutional repositories, publisher databases and the internet, cross-checks submissions against each other and flags passages likely generated by AI. The report shows similarity coefficients, sources, paraphrasing and signs of text manipulation. It integrates with Moodle, Canvas, Blackboard and OJS, and data is stored on EU servers. It is bought by institutions; pricing on request.', 'Перевірка на плагіат
+Виявлення АІ-тексту (30+ мов)
+Перехресна перевірка робіт
+Інтеграції з Moodle, Canvas, OJS', 'Plagiarism check
+AI text detection (30+ languages)
+Cross-checking of submissions
+Moodle, Canvas, OJS integrations', 'Університетам, коледжам, наукових видавцям.', 'Universities, colleges and scientific publishers.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'strikeplagiarism.com/en' OR LOWER(`name`) = 'strikeplagiarism.com') ORDER BY `id` LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A language learning app with Ukrainian roots: bite-sized lessons, courses, tutors and an AI Tutor for speaking practice.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Promova helps you learn 12 languages, including English, Spanish, German, Japanese and Ukrainian. It offers bite-sized lessons, interactive courses, sessions with tutors and an AI Tutor for speaking practice from day one. The app has 400+ topics and a 4.6 rating; you can start for free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '12 languages
-AI Tutor for speaking
-Courses and tutors
-400+ topics', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Language learners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Plagiarism and AI-text checking for universities, publishers and institutions, AI detection in 30+ languages.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'StrikePlagiarism.com is an originality checking system for educational institutions and publishers. It compares a work with scientific journals, institutional repositories, publisher databases and the internet, cross-checks submissions against each other and flags passages likely generated by AI. The report shows similarity coefficients, sources, paraphrasing and signs of text manipulation. It integrates with Moodle, Canvas, Blackboard and OJS, and data is stored on EU servers. It is bought by institutions; pricing on request.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Plagiarism check
+AI text detection (30+ languages)
+Cross-checking of submissions
+Moodle, Canvas, OJS integrations', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Universities, colleges and scientific publishers.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Langotalk — education-knowledge/tutoring, translation-languages
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'langotalk.org' OR LOWER(`name`) = 'langotalk')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Langotalk', NULL, 'https://www.langotalk.org', NULL, NULL, 'Персональний АІ-тьютор з мов: виправляє помилки, заповнює прогалини й веде розмовні уроки 20+ мовами.', 'A personal AI language tutor: corrects mistakes, fills gaps and guides conversational lessons in 20+ languages.', 'Langotalk працює як особистий репетитор: аналізує ваш словник, граматику та вільність мовлення після кожного речення й підлаштовує уроки під вас. Навчання будується на живих діалогах — говоріть, слухайте й читайте замість повторюваних вправ. Понад 20 мов, почати можна безкоштовно.', 'Langotalk acts as a personal tutor: it analyses your vocabulary, grammar and fluency after every sentence and adapts lessons to you. Learning is built on real conversations — speak, listen and read instead of repetitive drills. 20+ languages, free to start.', 'АІ-тьютор
-Виправлення помилок
-Розмовні уроки
-20+ мов', 'AI tutor
-Mistake correction
-Conversational lessons
-20+ languages', 'Тим, хто хоче заговорити іноземною мовою.', 'Learners who want to speak a new language.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'langotalk.org' OR LOWER(`name`) = 'langotalk') ORDER BY `id` LIMIT 1);
+-- iThenticate — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ithenticate.com' OR LOWER(`name`) = 'ithenticate')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'iThenticate', NULL, 'https://www.ithenticate.com/', NULL, NULL, 'Перевірка рукописів, дисертацій і статей на схожість перед публікацією; від Turnitin.', 'Similarity checking of manuscripts, theses and papers before publication, by Turnitin.', 'iThenticate від Turnitin перевіряє оригінальність «документів з високою ціною помилки»: наукових статей, рукописів, дисертацій. Видавці й установи підключають його для всієї організації (там є й виявлення АІ-тексту), а дослідники можуть купити кредити на один чи кілька рукописів. В індивідуальних пакетах виявлення АІ-тексту не входить.', 'iThenticate by Turnitin checks the originality of high-stakes documents: research papers, manuscripts and dissertations. Publishers and institutions license it organisation-wide (including AI writing detection), while researchers can buy credits for one or several manuscripts. AI writing detection is not included in individual packages.', 'Перевірка схожості рукописів
+Для дисертацій і статей
+Кредити на 12 місяців
+5 безкоштовних повторних перевірок', 'Manuscript similarity check
+For theses and papers
+Credits valid 12 months
+5 free revisions', 'Науковцям, аспірантам, видавцям, університетам.', 'Researchers, PhD students, publishers, universities.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ithenticate.com' OR LOWER(`name`) = 'ithenticate') ORDER BY `id` LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tutoring' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A personal AI language tutor: corrects mistakes, fills gaps and guides conversational lessons in 20+ languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Langotalk acts as a personal tutor: it analyses your vocabulary, grammar and fluency after every sentence and adapts lessons to you. Learning is built on real conversations — speak, listen and read instead of repetitive drills. 20+ languages, free to start.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI tutor
-Mistake correction
-Conversational lessons
-20+ languages', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Learners who want to speak a new language.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Similarity checking of manuscripts, theses and papers before publication, by Turnitin.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'iThenticate by Turnitin checks the originality of high-stakes documents: research papers, manuscripts and dissertations. Publishers and institutions license it organisation-wide (including AI writing detection), while researchers can buy credits for one or several manuscripts. AI writing detection is not included in individual packages.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Manuscript similarity check
+For theses and papers
+Credits valid 12 months
+5 free revisions', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Researchers, PhD students, publishers, universities.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Single', 'Single', 125.00, 'one_time', 'Один рукопис до 25 000 слів, кредити на 12 місяців, 5 повторних перевірок. Без виявлення АІ-тексту. Ціна без податків.', 'One manuscript up to 25,000 words, credits valid 12 months, 5 free revisions. No AI writing detection. Price excludes taxes.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Single' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Single', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'One manuscript up to 25,000 words, credits valid 12 months, 5 free revisions. No AI writing detection. Price excludes taxes.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Multiple', 'Multiple', 300.00, 'one_time', 'До 3 рукописів або один до 75 000 слів, кредити на 12 місяців. Без виявлення АІ-тексту. Ціна без податків.', 'Up to 3 manuscripts or one up to 75,000 words, credits valid 12 months. No AI writing detection. Price excludes taxes.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Multiple' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Multiple', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Up to 3 manuscripts or one up to 75,000 words, credits valid 12 months. No AI writing detection. Price excludes taxes.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Clozemaster — education-knowledge/courses, translation-languages
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'clozemaster.com' OR LOWER(`name`) = 'clozemaster')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Clozemaster', NULL, 'https://www.clozemaster.com', NULL, NULL, 'Гра для вивчення слів у контексті: тисячі речень із пропусками 50+ мовами.', 'A game for learning vocabulary in context: thousands of fill-in-the-blank sentences in 50+ languages.', 'Clozemaster вчить слова в реальних реченнях: ви заповнюєте пропуски й запам’ятовуєте не лише значення, а й уживання. Понад 50 мов і 170 мовних пар, ігрова механіка й повторення. Підходить як наступний крок після Duolingo; реєстрація безкоштовна.', 'Clozemaster teaches vocabulary in real sentences: you fill in the blanks and remember not only meaning but usage. 50+ languages and 170+ language pairs, with game mechanics and review. It works well as a next step after Duolingo; sign-up is free.', 'Речення з пропусками
-50+ мов
-170+ мовних пар
-Ігрова механіка', 'Fill-in-the-blank sentences
-50+ languages
-170+ language pairs
-Gamified', 'Тим, хто вивчає мову й хоче розширити словник.', 'Learners building vocabulary.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'clozemaster.com' OR LOWER(`name`) = 'clozemaster') ORDER BY `id` LIMIT 1);
+-- Quetext — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'quetext.com' OR LOWER(`name`) = 'quetext')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Quetext', NULL, 'https://www.quetext.com/', NULL, NULL, 'Перевірка тексту на плагіат і АІ, генератор цитувань, розширення для браузера.', 'Plagiarism and AI checking of text, citation help and a browser extension.', 'Quetext — онлайн-сервіс для студентів і авторів: перевіряє текст на збіги з іншими джерелами, оцінює ймовірність АІ-генерації й допомагає оформити цитування. Є розширення для браузера. Безкоштовний план дає базові перевірки; платні плани збільшують кількість слів на місяць.', 'Quetext is an online service for students and writers: it checks text for matches with other sources, estimates the likelihood of AI generation and helps with citations. A browser extension is available. The free plan offers basic checks; paid plans raise the monthly word limit.', 'Перевірка на плагіат
+Детектор АІ-тексту
+Допомога з цитуванням
+Розширення для браузера', 'Plagiarism checker
+AI text detector
+Citation help
+Browser extension', 'Студентам, викладачам, авторам.', 'Students, teachers, writers.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'quetext.com' OR LOWER(`name`) = 'quetext') ORDER BY `id` LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A game for learning vocabulary in context: thousands of fill-in-the-blank sentences in 50+ languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Clozemaster teaches vocabulary in real sentences: you fill in the blanks and remember not only meaning but usage. 50+ languages and 170+ language pairs, with game mechanics and review. It works well as a next step after Duolingo; sign-up is free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Fill-in-the-blank sentences
-50+ languages
-170+ language pairs
-Gamified', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Learners building vocabulary.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Plagiarism and AI checking of text, citation help and a browser extension.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Quetext is an online service for students and writers: it checks text for matches with other sources, estimates the likelihood of AI generation and helps with citations. A browser extension is available. The free plan offers basic checks; paid plans raise the monthly word limit.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Plagiarism checker
+AI text detector
+Citation help
+Browser extension', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Students, teachers, writers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Essential', 'Essential', 14.99, 'month', 'Від $14,99 на місяць, 100 тис. слів на місяць.', 'From $14.99 per month, 100k words per month.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Essential' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Essential', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'From $14.99 per month, 100k words per month.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Professional', 'Professional', 29.98, 'month', 'Від $29,98 на місяць, 200 тис. слів, для команд і шкіл.', 'From $29.98 per month, 200k words, for teams and schools.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Professional' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Professional', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'From $29.98 per month, 200k words, for teams and schools.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Readlang — education-knowledge/courses, translation-languages
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'readlang.com' OR LOWER(`name`) = 'readlang')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Readlang', NULL, 'https://readlang.com', NULL, NULL, 'Вивчення мови через читання: переклад слів кліком, розумні картки та тексти 100+ мовами.', 'Learn a language by reading: click-to-translate words, smart flashcards and texts in 100+ languages.', 'Readlang дає змогу читати статті, книжки, відео й вебсторінки іноземною мовою і перекладати слова чи фрази одним кліком. Перекладені слова потрапляють у розумні картки для повторення. Понад 100 мов; почати можна безкоштовно.', 'Readlang lets you read articles, books, videos and web pages in a foreign language and translate words or phrases with one click. Translated words go into smart flashcards for review. 100+ languages; free to start.', 'Переклад кліком
-Розумні картки
-Статті, книжки, вебсторінки
-100+ мов', 'Click to translate
-Smart flashcards
-Articles, books, web pages
-100+ languages', 'Тим, хто вивчає мову через читання.', 'Learners who study through reading.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'readlang.com' OR LOWER(`name`) = 'readlang') ORDER BY `id` LIMIT 1);
+-- Proofig AI — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'proofig.com' OR LOWER(`name`) = 'proofig ai')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Proofig AI', NULL, 'https://www.proofig.com/', NULL, NULL, 'Перевірка зображень у наукових рукописах: дублювання, маніпуляції, запозичення, АІ-генерація.', 'Image integrity checks in research manuscripts: duplication, manipulation, reuse and AI generation.', 'Proofig AI аналізує всі рисунки рукопису за кілька хвилин: знаходить повторне використання зображень у межах статті (зокрема повернуті, віддзеркалені, масштабовані), запозичення з опублікованої літератури (база понад 155 млн зображень PubMed), ознаки редагування й згенеровані АІ зображення. Результат — звіт PDF для редакції чи комісії з доброчесності. Ціна — за запитом.', 'Proofig AI analyses all figures of a manuscript in minutes: it finds reused images within a paper (including rotated, flipped or scaled ones), reuse from published literature (a database of 155M+ PubMed images), signs of editing and AI-generated images. The result is a PDF report for editors or integrity committees. Pricing on request.', 'Дублювання зображень у рукописі
+Пошук запозичень у 155+ млн зображень
+Виявлення редагування
+Детектор АІ-зображень', 'Image duplication within a manuscript
+Reuse search across 155M+ images
+Manipulation detection
+AI image detector', 'Науковим видавцям, університетам, дослідницьким установам.', 'Scientific publishers, universities, research institutions.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'proofig.com' OR LOWER(`name`) = 'proofig ai') ORDER BY `id` LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Learn a language by reading: click-to-translate words, smart flashcards and texts in 100+ languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Readlang lets you read articles, books, videos and web pages in a foreign language and translate words or phrases with one click. Translated words go into smart flashcards for review. 100+ languages; free to start.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Click to translate
-Smart flashcards
-Articles, books, web pages
-100+ languages', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Learners who study through reading.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Image integrity checks in research manuscripts: duplication, manipulation, reuse and AI generation.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Proofig AI analyses all figures of a manuscript in minutes: it finds reused images within a paper (including rotated, flipped or scaled ones), reuse from published literature (a database of 155M+ PubMed images), signs of editing and AI-generated images. The result is a PDF report for editors or integrity committees. Pricing on request.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Image duplication within a manuscript
+Reuse search across 155M+ images
+Manipulation detection
+AI image detector', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Scientific publishers, universities, research institutions.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний рівень.', 'Free tier.' FROM DUAL WHERE @new = 1;
+
+-- Imagetwin — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'imagetwin.ai' OR LOWER(`name`) = 'imagetwin')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Imagetwin', NULL, 'https://imagetwin.ai/', NULL, NULL, 'Пошук дубльованих, змінених і згенерованих АІ зображень у наукових статтях.', 'Detection of duplicated, altered and AI-generated images in research papers.', 'Imagetwin перевіряє рисунки в наукових рукописах: шукає дублювання в межах статті, вставки й клонування фрагментів, згенеровані АІ зображення (з указанням ймовірної моделі) та збіги з базою понад 100 млн опублікованих рисунків. Сервісом користуються видавці, університети й самі дослідники; є приклади документів для безкоштовної пробної перевірки.', 'Imagetwin checks figures in research manuscripts: it looks for duplication within a paper, splicing and copy-move edits, AI-generated images (with likely model attribution) and matches against a database of 100M+ published figures. It is used by publishers, universities and researchers; sample documents can be scanned free of charge.', 'Дублювання зображень
+Виявлення монтажу
+Детектор АІ-зображень
+База 100+ млн рисунків', 'Image duplication
+Manipulation detection
+AI image detection
+100M+ figure database', 'Дослідникам, видавцям, університетам.', 'Researchers, publishers, universities.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'imagetwin.ai' OR LOWER(`name`) = 'imagetwin') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Detection of duplicated, altered and AI-generated images in research papers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Imagetwin checks figures in research manuscripts: it looks for duplication within a paper, splicing and copy-move edits, AI-generated images (with likely model attribution) and matches against a database of 100M+ published figures. It is used by publishers, universities and researchers; sample documents can be scanned free of charge.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Image duplication
+Manipulation detection
+AI image detection
+100M+ figure database', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Researchers, publishers, universities.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Problematic Paper Screener — education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'irit.fr/~guillaume.cabanac/problematic-paper-screener' OR LOWER(`name`) = 'problematic paper screener')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Problematic Paper Screener', NULL, 'https://www.irit.fr/~Guillaume.Cabanac/problematic-paper-screener', NULL, NULL, 'Безкоштовний дослідницький інструмент, що знаходить підозрілі наукові публікації: «перекручені фрази», згенеровані тексти.', 'A free research tool that flags suspect scientific publications: tortured phrases, generated papers.', 'Problematic Paper Screener (PPS) створили дослідники Гійом Кабанак, Сиріл Лаббе й Олександр Магазінов. Він автоматично відбирає вже опубліковані статті з ознаками фабрикації: «tortured phrases» (дивні синоніми замість усталених термінів, типові для перефразувальних програм), тексти генераторів на кшталт SCIgen, посилання на відкликані дослідження. Знахідки публікуються на PubPeer для перевірки спільнотою. Інструмент безкоштовний; Nature включив його до списку «Nature’s 10» 2021 року.', 'Problematic Paper Screener (PPS) was created by researchers Guillaume Cabanac, Cyril Labbé and Alexander Magazinov. It automatically flags published papers with signs of fabrication: tortured phrases (odd synonyms replacing established terms, typical of paraphrasing tools), output of generators such as SCIgen, and citations of retracted studies. Findings are posted on PubPeer for community review. The tool is free; it featured in Nature’s 10 list of 2021.', '«Перекручені фрази»
+Згенеровані статті (SCIgen)
+Посилання на відкликані роботи
+Звіти на PubPeer', 'Tortured phrases
+Generated papers (SCIgen)
+Citations of retracted work
+Reports on PubPeer', 'Науковцям, редакторам журналів, рецензентам.', 'Researchers, journal editors, reviewers.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'irit.fr/~guillaume.cabanac/problematic-paper-screener' OR LOWER(`name`) = 'problematic paper screener') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free research tool that flags suspect scientific publications: tortured phrases, generated papers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Problematic Paper Screener (PPS) was created by researchers Guillaume Cabanac, Cyril Labbé and Alexander Magazinov. It automatically flags published papers with signs of fabrication: tortured phrases (odd synonyms replacing established terms, typical of paraphrasing tools), output of generators such as SCIgen, and citations of retracted studies. Findings are posted on PubPeer for community review. The tool is free; it featured in Nature’s 10 list of 2021.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tortured phrases
+Generated papers (SCIgen)
+Citations of retracted work
+Reports on PubPeer', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Researchers, journal editors, reviewers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free tier.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Glossika — education-knowledge/courses, translation-languages
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ai.glossika.com' OR LOWER(`name`) = 'glossika')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Glossika', NULL, 'https://ai.glossika.com', NULL, NULL, 'Вивчення мов через масове слухання й повторення речень із адаптивними алгоритмами, 60+ мов.', 'Language learning through massive exposure to sentences with adaptive algorithms, 60+ languages.', 'Glossika веде до вільного мовлення через багаторазове прослуховування й повторення речень, що відповідають вашому рівню; адаптивні алгоритми керують графіком навчання. Понад 60 мов, зокрема кілька варіантів китайської та іспанської. Є 7-денний безкоштовний пробний період.', 'Glossika builds fluency through massive exposure to level-appropriate sentences that you listen to and repeat, guided by adaptive learning algorithms. 60+ languages, including several variants of Chinese and Spanish. There is a 7-day free trial.', 'Повторення речень
-Адаптивні алгоритми
-60+ мов
-7 днів безкоштовно', 'Sentence repetition
-Adaptive algorithms
-60+ languages
-7-day free trial', 'Тим, хто хоче заговорити іноземною мовою.', 'Learners aiming to speak fluently.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-25 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ai.glossika.com' OR LOWER(`name`) = 'glossika') ORDER BY `id` LIMIT 1);
+-- Content Credentials Verify — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'contentcredentials.org/verify' OR LOWER(`name`) = 'content credentials verify')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Content Credentials Verify', NULL, 'https://contentcredentials.org/verify', NULL, NULL, 'Безкоштовна перевірка «посвідчень вмісту» C2PA: ким, чим і як створено або змінено фото чи відео.', 'Free check of C2PA Content Credentials: who made or edited a photo or video, and with what tools.', 'Content Credentials — відкритий стандарт C2PA, який підтримують Adobe, Microsoft, Google, OpenAI, Meta, Sony, BBC та сотні інших компаній. Камера, редактор чи генератор зображень може додати до файлу підписаний запис про походження й історію змін, зокрема позначку, що зображення створене АІ. На сторінці Verify можна завантажити файл і подивитися ці дані. Важливо: відсутність посвідчення не означає підробку, а метадані можна видалити — це додатковий сигнал, а не вирок.', 'Content Credentials is the open C2PA standard backed by Adobe, Microsoft, Google, OpenAI, Meta, Sony, the BBC and hundreds of other companies. A camera, editor or image generator can attach a signed record of a file’s origin and edit history, including a note that it was made with AI. On the Verify page you upload a file and see that record. Note: a missing credential does not prove a fake, and metadata can be stripped, so it is an extra signal rather than a verdict.', 'Перевірка походження файлу
+Історія редагувань
+Позначка АІ-генерації
+Відкритий стандарт C2PA', 'File provenance check
+Edit history
+AI-generation label
+Open C2PA standard', 'Усім, хто перевіряє фото й відео; журналістам, модераторам.', 'Anyone checking photos and videos; journalists, moderators.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'contentcredentials.org/verify' OR LOWER(`name`) = 'content credentials verify') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free check of C2PA Content Credentials: who made or edited a photo or video, and with what tools.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Content Credentials is the open C2PA standard backed by Adobe, Microsoft, Google, OpenAI, Meta, Sony, the BBC and hundreds of other companies. A camera, editor or image generator can attach a signed record of a file’s origin and edit history, including a note that it was made with AI. On the Verify page you upload a file and see that record. Note: a missing credential does not prove a fake, and metadata can be stripped, so it is an extra signal rather than a verdict.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'File provenance check
+Edit history
+AI-generation label
+Open C2PA standard', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone checking photos and videos; journalists, moderators.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Google SynthID — cybersecurity/anti-scam-deepfakes, education-knowledge/detectors
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'deepmind.google/models/synthid' OR LOWER(`name`) = 'google synthid')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Google SynthID', NULL, 'https://deepmind.google/models/synthid/', NULL, NULL, 'Невидимі водяні знаки Google для згенерованих АІ зображень, відео, аудіо й тексту; перевірка через Gemini.', 'Google’s invisible watermarks for AI-generated images, video, audio and text; checked via Gemini.', 'SynthID від Google DeepMind додає непомітний водяний знак у зображення, відео, аудіо й текст, створені моделями Google (Gemini, Veo, Lyria, NotebookLM тощо). Знак розрахований на те, щоб витримувати обрізання, фільтри й стиснення. Щоб перевірити файл, його завантажують у Gemini, Пошук або Chrome і питають, чи створений він АІ Google. Обмеження: SynthID розпізнає лише вміст від Google, тож «не знайдено» не означає, що файл справжній.', 'SynthID by Google DeepMind embeds an imperceptible watermark into images, video, audio and text produced by Google models (Gemini, Veo, Lyria, NotebookLM and others). It is designed to survive cropping, filters and compression. To check a file, upload it to Gemini, Search or Chrome and ask whether it was created by Google AI. Limitation: SynthID only recognises Google content, so “not found” does not mean a file is genuine.', 'Водяні знаки в зображеннях, відео, аудіо, тексті
+Стійкість до обрізання й стиснення
+Перевірка в Gemini, Пошуку, Chrome', 'Watermarks in images, video, audio, text
+Robust to cropping and compression
+Check in Gemini, Search, Chrome', 'Усім, хто хоче перевірити, чи створено файл АІ Google.', 'Anyone who wants to check whether a file was made with Google AI.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'deepmind.google/models/synthid' OR LOWER(`name`) = 'google synthid') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'education-knowledge' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'detectors' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'translation-languages' LIMIT 1);
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Google’s invisible watermarks for AI-generated images, video, audio and text; checked via Gemini.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'SynthID by Google DeepMind embeds an imperceptible watermark into images, video, audio and text produced by Google models (Gemini, Veo, Lyria, NotebookLM and others). It is designed to survive cropping, filters and compression. To check a file, upload it to Gemini, Search or Chrome and ask whether it was created by Google AI. Limitation: SynthID only recognises Google content, so “not found” does not mean a file is genuine.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Watermarks in images, video, audio, text
+Robust to cropping and compression
+Check in Gemini, Search, Chrome', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone who wants to check whether a file was made with Google AI.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- TinEye — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tineye.com' OR LOWER(`name`) = 'tineye')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'TinEye', NULL, 'https://tineye.com/', NULL, NULL, 'Зворотний пошук зображень: де ще в мережі є це фото і де воно з’явилося вперше.', 'Reverse image search: where else a photo appears online and where it first appeared.', 'TinEye шукає копії зображення в індексі з понад 85 млрд картинок. Можна відсортувати результати за датою й знайти, де фото з’явилося вперше, побачити змінені версії й порівняти їх з оригіналом. Це допомагає викрити фейкові профілі, «чужі» фото в оголошеннях і старі знімки, які видають за нові. TinEye не зберігає зображення, які ви шукаєте. Для бізнесу є платний API.', 'TinEye searches for copies of an image in an index of 85+ billion images. You can sort results by date to find where a photo first appeared, see edited versions and compare them with the original. It helps expose fake profiles, borrowed photos in listings and old pictures passed off as new. TinEye does not save your search images. A paid API is available for businesses.', 'Пошук копій зображення
+Сортування за датою появи
+Порівняння з оригіналом
+Розширення для браузера', 'Find copies of an image
+Sort by first appearance
+Compare with the original
+Browser extensions', 'Усім, хто перевіряє фото в соцмережах, знайомствах, оголошеннях.', 'Anyone checking photos on social media, dating sites and listings.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tineye.com' OR LOWER(`name`) = 'tineye') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Language learning through massive exposure to sentences with adaptive algorithms, 60+ languages.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Glossika builds fluency through massive exposure to level-appropriate sentences that you listen to and repeat, guided by adaptive learning algorithms. 60+ languages, including several variants of Chinese and Spanish. There is a 7-day free trial.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Sentence repetition
-Adaptive algorithms
-60+ languages
-7-day free trial', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Learners aiming to speak fluently.', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Reverse image search: where else a photo appears online and where it first appeared.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'TinEye searches for copies of an image in an index of 85+ billion images. You can sort results by date to find where a photo first appeared, see edited versions and compare them with the original. It helps expose fake profiles, borrowed photos in listings and old pictures passed off as new. TinEye does not save your search images. A paid API is available for businesses.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Find copies of an image
+Sort by first appearance
+Compare with the original
+Browser extensions', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone checking photos on social media, dating sites and listings.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
+-- Google Lens — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lens.google' OR LOWER(`name`) = 'google lens')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Google Lens', NULL, 'https://lens.google/', NULL, NULL, 'Пошук за зображенням від Google: знайти джерело фото, товар, текст на знімку.', 'Google’s visual search: find the source of a photo, a product or text in an image.', 'Google Lens шукає за зображенням із камери, галереї чи скриншота: показує схожі зображення та сторінки, де воно трапляється, розпізнає й перекладає текст. Для перевірки на шахрайство це простий спосіб з’ясувати, чи фото «продавця», «військового» чи «нареченої» не взяте з чужого профілю або фотостоку. Безкоштовно в застосунку Google, Google Photos і Chrome.', 'Google Lens searches by image from your camera, gallery or a screenshot: it shows similar images and pages where the image appears, and recognises and translates text. For scam checks it is an easy way to find out whether a photo of a “seller”, “soldier” or “bride” was taken from someone else’s profile or a stock site. Free in the Google app, Google Photos and Chrome.', 'Пошук за фото
+Схожі зображення й сторінки
+Розпізнавання тексту
+У Chrome і застосунку Google', 'Search by photo
+Similar images and pages
+Text recognition
+In Chrome and the Google app', 'Усім користувачам смартфонів і браузера.', 'All smartphone and browser users.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lens.google' OR LOWER(`name`) = 'google lens') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Google’s visual search: find the source of a photo, a product or text in an image.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Google Lens searches by image from your camera, gallery or a screenshot: it shows similar images and pages where the image appears, and recognises and translates text. For scam checks it is an easy way to find out whether a photo of a “seller”, “soldier” or “bride” was taken from someone else’s profile or a stock site. Free in the Google app, Google Photos and Chrome.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Search by photo
+Similar images and pages
+Text recognition
+In Chrome and the Google app', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'All smartphone and browser users.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- FotoForensics — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'fotoforensics.com' OR LOWER(`name`) = 'fotoforensics')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'FotoForensics', NULL, 'https://fotoforensics.com/', NULL, NULL, 'Безкоштовний аналіз фото: рівень похибки стиснення (ELA), метадані, ознаки редагування.', 'Free photo analysis: error level analysis (ELA), metadata and signs of editing.', 'FotoForensics від Hacker Factor показує, як різні частини JPEG-фото стискалися (error level analysis), виводить метадані та інші технічні ознаки, що можуть вказувати на монтаж. На сайті є навчальні матеріали, як читати результати. Безкоштовна версія публічна: завантажені фото не вважаються приватними, тож не надсилайте туди особисті знімки. Для комерційного й юридичного використання є платна FotoForensics Lab.', 'FotoForensics by Hacker Factor shows how different parts of a JPEG were compressed (error level analysis), extracts metadata and other technical clues that can point to editing. The site has tutorials on reading results. The free version is public: uploaded pictures are not private, so do not submit personal photos. A paid FotoForensics Lab exists for commercial and legal use.', 'Error level analysis (ELA)
+Метадані
+Навчальні матеріали
+Платна Lab-версія', 'Error level analysis (ELA)
+Metadata
+Tutorials
+Paid Lab version', 'Журналістам, дослідникам, усім, хто перевіряє фото.', 'Journalists, researchers, anyone checking photos.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'fotoforensics.com' OR LOWER(`name`) = 'fotoforensics') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free photo analysis: error level analysis (ELA), metadata and signs of editing.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'FotoForensics by Hacker Factor shows how different parts of a JPEG were compressed (error level analysis), extracts metadata and other technical clues that can point to editing. The site has tutorials on reading results. The free version is public: uploaded pictures are not private, so do not submit personal photos. A paid FotoForensics Lab exists for commercial and legal use.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Error level analysis (ELA)
+Metadata
+Tutorials
+Paid Lab version', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Journalists, researchers, anyone checking photos.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Forensically — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = '29a.ch/photo-forensics' OR LOWER(`name`) = 'forensically')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Forensically', NULL, 'https://29a.ch/photo-forensics/', NULL, NULL, 'Безкоштовний набір інструментів цифрової криміналістики фото в браузері: клони, ELA, метадані.', 'A free set of in-browser photo forensics tools: clone detection, ELA, metadata.', 'Forensically створив Йонас Вагнер. Це безкоштовний набір інструментів для аналізу фото просто в браузері: збільшувальне скло для дрібних деталей, пошук клонованих ділянок, аналіз рівня похибки (ELA), аналіз шуму та перегляд метаданих. Автор чесно попереджає: це «лупа», яка допомагає помітити деталі, але сама не відрізняє правду від підробки.', 'Forensically was created by Jonas Wagner. It is a free set of photo analysis tools that runs in the browser: a magnifier for small details, clone detection, error level analysis (ELA), noise analysis and metadata viewing. The author is upfront that it is a “magnifying glass” that helps you see details but cannot tell true from false on its own.', 'Пошук клонованих ділянок
+Error level analysis
+Аналіз шуму
+Метадані', 'Clone detection
+Error level analysis
+Noise analysis
+Metadata', 'Усім, хто хоче самостійно перевірити фото на монтаж.', 'Anyone who wants to check a photo for editing themselves.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = '29a.ch/photo-forensics' OR LOWER(`name`) = 'forensically') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free set of in-browser photo forensics tools: clone detection, ELA, metadata.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Forensically was created by Jonas Wagner. It is a free set of photo analysis tools that runs in the browser: a magnifier for small details, clone detection, error level analysis (ELA), noise analysis and metadata viewing. The author is upfront that it is a “magnifying glass” that helps you see details but cannot tell true from false on its own.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Clone detection
+Error level analysis
+Noise analysis
+Metadata', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone who wants to check a photo for editing themselves.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- InVID Verification Plugin — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'invid-project.eu/tools-and-services/invid-verification-plugin' OR LOWER(`name`) = 'invid verification plugin')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'InVID Verification Plugin', NULL, 'https://www.invid-project.eu/tools-and-services/invid-verification-plugin/', NULL, NULL, 'Безкоштовне розширення для перевірки відео й фото: ключові кадри, зворотний пошук, метадані.', 'A free browser extension to verify videos and images: keyframes, reverse search, metadata.', 'InVID (InVID-WeVerify) — розширення для Chrome і Firefox, яке створили для журналістів і фактчекерів у європейських проєктах; його підтримує AFP Medialab. Воно розбиває відео на ключові кадри й шукає їх через зворотний пошук зображень, показує метадані фото й відео, дає доступ до криміналістичного аналізу зображень і допомагає дістати URL відео зі сторінки. Код відкритий (ліцензія MIT).', 'InVID (InVID-WeVerify) is a Chrome and Firefox extension built for journalists and fact-checkers in European projects and maintained with AFP Medialab. It splits videos into keyframes for reverse image search, shows photo and video metadata, gives access to image forensics and helps extract video URLs from a page. Open source (MIT licence).', 'Ключові кадри відео
+Зворотний пошук зображень
+Метадані фото й відео
+Криміналістичний аналіз', 'Video keyframes
+Reverse image search
+Photo and video metadata
+Image forensics', 'Журналістам, фактчекерам, дослідникам дезінформації.', 'Journalists, fact-checkers, disinformation researchers.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'invid-project.eu/tools-and-services/invid-verification-plugin' OR LOWER(`name`) = 'invid verification plugin') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free browser extension to verify videos and images: keyframes, reverse search, metadata.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'InVID (InVID-WeVerify) is a Chrome and Firefox extension built for journalists and fact-checkers in European projects and maintained with AFP Medialab. It splits videos into keyframes for reverse image search, shows photo and video metadata, gives access to image forensics and helps extract video URLs from a page. Open source (MIT licence).', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Video keyframes
+Reverse image search
+Photo and video metadata
+Image forensics', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Journalists, fact-checkers, disinformation researchers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Truepic — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'truepic.com' OR LOWER(`name`) = 'truepic')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Truepic', NULL, 'https://www.truepic.com/', NULL, NULL, 'Фото й відео з підтвердженими часом, місцем і пристроєм зйомки для страхових і інспекцій.', 'Photos and videos with verified capture time, location and device for insurers and inspections.', 'Truepic підтверджує справжність фото й відео в момент зйомки. Клієнт отримує посилання й знімає через браузер або застосунок Truepic Vision, а система фіксує час, дату, пристрій і місце та шукає ознаки маніпуляцій. Це захищає компанії від шахрайства з підробленими чи згенерованими знімками, наприклад у страхових випадках. Truepic — один із засновників стандарту C2PA. Продукт для бізнесу, ціна за запитом.', 'Truepic authenticates photos and videos at the moment of capture. A customer gets a link and shoots via a mobile browser or the Truepic Vision app; the system records time, date, device and location and checks for signs of manipulation. This protects companies from fraud with edited or generated images, for example in insurance claims. Truepic is a founding member of the C2PA standard. A business product; pricing on request.', 'Захищена зйомка фото й відео
+Підтверджені час і місце
+Виявлення маніпуляцій
+Стандарт C2PA', 'Secure photo and video capture
+Verified time and location
+Manipulation detection
+C2PA standard', 'Страховим компаніям, банкам, компаніям з інспекцій.', 'Insurers, lenders, inspection companies.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'truepic.com' OR LOWER(`name`) = 'truepic') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Photos and videos with verified capture time, location and device for insurers and inspections.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Truepic authenticates photos and videos at the moment of capture. A customer gets a link and shoots via a mobile browser or the Truepic Vision app; the system records time, date, device and location and checks for signs of manipulation. This protects companies from fraud with edited or generated images, for example in insurance claims. Truepic is a founding member of the C2PA standard. A business product; pricing on request.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Secure photo and video capture
+Verified time and location
+Manipulation detection
+C2PA standard', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Insurers, lenders, inspection companies.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- McAfee Deepfake Detector — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mcafee.com/en-us/ai/deepfake-detector.html' OR LOWER(`name`) = 'mcafee deepfake detector')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'McAfee Deepfake Detector', NULL, 'https://www.mcafee.com/en-us/ai/deepfake-detector.html', NULL, NULL, 'Сповіщає за кілька секунд, якщо у відео в браузері є голос, згенерований АІ.', 'Alerts you within seconds if a video in your browser contains AI-generated audio.', 'McAfee Deepfake Detector працює в браузері на комп’ютері й сам аналізує звук відео, які ви дивитесь. Якщо в ньому є АІ-згенерований голос, ви отримуєте сповіщення за кілька секунд, без додаткових кліків. За словами McAfee, аудіо й історія переглядів не зберігаються. Доступний на ПК з процесорами Intel Core Ultra 200V; умови — на сайті McAfee.', 'McAfee Deepfake Detector runs in the browser on your computer and analyses the audio of videos you watch. If it contains AI-generated voice, you get an alert within seconds, without extra clicks. McAfee says it does not store the audio or your browsing history. Available on PCs with Intel Core Ultra 200V processors; see McAfee’s site for terms.', 'Виявлення АІ-голосу у відео
+Сповіщення за секунди
+Працює в браузері
+Не зберігає аудіо', 'Detects AI voice in videos
+Alerts within seconds
+Works in the browser
+Does not store audio', 'Користувачам ПК, батькам, людям, які дивляться новини онлайн.', 'PC users, parents, people who watch news online.', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mcafee.com/en-us/ai/deepfake-detector.html' OR LOWER(`name`) = 'mcafee deepfake detector') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Alerts you within seconds if a video in your browser contains AI-generated audio.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'McAfee Deepfake Detector runs in the browser on your computer and analyses the audio of videos you watch. If it contains AI-generated voice, you get an alert within seconds, without extra clicks. McAfee says it does not store the audio or your browsing history. Available on PCs with Intel Core Ultra 200V processors; see McAfee’s site for terms.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Detects AI voice in videos
+Alerts within seconds
+Works in the browser
+Does not store audio', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'PC users, parents, people who watch news online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Glaze — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'glaze.cs.uchicago.edu' OR LOWER(`name`) = 'glaze')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Glaze', NULL, 'https://glaze.cs.uchicago.edu/', NULL, NULL, 'Безкоштовний захист робіт художників від копіювання їхнього стилю генеративним АІ.', 'Free protection for artists’ work against style mimicry by generative AI.', 'Glaze розробили в Чиказькому університеті (SAND Lab). Програма вносить у зображення малопомітні зміни, через які моделі, навчені на ньому, гірше копіюють стиль художника. Є версії для Windows і macOS та вебверсія WebGlaze. Безкоштовна. Повного захисту не гарантує, але ускладнює «підробки під автора».', 'Glaze was developed at the University of Chicago (SAND Lab). It adds subtle changes to an image so that models trained on it are worse at copying the artist’s style. There are Windows and macOS versions and a web version, WebGlaze. Free. It does not guarantee full protection but makes forgeries “in the style of” an artist harder.', 'Захист стилю художника
+Windows, macOS, WebGlaze
+Безкоштовно
+Від Чиказького університету', 'Protects an artist’s style
+Windows, macOS, WebGlaze
+Free
+From the University of Chicago', 'Художникам, ілюстраторам.', 'Artists and illustrators.', 'web,desktop', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'glaze.cs.uchicago.edu' OR LOWER(`name`) = 'glaze') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free protection for artists’ work against style mimicry by generative AI.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Glaze was developed at the University of Chicago (SAND Lab). It adds subtle changes to an image so that models trained on it are worse at copying the artist’s style. There are Windows and macOS versions and a web version, WebGlaze. Free. It does not guarantee full protection but makes forgeries “in the style of” an artist harder.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Protects an artist’s style
+Windows, macOS, WebGlaze
+Free
+From the University of Chicago', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Artists and illustrators.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Nightshade — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nightshade.cs.uchicago.edu' OR LOWER(`name`) = 'nightshade')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Nightshade', NULL, 'https://nightshade.cs.uchicago.edu/', NULL, NULL, 'Безкоштовний інструмент, що робить зображення «отруйними» для навчання моделей без дозволу.', 'A free tool that makes images “poisonous” for unauthorised model training.', 'Nightshade — ще один проєкт команди Glaze з Чиказького університету. Він змінює зображення так, що для людини воно виглядає майже так само, а модель, навчена на ньому без дозволу, засвоює хибні зв’язки. Мета — зробити несанкціоноване навчання на чужих роботах дорожчим. Безкоштовний, для Windows і macOS. Наукову статтю прийнято на IEEE Security & Privacy 2024.', 'Nightshade is another project from the Glaze team at the University of Chicago. It alters an image so it looks nearly the same to people, while a model trained on it without permission learns wrong associations. The goal is to make unauthorised training on others’ work more costly. Free for Windows and macOS. The paper was accepted at IEEE Security & Privacy 2024.', 'Захист від навчання без дозволу
+Windows і macOS
+Безкоштовно
+Від команди Glaze', 'Protection against unauthorised training
+Windows and macOS
+Free
+By the Glaze team', 'Художникам, фотографам, ілюстраторам.', 'Artists, photographers, illustrators.', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nightshade.cs.uchicago.edu' OR LOWER(`name`) = 'nightshade') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free tool that makes images “poisonous” for unauthorised model training.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Nightshade is another project from the Glaze team at the University of Chicago. It alters an image so it looks nearly the same to people, while a model trained on it without permission learns wrong associations. The goal is to make unauthorised training on others’ work more costly. Free for Windows and macOS. The paper was accepted at IEEE Security & Privacy 2024.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Protection against unauthorised training
+Windows and macOS
+Free
+By the Glaze team', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Artists, photographers, illustrators.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Bitdefender Scamio — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bitdefender.com/en-us/consumer/scamio' OR LOWER(`name`) = 'bitdefender scamio')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Bitdefender Scamio', NULL, 'https://www.bitdefender.com/en-us/consumer/scamio', NULL, NULL, 'Безкоштовний АІ-чат-бот, який перевіряє підозрілі повідомлення, посилання, QR-коди й скриншоти.', 'A free AI chatbot that checks suspicious messages, links, QR codes and screenshots.', 'Scamio від Bitdefender — безкоштовний чат-бот для перевірки шахрайства. Йому можна переслати текст, лист, повідомлення з соцмереж, посилання, QR-код або скриншот чи просто описати ситуацію, і він скаже, чи схоже це на шахрайство. Працює у вебзастосунку, WhatsApp, Messenger і Discord, використовує технології виявлення загроз Bitdefender.', 'Scamio by Bitdefender is a free chatbot for checking scams. You can forward it a text, an email, a social media message, a link, a QR code or a screenshot, or just describe the situation, and it tells you whether it looks like a scam. It works in a web app, WhatsApp, Messenger and Discord and uses Bitdefender’s threat detection.', 'Перевірка повідомлень і посилань
+QR-коди й скриншоти
+WhatsApp, Messenger, Discord, веб
+Безкоштовно', 'Checks messages and links
+QR codes and screenshots
+WhatsApp, Messenger, Discord, web
+Free', 'Усім, хто отримує підозрілі повідомлення.', 'Anyone who receives suspicious messages.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bitdefender.com/en-us/consumer/scamio' OR LOWER(`name`) = 'bitdefender scamio') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A free AI chatbot that checks suspicious messages, links, QR codes and screenshots.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Scamio by Bitdefender is a free chatbot for checking scams. You can forward it a text, an email, a social media message, a link, a QR code or a screenshot, or just describe the situation, and it tells you whether it looks like a scam. It works in a web app, WhatsApp, Messenger and Discord and uses Bitdefender’s threat detection.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Checks messages and links
+QR codes and screenshots
+WhatsApp, Messenger, Discord, web
+Free', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone who receives suspicious messages.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Truecaller — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'truecaller.com' OR LOWER(`name`) = 'truecaller')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Truecaller', NULL, 'https://www.truecaller.com/', NULL, NULL, 'Визначник номера й блокування спаму та шахрайських дзвінків, перевірка номерів і посилань.', 'Caller ID and blocking of spam and scam calls, plus number and link checks.', 'Truecaller показує, хто телефонує з невідомого номера, позначає й блокує спам і шахрайські дзвінки. Безкоштовний Scam Checker допомагає перевірити номер або посилання з WhatsApp чи пошти. Працює на Android та iPhone. Є Premium без реклами з додатковими функціями. Зважайте: сервіс використовує дані про номери, зібрані від користувачів, — прочитайте політику приватності.', 'Truecaller shows who is calling from an unknown number and labels and blocks spam and scam calls. The free Scam Checker helps you check a number or a link from WhatsApp or email. Works on Android and iPhone. Premium removes ads and adds features. Note that the service relies on number data collected from users; read the privacy policy.', 'Визначник номера
+Блокування спаму й шахраїв
+Scam Checker для номерів і посилань
+Android та iPhone', 'Caller ID
+Spam and scam blocking
+Scam Checker for numbers and links
+Android and iPhone', 'Усім, хто отримує дзвінки з невідомих номерів.', 'Anyone getting calls from unknown numbers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'truecaller.com' OR LOWER(`name`) = 'truecaller') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Caller ID and blocking of spam and scam calls, plus number and link checks.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Truecaller shows who is calling from an unknown number and labels and blocks spam and scam calls. The free Scam Checker helps you check a number or a link from WhatsApp or email. Works on Android and iPhone. Premium removes ads and adds features. Note that the service relies on number data collected from users; read the privacy policy.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Caller ID
+Spam and scam blocking
+Scam Checker for numbers and links
+Android and iPhone', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone getting calls from unknown numbers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- ScamAdviser — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'scamadviser.com' OR LOWER(`name`) = 'scamadviser')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ScamAdviser', NULL, 'https://www.scamadviser.com/', NULL, NULL, 'Безкоштовна перевірка сайтів, інтернет-магазинів і повідомлень на ознаки шахрайства.', 'Free checking of websites, online shops and messages for signs of fraud.', 'ScamAdviser оцінює, наскільки можна довіряти сайту: вік домену, розташування, відгуки та інші сигнали. Є перевірка підозрілих повідомлень і пропозицій, функція Lens для скриншотів, навчальні тести на розпізнавання шахрайства й скарги спільноти. Безкоштовно. Оцінка — орієнтир, а не гарантія: перевіряйте продавця й іншими способами.', 'ScamAdviser estimates how far a website can be trusted: domain age, location, reviews and other signals. It also checks suspicious messages and offers, has a Lens feature for screenshots, scam-spotting quizzes and community reports. Free. A score is a guide, not a guarantee: check the seller in other ways too.', 'Оцінка довіри до сайту
+Перевірка повідомлень
+Аналіз скриншотів (Lens)
+Відгуки спільноти', 'Website trust score
+Message checks
+Screenshot analysis (Lens)
+Community reports', 'Покупцям в інтернеті, усім, хто отримує «вигідні пропозиції».', 'Online shoppers and anyone receiving “great deals”.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'scamadviser.com' OR LOWER(`name`) = 'scamadviser') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free checking of websites, online shops and messages for signs of fraud.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ScamAdviser estimates how far a website can be trusted: domain age, location, reviews and other signals. It also checks suspicious messages and offers, has a Lens feature for screenshots, scam-spotting quizzes and community reports. Free. A score is a guide, not a guarantee: check the seller in other ways too.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Website trust score
+Message checks
+Screenshot analysis (Lens)
+Community reports', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Online shoppers and anyone receiving “great deals”.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- VirusTotal — cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'virustotal.com' OR LOWER(`name`) = 'virustotal')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'VirusTotal', NULL, 'https://www.virustotal.com/', NULL, NULL, 'Безкоштовна перевірка файлів і посилань десятками антивірусних рушіїв і сервісів.', 'Free scanning of files and links with dozens of antivirus engines and services.', 'VirusTotal (належить Google) перевіряє файл, посилання, домен чи IP-адресу одночасно багатьма антивірусами й сервісами репутації сайтів і показує, хто з них вважає об’єкт небезпечним. Це зручно, щоб перевірити «рахунок», «повістку» чи посилання з повідомлення, перш ніж відкрити. Увага: завантажені файли стають доступними партнерам сервісу, тож не надсилайте документи з особистими даними.', 'VirusTotal (owned by Google) checks a file, URL, domain or IP address with many antivirus engines and website reputation services at once and shows which of them flag it. It is handy for checking an “invoice”, a “summons” or a link from a message before opening it. Note: uploaded files are shared with the service’s partners, so do not submit documents with personal data.', 'Перевірка файлів
+Перевірка посилань і доменів
+Десятки антивірусних рушіїв
+Розширення для браузера', 'File scanning
+URL and domain checks
+Dozens of antivirus engines
+Browser extensions', 'Усім, хто отримав підозрілий файл чи посилання.', 'Anyone who received a suspicious file or link.', 'web', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'virustotal.com' OR LOWER(`name`) = 'virustotal') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free scanning of files and links with dozens of antivirus engines and services.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'VirusTotal (owned by Google) checks a file, URL, domain or IP address with many antivirus engines and website reputation services at once and shows which of them flag it. It is handy for checking an “invoice”, a “summons” or a link from a message before opening it. Note: uploaded files are shared with the service’s partners, so do not submit documents with personal data.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'File scanning
+URL and domain checks
+Dozens of antivirus engines
+Browser extensions', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone who received a suspicious file or link.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Google Authenticator — cybersecurity/identity-protection, cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accounts/answer/1066447' OR LOWER(`name`) = 'google authenticator')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Google Authenticator', NULL, 'https://support.google.com/accounts/answer/1066447', NULL, NULL, 'Застосунок одноразових кодів для двоетапної перевірки входу; працює без інтернету.', 'An app for one-time codes for 2-step verification; works offline.', 'Google Authenticator генерує одноразові коди для входу на сайти й у застосунки, що підтримують двоетапну перевірку. Коди працюють навіть без інтернету й мобільного зв’язку, тож їх не перехопить той, хто переадресував ваші дзвінки чи SMS. Коди можна синхронізувати між пристроями через акаунт Google. Безкоштовно для Android та iOS.', 'Google Authenticator generates one-time codes for signing in to sites and apps that support 2-step verification. Codes work without internet or mobile service, so they cannot be intercepted by someone who has redirected your calls or SMS. Codes can be synced across devices via your Google Account. Free for Android and iOS.', 'Одноразові коди (TOTP)
+Працює без інтернету
+Синхронізація через акаунт Google
+Android та iOS', 'One-time codes (TOTP)
+Works offline
+Sync via Google Account
+Android and iOS', 'Усім, хто хоче захистити акаунти від викрадення.', 'Anyone wanting to protect accounts from takeover.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accounts/answer/1066447' OR LOWER(`name`) = 'google authenticator') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'identity-protection' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An app for one-time codes for 2-step verification; works offline.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Google Authenticator generates one-time codes for signing in to sites and apps that support 2-step verification. Codes work without internet or mobile service, so they cannot be intercepted by someone who has redirected your calls or SMS. Codes can be synced across devices via your Google Account. Free for Android and iOS.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'One-time codes (TOTP)
+Works offline
+Sync via Google Account
+Android and iOS', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone wanting to protect accounts from takeover.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Microsoft Authenticator — cybersecurity/identity-protection, cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'microsoft.com/en-us/security/mobile-authenticator-app' OR LOWER(`name`) = 'microsoft authenticator')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Microsoft Authenticator', NULL, 'https://www.microsoft.com/en-us/security/mobile-authenticator-app', NULL, NULL, 'Двофакторна автентифікація й вхід без пароля в акаунти Microsoft та інші сервіси.', 'Two-factor authentication and passwordless sign-in for Microsoft and other accounts.', 'Microsoft Authenticator дає одноразові коди для двофакторної автентифікації в будь-яких сервісах, що її підтримують, а для акаунтів Microsoft (особистих, робочих, навчальних) — вхід без пароля через підтвердження в телефоні. Безкоштовно для Android та iOS.', 'Microsoft Authenticator provides one-time codes for two-factor authentication in any service that supports it, and passwordless sign-in for Microsoft accounts (personal, work or school) by approving on your phone. Free for Android and iOS.', 'Одноразові коди
+Вхід без пароля в Microsoft
+Особисті, робочі, навчальні акаунти
+Android та iOS', 'One-time codes
+Passwordless Microsoft sign-in
+Personal, work and school accounts
+Android and iOS', 'Користувачам Microsoft 365, школярам і студентам, працівникам.', 'Microsoft 365 users, students, employees.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'microsoft.com/en-us/security/mobile-authenticator-app' OR LOWER(`name`) = 'microsoft authenticator') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'identity-protection' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Two-factor authentication and passwordless sign-in for Microsoft and other accounts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Microsoft Authenticator provides one-time codes for two-factor authentication in any service that supports it, and passwordless sign-in for Microsoft accounts (personal, work or school) by approving on your phone. Free for Android and iOS.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'One-time codes
+Passwordless Microsoft sign-in
+Personal, work and school accounts
+Android and iOS', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Microsoft 365 users, students, employees.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- YubiKey — cybersecurity/identity-protection, cybersecurity/anti-scam-deepfakes
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'yubico.com/products' OR LOWER(`name`) = 'yubikey')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'YubiKey', NULL, 'https://www.yubico.com/products/', NULL, NULL, 'Апаратний ключ безпеки для входу без кодів: захищає від фішингу й перехоплення SMS.', 'A hardware security key for sign-in without codes, protecting against phishing and SMS interception.', 'YubiKey від Yubico — фізичний ключ, який підключають через USB чи NFC і торкаються для входу. Він підтримує FIDO2/паскі й інші протоколи, працює з входом у Windows і Mac, Gmail, Facebook, Dropbox та сотнями інших сервісів. Ключ перевіряє адресу сайту, тож не «віддасть» вхід фішинговій копії, а вкрасти його віддалено, як SMS-код, не можна. Ціни — на сайті Yubico.', 'YubiKey by Yubico is a physical key you plug in via USB or tap via NFC to sign in. It supports FIDO2/passkeys and other protocols and works with Windows and Mac login, Gmail, Facebook, Dropbox and hundreds of other services. The key checks the site address, so it will not hand a sign-in to a phishing copy, and unlike an SMS code it cannot be stolen remotely. Prices on Yubico’s site.', 'FIDO2 і паскі
+USB і NFC
+Сотні сумісних сервісів
+Захист від фішингу', 'FIDO2 and passkeys
+USB and NFC
+Hundreds of compatible services
+Phishing resistant', 'Усім, хто хоче максимально захистити пошту, банк, соцмережі.', 'Anyone wanting the strongest protection for email, banking and social accounts.', 'desktop,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-27 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'yubico.com/products' OR LOWER(`name`) = 'yubikey') ORDER BY `id` LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'identity-protection' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A hardware security key for sign-in without codes, protecting against phishing and SMS interception.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'YubiKey by Yubico is a physical key you plug in via USB or tap via NFC to sign in. It supports FIDO2/passkeys and other protocols and works with Windows and Mac login, Gmail, Facebook, Dropbox and hundreds of other services. The key checks the site address, so it will not hand a sign-in to a phishing copy, and unlike an SMS code it cannot be stolen remotely. Prices on Yubico’s site.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'FIDO2 and passkeys
+USB and NFC
+Hundreds of compatible services
+Phishing resistant', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone wanting the strongest protection for email, banking and social accounts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Наявні продукти → cybersecurity / anti-scam-deepfakes (за назвою; відсутні пропускаються).
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'cybersecurity' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'anti-scam-deepfakes' LIMIT 1);
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'hiya' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'pindrop' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'reality defender' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'sensity ai' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'ai voice detector' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'ai or not' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'hive moderation' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'sightengine' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'attestiv' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'duckduckgoose' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'have i been pwned' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'norton 360' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'bitdefender' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'malwarebytes' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'aura' AND `status` = 'published' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;

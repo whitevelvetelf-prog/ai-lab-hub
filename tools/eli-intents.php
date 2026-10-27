@@ -176,6 +176,8 @@ const ELI_INTENTS = [
     ['пароль, паролі, password, passwords', 'cybersecurity', 'password-managers', 1.0],
     ['vpn, приватність, анонімність, privacy', 'cybersecurity', 'vpn-privacy', 1.0],
     ['вірус, віруси, антивірус, virus, antivirus, malware', 'cybersecurity', 'device-protection', 1.0],
+    ['шахрай, шахраї, шахрайство, шахрайський, дипфейк, дипфейки, діпфейк, підробка, підроблений, фейк, фейковий, переадресація, scam, scams, scammer, fraud, deepfake, deepfakes, fake, phishing, фішинг', 'cybersecurity', 'anti-scam-deepfakes', 1.0],
+    ['клонування, клонований, spoofing, переадресацію', 'cybersecurity', 'anti-scam-deepfakes', 0.6],
     ['безпека, захист, хакер, security, hacker, protect', 'cybersecurity', null, 0.8],
 
     // --- Доступність

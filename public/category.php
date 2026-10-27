@@ -177,6 +177,7 @@ $subcategoryIcons = [
     'identity-protection' => 'user-lock',
     'business-security'   => 'building-2',
     'appsec'              => 'bug',
+    'anti-scam-deepfakes' => 'shield-alert',
     // Доступність
     'blind-low-vision'       => 'eye',
     'deaf-hard-of-hearing'   => 'ear',
