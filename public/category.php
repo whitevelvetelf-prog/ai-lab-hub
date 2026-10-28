@@ -75,6 +75,7 @@ $categoryIcons = [
     'accessibility'         => 'accessibility',
     'entertainment'         => 'party-popper',
     'esoterics'             => 'sparkles',
+    'ukrainian-apps'        => 'flag',
 ];
 
 $subcategoryIcons = [
@@ -212,6 +213,29 @@ $subcategoryIcons = [
     'photo-animation'        => 'image-play',
     'voice-changers'         => 'mic-vocal',
     'memes'                  => 'laugh',
+    // Українські додатки
+    'ua-gov'                 => 'landmark',
+    'ua-military'            => 'medal',
+    'ua-banks'               => 'wallet',
+    'ua-payments'            => 'receipt',
+    'ua-energy'              => 'zap',
+    'ua-alerts'              => 'siren',
+    'ua-city'                => 'building',
+    'ua-transport'           => 'train-front',
+    'ua-auto'                => 'fuel',
+    'ua-insurance'           => 'umbrella',
+    'ua-delivery'            => 'package',
+    'ua-shopping'            => 'shopping-bag',
+    'ua-groceries'           => 'shopping-cart',
+    'ua-health'              => 'pill',
+    'ua-telecom'             => 'smartphone',
+    'ua-media'               => 'tv',
+    'ua-books'               => 'book-open',
+    'ua-education'           => 'graduation-cap',
+    'ua-jobs'                => 'briefcase',
+    'ua-classifieds'         => 'house',
+    'ua-charity'             => 'hand-heart',
+    'ua-business'            => 'briefcase-business',
     // Розробка та IT: LLM-інструменти
     'local-llm'          => 'cpu',
     'llm-inference'      => 'server',

@@ -50,6 +50,7 @@ $categoryIcons = [
     'accessibility'         => 'accessibility',
     'entertainment'         => 'party-popper',
     'esoterics'             => 'sparkles',
+    'ukrainian-apps'        => 'flag',
 ];
 
 ?>

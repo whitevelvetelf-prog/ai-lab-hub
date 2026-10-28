@@ -209,6 +209,26 @@ const ELI_INTENTS = [
     ['дизайн людини, бодіграф, human design, bodygraph, gene keys', 'esoterics', 'human-design', 1.0],
     ['сонник, наснилося, снилося, усвідомлені сни, dream, dreams, lucid dreaming', 'esoterics', 'dreams', 1.0],
     ['місячний календар, фаза місяця, молодик, moon calendar, moon phase, full moon, new moon', 'esoterics', 'moon-calendars', 1.0],
+
+    // --- Українські додатки (чутливий розділ: не АІ, лише за прямими словами)
+    ['український застосунок, українські застосунки, український додаток, українські додатки, ukrainian app, ukrainian apps', 'ukrainian-apps', null, 1.0],
+    ['дія, держпослуги, державні послуги, пенсійний фонд, пенсія, diia', 'ukrainian-apps', 'ua-gov', 1.0],
+    ['резерв+, армія+, військовий облік, відстрочка, тцк, впо, military id', 'ukrainian-apps', 'ua-military', 1.0],
+    ['банк, банки, мобільний банк, монобанк, приват24, приватбанк, ощадбанк, картка, bank, banking, monobank, privatbank', 'ukrainian-apps', 'ua-banks', 1.0],
+    ['комуналка, комунальні, оплата рахунків, платіж, платежі, переказ, utilities, bills', 'ukrainian-apps', 'ua-payments', 1.0],
+    ['світло, електроенергія, відключення, графік відключень, обленерго, газ, вода, водоканал, показники лічильника, лічильник, electricity, outage, outages', 'ukrainian-apps', 'ua-energy', 1.0],
+    ['тривога, повітряна тривога, укриття, сирена, air alert, air raid, shelter', 'ukrainian-apps', 'ua-alerts', 1.0],
+    ['міський застосунок, паркування, проїзд, петиція, city app, parking', 'ukrainian-apps', 'ua-city', 1.0],
+    ['укрзалізниця, потяг, поїзд, квитки на потяг, автобус, таксі, громадський транспорт, train, train tickets, taxi', 'ukrainian-apps', 'ua-transport', 1.0],
+    ['азс, заправка, пальне, бензин, зарядна станція, електромобіль, штрафи пдр, fuel, petrol, ev charging', 'ukrainian-apps', 'ua-auto', 1.0],
+    ['страховка, страхування, автоцивілка, осцпв, зелена карта, insurance', 'ukrainian-apps', 'ua-insurance', 1.0],
+    ['нова пошта, укрпошта, посилка, посилки, доставка посилок, parcel, parcels', 'ukrainian-apps', 'ua-delivery', 1.0],
+    ['аптека, аптеки, ліки, запис до лікаря, клініка, pharmacy', 'ukrainian-apps', 'ua-health', 0.8],
+    ['супермаркет, продукти, доставка продуктів, groceries, supermarket', 'ukrainian-apps', 'ua-groceries', 1.0],
+    ['київстар, водафон, лайфсел, мобільний оператор, тариф, kyivstar, vodafone, lifecell', 'ukrainian-apps', 'ua-telecom', 1.0],
+    ['телебачення, телеканал, телеканали, радіостанція, радіо, онлайн-кінотеатр', 'ukrainian-apps', 'ua-media', 0.8],
+    ['донат, донати, збір, збори, благодійність, волонтер, donate, donation, charity', 'ukrainian-apps', 'ua-charity', 1.0],
+    ['фоп, рро, прро, документообіг, кеп, sole trader', 'ukrainian-apps', 'ua-business', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */
