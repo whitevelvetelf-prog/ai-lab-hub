@@ -1,8 +1,6 @@
 /* AI LAB HUB — кнопка «Поділитися».
  *
  * Один спільний компонент: вставляється в кожну шапку сайту (.site-header)
- * (на мобільному ≤ 768px вона там схована — замість неї кнопка біля заголовка
- * продукту / статті, h1[data-share-title], див. mountInline())
  * поруч із кнопкою «Викликати Асистента», без жодних правок на окремих
  * сторінках. Заголовок і URL беруться з document.title / поточного
  * location — вони вже коректні на кожній сторінці (назва продукту,
@@ -231,24 +229,5 @@
         }
     }
 
-    /* Друга кнопка — біля заголовка продукту / статті (h1[data-share-title]: "after" — після
-       заголовка, у flex-рядку; "float" — праворуч перед ним). Видно лише на мобільному
-       (≤ 768px), де кнопку з шапки сховано (share-button.css). */
-    function mountInline() {
-        var title = document.querySelector('h1[data-share-title]');
-        if (!title || title.parentNode.querySelector('.share-btn--inline')) {
-            return;
-        }
-        var btn = buildButton();
-        btn.classList.add('share-btn--inline');
-        if (title.getAttribute('data-share-title') === 'float') {
-            btn.classList.add('share-btn--float');
-            title.parentNode.insertBefore(btn, title);
-        } else {
-            title.parentNode.insertBefore(btn, title.nextSibling);
-        }
-    }
-
     mount();
-    mountInline();
 })();

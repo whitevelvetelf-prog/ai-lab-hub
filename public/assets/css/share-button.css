@@ -45,25 +45,6 @@
     }
 }
 
-/* Кнопка біля заголовка продукту / статті (share-button.js → mountInline) — лише ≤ 768px;
-   у шапці на мобільному «Поділитися» немає (app/footer.php). */
-.share-btn--inline {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .share-btn.share-btn--inline {
-        display: inline-flex;
-        width: 44px;
-        height: 44px;
-    }
-
-    .share-btn--float {
-        float: right;
-        margin: 2px 0 8px 12px;
-    }
-}
-
 /* ===== Випадаюче меню (десктоп, коли navigator.share недоступний) ===== */
 .share-menu {
     position: absolute;

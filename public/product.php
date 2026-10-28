@@ -573,7 +573,7 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         <!-- 1. Логотип + назва продукту -->
         <div class="product-head">
             <div class="product-head__logo"><?= htmlspecialchars(product_initials($product['name']), ENT_QUOTES) ?></div>
-            <h1 class="product-head__name" data-share-title="after"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h1>
+            <h1 class="product-head__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h1>
             <?php $saveLabel = $isSaved ? t('saved_btn_unsave') : t('saved_btn_save'); ?>
             <button type="button"
                     class="save-btn<?= $isSaved ? ' is-saved' : '' ?>"

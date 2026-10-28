@@ -894,9 +894,9 @@ require_once __DIR__ . '/marketplace.php';
        Шапка — один рядок 56px (+ safe-area): логотип, «Спитати Елю», пошук, меню. Меню
        й розкритий пошук не змінюють висоту шапки: меню — панель поверх контенту, пошук
        заміщає вміст рядка. При прокрутці вниз шапка ховається (transform), угору —
-       з'являється (скрипт нижче). Перемикач мови, «Поділитися» й стрілка «назад» у шапці
-       сховані: мова — першим пунктом меню, «Поділитися» — біля заголовка продукту й
-       статті (share-button.js). Підвал — у потоці документа в кінці сторінки, на
+       з'являється (скрипт нижче). Перемикач мови й стрілка «назад» у шапці сховані
+       (мова — першим пунктом меню); «Поділитися» лишається в рядку шапки на кожній
+       сторінці (іконка 44px між пошуком і меню). Підвал — у потоці документа в кінці сторінки, на
        коротких сторінках притиснутий до низу (body — flex-колонка, margin-top: auto). */
     .site-search-toggle,
     .site-search__close,
@@ -930,9 +930,16 @@ require_once __DIR__ . '/marketplace.php';
         }
 
         .site-header .site-back,
-        .site-header > .site-lang,
-        .site-header > .share-btn {
+        .site-header > .site-lang {
             display: none;
+        }
+
+        .site-header > .share-btn {
+            order: 0;
+            width: 44px;
+            height: 44px;
+            margin: 0;
+            border-radius: 10px;
         }
 
         .site-header__brand {
@@ -1202,8 +1209,8 @@ require_once __DIR__ . '/marketplace.php';
         }
     }
 
-    /* < 340px: кнопка Елі — іконка + «Еля». */
-    @media (max-width: 339px) {
+    /* < 375px: кнопка Елі — іконка + «Еля» (у рядку ще три іконки: «Поділитися», пошук, меню). */
+    @media (max-width: 374px) {
         .site-header .site-nav__link--cta.site-header__cta {
             padding: 0 10px;
         }
