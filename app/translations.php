@@ -53,6 +53,9 @@ $GLOBALS['TRANSLATIONS'] = [
     'nav_menu'      => 'Меню',
     // Видимий підпис кнопки-перемикача мобільного меню (замість іконки «три риски»).
     'nav_menu_toggle' => 'Меню',
+    // Мобільна шапка (≤ 768px): підпис кнопки Елі; на найвужчих (< 340px) — «Еля».
+    'nav_eli_ask'   => 'Спитати Елю',
+    'nav_eli_tiny'  => 'Еля',
     'lang_switch'   => 'Мова інтерфейсу',
 
     // --- Кнопка «Додаток» (встановлення PWA, assets/js/pwa-install.js) ---
@@ -363,6 +366,9 @@ $GLOBALS['TRANSLATIONS'] = [
     // --- Пошук у шапці (app/footer.php + public/assets/js/site-search.js) ---
     'search_placeholder'   => 'Пошук AI-інструментів…',
     'search_clear_aria'    => 'Очистити пошук',
+    // Мобільна шапка: іконка пошуку розкриває поле на всю ширину, стрілка — закриває.
+    'search_open_aria'     => 'Відкрити пошук',
+    'search_close_aria'    => 'Закрити пошук',
     'search_no_results'    => 'Нічого не знайдено',
     'search_no_results_hint' => 'Спробуйте інший запит або',
     'search_ask_eli_link'  => 'запитайте Елю',

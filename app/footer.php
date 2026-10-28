@@ -887,6 +887,332 @@ require_once __DIR__ . '/marketplace.php';
         color: rgba(255, 255, 255, 0.5);
         text-align: center;
     }
+
+    /* ===== Мобільна шапка й підвал (≤ 768px) =====
+       Десктоп не змінюється: усе нижче — лише в медіа-запитах ≤ 768px (кнопки пошуку,
+       закриття пошуку й копія перемикача мови в меню поза ними сховані).
+       Шапка — один рядок 56px (+ safe-area): логотип, «Спитати Елю», пошук, меню. Меню
+       й розкритий пошук не змінюють висоту шапки: меню — панель поверх контенту, пошук
+       заміщає вміст рядка. При прокрутці вниз шапка ховається (transform), угору —
+       з'являється (скрипт нижче). Перемикач мови, «Поділитися» й стрілка «назад» у шапці
+       сховані: мова — першим пунктом меню, «Поділитися» — біля заголовка продукту й
+       статті (share-button.js). Підвал — у потоці документа в кінці сторінки, на
+       коротких сторінках притиснутий до низу (body — flex-колонка, margin-top: auto). */
+    .site-search-toggle,
+    .site-search__close,
+    .site-nav .site-lang--menu {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        html {
+            scroll-padding-top: 72px;
+        }
+
+        .site-header {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 6px;
+            box-sizing: border-box;
+            height: calc(56px + env(safe-area-inset-top, 0px));
+            padding: env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
+            transition: transform 0.2s ease;
+        }
+
+        .site-header.is-scrolled-away {
+            transform: translateY(-100%);
+        }
+
+        .site-header::after {
+            content: none;
+        }
+
+        .site-header .site-back,
+        .site-header > .site-lang,
+        .site-header > .share-btn {
+            display: none;
+        }
+
+        .site-header__brand {
+            display: flex;
+            align-items: center;
+            flex: 0 1 auto;
+            min-width: 0;
+            margin-right: auto;
+        }
+
+        .site-header .site-header__logo {
+            height: 34px;
+            width: auto;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta {
+            box-sizing: border-box;
+            height: 44px;
+            margin-left: 0;
+            padding: 0 14px;
+            flex-shrink: 0;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta > svg {
+            display: block;
+            width: 18px;
+            height: 18px;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta::after {
+            content: <?= '"' . addcslashes(t('nav_eli_ask'), '"\\') . '"' ?>;
+            margin-left: 6px;
+            font-size: 0.88rem;
+            letter-spacing: 0;
+        }
+
+        .site-header .site-nav__toggle,
+        .site-header .site-search-toggle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-sizing: border-box;
+            width: 44px;
+            height: 44px;
+            margin: 0;
+            padding: 0;
+            gap: 0;
+            border-radius: 10px;
+            font-size: 0;
+            color: #ffffff;
+        }
+
+        .site-header .site-search-toggle {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+        }
+
+        .site-header .site-search-toggle:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .site-header .site-nav__toggle svg,
+        .site-header .site-search-toggle svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .site-header .site-nav__toggle:focus-visible,
+        .site-header .site-search-toggle:focus-visible,
+        .site-search__close:focus-visible {
+            outline: 2px solid #ffffff;
+            outline-offset: 2px;
+        }
+
+        /* Меню — панель під шапкою поверх контенту (висота шапки не змінюється). */
+        .site-header .site-nav,
+        .site-header .site-nav.is-open {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            order: 0;
+            flex-basis: auto;
+            margin: 0;
+            padding: 10px max(12px, env(safe-area-inset-right, 0px)) 14px max(12px, env(safe-area-inset-left, 0px));
+            flex-direction: column;
+            align-items: stretch;
+            gap: 4px;
+            max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px));
+            overflow-y: auto;
+            overscroll-behavior: contain;
+            background: rgba(0, 3, 44, 0.98);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+        }
+
+        .site-header .site-nav {
+            display: none;
+        }
+
+        .site-header .site-nav.is-open {
+            display: flex;
+        }
+
+        .site-header .site-nav .site-nav__link {
+            justify-content: flex-start;
+            min-height: 44px;
+            box-sizing: border-box;
+            padding: 0 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+        }
+
+        /* order: -1 — базові правила .site-lang для ≤ 480px ставлять order: 3 (перемикач у шапці). */
+        .site-header .site-nav .site-lang--menu {
+            display: inline-flex;
+            order: -1;
+            flex-basis: auto;
+            align-self: flex-start;
+            margin: 0 0 6px;
+        }
+
+        .site-header .site-nav .site-lang--menu .site-lang__btn {
+            min-width: 52px;
+            min-height: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Пошук: іконка розкриває поле на всю ширину рядка (заміщає логотип і кнопки). */
+        .site-header > .site-search {
+            display: none;
+        }
+
+        .site-header.is-search-open > :not(.site-search) {
+            display: none !important;
+        }
+
+        .site-header.is-search-open > .site-search {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            order: 0;
+            flex: 1 1 auto;
+            flex-basis: auto;
+            width: auto;
+            min-width: 0;
+            margin: 0;
+        }
+
+        .site-search__close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            width: 44px;
+            height: 44px;
+            padding: 0;
+            border: none;
+            border-radius: 10px;
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .site-search__close svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .site-header .site-search__inner {
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 0;
+            margin: 0;
+        }
+
+        .site-header .site-search__input {
+            box-sizing: border-box;
+            height: 44px;
+            padding: 0 40px;
+            font-size: 16px;   /* < 16px — iOS збільшує сторінку при фокусі */
+        }
+
+        .site-header .site-search__results {
+            max-height: calc(100dvh - 80px - env(safe-area-inset-top, 0px));
+        }
+
+        /* Підвал у потоці документа, лише прокрутка сторінки. */
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding-bottom: 0;
+        }
+
+        /* Auto-поля в колонковому flex вимикають розтягування — основні обгортки на всю ширину. */
+        body > :is(.page, main, .mp-page, .rep, .main) {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .site-footer {
+            position: static;
+            z-index: auto;
+            margin-top: auto;
+            max-height: none;
+            overflow: visible;
+            padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+        }
+
+        .site-footer__inner {
+            flex-wrap: wrap;
+            gap: 10px 8px;
+        }
+
+        .site-footer__links {
+            flex-basis: 100%;
+            justify-content: center;
+            gap: 2px 14px;
+        }
+
+        .site-footer__links a {
+            display: block;   /* інакше рядок li бере line-height body (≈ 26px) */
+            padding: 1px 0;
+            font-size: 13px;
+            line-height: 1.35;
+        }
+
+        .site-footer__support,
+        .site-footer__toggle {
+            flex: 1 1 auto;
+            box-sizing: border-box;
+            height: 40px;
+            padding: 0 10px;
+            gap: 6px;
+            justify-content: center;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+
+        .site-footer__toggle {
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .site-footer__more {
+            padding: 4px 0 12px;
+        }
+
+        .site-footer__newsletter {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+        }
+
+        .site-footer__disclaimer {
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+    }
+
+    @media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+        .site-header {
+            transition: none;
+        }
+    }
+
+    /* < 340px: кнопка Елі — іконка + «Еля». */
+    @media (max-width: 339px) {
+        .site-header .site-nav__link--cta.site-header__cta {
+            padding: 0 10px;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta::after {
+            content: <?= '"' . addcslashes(t('nav_eli_tiny'), '"\\') . '"' ?>;
+            margin-left: 5px;
+        }
+    }
 </style>
 
 <footer class="site-footer" id="siteFooter">
@@ -975,7 +1301,9 @@ require_once __DIR__ . '/marketplace.php';
         }
         var toggle = document.getElementById('siteFooterToggle');
         function sync() {
-            document.documentElement.style.setProperty('--footer-h', footer.offsetHeight + 'px');
+            // На мобільному (≤ 768px) підвал у потоці документа — відступ під нього не потрібен.
+            var fixed = window.getComputedStyle(footer).position === 'fixed';
+            document.documentElement.style.setProperty('--footer-h', (fixed ? footer.offsetHeight : 0) + 'px');
         }
         if (toggle) {
             toggle.addEventListener('click', function () {
@@ -1001,7 +1329,9 @@ require_once __DIR__ . '/marketplace.php';
         }
         var TYPING = 'input:not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=reset]):not([type=file]):not([type=range]):not([type=color]),textarea,select,[contenteditable="true"]';
         function typing(el) {
-            return el && el.matches && el.matches(TYPING) && !footer.contains(el);
+            // Лише закріплений підвал (не мобільний у потоці документа) піднімається над клавіатурою.
+            return el && el.matches && el.matches(TYPING) && !footer.contains(el)
+                && window.getComputedStyle(footer).position === 'fixed';
         }
         document.addEventListener('focusin', function (e) {
             if (typing(e.target)) {
@@ -1042,10 +1372,37 @@ require_once __DIR__ . '/marketplace.php';
         if (!toggle || !nav) {
             return;
         }
-        toggle.addEventListener('click', function () {
-            var open = nav.classList.toggle('is-open');
+        var header = toggle.closest('.site-header');
+        function setOpen(open, restoreFocus) {
+            nav.classList.toggle('is-open', open);
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (header) {
+                header.classList.toggle('is-menu-open', open);
+            }
+            if (!open && restoreFocus) {
+                toggle.focus();
+            }
+        }
+        toggle.addEventListener('click', function () {
+            if (window.closeSiteSearch) {
+                window.closeSiteSearch(false);
+            }
+            setOpen(!nav.classList.contains('is-open'), false);
         });
+        // Esc і дотик поза меню — закрити (на десктопі #siteNav завжди видно, клас лише прибирається).
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+                setOpen(false, nav.contains(document.activeElement) || document.activeElement === toggle);
+            }
+        });
+        document.addEventListener('click', function (e) {
+            if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+                setOpen(false, false);
+            }
+        });
+        window.closeSiteMenu = function () {
+            setOpen(false, false);
+        };
     })();
 </script>
 
@@ -1061,6 +1418,140 @@ require_once __DIR__ . '/marketplace.php';
     };
 </script>
 <script src="/assets/js/site-search.js"></script>
+<script>
+    /* Мобільна шапка (≤ 768px): іконка пошуку розкриває наявне поле .site-search на всю
+       ширину рядка шапки (клас .is-search-open), стрілка або Esc — закривають. Логіка пошуку
+       (site-search.js) не змінюється. На десктопі обидві кнопки сховані CSS. */
+    (function () {
+        var header = document.querySelector('.site-header');
+        var wrap = header && header.querySelector('.site-search');
+        if (!wrap) {
+            return;
+        }
+        var input = wrap.querySelector('.site-search__input');
+        var SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+        wrap.id = wrap.id || 'siteSearch';
+
+        var openBtn = document.createElement('button');
+        openBtn.type = 'button';
+        openBtn.className = 'site-search-toggle';
+        openBtn.setAttribute('aria-label', <?= json_encode(t('search_open_aria'), JSON_UNESCAPED_UNICODE) ?>);
+        openBtn.setAttribute('aria-expanded', 'false');
+        openBtn.setAttribute('aria-controls', wrap.id);
+        openBtn.innerHTML = SVG + '<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>';
+        header.insertBefore(openBtn, header.querySelector('.site-nav__toggle'));
+
+        var closeBtn = document.createElement('button');
+        closeBtn.type = 'button';
+        closeBtn.className = 'site-search__close';
+        closeBtn.setAttribute('aria-label', <?= json_encode(t('search_close_aria'), JSON_UNESCAPED_UNICODE) ?>);
+        closeBtn.innerHTML = SVG + '<path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>';
+        wrap.insertBefore(closeBtn, wrap.firstChild);
+
+        function close(restoreFocus) {
+            if (!header.classList.contains('is-search-open')) {
+                return;
+            }
+            header.classList.remove('is-search-open');
+            openBtn.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) {
+                openBtn.focus();
+            }
+        }
+        window.closeSiteSearch = close;
+
+        openBtn.addEventListener('click', function () {
+            if (window.closeSiteMenu) {
+                window.closeSiteMenu();
+            }
+            header.classList.add('is-search-open');
+            header.classList.remove('is-scrolled-away');
+            openBtn.setAttribute('aria-expanded', 'true');
+            if (input) {
+                input.focus();
+            }
+        });
+        closeBtn.addEventListener('click', function () {
+            close(true);
+        });
+        // Esc: у непорожньому полі перше натискання очищає його (site-search.js), наступне — закриває.
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                e.wasNonEmpty = input.value !== '';
+            }
+        }, true);
+        wrap.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !e.wasNonEmpty) {
+                close(true);
+            }
+        });
+        // Перехід на десктопну ширину — поле знову звичайним рядком.
+        if (window.matchMedia) {
+            var mq = window.matchMedia('(max-width: 768px)');
+            if (mq.addEventListener) {
+                mq.addEventListener('change', function () {
+                    if (!mq.matches) {
+                        close(false);
+                    }
+                });
+            }
+        }
+    })();
+
+    /* Мобільна шапка ховається при прокрутці вниз і з'являється при прокрутці вгору
+       (CSS: .is-scrolled-away → translateY(-100%), 200 мс; без анімації при reduced-motion).
+       Не ховається біля верху сторінки, з відкритим меню чи пошуком і коли фокус у шапці. */
+    (function () {
+        var header = document.querySelector('.site-header');
+        if (!header || !window.matchMedia) {
+            return;
+        }
+        var mq = window.matchMedia('(max-width: 768px)');
+        var TOP_ZONE = 80;
+        var DELTA = 6;
+        var lastY = window.scrollY || 0;
+        var ticking = false;
+
+        // Фокус з клавіатури (:focus-visible) тримає шапку; фокус після дотику до кнопки — ні.
+        function keyboardFocusInside() {
+            try {
+                return !!header.querySelector(':focus-visible');
+            } catch (e) {
+                return false;
+            }
+        }
+        function pinned() {
+            return header.classList.contains('is-menu-open')
+                || header.classList.contains('is-search-open')
+                || keyboardFocusInside();
+        }
+        function update() {
+            ticking = false;
+            var y = window.scrollY || 0;
+            if (!mq.matches || y < TOP_ZONE || pinned()) {
+                header.classList.remove('is-scrolled-away');
+            } else if (y > lastY + DELTA) {
+                header.classList.add('is-scrolled-away');
+            } else if (y < lastY - DELTA) {
+                header.classList.remove('is-scrolled-away');
+            } else {
+                return;   // дрібний рух — точку відліку не зсуваємо
+            }
+            lastY = y;
+        }
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                ticking = true;
+                window.requestAnimationFrame(update);
+            }
+        }, { passive: true });
+        header.addEventListener('focusin', function () {
+            if (keyboardFocusInside()) {
+                header.classList.remove('is-scrolled-away');
+            }
+        });
+    })();
+</script>
 
 <script>
     /* Перемикач мови UA/EN. Вставляємо в кожну шапку сайту, щоб не дублювати
@@ -1105,6 +1596,14 @@ require_once __DIR__ . '/marketplace.php';
         } else {
             header.appendChild(box);
         }
+
+        // Копія — першим пунктом мобільного меню (у шапці на ≤ 768px перемикач схований CSS).
+        var nav = document.getElementById('siteNav');
+        if (nav) {
+            var menuBox = box.cloneNode(true);
+            menuBox.className = 'site-lang site-lang--menu';
+            nav.insertBefore(menuBox, nav.firstChild);
+        }
     })();
 </script>
 
@@ -1118,7 +1617,7 @@ require_once __DIR__ . '/marketplace.php';
         productText: <?= json_encode(t('share_product_text'), JSON_UNESCAPED_UNICODE) ?>
     };
 </script>
-<script src="/assets/js/share-button.js"></script>
+<script src="/assets/js/share-button.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/share-button.js') ?>"></script>
 
 <?php /* ===== Кнопка «Назад» на картці продукту: розмітку дає app/back-button.php ===== */ ?>
 <script src="/assets/js/back-button.js"></script>

@@ -299,7 +299,7 @@ if ($article !== null) {
             <?php if ($translationPending): ?>
                 <p class="translation-pending"><?= htmlspecialchars(t('blog_translation_pending'), ENT_QUOTES) ?></p>
             <?php endif; ?>
-            <h1 class="stub__title" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h1>
+            <h1 class="stub__title" data-share-title="float" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($article['title'], ENT_QUOTES) ?></h1>
             <div class="article" lang="<?= htmlspecialchars($article['lang'], ENT_QUOTES) ?>"><?= $article['html'] ?></div>
         <?php endif; ?>
     </main>
