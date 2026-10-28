@@ -24,11 +24,12 @@
  *     картка поверх кадру («Реклама», кнопка рекламодавця, «Переглянути ще раз» — лише кліком і без
  *     звуку; повтор не рахується ні як показ, ні як перегляд). YouTube після завершення прибирається,
  *     щоб не показувати чужі рекомендовані відео. Відлік «Пропустити» йде своїм ходом.
- *     saveData / prefers-reduced-motion (або браузер не дав навіть без звуку) — постер і «▶»:
- *     ролик стартує без звуку лише на дію глядача.
+ *     prefers-reduced-motion — відео однаково стартує само, але завжди без звуку.
+ *     saveData (або браузер не дав навіть без звуку) — постер і «▶»: ролик стартує без звуку лише
+ *     на дію глядача.
  *   * YouTube: плеєр через IFrame Player API (хост youtube-nocookie.com, скрипт API вантажиться лише
  *     коли відкривається вікно з YouTube), стартує сам БЕЗ звуку; звук — лише кнопкою-динаміком.
- *     Браузер заблокував автозапуск / скрипт YouTube заблоковано / reduced-motion чи saveData —
+ *     Браузер заблокував автозапуск / скрипт YouTube заблоковано / saveData —
  *     мініатюра й «▶». Помилка відео (2, 5, 100, 101, 150 — приватне, видалене, вбудовування
  *     заборонене) — лише мініатюра, вікно працює як із зображенням.
  *   * Відлік «Пропустити» йде з початку відтворення (зображення, картка, постер — одразу; відео не
@@ -67,7 +68,9 @@
 
     var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var saveData = !!(navigator.connection && navigator.connection.saveData);
-    var allowAutoplay = !reduceMotion && !saveData;
+    // reduced-motion не вимикає автозапуск (у Windows його вмикає вимкнена анімація системи, часто заради
+    // швидкодії): відео стартує, але лише без звуку; вимикається тільки анімація вікна.
+    var allowAutoplay = !saveData;
 
     function noop() {}
 
@@ -425,7 +428,7 @@
                     window.setTimeout(hideSoundHint, 6000);
                 };
 
-                // «Відтворити»: коли автостарт вимкнено (saveData, reduced-motion) або його заблокував
+                // «Відтворити»: коли автостарт вимкнено (saveData) або його заблокував
                 // браузер. Запускає ролик без звуку й не відкриває рекламодавця.
                 var videoPlay = null;
                 var showVideoPlay = function () {
@@ -850,7 +853,7 @@
                 }, YT_START_FALLBACK_MS);
                 ytStart();
             } else {
-                // reduced-motion / saveData — плеєр лише на дію глядача.
+                // saveData — плеєр лише на дію глядача.
                 ytShowPlay();
                 startCountdown();
             }
@@ -884,7 +887,7 @@
                     return video.play();
                 };
                 var activated = !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
-                if (activated && soundPref() !== 'off') {
+                if (activated && soundPref() !== 'off' && !reduceMotion) {
                     video.muted = false;
                     silenceOthers();
                     video.play().catch(function () {
