@@ -22,7 +22,7 @@ All the tools in this article are collected in the "Drinks" subcategory of the "
 
 ## Cocktails at home: what to make from what you have
 
-The most popular scenario is simple: you tell the app what you have, and it shows what you can make. [Cocktail Builder](https://ailabhub-directory.com/product.php?id=3254) shows every cocktail you can make from your bar for free and remembers what is in it. [Mixel](https://ailabhub-directory.com/product.php?id=3242) and [Cocktail Flow](https://ailabhub-directory.com/product.php?id=3241) sort recipes by what you have at hand, and [Mixology](https://ailabhub-directory.com/product.php?id=3237) also suggests ingredient substitutions and a shopping list.
+The most popular scenario is simple: you tell the app what you have, and it shows what you can make. [Cocktail Builder](https://ailabhub-directory.com/product.php?id=3254) shows every cocktail you can make from your bar for free and remembers what is in it. [Mixel](https://ailabhub-directory.com/product.php?id=3242) and [Cocktail Flow](https://ailabhub-directory.com/product.php?id=3241) sort recipes by what you have at hand.
 
 If you want something new, AI generators can help. [Mixologia](https://ailabhub-directory.com/product.php?id=3239) invents a cocktail for your ingredients and mood and keeps a "My Bar" section. [dr.inks](https://ailabhub-directory.com/product.php?id=3240) has about a thousand recipes and creates your own to match your taste, and the Spanish-language [GuIA del Cóctel](https://ailabhub-directory.com/product.php?id=3238) offers an AI cocktail for your party theme.
 

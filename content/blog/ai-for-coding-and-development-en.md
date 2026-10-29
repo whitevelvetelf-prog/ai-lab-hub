@@ -28,9 +28,9 @@ One of the most popular AI code editors of 2026, with $2 billion in annual reven
 
 **Pricing:** Hobby — free; Pro — $20/mo; Business — $40/mo; Ultra — $200/mo.
 
-### [Windsurf](https://ailabhub-directory.com/product.php?id=13)
+### [Devin Desktop (formerly Windsurf)](https://ailabhub-directory.com/product.php?id=13)
 
-An AI editor that understands the structure of the whole project and can carry out development tasks on its own in the background. It supports several AI models and, of course, code autocomplete.
+An AI editor that understands the structure of the whole project and can carry out development tasks on its own in the background. It supports several AI models and, of course, code autocomplete. In June 2026 Cognition renamed Windsurf to Devin Desktop and added a panel for managing several agents; pricing for existing users stayed the same.
 
 **Best for:** developers who want to hand off part of their routine work to an AI agent.
 
@@ -78,7 +78,7 @@ A code assistant focused on privacy and IP protection: autocomplete on IP-safe m
 
 **Best for:** developers and teams for whom code privacy is critical.
 
-**Pricing:** Tabnine Dev — $12/mo; Code Assistant — $39/mo; Agentic Platform — $59/mo.
+**Pricing:** Tabnine Dev — $12/mo; Code Assistant — $39/mo; Agentic Platform — $59/mo. In July 2026 Tricentis acquired Tabnine, and tabnine.com now redirects to the Tricentis products page, so check current terms there.
 
 ### [Amazon Q Developer](https://ailabhub-directory.com/product.php?id=12)
 
@@ -131,14 +131,6 @@ An open-source AI agent for VS Code with more than a million installs. It handle
 **Best for:** anyone who wants a controlled AI agent in VS Code.
 
 **Pricing:** extension (with your own API key) — free; cloud credits — $5/mo.
-
-### [Continue.dev](https://ailabhub-directory.com/product.php?id=853)
-
-A fully open (Apache 2.0) assistant: real-time autocomplete, a chat for questions and debugging in the IDE, your own choice of LLM and custom context. The plugin itself is free — you pay only for the tokens of the model you choose.
-
-**Best for:** developers who want full control over which AI model they use.
-
-**Pricing:** extension — free; Starter (cloud) — $3, one-time payment.
 
 ### [Kilo Code](https://ailabhub-directory.com/product.php?id=1329)
 
@@ -269,7 +261,7 @@ A code review bot that automatically checks pull requests across an unlimited nu
 | Tool | Type | Free plan | Paid plans | Best for |
 | --- | --- | --- | --- | --- |
 | [Cursor](https://ailabhub-directory.com/product.php?id=64) | AI editor | Yes (Hobby) | $20–$200/mo | Deepest AI integration |
-| [Windsurf](https://ailabhub-directory.com/product.php?id=13) | AI editor | Yes | $20–$200/mo | Background agent tasks |
+| [Devin Desktop](https://ailabhub-directory.com/product.php?id=13) | AI editor | Yes | $20–$200/mo | Background agent tasks |
 | [Trae](https://ailabhub-directory.com/product.php?id=860) | AI editor | Yes | $3–$100/mo | Top models at low cost |
 | [Zed AI](https://ailabhub-directory.com/product.php?id=858) | AI editor | Yes (Personal) | $10–$30/mo | Speed and native feel |
 | [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9) | IDE assistant | Yes | $10–$39/mo | Any level, familiar editor |
@@ -281,7 +273,6 @@ A code review bot that automatically checks pull requests across an unlimited nu
 | [CodeGeeX](https://ailabhub-directory.com/product.php?id=871) | IDE assistant | Yes (fully) | — | Completely free |
 | [Tabby](https://ailabhub-directory.com/product.php?id=870) | Self-hosted assistant | Yes | — | Code on your own servers |
 | [Cline](https://ailabhub-directory.com/product.php?id=854) | Open-source agent | Yes | $5/mo (credits) | Control over every action |
-| [Continue.dev](https://ailabhub-directory.com/product.php?id=853) | Open-source assistant | Yes | $3 one-time | Your own choice of model |
 | [Kilo Code](https://ailabhub-directory.com/product.php?id=1329) | Open-source agent | Yes | $15/mo; Enterprise — on request | Hundreds of models, no markup |
 | [Aider](https://ailabhub-directory.com/product.php?id=855) | Terminal pair programmer | Yes (fully) | — | Terminal and Git workflow |
 | [Claude Code](https://ailabhub-directory.com/product.php?id=1196) | AI agent | No | $20–$100/mo (with Claude) | Agentic work in a repository |
@@ -305,7 +296,7 @@ Start with free plans and a familiar environment. The free tier of [GitHub Copil
 
 ### You are a professional
 
-If you write code every day and value speed, choose an AI editor: [Cursor](https://ailabhub-directory.com/product.php?id=64) Pro or [Windsurf](https://ailabhub-directory.com/product.php?id=13) Pro at $20/mo. For large tasks in a repository, add an agent such as [Claude Code](https://ailabhub-directory.com/product.php?id=1196) or [Devin](https://ailabhub-directory.com/product.php?id=1072). Working in JetBrains? Take [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874). Love the terminal? Try [Aider](https://ailabhub-directory.com/product.php?id=855) and [Warp](https://ailabhub-directory.com/product.php?id=856). Want full control over the model? Go with [Cline](https://ailabhub-directory.com/product.php?id=854) or [Kilo Code](https://ailabhub-directory.com/product.php?id=1329).
+If you write code every day and value speed, choose an AI editor: [Cursor](https://ailabhub-directory.com/product.php?id=64) Pro or [Devin Desktop](https://ailabhub-directory.com/product.php?id=13) Pro at $20/mo. For large tasks in a repository, add an agent such as [Claude Code](https://ailabhub-directory.com/product.php?id=1196) or [Devin](https://ailabhub-directory.com/product.php?id=1072). Working in JetBrains? Take [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874). Love the terminal? Try [Aider](https://ailabhub-directory.com/product.php?id=855) and [Warp](https://ailabhub-directory.com/product.php?id=856). Want full control over the model? Go with [Cline](https://ailabhub-directory.com/product.php?id=854) or [Kilo Code](https://ailabhub-directory.com/product.php?id=1329).
 
 ### You are a team or company
 
@@ -323,7 +314,7 @@ There is no universal answer. For most developers, the easiest start is [GitHub 
 
 ### Are there free AI tools for programming?
 
-Yes, plenty. Completely free options include [CodeGeeX](https://ailabhub-directory.com/product.php?id=871), [Aider](https://ailabhub-directory.com/product.php?id=855) and [Tabby](https://ailabhub-directory.com/product.php?id=870) (for teams of up to 50 people). Free plans are available from [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9), [Cursor](https://ailabhub-directory.com/product.php?id=64), [Windsurf](https://ailabhub-directory.com/product.php?id=13), [Trae](https://ailabhub-directory.com/product.php?id=860), [Zed AI](https://ailabhub-directory.com/product.php?id=858), [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874) and others. With [Cline](https://ailabhub-directory.com/product.php?id=854) and [Continue.dev](https://ailabhub-directory.com/product.php?id=853), the tool itself is free — you pay only for the model you choose.
+Yes, plenty. Completely free options include [CodeGeeX](https://ailabhub-directory.com/product.php?id=871), [Aider](https://ailabhub-directory.com/product.php?id=855) and [Tabby](https://ailabhub-directory.com/product.php?id=870) (for teams of up to 50 people). Free plans are available from [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9), [Cursor](https://ailabhub-directory.com/product.php?id=64), [Devin Desktop](https://ailabhub-directory.com/product.php?id=13), [Trae](https://ailabhub-directory.com/product.php?id=860), [Zed AI](https://ailabhub-directory.com/product.php?id=858), [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874) and others. With [Cline](https://ailabhub-directory.com/product.php?id=854), the tool itself is free — you pay only for the model you choose.
 
 ### What is the difference between an AI agent and a code assistant?
 

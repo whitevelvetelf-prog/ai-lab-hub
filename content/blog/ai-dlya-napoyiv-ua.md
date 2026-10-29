@@ -22,7 +22,7 @@ description: "AI-міксологи й генератори коктейлів, 
 
 ## Коктейлі вдома: що приготувати з того, що є
 
-Найпопулярніший сценарій простий: ви кажете, що у вас є, а застосунок показує, що з цього вийде. [Cocktail Builder](https://ailabhub-directory.com/product.php?id=3254) безкоштовно показує всі коктейлі, які можна зробити з вашого бару, і пам'ятає його вміст. [Mixel](https://ailabhub-directory.com/product.php?id=3242) і [Cocktail Flow](https://ailabhub-directory.com/product.php?id=3241) сортують рецепти за тим, що у вас є під рукою, а [Mixology](https://ailabhub-directory.com/product.php?id=3237) ще й пропонує заміни інгредієнтів і список покупок.
+Найпопулярніший сценарій простий: ви кажете, що у вас є, а застосунок показує, що з цього вийде. [Cocktail Builder](https://ailabhub-directory.com/product.php?id=3254) безкоштовно показує всі коктейлі, які можна зробити з вашого бару, і пам'ятає його вміст. [Mixel](https://ailabhub-directory.com/product.php?id=3242) і [Cocktail Flow](https://ailabhub-directory.com/product.php?id=3241) сортують рецепти за тим, що у вас є під рукою.
 
 Якщо хочеться чогось нового, допоможуть генератори на AI. [Mixologia](https://ailabhub-directory.com/product.php?id=3239) придумує коктейль під ваші інгредієнти й настрій і веде розділ «Мій бар». [dr.inks](https://ailabhub-directory.com/product.php?id=3240) має близько тисячі рецептів і створює власні під ваш смак, а іспаномовний [GuIA del Cóctel](https://ailabhub-directory.com/product.php?id=3238) пропонує AI-коктейль під тему вечірки.
 

@@ -28,9 +28,9 @@ description: "Cursor, GitHub Copilot, Claude Code, Devin, Lovable і ще 23 AI-
 
 **Тарифи:** Hobby — безкоштовно; Pro — $20/міс; Business — $40/міс; Ultra — $200/міс.
 
-### [Windsurf](https://ailabhub-directory.com/product.php?id=13)
+### [Devin Desktop (колишній Windsurf)](https://ailabhub-directory.com/product.php?id=13)
 
-AI-редактор, що розуміє структуру всього проєкту й може самостійно виконувати задачі розробки у фоновому режимі. Підтримує кілька AI-моделей на вибір і, звісно, автодоповнення коду.
+AI-редактор, що розуміє структуру всього проєкту й може самостійно виконувати задачі розробки у фоновому режимі. Підтримує кілька AI-моделей на вибір і, звісно, автодоповнення коду. У червні 2026 Cognition перейменувала Windsurf на Devin Desktop і додала панель для керування кількома агентами; тарифи для наявних користувачів не змінилися.
 
 **Кому підійде:** розробникам, які хочуть делегувати частину рутинної роботи AI-агенту.
 
@@ -78,7 +78,7 @@ AI, вбудований в усі основні JetBrains IDE. Головни�
 
 **Кому підійде:** розробникам і командам, для яких критична приватність коду.
 
-**Тарифи:** Tabnine Dev — $12/міс; Code Assistant — $39/міс; Agentic Platform — $59/міс.
+**Тарифи:** Tabnine Dev — $12/міс; Code Assistant — $39/міс; Agentic Platform — $59/міс. У липні 2026 Tabnine купила Tricentis, і сайт tabnine.com тепер веде на сторінку продуктів Tricentis, тож актуальні умови уточнюйте там.
 
 ### [Amazon Q Developer](https://ailabhub-directory.com/product.php?id=12)
 
@@ -131,14 +131,6 @@ Open-source AI-агент для VS Code з понад мільйоном вст
 **Кому підійде:** тим, хто хоче контрольованого AI-агента у VS Code.
 
 **Тарифи:** розширення (зі своїм API-ключем) — безкоштовно; хмарні кредити — $5/міс.
-
-### [Continue.dev](https://ailabhub-directory.com/product.php?id=853)
-
-Повністю відкритий (Apache 2.0) асистент: автодоповнення в реальному часі, чат для запитань і дебагу в IDE, вибір власної LLM-моделі й кастомний контекст. Сам плагін безкоштовний — платите лише за токени обраної моделі.
-
-**Кому підійде:** розробникам, які хочуть повний контроль над вибором AI-моделі.
-
-**Тарифи:** розширення — безкоштовно; Starter (хмара) — $3, разова оплата.
 
 ### [Kilo Code](https://ailabhub-directory.com/product.php?id=1329)
 
@@ -269,7 +261,7 @@ AI-конструктор від StackBlitz: з текстового опису 
 | Інструмент | Тип | Безкоштовний план | Платні тарифи | Найкраще для |
 | --- | --- | --- | --- | --- |
 | [Cursor](https://ailabhub-directory.com/product.php?id=64) | AI-редактор | Так (Hobby) | $20–$200/міс | Максимальна інтеграція AI |
-| [Windsurf](https://ailabhub-directory.com/product.php?id=13) | AI-редактор | Так | $20–$200/міс | Фонові задачі агента |
+| [Devin Desktop](https://ailabhub-directory.com/product.php?id=13) | AI-редактор | Так | $20–$200/міс | Фонові задачі агента |
 | [Trae](https://ailabhub-directory.com/product.php?id=860) | AI-редактор | Так | $3–$100/міс | Доступ до топ-моделей недорого |
 | [Zed AI](https://ailabhub-directory.com/product.php?id=858) | AI-редактор | Так (Personal) | $10–$30/міс | Швидкість і нативність |
 | [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9) | Асистент в IDE | Так | $10–$39/міс | Будь-який рівень, звичний редактор |
@@ -281,7 +273,6 @@ AI-конструктор від StackBlitz: з текстового опису 
 | [CodeGeeX](https://ailabhub-directory.com/product.php?id=871) | Асистент в IDE | Так (повністю) | — | Повністю безкоштовно |
 | [Tabby](https://ailabhub-directory.com/product.php?id=870) | Self-hosted асистент | Так | — | Код на власних серверах |
 | [Cline](https://ailabhub-directory.com/product.php?id=854) | Open-source агент | Так | $5/міс (кредити) | Контроль кожної дії |
-| [Continue.dev](https://ailabhub-directory.com/product.php?id=853) | Open-source асистент | Так | $3 разово | Свій вибір моделі |
 | [Kilo Code](https://ailabhub-directory.com/product.php?id=1329) | Open-source агент | Так | $15/міс; Enterprise — за запитом | Сотні моделей без націнки |
 | [Aider](https://ailabhub-directory.com/product.php?id=855) | Термінальний напарник | Так (повністю) | — | Робота в терміналі й Git |
 | [Claude Code](https://ailabhub-directory.com/product.php?id=1196) | AI-агент | Ні | $20–$100/міс (у складі Claude) | Агентна робота в репозиторії |
@@ -305,7 +296,7 @@ AI-конструктор від StackBlitz: з текстового опису 
 
 ### Ви професіонал
 
-Якщо ви щодня пишете код і цінуєте швидкість, обирайте AI-редактор: [Cursor](https://ailabhub-directory.com/product.php?id=64) Pro чи [Windsurf](https://ailabhub-directory.com/product.php?id=13) Pro за $20/міс. Для великих задач у репозиторії додайте агента — [Claude Code](https://ailabhub-directory.com/product.php?id=1196) або [Devin](https://ailabhub-directory.com/product.php?id=1072). Працюєте в JetBrains — візьміть [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874). Любите термінал — [Aider](https://ailabhub-directory.com/product.php?id=855) і [Warp](https://ailabhub-directory.com/product.php?id=856). Хочете повний контроль над моделлю — [Cline](https://ailabhub-directory.com/product.php?id=854) чи [Kilo Code](https://ailabhub-directory.com/product.php?id=1329).
+Якщо ви щодня пишете код і цінуєте швидкість, обирайте AI-редактор: [Cursor](https://ailabhub-directory.com/product.php?id=64) Pro чи [Devin Desktop](https://ailabhub-directory.com/product.php?id=13) Pro за $20/міс. Для великих задач у репозиторії додайте агента — [Claude Code](https://ailabhub-directory.com/product.php?id=1196) або [Devin](https://ailabhub-directory.com/product.php?id=1072). Працюєте в JetBrains — візьміть [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874). Любите термінал — [Aider](https://ailabhub-directory.com/product.php?id=855) і [Warp](https://ailabhub-directory.com/product.php?id=856). Хочете повний контроль над моделлю — [Cline](https://ailabhub-directory.com/product.php?id=854) чи [Kilo Code](https://ailabhub-directory.com/product.php?id=1329).
 
 ### Ви команда чи компанія
 
@@ -323,7 +314,7 @@ AI-конструктор від StackBlitz: з текстового опису 
 
 ### Чи є безкоштовні AI-інструменти для програмування?
 
-Так, і чимало. Повністю безкоштовні — [CodeGeeX](https://ailabhub-directory.com/product.php?id=871), [Aider](https://ailabhub-directory.com/product.php?id=855) і [Tabby](https://ailabhub-directory.com/product.php?id=870) (для команд до 50 людей). Безкоштовні плани мають [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9), [Cursor](https://ailabhub-directory.com/product.php?id=64), [Windsurf](https://ailabhub-directory.com/product.php?id=13), [Trae](https://ailabhub-directory.com/product.php?id=860), [Zed AI](https://ailabhub-directory.com/product.php?id=858), [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874) та інші. У [Cline](https://ailabhub-directory.com/product.php?id=854) і [Continue.dev](https://ailabhub-directory.com/product.php?id=853) сам інструмент безкоштовний — ви платите лише за обрану модель.
+Так, і чимало. Повністю безкоштовні — [CodeGeeX](https://ailabhub-directory.com/product.php?id=871), [Aider](https://ailabhub-directory.com/product.php?id=855) і [Tabby](https://ailabhub-directory.com/product.php?id=870) (для команд до 50 людей). Безкоштовні плани мають [GitHub Copilot](https://ailabhub-directory.com/product.php?id=9), [Cursor](https://ailabhub-directory.com/product.php?id=64), [Devin Desktop](https://ailabhub-directory.com/product.php?id=13), [Trae](https://ailabhub-directory.com/product.php?id=860), [Zed AI](https://ailabhub-directory.com/product.php?id=858), [JetBrains AI Assistant](https://ailabhub-directory.com/product.php?id=874) та інші. У [Cline](https://ailabhub-directory.com/product.php?id=854) сам інструмент безкоштовний — ви платите лише за обрану модель.
 
 ### Чим AI-агент відрізняється від асистента коду?
 
