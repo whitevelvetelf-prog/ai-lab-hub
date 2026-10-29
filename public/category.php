@@ -82,6 +82,7 @@ $subcategoryIcons = [
     // Мультимедіа
     'video-generation'   => 'video',
     'image-generation'   => 'image',
+    'local-image-generation' => 'image-down',
     'voiceover'          => 'mic',
     'audio'              => 'volume-2',
     'photography'        => 'camera',

@@ -83,6 +83,10 @@ const BLOG_ARTICLES = [
         'uk' => 'yak-uberegtys-vid-shakhraystva-i-dypfeykiv-ua.md',
         'en' => 'ai-fraud-and-deepfakes-protection-en.md',
     ],
+    'midjourney-alternatives' => [
+        'uk' => 'alternatyvy-midjourney-ua.md',
+        'en' => 'midjourney-alternatives-en.md',
+    ],
 ];
 
 /**
@@ -115,6 +119,7 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-for-working-and-service-dogs' => ['my-home/working-dogs', 'my-home/pet-grooming-vet'],
     'ai-digital-memory-loved-ones' => ['my-home/digital-memory-legacy'],
     'ai-fraud-deepfakes-protection' => ['cybersecurity/anti-scam-deepfakes', 'education-knowledge/detectors', 'cybersecurity/identity-protection'],
+    'midjourney-alternatives' => ['multimedia/image-generation', 'multimedia/local-image-generation'],
 ];
 
 /**

@@ -45,6 +45,7 @@ const ELI_INTENTS = [
     ['монтаж, змонтувати, стиснути, обрізати, кліп, edit, editing, compress, trim, clip, youtube, tiktok, reels, shorts', 'multimedia', 'video-editing', 1.0],
     ['фото, фотографія, світлина, photo, photos, photography', 'multimedia', 'photography', 1.0],
     ['зображення, картинка, картинки, малюнок, намалювати, ілюстрація, image, images, picture, illustration, draw, drawing', 'multimedia', 'image-generation', 1.0],
+    ['stable diffusion, comfyui, fooocus, automatic1111, a1111, invokeai, diffusionbee, офлайн-генератор, локальний генератор', 'multimedia', 'local-image-generation', 0.8],
     ['музика, музику, пісня, пісню, мелодія, music, song, melody, soundtrack', 'multimedia', 'music', 1.0],
     ['звук, аудіо, подкаст, подкасти, audio, sound, podcast', 'multimedia', 'audio', 1.0],
     ['озвучка, озвучення, озвучити, голос, диктор, voiceover, voice, narration, narrator, tts', 'multimedia', 'voiceover', 1.0],
