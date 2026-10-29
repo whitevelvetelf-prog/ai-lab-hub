@@ -87,13 +87,13 @@ Google's image generation model, known for high-quality fine detail and accurate
 
 **Best for:** developers and companies already working within the Google Cloud ecosystem.
 
-### [DreamStudio](https://ailabhub-directory.com/product.php?id=202)
+### [Brand Studio (formerly DreamStudio)](https://ailabhub-directory.com/product.php?id=202)
 
-A web interface for Stable Diffusion — lets you generate images without installing anything, using a credit-based system.
+In 2026 Stability AI replaced DreamStudio with Brand Studio, and the old site now redirects there. It is no longer a simple credit-based generator but a tool for on-brand images and ad visuals: custom models trained on a brand's photos and colors, campaigns from reference images, precision editing and product insertion.
 
-**Pricing:** Free — $0; Credits — $10 one-time.
+**Pricing:** Core — free trial; Enterprise — pricing on request.
 
-**Best for:** anyone who wants to use Stable Diffusion without technical setup.
+**Best for:** designers, marketers and brand teams.
 
 ### [Playground AI](https://ailabhub-directory.com/product.php?id=203)
 
@@ -176,7 +176,7 @@ Virtually try on hairstyles, hair color, and facial looks on your own photo with
 | [Krea](https://ailabhub-directory.com/product.php?id=112) | Alternative | Real-time generation | Free (premium available) |
 | [FLUX.1](https://ailabhub-directory.com/product.php?id=200) | Alternative | High photorealism | Free (API available) |
 | [Google Imagen](https://ailabhub-directory.com/product.php?id=201) | Alternative | Detail quality from Google | From $0.02/request |
-| [DreamStudio](https://ailabhub-directory.com/product.php?id=202) | Alternative | Stable Diffusion, no install | Free (premium available) |
+| [Brand Studio (DreamStudio)](https://ailabhub-directory.com/product.php?id=202) | Alternative | On-brand visuals | Core free trial; Enterprise on request |
 | [Playground AI](https://ailabhub-directory.com/product.php?id=203) | Alternative | Community and multiple models | Free (premium available) |
 | [NightCafe](https://ailabhub-directory.com/product.php?id=204) | Alternative | Daily free credits | Free (premium available) |
 | [Khroma](https://ailabhub-directory.com/product.php?id=28) | Specialized | Personalized color palettes | Free |
@@ -191,7 +191,7 @@ Virtually try on hairstyles, hair color, and facial looks on your own photo with
 - **Want the highest-quality generation from scratch** — [Midjourney](https://ailabhub-directory.com/product.php?id=5), or [Adobe Firefly](https://ailabhub-directory.com/product.php?id=25) if commercial safety matters.
 - **Need vector graphics or accurate text in an image** — [Recraft](https://ailabhub-directory.com/product.php?id=26) or [Ideogram](https://ailabhub-directory.com/product.php?id=198).
 - **Want to try it out free with a low barrier to entry** — [Leonardo AI](https://ailabhub-directory.com/product.php?id=8), [Playground AI](https://ailabhub-directory.com/product.php?id=203), or [NightCafe](https://ailabhub-directory.com/product.php?id=204).
-- **Need full control and local generation** — [Stable Diffusion](https://ailabhub-directory.com/product.php?id=199), or [DreamStudio](https://ailabhub-directory.com/product.php?id=202) as a web wrapper around it.
+- **Need full control and local generation** — [Stable Diffusion](https://ailabhub-directory.com/product.php?id=199).
 - **Your main task is editing photos, not generating from scratch** — [Photoroom](https://ailabhub-directory.com/product.php?id=27) for product photos, or [Adobe Photoshop](https://ailabhub-directory.com/product.php?id=76) for professional editing.
 - **Need a full design platform, not just a generator** — [Canva](https://ailabhub-directory.com/product.php?id=7) for marketing materials, or [Figma](https://ailabhub-directory.com/product.php?id=24) for interfaces.
 - **Picking a color scheme for a project** — [Khroma](https://ailabhub-directory.com/product.php?id=28).

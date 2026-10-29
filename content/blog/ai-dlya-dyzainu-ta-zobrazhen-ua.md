@@ -87,13 +87,13 @@ AI змінив підхід до створення візуального ко
 
 **Для кого:** розробники й компанії, що вже працюють у хмарній екосистемі Google.
 
-### [DreamStudio](https://ailabhub-directory.com/product.php?id=202)
+### [Brand Studio (колишній DreamStudio)](https://ailabhub-directory.com/product.php?id=202)
 
-Веб-інтерфейс для Stable Diffusion — дозволяє генерувати зображення без встановлення й власного обладнання, за системою кредитів.
+У 2026 році Stability AI замінила DreamStudio платформою Brand Studio: старий сайт тепер веде туди. Це вже не простий генератор із кредитами, а інструмент для зображень і рекламних візуалів у стилі бренду: власні моделі на фото й кольорах бренду, кампанії з референсів, точкове редагування, вставлення товару в сцену.
 
-**Тарифи:** Free — 0 $; Credits — $10 разово.
+**Тарифи:** Core — безкоштовна спроба; Enterprise — ціна за запитом.
 
-**Для кого:** ті, хто хоче скористатись Stable Diffusion без технічного налаштування.
+**Для кого:** дизайнери, маркетологи й команди брендів.
 
 ### [Playground AI](https://ailabhub-directory.com/product.php?id=203)
 
@@ -176,7 +176,7 @@ AI-генератор кольорових палітр, що навчаєтьс
 | [Krea](https://ailabhub-directory.com/product.php?id=112) | Альтернативні | Генерація в реальному часі | Безкоштовно (є преміум) |
 | [FLUX.1](https://ailabhub-directory.com/product.php?id=200) | Альтернативні | Висока фотореалістичність | Безкоштовно (є API) |
 | [Google Imagen](https://ailabhub-directory.com/product.php?id=201) | Альтернативні | Якість деталей від Google | від $0.02/запит |
-| [DreamStudio](https://ailabhub-directory.com/product.php?id=202) | Альтернативні | Stable Diffusion без встановлення | Безкоштовно (є преміум) |
+| [Brand Studio (DreamStudio)](https://ailabhub-directory.com/product.php?id=202) | Альтернативні | Візуали в стилі бренду | Безкоштовна спроба Core; Enterprise за запитом |
 | [Playground AI](https://ailabhub-directory.com/product.php?id=203) | Альтернативні | Спільнота й кілька моделей | Безкоштовно (є преміум) |
 | [NightCafe](https://ailabhub-directory.com/product.php?id=204) | Альтернативні | Щоденні безкоштовні кредити | Безкоштовно (є преміум) |
 | [Khroma](https://ailabhub-directory.com/product.php?id=28) | Спеціалізовані | Персоналізовані кольорові палітри | Безкоштовно |
@@ -191,7 +191,7 @@ AI-генератор кольорових палітр, що навчаєтьс
 - **Потрібна найвища якість генерації "з нуля"** — [Midjourney](https://ailabhub-directory.com/product.php?id=5) або [Adobe Firefly](https://ailabhub-directory.com/product.php?id=25), якщо важлива комерційна безпека контенту.
 - **Потрібна векторна графіка чи точний текст на зображенні** — [Recraft](https://ailabhub-directory.com/product.php?id=26) або [Ideogram](https://ailabhub-directory.com/product.php?id=198).
 - **Хочете спробувати безкоштовно з мінімальним порогом входу** — [Leonardo AI](https://ailabhub-directory.com/product.php?id=8), [Playground AI](https://ailabhub-directory.com/product.php?id=203) або [NightCafe](https://ailabhub-directory.com/product.php?id=204).
-- **Потрібен повний контроль і локальний запуск** — [Stable Diffusion](https://ailabhub-directory.com/product.php?id=199) або [DreamStudio](https://ailabhub-directory.com/product.php?id=202) як веб-обгортка над ним.
+- **Потрібен повний контроль і локальний запуск** — [Stable Diffusion](https://ailabhub-directory.com/product.php?id=199).
 - **Головна задача — обробка фото, а не генерація з нуля** — [Photoroom](https://ailabhub-directory.com/product.php?id=27) для товарних фото або [Adobe Photoshop](https://ailabhub-directory.com/product.php?id=76) для професійного редагування.
 - **Потрібна ціла дизайн-платформа, а не окремий генератор** — [Canva](https://ailabhub-directory.com/product.php?id=7) для маркетингових матеріалів або [Figma](https://ailabhub-directory.com/product.php?id=24) для інтерфейсів.
 - **Підбираєте кольорову гаму проєкту** — [Khroma](https://ailabhub-directory.com/product.php?id=28).
