@@ -20,6 +20,7 @@ const PROMO_HOUSE_AB_MIN = 100;
 const PROMO_HOUSE_RULES = [
     'hide_if_campaign' => 'Не показувати користувачам, які вже створили рекламну кампанію',
     'hide_if_listing' => 'Не показувати користувачам, які вже публікували оголошення',
+    'guests_only' => 'Лише гостям (не показувати користувачам, які увійшли)',
     'site_only' => 'Лише на сторінках сайту й блогу (не всередині маркетплейсу)',
     'requires_marketplace' => 'Лише коли маркетплейс відкрито (marketplace_public = 1)',
     'exclude_advertise' => 'Не показувати на advertise.php і в кабінеті рекламодавця',
@@ -48,6 +49,7 @@ function promo_house_rules_flags(?string $json): array
     return [
         'hide_if_campaign' => !empty($r['hide_if_campaign']),
         'hide_if_listing' => !empty($r['hide_if_listing']),
+        'guests_only' => !empty($r['guests_only']),
         'site_only' => !empty($r['site_only']),
         'requires_marketplace' => ($r['requires_setting'] ?? '') === 'marketplace_public',
         'exclude_advertise' => in_array('advertise', (array) ($r['exclude_pages'] ?? []), true),
@@ -57,7 +59,7 @@ function promo_house_rules_flags(?string $json): array
 function promo_house_rules_json(array $in): string
 {
     $r = [];
-    foreach (['hide_if_campaign', 'hide_if_listing', 'site_only'] as $k) {
+    foreach (['hide_if_campaign', 'hide_if_listing', 'guests_only', 'site_only'] as $k) {
         if (!empty($in[$k])) {
             $r[$k] = 1;
         }

@@ -833,6 +833,7 @@ function promo_house_columns(PDO $pdo): bool
  *   site_only        — лише місця сайту й блогу, не всередині маркетплейсу;
  *   hide_if_campaign — не показувати користувачу, який уже створив рекламну кампанію;
  *   hide_if_listing  — не показувати користувачу, який уже публікував оголошення;
+ *   guests_only      — лише гостям (увійшовшим не показувати);
  *   exclude_pages    — список сторінок (advertise, cabinet), де кампанія не показується ($page['page']).
  */
 function promo_house_allowed(PDO $pdo, array $row, string $placement, array $page = []): bool
@@ -851,6 +852,9 @@ function promo_house_allowed(PDO $pdo, array $row, string $placement, array $pag
         return false;
     }
     $uid = function_exists('auth_user_id') ? auth_user_id() : null;
+    if ($uid !== null && !empty($rules['guests_only'])) {
+        return false;
+    }
     if ($uid !== null) {
         try {
             if (!empty($rules['hide_if_campaign'])) {
