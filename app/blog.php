@@ -93,6 +93,10 @@ const BLOG_ARTICLES = [
         'uk' => 'programa-dlya-zapysu-igor-insights-capture-ua.md',
         'en' => 'game-recording-insights-capture-alternatives-en.md',
     ],
+    'online-booking-altegio' => [
+        'uk' => 'onlayn-zapys-altegio-ua.md',
+        'en' => 'online-booking-altegio-en.md',
+    ],
 ];
 
 /**
@@ -127,6 +131,7 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-fraud-deepfakes-protection' => ['cybersecurity/anti-scam-deepfakes', 'education-knowledge/detectors', 'cybersecurity/identity-protection'],
     'midjourney-alternatives' => ['multimedia/image-generation', 'multimedia/local-image-generation'],
     'programa-dlya-zapysu-igor-insights-capture' => ['multimedia/for-gamers', 'sports/esports'],
+    'online-booking-altegio' => ['ukrainian-apps/ua-booking'],
 ];
 
 /**

@@ -281,9 +281,9 @@ if ($article !== null) {
             border-bottom: none;
         }
 
-        /* Двоколонкові таблиці («задача → інструмент») переносять текст, щоб на телефоні не було горизонтальної прокрутки. */
-        .article table:not(:has(th:nth-child(3))) th,
-        .article table:not(:has(th:nth-child(3))) td {
+        /* Таблиці до трьох колонок переносять текст, щоб на телефоні не було горизонтальної прокрутки. */
+        .article table:not(:has(th:nth-child(4))) th,
+        .article table:not(:has(th:nth-child(4))) td {
             white-space: normal;
         }
 
