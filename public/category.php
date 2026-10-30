@@ -237,6 +237,7 @@ $subcategoryIcons = [
     'ua-classifieds'         => 'house',
     'ua-charity'             => 'hand-heart',
     'ua-business'            => 'briefcase-business',
+    'ua-booking'             => 'calendar-check',
     // Розробка та IT: LLM-інструменти
     'local-llm'          => 'cpu',
     'llm-inference'      => 'server',

@@ -230,6 +230,7 @@ const ELI_INTENTS = [
     ['телебачення, телеканал, телеканали, радіостанція, радіо, онлайн-кінотеатр', 'ukrainian-apps', 'ua-media', 0.8],
     ['донат, донати, збір, збори, благодійність, волонтер, волонтерство, переселенці, правова допомога, donate, donation, charity', 'ukrainian-apps', 'ua-charity', 1.0],
     ['фоп, рро, прро, документообіг, кеп, sole trader', 'ukrainian-apps', 'ua-business', 1.0],
+    ['онлайн-запис, онлайн запис, запис клієнтів, запис до майстра, журнал записів, crm для салону, салон краси, бʼюті-майстер, booking, appointment', 'ukrainian-apps', 'ua-booking', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */
