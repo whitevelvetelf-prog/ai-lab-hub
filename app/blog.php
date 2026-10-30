@@ -12,7 +12,9 @@ declare(strict_types=1);
  * Формат файлу: YAML-подібний frontmatter (--- title / description ---)
  * і далі Markdown-тіло. Підтримується підмножина Markdown, якої досить для
  * статей-порівнянь: заголовки #/##/###, **жирний**, *курсив*, `код`, [текст](url), списки
- * "- пункт", таблиці "| ... | ... |", роздільник "---", виділений блок-застереження "> текст".
+ * "- пункт", таблиці "| ... | ... |", роздільник "---", виділений блок-застереження "> текст",
+ * дрібний шрифт "^ текст" (дисклеймери в кінці статті). Необов'язкові поля frontmatter
+ * date / updated ("РРРР-ММ-ДД") ідуть у структуровані дані Article на сторінці статті.
  * Посилання на картки й підкатегорії каталогу без id: [текст](product:Назва продукту),
  * [текст](subcategory:slug) — id розв'язується за назвою / slug у БД того сервера, де відкрито
  * сторінку (локально й на хостингу id різні). Розширювати конвертер лише під реальну потребу
@@ -87,6 +89,10 @@ const BLOG_ARTICLES = [
         'uk' => 'alternatyvy-midjourney-ua.md',
         'en' => 'midjourney-alternatives-en.md',
     ],
+    'programa-dlya-zapysu-igor-insights-capture' => [
+        'uk' => 'programa-dlya-zapysu-igor-insights-capture-ua.md',
+        'en' => 'game-recording-insights-capture-alternatives-en.md',
+    ],
 ];
 
 /**
@@ -120,6 +126,7 @@ const BLOG_ARTICLE_TOPICS = [
     'ai-digital-memory-loved-ones' => ['my-home/digital-memory-legacy'],
     'ai-fraud-deepfakes-protection' => ['cybersecurity/anti-scam-deepfakes', 'education-knowledge/detectors', 'cybersecurity/identity-protection'],
     'midjourney-alternatives' => ['multimedia/image-generation', 'multimedia/local-image-generation'],
+    'programa-dlya-zapysu-igor-insights-capture' => ['multimedia/for-gamers', 'sports/esports'],
 ];
 
 /**
@@ -152,7 +159,7 @@ function blog_article_url(string $slug, string $lang, bool $absolute = false): s
     return $absolute ? BLOG_SITE_URL . '/' . $url : $url;
 }
 
-/** @return array{title: string, description: string, body: string}|null */
+/** @return array{title: string, description: string, date: string, updated: string, body: string}|null */
 function blog_read_file(string $filename): ?array
 {
     $path = BLOG_CONTENT_DIR . '/' . $filename;
@@ -165,24 +172,19 @@ function blog_read_file(string $filename): ?array
         return null;
     }
 
-    $title = '';
-    $description = '';
+    $meta = ['title' => '', 'description' => '', 'date' => '', 'updated' => ''];
     $body = $raw;
 
     if (preg_match('/^---\s*\n(.*?)\n---\s*\n(.*)$/s', $raw, $m)) {
         foreach (explode("\n", $m[1]) as $line) {
-            if (preg_match('/^(title|description):\s*"(.*)"\s*$/', trim($line), $fm)) {
-                if ($fm[1] === 'title') {
-                    $title = $fm[2];
-                } else {
-                    $description = $fm[2];
-                }
+            if (preg_match('/^(title|description|date|updated):\s*"(.*)"\s*$/', trim($line), $fm)) {
+                $meta[$fm[1]] = $fm[2];
             }
         }
         $body = $m[2];
     }
 
-    return ['title' => $title, 'description' => $description, 'body' => trim($body)];
+    return $meta + ['body' => trim($body)];
 }
 
 /**
@@ -201,7 +203,7 @@ function blog_file_lang(array $files, string $lang): string
  *
  * $withDrafts — чи віддавати чернетки з BLOG_DRAFTS (лише для працівників / адміністраторів).
  *
- * @return array{title: string, description: string, html: string, lang: string, draft: bool}|null
+ * @return array{title: string, description: string, date: string, updated: string, html: string, lang: string, draft: bool}|null
  */
 function blog_load_article(string $slug, string $lang, bool $withDrafts = false): ?array
 {
@@ -225,6 +227,8 @@ function blog_load_article(string $slug, string $lang, bool $withDrafts = false)
     return [
         'title' => $article['title'],
         'description' => $article['description'],
+        'date' => $article['date'],
+        'updated' => $article['updated'],
         'html' => blog_markdown_to_html($article['body']),
         'lang' => $fileLang,
         'draft' => $draft,
@@ -434,7 +438,7 @@ function blog_inline_html(string $text): string
  * Мінімальний Markdown → HTML для статей блогу.
  * Підтримує: #/##/### заголовки (перший # у тілі пропускається — дублює
  * H1 сторінки), **жирний**, *курсив*, [текст](url), списки "- ", таблиці "| ... |",
- * роздільник "---".
+ * роздільник "---", дрібний шрифт "^ ".
  */
 function blog_markdown_to_html(string $markdown): string
 {
@@ -551,6 +555,13 @@ function blog_markdown_to_html(string $markdown): string
         if (str_starts_with($trimmed, '|')) {
             $flushList();
             $tableBuffer[] = $trimmed;
+            continue;
+        }
+
+        if (str_starts_with($trimmed, '^ ')) {
+            $flushList();
+            $flushTable();
+            $html[] = '<p class="blog-fine">' . blog_inline_html(substr($trimmed, 2)) . '</p>';
             continue;
         }
 

@@ -77,6 +77,38 @@ if ($article !== null) {
             <link rel="alternate" hreflang="<?= htmlspecialchars($altLang, ENT_QUOTES) ?>" href="<?= htmlspecialchars(blog_article_url($slug, $altLang, true), ENT_QUOTES) ?>">
         <?php endforeach; ?>
         <link rel="alternate" hreflang="x-default" href="<?= htmlspecialchars(blog_article_url($slug, BLOG_DEFAULT_LANG, true), ENT_QUOTES) ?>">
+        <?php
+        $canonicalUrl = blog_article_url($slug, $article['lang'], true);
+        $ogImage = BLOG_SITE_URL . '/logo.png';
+        // Структуровані дані статті: лише факти з frontmatter, без рейтингів і відгуків.
+        $articleLd = [
+            '@context' => 'https://schema.org',
+            '@type' => 'Article',
+            'headline' => $article['title'],
+            'description' => $article['description'],
+            'inLanguage' => $article['lang'],
+            'mainEntityOfPage' => $canonicalUrl,
+            'image' => $ogImage,
+            'author' => ['@type' => 'Organization', 'name' => 'AI LAB HUB', 'url' => BLOG_SITE_URL . '/'],
+            'publisher' => ['@type' => 'Organization', 'name' => 'AI LAB HUB', 'logo' => ['@type' => 'ImageObject', 'url' => $ogImage]],
+        ];
+        if ($article['date'] !== '') {
+            $articleLd['datePublished'] = $article['date'];
+            $articleLd['dateModified'] = $article['updated'] !== '' ? $article['updated'] : $article['date'];
+        }
+        ?>
+        <meta property="og:type" content="article">
+        <meta property="og:site_name" content="AI LAB HUB">
+        <meta property="og:title" content="<?= htmlspecialchars($article['title'], ENT_QUOTES) ?>">
+        <meta property="og:description" content="<?= htmlspecialchars($article['description'], ENT_QUOTES) ?>">
+        <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES) ?>">
+        <meta property="og:image" content="<?= htmlspecialchars($ogImage, ENT_QUOTES) ?>">
+        <meta property="og:locale" content="<?= $article['lang'] === 'en' ? 'en_US' : 'uk_UA' ?>">
+        <?php if ($article['date'] !== ''): ?>
+            <meta property="article:published_time" content="<?= htmlspecialchars($articleLd['datePublished'], ENT_QUOTES) ?>">
+            <meta property="article:modified_time" content="<?= htmlspecialchars($articleLd['dateModified'], ENT_QUOTES) ?>">
+        <?php endif; ?>
+        <script type="application/ld+json"><?= json_encode($articleLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     <?php else: ?>
         <title><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?> — AI LAB HUB</title>
     <?php endif; ?>
@@ -247,6 +279,18 @@ if ($article !== null) {
 
         .article tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        /* Двоколонкові таблиці («задача → інструмент») переносять текст, щоб на телефоні не було горизонтальної прокрутки. */
+        .article table:not(:has(th:nth-child(3))) th,
+        .article table:not(:has(th:nth-child(3))) td {
+            white-space: normal;
+        }
+
+        .article p.blog-fine {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.6);
         }
 
         .blog-note {
