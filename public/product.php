@@ -15,6 +15,7 @@ require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/subcategory-note.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/blog.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -48,7 +49,7 @@ if ($product !== false) {
 
 
     $catStmt = $pdo->prepare(
-        "SELECT c.id, c.name, c.name_en
+        "SELECT c.id, c.name, c.name_en, c.slug
          FROM product_categories pc
          JOIN categories c ON c.id = pc.category_id
          WHERE pc.product_id = :id
@@ -58,9 +59,10 @@ if ($product !== false) {
     $categories = $catStmt->fetchAll();
 
     $subStmt = $pdo->prepare(
-        "SELECT s.id, s.name, s.name_en, s.slug
+        "SELECT s.id, s.name, s.name_en, s.slug, sc.slug AS category_slug
          FROM product_subcategories ps
          JOIN subcategories s ON s.id = ps.subcategory_id
+         JOIN categories sc ON sc.id = s.category_id
          WHERE ps.product_id = :id
          ORDER BY s.name"
     );
@@ -445,6 +447,40 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             max-width: 62ch;
         }
 
+        /* 8. Статті на цю тему */
+        .related-articles {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            gap: 12px;
+        }
+
+        .related-articles li {
+            padding: 16px 18px;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+        }
+
+        .related-articles__link {
+            color: #bcd0ff;
+            font-weight: 700;
+            text-decoration: none;
+            overflow-wrap: anywhere;
+        }
+
+        .related-articles__link:hover {
+            color: #ffffff;
+            text-decoration: underline;
+        }
+
+        .related-articles__desc {
+            margin: 6px 0 0;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+
         /* 7. Тарифні плани */
         .plans {
             display: grid;
@@ -661,7 +697,31 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         </section>
         <?php endif; ?>
 
-        <!-- 8. Нижні бейджі: платформа і рівень навичок -->
+        <!-- 8. Статті блогу на тему продукту (за підкатегоріями й категоріями, BLOG_ARTICLE_TOPICS) -->
+        <?php
+        $relatedArticles = blog_articles_for_taxonomy(
+            array_column($categories, 'slug'),
+            array_map(static fn(array $s): string => $s['category_slug'] . '/' . $s['slug'], $subcategories),
+            current_lang()
+        );
+        ?>
+        <?php if ($relatedArticles !== []): ?>
+        <section class="section">
+            <h2 class="section__title"><?= htmlspecialchars(t('product_related_articles_title'), ENT_QUOTES) ?></h2>
+            <ul class="related-articles">
+                <?php foreach ($relatedArticles as $relatedArticle): ?>
+                    <li>
+                        <a class="related-articles__link" href="<?= htmlspecialchars(blog_article_url($relatedArticle['slug'], current_lang()), ENT_QUOTES) ?>" lang="<?= htmlspecialchars($relatedArticle['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($relatedArticle['title'], ENT_QUOTES) ?></a>
+                        <?php if ($relatedArticle['description'] !== ''): ?>
+                            <p class="related-articles__desc" lang="<?= htmlspecialchars($relatedArticle['lang'], ENT_QUOTES) ?>"><?= htmlspecialchars($relatedArticle['description'], ENT_QUOTES) ?></p>
+                        <?php endif; ?>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+        <?php endif; ?>
+
+        <!-- 9. Нижні бейджі: платформа і рівень навичок -->
         <div class="footer-badges">
             <div class="footer-badge">
                 <span class="footer-badge__label"><?= htmlspecialchars(t('product_platform_label'), ENT_QUOTES) ?></span>

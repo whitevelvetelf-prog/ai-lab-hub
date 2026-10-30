@@ -404,6 +404,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'product_features_title' => 'Основні функції',
     'product_audience_title' => 'Для кого призначений',
     'product_plans_title'    => 'Тарифні плани',
+    'product_related_articles_title' => 'Статті на цю тему',
     'product_plan_select'    => 'Обрати',
     'product_platform_label' => 'Платформа',
     'product_skill_label'    => 'Рівень навичок',

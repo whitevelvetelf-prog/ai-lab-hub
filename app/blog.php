@@ -294,6 +294,36 @@ function blog_article_has_topic(string $slug, string $cat, string $sub = ''): bo
 }
 
 /**
+ * Статті на тему продукту (блок «Статті на цю тему» на product.php): тема-підкатегорія
+ * збігається, якщо продукт у цій підкатегорії; тема-категорія — якщо продукт у цій категорії.
+ * Найновіші першими, мовою $lang з тим самим фолбеком, що й список блогу.
+ *
+ * @param list<string> $catSlugs  slug-и категорій продукту
+ * @param list<string> $subTopics підкатегорії продукту як «категорія/підкатегорія»
+ * @return list<array{slug: string, title: string, description: string, lang: string}>
+ */
+function blog_articles_for_taxonomy(array $catSlugs, array $subTopics, string $lang, int $limit = 3): array
+{
+    $found = [];
+    foreach (blog_list_articles($lang) as $article) {
+        foreach (blog_article_topics($article['slug']) as $topic) {
+            $match = $topic['sub'] === ''
+                ? in_array($topic['cat'], $catSlugs, true)
+                : in_array($topic['cat'] . '/' . $topic['sub'], $subTopics, true);
+            if ($match) {
+                $found[] = $article;
+                break;
+            }
+        }
+        if (count($found) >= $limit) {
+            break;
+        }
+    }
+
+    return $found;
+}
+
+/**
  * Назви тем, які трапляються в BLOG_ARTICLE_TOPICS, з БД: категорії в
  * порядку каталогу (за id) і їхні підкатегорії. Тема, slug якої в БД нема
  * (таксономії локально й на хостингу можуть розходитися), сюди не потрапляє.
