@@ -25,22 +25,16 @@ SET NAMES utf8mb4;
 --   * Допомога та благодійність / Help & Charity (slug ua-charity)
 --   * Для бізнесу та ФОП / Business & Sole Traders (slug ua-business)
 --   * Онлайн-запис на послуги / Online Booking & Appointments (slug ua-booking)
--- + 5 нових продуктів (якщо продукт із такою адресою чи назвою вже є — лише прив'язка),
---   2 наявних лише прив'язано (тексти не змінюються): Helsi, My Doctor Eleks
+-- + 1 нових продуктів (якщо продукт із такою адресою чи назвою вже є — лише прив'язка),
+--   0 наявних лише прив'язано (тексти не змінюються): 
 -- Тексти UA/EN написано за офіційними сайтами та описами застосунків в App Store (регіон UA), звірено 2026-10-30.
 -- Ціни не вказано: план «Ціна: див. сайт» (0, one_time); Free — застосунок безкоштовний у магазині застосунків.
 -- Категорія чутлива (categories.search_only_on_match = 1): це не АІ-інструменти, тож Еля пропонує їх лише на прямі запити
 --   (банк, Дія, тривога, світло, пошта…); інтенти запасного пошуку Елі — у кінці файлу (tools/eli-intents.php).
--- Пропущено: Altegio (за даними AIN.UA і dev.ua — новий бренд російської YCLIENTS; рішення власника сайту), Bumpix (сайт російською, походження неясне), ANNA і CleverBox (походження не підтверджено), EasyWeek (німецька компанія).
+-- Altegio додано на прохання власника сайту (2026-10-30); у тексті картки — лише дані компанії, без твердження, що вона українська.
 -- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
 -- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
---   Bookon CRM — Онлайн-запис на послуги
---   Sprava — Онлайн-запис на послуги
---   bety — Онлайн-запис на послуги
---   PYFO — Онлайн-запис на послуги
---   ShineBooking — Онлайн-запис на послуги
---   Helsi (наявний) — Онлайн-запис на послуги
---   My Doctor Eleks (наявний) — Онлайн-запис на послуги
+--   Altegio — Онлайн-запис на послуги
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
@@ -75,163 +69,36 @@ INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @c
 INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Для бізнесу та ФОП', 'Business & Sole Traders', 'ua-business' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-business');
 INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Онлайн-запис на послуги', 'Online Booking & Appointments', 'ua-booking' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking');
 
--- Bookon CRM — Онлайн-запис на послуги
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'binotel.ua/ua/bookon' OR LOWER(`name`) = 'bookon crm')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Bookon CRM', NULL, 'https://www.binotel.ua/ua/bookon', NULL, NULL, 'CRM і онлайн-запис від Binotel для салонів краси, барбершопів і бізнесу у сфері послуг.', 'CRM and online booking from Binotel for beauty salons, barbershops and other service businesses.', 'Bookon CRM — система керування бізнесом у сфері послуг від української компанії Binotel. Клієнти записуються онлайн 24/7 із сайту чи соцмереж без дзвінків, а в журналі записів видно графік кожного майстра. Є картка клієнта з історією візитів, дзвінки й SMS з профілю, нагадування проти неявок, аналітика по майстрах і за період. Мобільний застосунок Bookon Biz дає керувати записами з телефона. Ліцензія Bookon — 750 грн/міс для салону з 5 майстрами, Bookon One — 375 грн/міс до 2 майстрів (за даними сайту Binotel).', 'Bookon CRM is a management system for service businesses from the Ukrainian company Binotel. Clients book online 24/7 from your website or social media without calling, and the appointment book shows each specialist''s schedule. It has client profiles with visit history, calls and SMS from the profile, reminders against no-shows, and analytics by specialist and period. The Bookon Biz mobile app lets you manage bookings from your phone. The Bookon licence is UAH 750/month for a salon with 5 specialists, Bookon One is UAH 375/month for up to 2 (per the Binotel website).', 'Онлайн-запис 24/7 із сайту й соцмереж
-Журнал записів з доступом для кожного майстра
-Історія візитів, дзвінки й SMS з картки клієнта
-Аналітика по майстрах і салону
-Застосунок Bookon Biz для iOS та Android', '24/7 online booking from website and social media
-Appointment book with per-specialist access
-Visit history, calls and SMS from the client profile
-Analytics by specialist and for the whole salon
-Bookon Biz app for iOS and Android', 'Салонам краси, барбершопам і компаніям сфери послуг.', 'Beauty salons, barbershops and service companies.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'binotel.ua/ua/bookon' OR LOWER(`name`) = 'bookon crm') ORDER BY `id` LIMIT 1);
+-- Altegio — Онлайн-запис на послуги
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'alteg.io/uk' OR LOWER(`name`) = 'altegio')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Altegio', NULL, 'https://alteg.io/uk/', NULL, NULL, 'Система онлайн-запису та керування бізнесом у сфері послуг: журнал записів, CRM, нагадування, фінанси, склад і зарплати.', 'An online booking and business management system for service businesses: appointment book, CRM, reminders, finance, inventory and payroll.', 'Altegio — платформа для салонів краси, клінік, фітнес-студій, шкіл, автосервісів та інших бізнесів, що працюють за записом. Компанія ALTEGIO LTD за власними даними — європейський ІТ-холдинг з офісами в 7 країнах; має українську версію сайту й застосунків і заявляє, що не надає послуги клієнтам у Росії та Білорусі. Клієнти записуються онлайн 24/7 із сайту, застосунку, месенджерів і соцмереж, нагадування надходять через WhatsApp, SMS, email і push. Є CRM з історією візитів і абонементами, фінансовий облік, розрахунок зарплат, складський облік витратних матеріалів, програма лояльності й аналітика по філіях. Клієнтський застосунок Altegio.me збирає всі записи в одному місці, а MCP-сервер дає підключити Claude, ChatGPT чи Cursor до даних бізнесу. Є 7 днів безкоштовного пробного періоду.', 'Altegio is a platform for beauty salons, clinics, fitness studios, schools, car services and other appointment-based businesses. ALTEGIO LTD describes itself as a European IT holding with offices in 7 countries; it has a Ukrainian version of its website and apps and states that it does not serve clients in Russia or Belarus. Clients book online 24/7 from a website, app, messengers and social media, with reminders via WhatsApp, SMS, email and push. It includes a CRM with visit history and memberships, financial accounting, payroll, inventory of consumables, a loyalty programme and analytics across branches. The Altegio.me client app keeps all bookings in one place, and an MCP server lets you connect Claude, ChatGPT or Cursor to your business data. A 7-day free trial is available.', 'Онлайн-запис 24/7 із сайту, застосунку й месенджерів
+Нагадування через WhatsApp, SMS, email і push
+CRM, абонементи й програма лояльності
+Фінанси, зарплати й складський облік
+Клієнтський застосунок Altegio.me
+MCP-сервер для Claude, ChatGPT і Cursor', '24/7 online booking from website, app and messengers
+Reminders via WhatsApp, SMS, email and push
+CRM, memberships and loyalty programme
+Finance, payroll and inventory
+Altegio.me client app
+MCP server for Claude, ChatGPT and Cursor', 'Салонам краси, клінікам, фітнес-студіям, школам, автосервісам і мережам з кількома філіями.', 'Beauty salons, clinics, fitness studios, schools, car services and multi-branch chains.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'alteg.io/uk' OR LOWER(`name`) = 'altegio') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'CRM and online booking from Binotel for beauty salons, barbershops and other service businesses.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Bookon CRM is a management system for service businesses from the Ukrainian company Binotel. Clients book online 24/7 from your website or social media without calling, and the appointment book shows each specialist''s schedule. It has client profiles with visit history, calls and SMS from the profile, reminders against no-shows, and analytics by specialist and period. The Bookon Biz mobile app lets you manage bookings from your phone. The Bookon licence is UAH 750/month for a salon with 5 specialists, Bookon One is UAH 375/month for up to 2 (per the Binotel website).', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '24/7 online booking from website and social media
-Appointment book with per-specialist access
-Visit history, calls and SMS from the client profile
-Analytics by specialist and for the whole salon
-Bookon Biz app for iOS and Android', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Beauty salons, barbershops and service companies.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An online booking and business management system for service businesses: appointment book, CRM, reminders, finance, inventory and payroll.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Altegio is a platform for beauty salons, clinics, fitness studios, schools, car services and other appointment-based businesses. ALTEGIO LTD describes itself as a European IT holding with offices in 7 countries; it has a Ukrainian version of its website and apps and states that it does not serve clients in Russia or Belarus. Clients book online 24/7 from a website, app, messengers and social media, with reminders via WhatsApp, SMS, email and push. It includes a CRM with visit history and memberships, financial accounting, payroll, inventory of consumables, a loyalty programme and analytics across branches. The Altegio.me client app keeps all bookings in one place, and an MCP server lets you connect Claude, ChatGPT or Cursor to your business data. A 7-day free trial is available.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '24/7 online booking from website, app and messengers
+Reminders via WhatsApp, SMS, email and push
+CRM, memberships and loyalty programme
+Finance, payroll and inventory
+Altegio.me client app
+MCP server for Claude, ChatGPT and Cursor', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Beauty salons, clinics, fitness studios, schools, car services and multi-branch chains.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Sprava — Онлайн-запис на послуги
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mysprava.app' OR LOWER(`name`) = 'sprava')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sprava', NULL, 'https://www.mysprava.app', NULL, NULL, 'Застосунок онлайн-запису для майстрів і невеликих салонів: посилання для запису, SMS-нагадування й облік заробітку.', 'An online booking app for beauty professionals and small salons: booking link, SMS reminders and earnings tracking.', 'Sprava — український застосунок для запису клієнтів. Майстер додає посилання на запис в Instagram, і клієнт сам обирає послугу, спеціаліста й вільний час. Застосунок нагадує клієнтам про візит через SMS і сповіщення, зберігає історію та нотатки по клієнтах, показує записи й графіки всієї команди та рахує заробіток.', 'Sprava is a Ukrainian app for client bookings. A specialist adds a booking link to Instagram, and clients choose the service, specialist and free time themselves. The app reminds clients about visits by SMS and notifications, keeps client history and notes, shows the whole team''s bookings and schedules, and tracks earnings.', 'Персональна сторінка онлайн-запису
-SMS-нагадування клієнтам
-Клієнтська база з історією й нотатками
-Графіки команди та облік заробітку', 'Personal online booking page
-SMS reminders for clients
-Client base with history and notes
-Team schedules and earnings tracking', 'Б''юті-майстрам, салонам краси, барбершопам, косметологам, масажистам і тренерам, які приймають клієнтів за записом.', 'Beauty professionals, salons, barbershops, cosmetologists, massage therapists and trainers who work by appointment.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mysprava.app' OR LOWER(`name`) = 'sprava') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An online booking app for beauty professionals and small salons: booking link, SMS reminders and earnings tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sprava is a Ukrainian app for client bookings. A specialist adds a booking link to Instagram, and clients choose the service, specialist and free time themselves. The app reminds clients about visits by SMS and notifications, keeps client history and notes, shows the whole team''s bookings and schedules, and tracks earnings.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Personal online booking page
-SMS reminders for clients
-Client base with history and notes
-Team schedules and earnings tracking', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Beauty professionals, salons, barbershops, cosmetologists, massage therapists and trainers who work by appointment.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- bety — Онлайн-запис на послуги
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bety.com.ua' OR LOWER(`name`) = 'bety')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'bety', NULL, 'https://bety.com.ua', NULL, NULL, 'Застосунок для б''юті-майстрів: міні-сайт для запису, передоплата, нагадування в Telegram і SMS, облік доходів.', 'An app for beauty professionals: booking mini-site, prepayment, Telegram and SMS reminders, income tracking.', 'bety — київський застосунок для б''юті-майстрів, який бере на себе рутину запису. Кожен майстер отримує міні-сайт з онлайн-записом 24/7: клієнт сам обирає послугу й час, може додати фото-референс, перенести чи скасувати візит. Передоплата зменшує кількість скасувань в останню мить, нагадування надходять клієнтам через Telegram-бот і SMS, а після візиту застосунок збирає відгук і запрошує на повторний запис.', 'bety is a Kyiv-made app for beauty professionals that takes over booking routine. Each specialist gets a mini-site with 24/7 online booking: clients pick the service and time, can attach a reference photo, reschedule or cancel. Prepayment cuts last-minute cancellations, reminders reach clients via a Telegram bot and SMS, and after the visit the app collects feedback and invites clients to rebook.', 'Міні-сайт з онлайн-записом
-Передоплата за візит
-Нагадування через Telegram і SMS
-Відгуки й запрошення на повторний запис', 'Mini-site with online booking
-Prepayment for visits
-Reminders via Telegram and SMS
-Feedback and rebooking invitations', 'Майстрам манікюру, брів і вій, візажистам, перукарям і косметологам.', 'Nail, brow and lash artists, make-up artists, hairdressers and cosmetologists.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bety.com.ua' OR LOWER(`name`) = 'bety') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An app for beauty professionals: booking mini-site, prepayment, Telegram and SMS reminders, income tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'bety is a Kyiv-made app for beauty professionals that takes over booking routine. Each specialist gets a mini-site with 24/7 online booking: clients pick the service and time, can attach a reference photo, reschedule or cancel. Prepayment cuts last-minute cancellations, reminders reach clients via a Telegram bot and SMS, and after the visit the app collects feedback and invites clients to rebook.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Mini-site with online booking
-Prepayment for visits
-Reminders via Telegram and SMS
-Feedback and rebooking invitations', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Nail, brow and lash artists, make-up artists, hairdressers and cosmetologists.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- PYFO — Онлайн-запис на послуги
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6502990738' OR LOWER(`name`) = 'pyfo')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'PYFO', NULL, 'https://apps.apple.com/ua/app/id6502990738', NULL, NULL, 'Застосунок і CRM для б''юті-майстрів: календар записів, особистий сайт і каталог майстрів.', 'An app and CRM for beauty professionals: booking calendar, personal website and a directory of specialists.', 'PYFO допомагає б''юті-майстрам приймати записи, вести клієнтську базу й знаходити нових клієнтів. Кожен майстер має особисту сторінку, з якої клієнти записуються напряму, а в каталозі застосунку майстрів шукають за рейтингом, локацією та роботами. Можна розміщувати портфоліо й збирати відгуки.', 'PYFO helps beauty professionals take bookings, keep a client base and find new clients. Each specialist has a personal page where clients book directly, and the in-app directory lets people find specialists by rating, location and work. You can post a portfolio and collect reviews.', 'Онлайн-запис із застосунку та особистого сайту
-Каталог майстрів з пошуком за локацією
-CRM і розклад
-Портфоліо та відгуки', 'Online booking from the app and a personal site
-Specialist directory with location search
-CRM and schedule
-Portfolio and reviews', 'Б''юті-майстрам і їхнім клієнтам.', 'Beauty professionals and their clients.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6502990738' OR LOWER(`name`) = 'pyfo') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'An app and CRM for beauty professionals: booking calendar, personal website and a directory of specialists.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'PYFO helps beauty professionals take bookings, keep a client base and find new clients. Each specialist has a personal page where clients book directly, and the in-app directory lets people find specialists by rating, location and work. You can post a portfolio and collect reviews.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Online booking from the app and a personal site
-Specialist directory with location search
-CRM and schedule
-Portfolio and reviews', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Beauty professionals and their clients.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- ShineBooking — Онлайн-запис на послуги
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'shinebooking.com.ua' OR LOWER(`name`) = 'shinebooking')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ShineBooking', NULL, 'https://shinebooking.com.ua', NULL, NULL, 'Пошук б''юті-майстрів і салонів на мапі з онлайн-записом, а для майстрів — CRM і персональний сайт.', 'Find beauty professionals and salons on a map and book online; for professionals — a CRM and a personal site.', 'ShineBooking поєднує клієнтів і б''юті-майстрів. Клієнти шукають майстрів поруч на мапі, фільтрують за послугами, дивляться відеопрезентації та відгуки й записуються на вільний час у два кліки. Майстри отримують персональний сайт з власним посиланням для Instagram чи TikTok, календар без накладок, клієнтську базу, аналітику доходів і синхронізацію з Google та Apple Calendar.', 'ShineBooking connects clients with beauty professionals. Clients find specialists nearby on a map, filter by service, watch video profiles and reviews, and book a free slot in two taps. Professionals get a personal site with their own link for Instagram or TikTok, a calendar without double bookings, a client base, income analytics and sync with Google and Apple Calendar.', 'Пошук майстрів на мапі з фільтрами
-Онлайн-запис 24/7
-Персональний сайт майстра
-Аналітика й синхронізація з Google/Apple Calendar', 'Map search for specialists with filters
-24/7 online booking
-Personal site for each specialist
-Analytics and Google/Apple Calendar sync', 'Клієнтам, які шукають майстра, і б''юті-майстрам.', 'Clients looking for a specialist, and beauty professionals.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-10-30 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'shinebooking.com.ua' OR LOWER(`name`) = 'shinebooking') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Find beauty professionals and salons on a map and book online; for professionals — a CRM and a personal site.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ShineBooking connects clients with beauty professionals. Clients find specialists nearby on a map, filter by service, watch video profiles and reviews, and book a free slot in two taps. Professionals get a personal site with their own link for Instagram or TikTok, a calendar without double bookings, a client base, income analytics and sync with Google and Apple Calendar.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Map search for specialists with filters
-24/7 online booking
-Personal site for each specialist
-Analytics and Google/Apple Calendar sync', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Clients looking for a specialist, and beauty professionals.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Helsi — Онлайн-запис на послуги (наявний, лише прив'язка)
-SET @new = 0;
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'helsi' ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-
--- My Doctor Eleks — Онлайн-запис на послуги (наявний, лише прив'язка)
-SET @new = 0;
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'my doctor eleks' ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
 -- Інтенти запасного пошуку Елі (tools/eli-intents.php, лише ukrainian-apps)
 INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'онлайн запис', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-booking' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-booking' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'онлайн запис' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-booking' LIMIT 1));
