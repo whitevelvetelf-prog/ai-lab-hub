@@ -278,6 +278,18 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
         }
 
+        .product-head__logo--img {
+            overflow: hidden;
+            background: #ffffff;
+        }
+
+        .product-head__logo--img img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .product-head__name {
             margin: 0;
             font-size: clamp(1.8rem, 5vw, 2.6rem);
@@ -608,7 +620,16 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         ?>
         <!-- 1. Логотип + назва продукту -->
         <div class="product-head">
+            <?php
+            // Логотип — лише локальний файл із assets/images/logos (CRM-завантаження або іконка з магазину); інакше ініціали.
+            $logoRel = ltrim((string) ($product['logo_url'] ?? ''), '/');
+            $hasLogo = preg_match('#^assets/images/logos/[A-Za-z0-9._-]+\.(png|jpe?g|webp|svg)$#', $logoRel) === 1 && is_file(__DIR__ . '/' . $logoRel);
+            ?>
+            <?php if ($hasLogo): ?>
+            <div class="product-head__logo product-head__logo--img"><img src="/<?= htmlspecialchars($logoRel, ENT_QUOTES) ?>" alt="" width="64" height="64"></div>
+            <?php else: ?>
             <div class="product-head__logo"><?= htmlspecialchars(product_initials($product['name']), ENT_QUOTES) ?></div>
+            <?php endif; ?>
             <h1 class="product-head__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h1>
             <?php $saveLabel = $isSaved ? t('saved_btn_unsave') : t('saved_btn_save'); ?>
             <button type="button"
