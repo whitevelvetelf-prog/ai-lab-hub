@@ -86,6 +86,120 @@ require_once __DIR__ . '/marketplace.php';
         }
     }
 
+    /* ===== Кнопка «Підтримати проєкт» (support_button_html(), app/donation-history.php) =====
+       Головна (блок між hero і категоріями), кабінет (картка зверху), порожня історія донатів.
+       Градієнт як у кнопки «Спитати Елю» вікна реклами, темний текст бренду, іконка серця.
+       Ніколи не fixed/sticky — стоїть у потоці сторінки. Підйом на 2px при наведенні;
+       prefers-reduced-motion вимикає рух. */
+    .support-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 48px;
+        padding: 12px 26px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #6b8cff, #8fb4ff);
+        color: #00032c;
+        font-size: 1.02rem;
+        font-weight: 800;
+        line-height: 1.2;
+        text-align: center;
+        text-decoration: none;
+        box-shadow: 0 6px 18px rgba(107, 140, 255, 0.35);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .support-btn:hover,
+    .support-btn:focus-visible {
+        color: #00032c;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(107, 140, 255, 0.45);
+    }
+
+    .support-btn:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 3px;
+    }
+
+    .support-btn svg {
+        flex: 0 0 auto;
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Картка зверху кабінету */
+    .support-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 14px 24px;
+        margin: 0 0 18px;
+        padding: 18px 20px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(143, 180, 255, 0.35);
+    }
+
+    .support-card__title {
+        margin: 0 0 4px;
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: #ffffff;
+    }
+
+    .support-card__sub {
+        margin: 0;
+        font-size: 0.93rem;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .support-card__sub a {
+        color: #bcd0ff;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .support-card__sub a:hover {
+        color: #ffffff;
+    }
+
+    .support-card .support-btn {
+        flex: 0 0 auto;
+    }
+
+    @media (max-width: 640px) {
+        .support-card {
+            flex-direction: column;
+            align-items: stretch;
+            padding: 16px 14px;
+        }
+
+        .support-card .support-btn {
+            width: 100%;
+            padding: 12px 16px;
+        }
+    }
+
+    /* Пункт меню «Підтримати проєкт»: звичайне посилання меню з серцем у кольорі градієнта. */
+    .site-nav__link--support svg {
+        width: 16px;
+        height: 16px;
+        color: #8fb4ff;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .support-btn {
+            transition: none;
+        }
+
+        .support-btn:hover,
+        .support-btn:focus-visible {
+            transform: none;
+        }
+    }
+
     /* ===== Кнопка «Викликати Асистента» — найпомітніша дія шапки =====
        Холодний яскравий градієнт (бірюзовий → електрично-синій → фіолетовий), білий текст
        із підсвіткою, неонове світіння й м'яка пульсація кільця. Пульсація вимикається при

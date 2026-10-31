@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/marketplace.php';
+require_once __DIR__ . '/../app/donation-history.php'; // support_button_html()
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -315,6 +316,52 @@ $categoryIcons = [
             }
         }
 
+        /* Блок «Підтримати проєкт» між hero і категоріями (кнопка .support-btn — app/footer.php). */
+        .support-band {
+            width: 100%;
+            max-width: 1080px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px 28px;
+            margin: 8px 0 40px;
+            padding: 22px 28px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(143, 180, 255, 0.35);
+            box-shadow: 0 10px 30px rgba(0, 3, 44, 0.35);
+        }
+
+        .support-band__title {
+            margin: 0 0 4px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .support-band__sub {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.98rem;
+        }
+
+        .support-band .support-btn {
+            flex: 0 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .support-band {
+                flex-direction: column;
+                align-items: stretch;
+                text-align: center;
+                padding: 20px 16px;
+                margin-bottom: 32px;
+            }
+
+            .support-band .support-btn {
+                width: 100%;
+            }
+        }
+
         .directions {
             width: 100%;
             max-width: 1080px;
@@ -423,6 +470,14 @@ $categoryIcons = [
                 </a>
                 <?php endif; ?>
             </div>
+        </section>
+
+        <section class="support-band" aria-labelledby="support-band-title">
+            <div class="support-band__text">
+                <h2 class="support-band__title" id="support-band-title"><?= htmlspecialchars(t('support_home_title'), ENT_QUOTES) ?></h2>
+                <p class="support-band__sub"><?= htmlspecialchars(t('support_home_text'), ENT_QUOTES) ?></p>
+            </div>
+            <?= support_button_html() ?>
         </section>
 
         <section class="directions">

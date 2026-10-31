@@ -451,6 +451,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'account_crm_list_link'      => 'список продуктів',
     'account_crm_add_link'       => 'додати новий AI-продукт',
     'account_crm_ads_link'       => 'реклама',
+    'account_crm_donations_link' => 'донати',
     'account_logout'             => 'Вийти з акаунту',
 
     // --- account.php: акордеон-структура кабінету ---
@@ -671,6 +672,35 @@ $GLOBALS['TRANSLATIONS'] = [
     'donate_copy_failed'   => 'Не вдалося скопіювати — виділіть текст і скопіюйте вручну',
     'donate_legal_note'    => 'Донат добровільний, не є оплатою послуг і поверненню не підлягає.',
     'donate_terms_link'    => 'Умови використання',
+
+    // --- Кнопка «Підтримати проєкт» (головна, кабінет, меню) та історія донатів (app/donation-history.php) ---
+    'support_cta_btn'       => 'Підтримати проєкт',
+    'support_home_title'    => 'AI LAB HUB вам корисний?',
+    'support_home_text'     => 'Каталог безкоштовний і незалежний. Добровільний донат допомагає додавати нові інструменти й тримати описи актуальними.',
+    'support_account_title' => 'Дякуємо, що ви з нами!',
+    'support_account_text'  => 'Якщо AI LAB HUB вам допомагає, ви можете підтримати його розвиток донатом будь-якого розміру.',
+    'support_account_history_link' => 'Історія підтримки',
+    'donhist_title'         => 'Мої підтримки проєкту',
+    'donhist_empty'         => 'Тут поки немає донатів. Якщо вирішите підтримати AI LAB HUB, ваш донат з’явиться в цьому списку після того, як ми його підтвердимо. Дякуємо, що ви просто тут!',
+    'donhist_note'          => 'Донати надходять через банк, тому з’являються тут після ручного підтвердження, зазвичай протягом кількох днів. Якщо ви задонатили, а запису немає, напишіть нам через «Контакти».',
+    'donhist_col_date'      => 'Дата',
+    'donhist_col_amount'    => 'Сума',
+    'donhist_col_status'    => 'Статус',
+    'donhist_col_method'    => 'Спосіб оплати',
+    'donhist_paid'          => 'сплачено',
+    'donhist_total'         => 'Усього отримано: %s',
+    'donhist_prev'          => '← Новіші',
+    'donhist_next'          => 'Старіші →',
+    'donhist_page'          => 'Сторінка %1$d з %2$d',
+    'donhist_status_received'  => 'Отримано',
+    'donhist_status_pending'   => 'Очікується',
+    'donhist_status_refunded'  => 'Повернено',
+    'donhist_status_cancelled' => 'Скасовано',
+    'donhist_method_jar'       => 'Банка monobank',
+    'donhist_method_card'      => 'Переказ на картку',
+    'donhist_method_iban_uah'  => 'Банківський переказ (гривня)',
+    'donhist_method_iban_intl' => 'Міжнародний переказ',
+    'donhist_method_other'     => 'Інше',
 
     // --- Відеореклама (app/promo.php, public/promo-serve.php → public/assets/js/sponsored.js) ---
     'promo_label'            => 'Реклама',

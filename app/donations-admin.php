@@ -57,6 +57,7 @@ function donations_admin_render(PDO $pdo, array $user): void
                         </div>
                         <?php endif; ?>
                         <p class="dn-muted">Усі поля необов'язкові: на сторінці <a href="donate.php" target="_blank" rel="noopener">donate.php</a> показуються лише заповнені. Поки сторінку вимкнено, кнопка «Підтримати проєкт» у підвалі веде на неї, але там лише нейтральний текст «Скоро».</p>
+                        <p class="dn-muted">Облік отриманих донатів (історія для користувачів у кабінеті): <a href="crm-donations.php">CRM → Донати</a>.</p>
 
                         <form method="post" action="donations-admin-action.php" class="dn-form" autocomplete="off">
                             <input type="hidden" name="csrf" value="<?= $e(donate_csrf_token()) ?>">

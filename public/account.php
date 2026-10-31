@@ -19,6 +19,7 @@ require_once __DIR__ . '/../app/listing-account.php'; // розділ «Мої �
 require_once __DIR__ . '/../app/asset-account.php';   // розділ «Мої цифрові матеріали»
 require_once __DIR__ . '/../app/listing-admin-cabinet.php'; // розділ «Маркетплейс: оголошення» (модерація, employee/admin)
 require_once __DIR__ . '/../app/donations-admin.php'; // розділ «Донати» (реквізити, лише admin)
+require_once __DIR__ . '/../app/donation-history.php'; // «Мої підтримки проєкту» + картка «Підтримати проєкт»
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -1304,6 +1305,15 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                 <div class="notice notice--error"><?= e($oauthError) ?></div>
             <?php endif; ?>
 
+            <div class="support-card">
+                <div class="support-card__text">
+                    <p class="support-card__title"><?= htmlspecialchars(t('support_account_title'), ENT_QUOTES) ?></p>
+                    <p class="support-card__sub"><?= htmlspecialchars(t('support_account_text'), ENT_QUOTES) ?>
+                        <a href="#acc-donations" data-accordion-jump="acc-donations"><?= htmlspecialchars(t('support_account_history_link'), ENT_QUOTES) ?></a></p>
+                </div>
+                <?= support_button_html() ?>
+            </div>
+
             <div class="accordion" id="acc-saved">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-saved-panel">
                     <span class="accordion__title"><?= htmlspecialchars(t('account_saved_title'), ENT_QUOTES) ?></span>
@@ -1324,6 +1334,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                     </div>
                 </div>
             </div>
+
+            <?php donhist_account_render($pdo, $user); ?>
 
             <div class="accordion" id="acc-login-methods">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-login-methods-panel">
@@ -1675,7 +1687,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                             <div class="staff-note">
                                 <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
-                                · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a><?php endif; ?>.
+                                · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a>
+                                · <a href="crm-donations.php"><?= htmlspecialchars(t('account_crm_donations_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
                             <?php if (auth_role() === 'admin' && promo_is_admin($pdo, (int) $user['id'])) { echo promo_crm_overview_html($pdo); } ?>
                             <?php if (auth_role() === 'admin'):
