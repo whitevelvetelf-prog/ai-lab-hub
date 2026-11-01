@@ -103,6 +103,7 @@ $subcategoryIcons = [
     'databases'          => 'database',
     'cloud-services'     => 'cloud',
     'testing'            => 'bug',
+    'qa-practice'        => 'flask-conical',
     'api'                => 'webhook',
     'game-development'   => 'joystick',
     'gaming'             => 'gamepad',
