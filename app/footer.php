@@ -1005,12 +1005,16 @@ require_once __DIR__ . '/marketplace.php';
     /* ===== Мобільна шапка й підвал (≤ 768px) =====
        Десктоп не змінюється: усе нижче — лише в медіа-запитах ≤ 768px (кнопки пошуку,
        закриття пошуку й копія перемикача мови в меню поза ними сховані).
-       Шапка — один рядок 56px (+ safe-area): логотип, «Спитати Елю», пошук, меню. Меню
-       й розкритий пошук не змінюють висоту шапки: меню — панель поверх контенту, пошук
+       Шапка — один рядок 56px (+ safe-area), рівно чотири елементи: [логотип] [Спитати Елю]
+       [пошук] [меню], gap 8px, без накладання. Логотип не стискається (flex 0 0 auto) і
+       лежить над світінням кнопки Елі (z-index); кнопка Елі стискається першою (flex 0 1 auto,
+       min-width 0, підпис обрізається з «…»), її неонове кільце на мобільному менше.
+       Стрілка «назад» у шапці схована (на телефоні є системний жест), «Поділитися» з шапки
+       прибрано — на мобільному вона стоїть у самій сторінці продукту й статті
+       (share-button.js, .share-btn--inline). Мова, Головна, Кабінет, Моя добірка — у меню.
+       Меню й розкритий пошук не змінюють висоту шапки: меню — панель поверх контенту, пошук
        заміщає вміст рядка. При прокрутці вниз шапка ховається (transform), угору —
-       з'являється (скрипт нижче). Стрілка «назад» — першою в рядку (36px); перемикач
-       мови в шапці схований (мова — першим пунктом меню); «Поділитися» лишається в рядку шапки на кожній
-       сторінці (іконка 44px між пошуком і меню). Підвал — у потоці документа в кінці сторінки, на
+       з'являється (скрипт нижче). Підвал — у потоці документа в кінці сторінки, на
        коротких сторінках притиснутий до низу (body — flex-колонка, margin-top: auto). */
     .site-search-toggle,
     .site-search__close,
@@ -1028,7 +1032,7 @@ require_once __DIR__ . '/marketplace.php';
             flex-wrap: nowrap;
             align-items: center;
             justify-content: flex-start;
-            gap: 6px;
+            gap: 8px;
             box-sizing: border-box;
             height: calc(56px + env(safe-area-inset-top, 0px));
             padding: env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
@@ -1047,57 +1051,75 @@ require_once __DIR__ . '/marketplace.php';
             display: none;
         }
 
-        .site-header .site-back {
-            order: -1;
-            width: 36px;
-            height: 36px;
-        }
-
-        .site-header .site-back svg {
-            width: 18px;
-            height: 18px;
-        }
-
+        .site-header > .site-back,
         .site-header > .share-btn {
-            order: 0;
-            width: 44px;
-            height: 44px;
-            margin: 0;
-            border-radius: 10px;
+            display: none;
         }
 
+        /* Логотип: фіксована ширина, не стискається; z-index — над світінням кнопки Елі. */
         .site-header__brand {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
-            flex: 0 1 auto;
-            min-width: 0;
+            flex: 0 0 auto;
+            min-width: 34px;
             margin-right: auto;
         }
 
         .site-header .site-header__logo {
+            display: block;
+            width: 34px;
+            min-width: 34px;
             height: 34px;
-            width: auto;
+            object-fit: contain;
         }
 
         .site-header .site-nav__link--cta.site-header__cta {
+            position: relative;
+            z-index: 1;
+            display: inline-flex;
+            align-items: center;
             box-sizing: border-box;
+            flex: 0 1 auto;
+            min-width: 0;
             height: 44px;
             margin-left: 0;
-            padding: 0 14px;
-            flex-shrink: 0;
+            padding: 0 12px;
+            animation: eli-cta-pulse-sm 4s ease-out infinite, eli-cta-shine 6s ease-in-out infinite;
+        }
+
+        .site-header .site-nav__link--cta.site-header__cta:hover,
+        .site-header .site-nav__link--cta.site-header__cta:focus-visible {
+            transform: none;
+            box-shadow: 0 0 0 2px rgba(60, 220, 255, 0.35), 0 0 12px rgba(80, 190, 255, 0.8);
         }
 
         .site-header .site-nav__link--cta.site-header__cta > svg {
             display: block;
+            flex: 0 0 auto;
             width: 18px;
             height: 18px;
         }
 
         .site-header .site-nav__link--cta.site-header__cta::after {
             content: <?= '"' . addcslashes(t('nav_eli_ask'), '"\\') . '"' ?>;
+            display: block;
+            flex: 0 1 auto;
+            min-width: 0;
             margin-left: 6px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
             font-size: 0.88rem;
             letter-spacing: 0;
+        }
+
+        /* Менше кільце й ореол, ніж на десктопі (13px / 26px): не виходять на сусідів. */
+        @keyframes eli-cta-pulse-sm {
+            0% { box-shadow: 0 0 0 0 rgba(40, 210, 255, 0.55), 0 0 10px rgba(60, 170, 255, 0.7); }
+            70% { box-shadow: 0 0 0 5px rgba(40, 210, 255, 0), 0 0 12px rgba(60, 170, 255, 0.8); }
+            100% { box-shadow: 0 0 0 0 rgba(40, 210, 255, 0), 0 0 10px rgba(60, 170, 255, 0.7); }
         }
 
         .site-header .site-nav__toggle,
@@ -1331,24 +1353,19 @@ require_once __DIR__ . '/marketplace.php';
         .site-header {
             transition: none;
         }
-    }
-
-    /* < 375px: кнопка Елі — іконка + «Еля», стрілка «назад» 32px, проміжки 4px (у рядку ще
-       три іконки: «Поділитися», пошук, меню). */
-    @media (max-width: 374px) {
-        .site-header {
-            gap: 4px;
-        }
-
-        .site-header .site-back {
-            width: 32px;
-            height: 32px;
-        }
 
         .site-header .site-nav__link--cta.site-header__cta {
-            padding: 0 10px;
+            animation: eli-cta-glow-sm 3.5s ease-in-out infinite;
         }
 
+        @keyframes eli-cta-glow-sm {
+            0%, 100% { box-shadow: 0 0 8px rgba(60, 170, 255, 0.6); }
+            50% { box-shadow: 0 0 12px rgba(80, 200, 255, 0.9); }
+        }
+    }
+
+    /* ≤ 360px: кнопка Елі — іконка + «Еля» (без «Спитати»); усі кнопки лишаються 44px заввишки. */
+    @media (max-width: 360px) {
         .site-header .site-nav__link--cta.site-header__cta::after {
             content: <?= '"' . addcslashes(t('nav_eli_tiny'), '"\\') . '"' ?>;
             margin-left: 5px;

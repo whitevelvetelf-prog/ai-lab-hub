@@ -2,7 +2,8 @@
  *
  * Один спільний компонент: вставляється в кожну шапку сайту (.site-header)
  * поруч із кнопкою «Викликати Асистента», без жодних правок на окремих
- * сторінках. Заголовок і URL беруться з document.title / поточного
+ * сторінках. На мобільному в шапці її немає — там копія стоїть у сторінці
+ * продукту / статті (mountInline). Заголовок і URL беруться з document.title / поточного
  * location — вони вже коректні на кожній сторінці (назва продукту,
  * категорії тощо — те саме, що й у <title>).
  *
@@ -226,6 +227,40 @@
             header.insertBefore(btn, cta.nextSibling);
         } else {
             header.appendChild(btn);
+        }
+
+        mountInline();
+    }
+
+    /* На мобільному (≤ 768px) кнопки в шапці немає (CSS ховає її, щоб рядок шапки
+       вмістився). Тому на сторінці продукту й статті блогу додаємо копію в саму
+       сторінку — поруч із «зберегти» біля назви продукту / під заголовком статті.
+       На десктопі .share-btn--inline схована (share-button.css). */
+    function mountInline() {
+        if (document.querySelector('.share-btn--inline')) {
+            return;
+        }
+        // .save-btn є лише на картці знайденого продукту (на «Продукт не знайдено» — ні).
+        var anchor = document.querySelector('.product-head .save-btn');
+        var articleTitle = null;
+        if (!anchor) {
+            var article = document.querySelector('main .article');
+            articleTitle = article && article.previousElementSibling
+                && article.previousElementSibling.tagName === 'H1' ? article.previousElementSibling : null;
+            if (!articleTitle) {
+                return;
+            }
+            anchor = articleTitle;
+        }
+        var btn = buildButton();
+        btn.classList.add('share-btn--inline');
+        if (articleTitle) {
+            var row = document.createElement('div');
+            row.className = 'share-inline-row';
+            row.appendChild(btn);
+            anchor.parentNode.insertBefore(row, anchor.nextSibling);
+        } else {
+            anchor.parentNode.insertBefore(btn, anchor.nextSibling);
         }
     }
 
