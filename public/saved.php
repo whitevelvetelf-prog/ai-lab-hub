@@ -32,6 +32,9 @@ $stmt = $pdo->prepare(
 $stmt->execute([':uid' => auth_user_id()]);
 $products = $stmt->fetchAll();
 
+// Короткі описи карток поточною мовою (готові переклади одним запитом, без машинного перекладу).
+$shortDescs = localized_short_descriptions($pdo, $products);
+
 $plansByProduct = [];
 foreach ($pdo->query("SELECT product_id, price, period FROM pricing_plans ORDER BY price ASC") as $plan) {
     $plansByProduct[(int) $plan['product_id']][] = $plan;
@@ -357,7 +360,8 @@ $cardColors = [
                             title="<?= htmlspecialchars($unsaveLabel, ENT_QUOTES) ?>"><?= paw_icon_use() ?></button>
                     <div class="product-card__logo" style="background: <?= htmlspecialchars($color, ENT_QUOTES) ?>;"></div>
                     <h2 class="product-card__name"><?= htmlspecialchars($product['name'], ENT_QUOTES) ?></h2>
-                    <p class="product-card__desc"><?= htmlspecialchars((string) $product['short_description'], ENT_QUOTES) ?></p>
+                    <?php $desc = $shortDescs[$pid] ?? ['text' => (string) $product['short_description'], 'fallback' => false]; ?>
+                    <p class="product-card__desc"<?= $desc['fallback'] ? ' lang="' . htmlspecialchars(translation_source_lang(), ENT_QUOTES) . '"' : '' ?>><?= htmlspecialchars($desc['text'], ENT_QUOTES) ?></p>
                     <div class="product-card__footer">
                         <span class="price-badge<?= $isFree ? ' price-badge--free' : '' ?>">
                             <?= htmlspecialchars($priceText, ENT_QUOTES) ?>

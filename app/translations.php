@@ -937,6 +937,70 @@ function localized_field(PDO $pdo, string $table, string $idColumn, array $row, 
     );
 }
 
+/**
+ * Короткі описи для карток списку продуктів (каталог, «Моя добірка») поточною мовою.
+ *
+ * Мова оригіналу → $product['short_description'] як є. Інша мова — без машинного
+ * перекладу (у списку можуть бути тисячі карток): одним-двома запитами беремо готовий
+ * переклад із product_translations, далі колонку products.short_description_<lang>,
+ * а якщо нема й її — лишаємо оригінал (тоді 'fallback' = true, щоб позначити lang).
+ * Сторінка продукту сама перекладає й кешує відсутнє, тож прогалини поступово зникають.
+ *
+ * @param list<array<string, mixed>> $products Рядки з 'id' і 'short_description'.
+ * @return array<int, array{text: string, fallback: bool}> За id продукту.
+ */
+function localized_short_descriptions(PDO $pdo, array $products): array
+{
+    $lang = current_lang();
+    $result = [];
+    foreach ($products as $p) {
+        $result[(int) $p['id']] = ['text' => (string) ($p['short_description'] ?? ''), 'fallback' => false];
+    }
+    if ($lang === translation_source_lang() || $result === []) {
+        return $result;
+    }
+
+    $found = [];
+    $column = 'short_description_' . preg_replace('/[^a-z]/', '', $lang);
+    foreach (array_chunk(array_keys($result), 1000) as $ids) {
+        $in = implode(',', array_map('intval', $ids));
+        $st = $pdo->prepare(
+            "SELECT product_id, translated_text FROM product_translations
+              WHERE field_name = 'short_description' AND lang = :lang AND product_id IN ($in)"
+        );
+        $st->execute([':lang' => $lang]);
+        foreach ($st->fetchAll(PDO::FETCH_NUM) as [$pid, $text]) {
+            if (trim((string) $text) !== '') {
+                $found[(int) $pid] = (string) $text;
+            }
+        }
+
+        $missing = array_values(array_diff($ids, array_keys($found)));
+        if ($missing !== []) {
+            try {
+                $st = $pdo->query("SELECT id, `$column` FROM products WHERE id IN (" . implode(',', array_map('intval', $missing)) . ')');
+                foreach ($st->fetchAll(PDO::FETCH_NUM) as [$pid, $text]) {
+                    if (trim((string) $text) !== '') {
+                        $found[(int) $pid] = (string) $text;
+                    }
+                }
+            } catch (PDOException $e) {
+                // Колонки для цієї мови немає — лишаються переклади з product_translations.
+            }
+        }
+    }
+
+    foreach ($result as $pid => $row) {
+        if (isset($found[$pid])) {
+            $result[$pid] = ['text' => $found[$pid], 'fallback' => false];
+        } elseif ($row['text'] !== '') {
+            $result[$pid]['fallback'] = true;
+        }
+    }
+
+    return $result;
+}
+
 /*
  * Перемикач мови.
  *
