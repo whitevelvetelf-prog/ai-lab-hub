@@ -45,28 +45,6 @@
     }
 }
 
-/* Копія кнопки в самій сторінці (продукт, стаття) — лише на мобільному, де
-   «Поділитися» прибрано з шапки (app/footer.php). Touch-зона 44px. */
-.share-btn--inline,
-.share-inline-row {
-    display: none;
-}
-
-@media (max-width: 768px) {
-    .share-btn.share-btn--inline {
-        display: inline-flex;
-        order: 0;
-        width: 44px;
-        height: 44px;
-    }
-
-    .share-inline-row {
-        display: flex;
-        justify-content: flex-end;
-        margin: -6px 0 12px;
-    }
-}
-
 /* ===== Випадаюче меню (десктоп, коли navigator.share недоступний) ===== */
 .share-menu {
     position: absolute;
