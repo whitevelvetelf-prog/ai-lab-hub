@@ -31,6 +31,9 @@ require_once __DIR__ . '/marketplace.php';
         <?php endif; ?>
         <?php if (auth_check()): ?>
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
+        <?php if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'account.php'): // навігація кабінету: «Блог» для всіх залогінених ролей ?>
+        <a class="site-nav__link" href="blog.php" data-nav-blog><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a>
+        <?php endif; ?>
         <?php else: ?>
         <a class="site-nav__link" href="login.php"><?= htmlspecialchars(t('nav_login'), ENT_QUOTES) ?></a>
         <?php endif; ?>
