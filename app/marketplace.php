@@ -46,6 +46,8 @@ function mp_config(): array
             'ip_limit_report'    => 20,
             'ip_limit_post'      => 15,
             'ip_limit_mail'      => 20,
+            // Автопідказка місць (mp-geo-suggest.php): запитів з одного IP за добу (mp_rate_limits), не для staff.
+            'ip_limit_geo_suggest' => 600,
             'rules_version'      => '',
             'mail_transport'     => 'mail',
             'site_url'           => '',

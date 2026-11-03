@@ -69,11 +69,15 @@ mpb_open((string) $board['title'], !$isLive, 'board');
             <?php if ($priceText !== ''): ?>
                 <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_price_range')) ?>:</span> <?= mp_e($priceText) ?></p>
             <?php endif; ?>
+            <?php if (isset($board['work_format'])): // етап 6: «Де надається» з довідника, мовою інтерфейсу ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpg_where_title')) ?>:</span> <?= mp_e(mpg_coverage_text($pdo, $board, $lang)) ?></p>
+            <?php else: ?>
             <?php if (!empty($board['city'])): ?>
                 <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_city')) ?>:</span> <?= mp_e($board['city']) ?></p>
             <?php endif; ?>
             <?php if ((int) ($board['is_remote'] ?? 0) === 1): ?>
                 <p class="mp-info__row"><?= mp_e(t('mpb_f_remote')) ?></p>
+            <?php endif; ?>
             <?php endif; ?>
         </div>
 

@@ -15,6 +15,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace.php';
+require_once __DIR__ . '/../app/mp-geo-form.php';   // етап 6: блок «Де надається»
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -47,6 +48,7 @@ $sellerId = mp_seller_id($pdo);
 
 // --- Завантаження наявної пропозиції ---------------------------------------
 $existing = null;
+$geoV = mpg_form_defaults();
 $existingFile = null;
 $existingCats = [];
 if ($listingId > 0) {
@@ -58,6 +60,9 @@ if ($listingId > 0) {
     );
     $st->execute([':id' => $listingId]);
     $existing = $st->fetch(PDO::FETCH_ASSOC) ?: null;
+    if ($existing !== null) {
+        $geoV = mpg_form_from_listing($pdo, $existing);
+    }
     if ($existing === null) {
         header('Location: mp-list.php');
         exit;
@@ -185,6 +190,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // --- Де надається (етап 6): для цифрових рішень зазвичай «Онлайн · весь світ» ---
+        $geoV = mpg_form_from_post($_POST);
+        $geoErr = [];
+        $geo = mpg_validate($pdo, $geoV, $geoErr);
+        foreach ($geoErr as $ge) {
+            $errors[] = t($ge);
+        }
+
         // --- Антидубль за назвою ---
         if (mb_strlen($v['title']) >= 3) {
             $dups = mp_find_similar_titles($pdo, $v['title'], $listingId);
@@ -303,6 +316,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $delSt->execute([':l' => $savedId, ':c' => (int) $cid]);
                 }
 
+                // Географія (етап 6) — у тій самій транзакції; ціна рішень не вказується (free) → price_usd NULL.
+                mpg_save_listing_geo($pdo, $savedId, $geo);
+
                 $pdo->commit();
             } catch (Throwable $ex) {
                 if ($pdo->inTransaction()) {
@@ -341,6 +357,7 @@ $maxMb = round(((int) $cfg['max_upload_bytes']) / 1048576, 1);
     <title>AI LAB HUB — Marketplace: <?= $isEdit ? 'редагування' : 'нова' ?> пропозиція</title>
     <link rel="stylesheet" href="/assets/css/crm-ads.css">
     <link rel="stylesheet" href="/assets/css/mp-crm.css">
+    <link rel="stylesheet" href="/assets/css/mp-geo.css">
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
@@ -438,6 +455,8 @@ $maxMb = round(((int) $cfg['max_upload_bytes']) / 1048576, 1);
                     </div>
                 <?php endif; ?>
             </div>
+
+            <?= mpg_form_html($pdo, $geoV, 'uk') ?>
 
             <div class="field-row">
                 <div class="field">

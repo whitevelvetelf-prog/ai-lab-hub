@@ -16,7 +16,11 @@ $cardThumb = $cardIsSolution
     ? mp_cover_url($card['cover_image'] ?? null)
     : (!empty($card['cover_thumb']) ? mpb_photo_url((string) $card['cover_thumb']) : null);
 $cardFallback = (string) ($card['text_lang'] ?? '') !== current_lang();
-$cardLoc = $cardIsSolution ? '' : mpb_location_label($card);
+// Етап 6: місце з довідника мовою інтерфейсу, формат і відстань (якщо пошук за місцем); інакше — старий підпис.
+$cardLoc = $cardIsSolution ? ''
+    : (isset($card['work_format'], $pdo) && $pdo instanceof PDO
+        ? mpg_location_label($pdo, $card, current_lang(), isset($card['distance_km']) ? (float) $card['distance_km'] : null, (string) ($filters['units'] ?? 'km'))
+        : mpb_location_label($card));
 $cardPrice = mpb_price_label($card);   // '' — ціну не вказано
 $cardDate = !empty($card['published_at']) ? date('d.m.Y', (int) strtotime((string) $card['published_at'])) : '';
 ?>

@@ -19,6 +19,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
 require_once __DIR__ . '/../app/mpb-rules.php';
+require_once __DIR__ . '/../app/mp-geo-form.php';
 
 mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
@@ -83,6 +84,9 @@ if ($existing !== null) {
     ];
     $photos = mpb_photos($pdo, $id);
 }
+// Блок «Де надається» (етап 6): формат, місто з автопідказки, охоплення — app/mp-geo.php.
+$geoV = $existing !== null ? mpg_form_from_listing($pdo, $existing) : mpg_form_defaults();
+$geoReady = mpg_ready($pdo);
 
 // --- Обробка форми -----------------------------------------------------------
 $errors = [];   // string (ключ t()) або [ключ, аргументи для sprintf]
@@ -151,12 +155,18 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $currency = $v['currency'];
         }
 
-        // Місто / дистанційно
-        if (!$v['is_remote'] && $v['city'] === '') {
-            $errors[] = 'mpb_err_location';
-        }
-        if (mb_strlen($v['city']) > 120) {
-            $errors[] = 'mpb_err_city_long';
+        // Де надається (етап 6) — замість вільного тексту міста; без міграцій — старі поля місто / дистанційно.
+        if ($geoReady) {
+            $geoV = mpg_form_from_post($_POST);
+            $geo = mpg_validate($pdo, $geoV, $errors);
+            $v['is_remote'] = $geo['work_format'] !== 'offline';
+        } else {
+            if (!$v['is_remote'] && $v['city'] === '') {
+                $errors[] = 'mpb_err_location';
+            }
+            if (mb_strlen($v['city']) > 120) {
+                $errors[] = 'mpb_err_city_long';
+            }
         }
 
         // Контакти
@@ -263,6 +273,8 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     'price_amount' => $priceAmount, 'currency' => $currency,
                     'is_remote' => $v['is_remote'], 'city' => $v['city'] !== '' ? $v['city'] : null,
                     'contact' => $contact,
+                    // Курс береться до транзакції (може звернутися до НБУ); немає курсу → NULL.
+                    'geo' => $geoReady ? $geo + ['price_usd' => mpg_price_usd($pdo, $priceAmount, $currency)] : null,
                 ], $existing, $userId, $sellerId, $lang, $created, $deleteIds, $photoOrder);
 
                 mpb_flash('ok', t($isStaff ? 'mpb_saved_published' : 'mpb_saved_pending'));
@@ -362,6 +374,9 @@ mpb_open($pageTitle, true, 'post');
                 </div>
             </div>
 
+            <?php if ($geoReady): ?>
+                <?= mpg_form_html($pdo, $geoV, $lang) ?>
+            <?php else: ?>
             <div class="mp-row">
                 <div class="mp-field">
                     <label class="mp-label" for="city"><?= mp_e(t('mpb_f_city')) ?></label>
@@ -371,6 +386,7 @@ mpb_open($pageTitle, true, 'post');
                     <label class="mp-check"><input type="checkbox" name="is_remote" value="1"<?= $v['is_remote'] ? ' checked' : '' ?>> <span><?= mp_e(t('mpb_f_remote')) ?></span></label>
                 </div>
             </div>
+            <?php endif; ?>
 
             <fieldset class="mp-field mp-fieldset">
                 <legend class="mp-label"><?= mp_e(t('mpb_f_contacts')) ?></legend>

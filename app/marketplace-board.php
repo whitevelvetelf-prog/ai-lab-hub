@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/marketplace.php';
 require_once __DIR__ . '/mp-section-nav.php';
+require_once __DIR__ . '/mp-geo.php';   // етап 6: географія, пошук за місцем, ціна в USD
 
 const MPB_SECTION = 'board';
 const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   // 'none' — ціну не вказано
@@ -206,7 +207,8 @@ function mpb_open(string $title, bool $noindex = true, ?string $nav = null): voi
         . '<title>' . mp_e($title) . ' — ' . mp_e(t('title_marketplace')) . "</title>\n";
     include __DIR__ . '/header.php';
     echo "\n<link rel=\"stylesheet\" href=\"/assets/css/site-nav.css\">\n"
-        . '<link rel="stylesheet" href="' . css_asset('mp-public.css') . "\">\n</head>\n<body class=\"mp-body\">\n";
+        . '<link rel="stylesheet" href="' . css_asset('mp-public.css') . "\">\n"
+        . '<link rel="stylesheet" href="' . css_asset('mp-geo.css') . "\">\n</head>\n<body class=\"mp-body\">\n";
     include __DIR__ . '/site-header.php';
     if ($nav !== null) {
         echo mp_section_nav($nav);
@@ -404,9 +406,12 @@ function mpb_reports_sql(): string
 }
 
 /** SELECT-частина з текстами поточною мовою (запасний варіант — мова оригіналу). БЕЗ контактів. */
-function mpb_select_sql(): string
+function mpb_select_sql(?PDO $pdo = null): string
 {
-    return "SELECT l.id, l.section, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,
+    // Колонки етапу 6 (формат, місце) — лише якщо міграцію застосовано.
+    $geo = $pdo !== null && mpg_ready($pdo) ? ' l.work_format, l.service_scope, l.primary_place_id, l.country_code, l.service_radius_km, l.price_usd,' : '';
+
+    return "SELECT l.id, l.section, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,{$geo}
                    l.published_at, l.expires_at, l.created_at, l.views_count, l.source_lang, l.reject_reason,
                    s.display_name AS seller_name, s.user_id AS seller_user_id,
                    COALESCE(NULLIF(tc.title, ''), ts.title)           AS title,
@@ -423,55 +428,49 @@ function mpb_select_sql(): string
 }
 
 /**
- * Пошук для marketplace.php: оголошення дошки і Готові AI-рішення платформи разом.
- * Фільтри: category (int — категорія дошки, MPB_SOLUTIONS — лише Готові AI-рішення), sub (категорія рішень, разом
- * із category=MPB_SOLUTIONS), price_type, min/max (?float), city, remote(bool), q; sort: new|cheap|expensive.
- * Ефективна ціна: free → 0, fixed → price_amount, решта (договірна/обмін) → NULL (у діапазон не потрапляє, у сортуванні — в кінці).
+ * Пошук для marketplace.php: оголошення дошки і Готові AI-рішення платформи разом (етап 6 — розширений).
+ * Фільтри ($f, уже нормалізовані marketplace.php за білими списками):
+ *   section ''|'board'|'solutions', cat (категорія дошки чи рішень — разом із section), price_type,
+ *   price_min / price_max (?float, USD), q, listing_langs (list<uk|en>), with_photos, verified (bool),
+ *   geo (?array для mpg_where(): format, show_online, country, place, radius_km); sort new|price_asc|price_desc|distance.
+ * Ефективна ціна в USD: free → 0, fixed → price_usd (NULL — курсу немає: у діапазон не потрапляє, але без
+ * фільтра ціни показується), решта (договірна/обмін) → NULL; у сортуванні NULL — в кінці.
+ * Без міграцій етапу 6 — ціна в оригінальній валюті, без географії.
  *
  * @return array{rows:list<array<string,mixed>>,total:int,pages:int,page:int}
  */
 function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
 {
-    $eff = "(CASE l.price_type WHEN 'free' THEN 0 WHEN 'fixed' THEN l.price_amount ELSE NULL END)";
+    $geoReady = mpg_ready($pdo);
+    $priceCol = $geoReady ? 'l.price_usd' : 'l.price_amount';
+    $eff = "(CASE l.price_type WHEN 'free' THEN 0 WHEN 'fixed' THEN $priceCol ELSE NULL END)";
     $params = [];
 
-    $cat = $f['category'] ?? 0;
-    if ($cat === MPB_SOLUTIONS) {
+    $section = (string) ($f['section'] ?? '');
+    $cat = (int) ($f['cat'] ?? 0);
+    if ($section === MPB_SOLUTIONS) {
         $where = [mpb_solution_visible_sql()];
-        $sub = (int) ($f['sub'] ?? 0);
-        if ($sub > 0) {
-            $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :sub)';
-            $params[':sub'] = $sub;
-        }
-    } elseif ((int) $cat > 0) {
-        $where = [mpb_visible_sql(), 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)'];
-        $params[':cat'] = (int) $cat;
+    } elseif ($section === 'board') {
+        $where = [mpb_visible_sql()];
     } else {
         $where = ['((' . mpb_visible_sql() . ') OR (' . mpb_solution_visible_sql() . '))'];
+    }
+    if ($cat > 0) {
+        $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)';
+        $params[':cat'] = $cat;
     }
     $pt = (string) ($f['price_type'] ?? '');
     if (in_array($pt, MPB_PRICE_TYPES, true)) {
         $where[] = 'l.price_type = :pt';
         $params[':pt'] = $pt;
     }
-    if (($f['min'] ?? null) !== null) {
+    if (($f['price_min'] ?? null) !== null) {
         $where[] = "$eff >= :pmin";
-        $params[':pmin'] = (float) $f['min'];
+        $params[':pmin'] = (float) $f['price_min'];
     }
-    if (($f['max'] ?? null) !== null) {
+    if (($f['price_max'] ?? null) !== null) {
         $where[] = "$eff <= :pmax";
-        $params[':pmax'] = (float) $f['max'];
-    }
-    $city = trim((string) ($f['city'] ?? ''));
-    $remote = (bool) ($f['remote'] ?? false);
-    if ($city !== '' && $remote) {
-        $where[] = "(l.city LIKE :city ESCAPE '\\\\' OR l.is_remote = 1)";
-        $params[':city'] = addcslashes($city, '%_\\') . '%';
-    } elseif ($city !== '') {
-        $where[] = "l.city LIKE :city ESCAPE '\\\\'";
-        $params[':city'] = addcslashes($city, '%_\\') . '%';
-    } elseif ($remote) {
-        $where[] = 'l.is_remote = 1';
+        $params[':pmax'] = (float) $f['price_max'];
     }
     $q = trim((string) ($f['q'] ?? ''));
     if ($q !== '') {
@@ -480,13 +479,44 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
         $params[':q1'] = $like;
         $params[':q2'] = $like;
     }
-    $order = match ((string) ($f['sort'] ?? 'new')) {
-        'cheap'     => "($eff IS NULL) ASC, $eff ASC, l.published_at DESC, l.id DESC",
-        'expensive' => "($eff IS NULL) ASC, $eff DESC, l.published_at DESC, l.id DESC",
-        default     => 'l.published_at DESC, l.id DESC',
+    // Мова оголошення: мова оригіналу або ручний (не авто-) переклад — окремо від географії.
+    $langs = array_values(array_intersect((array) ($f['listing_langs'] ?? []), MPG_LISTING_LANGS));
+    if ($langs !== []) {
+        $or = [];
+        foreach ($langs as $i => $ll) {
+            $or[] = "l.source_lang = :ll$i OR EXISTS (SELECT 1 FROM mp_listing_translations lt WHERE lt.listing_id = l.id AND lt.lang = :llt$i AND lt.is_auto = 0)";
+            $params[":ll$i"] = $ll;
+            $params[":llt$i"] = $ll;
+        }
+        $where[] = '(' . implode(' OR ', $or) . ')';
+    }
+    if (!empty($f['with_photos'])) {
+        $where[] = '(l.cover_image IS NOT NULL OR EXISTS (SELECT 1 FROM mp_listing_photos ph WHERE ph.listing_id = l.id))';
+    }
+    if (!empty($f['verified'])) {
+        $where[] = 'EXISTS (SELECT 1 FROM mp_sellers sv WHERE sv.id = l.seller_id AND sv.is_verified = 1)';
+    }
+    $geo = $geoReady ? ($f['geo'] ?? null) : null;
+    $place = is_array($geo) && is_array($geo['place'] ?? null) && $geo['place']['lat'] !== null ? $geo['place'] : null;
+    $geoJoin = '';
+    if (is_array($geo)) {
+        $where = array_merge($where, mpg_where($geo, $params));
+        $geoJoin = mpg_candidates_join($geo, $params);   // індексований попередній відбір (UNION)
+    }
+    $distSql = $place !== null ? mpg_distance_sql($place) : null;
+
+    $sort = (string) ($f['sort'] ?? 'new');
+    if ($sort === 'distance' && $distSql === null) {
+        $sort = 'new';
+    }
+    $order = match ($sort) {
+        'price_asc'  => "($eff IS NULL) ASC, $eff ASC, l.published_at DESC, l.id DESC",
+        'price_desc' => "($eff IS NULL) ASC, $eff DESC, l.published_at DESC, l.id DESC",
+        'distance'   => 'distance_km ASC, l.published_at DESC, l.id DESC',
+        default      => 'l.published_at DESC, l.id DESC',
     };
     $whereSql = implode(' AND ', $where);
-    $from = "FROM mp_listings l
+    $from = ($geoJoin !== '' ? $geoJoin : 'FROM mp_listings l') . "
              LEFT JOIN mp_listing_translations tc ON tc.listing_id = l.id AND tc.lang = :lang
              LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
              WHERE $whereSql AND COALESCE(NULLIF(tc.title, ''), ts.title) IS NOT NULL";
@@ -498,7 +528,14 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
     $page = max(1, min($page, $pages));
 
     // mpb_select_sql() уже містить FROM/JOIN — тож фільтри додаємо як WHERE до нього.
-    $sql = mpb_select_sql() . " WHERE $whereSql AND COALESCE(NULLIF(tc.title, ''), ts.title) IS NOT NULL
+    $select = mpb_select_sql($pdo);
+    if ($geoJoin !== '') {
+        $select = str_replace('FROM mp_listings l', $geoJoin, $select);
+    }
+    if ($distSql !== null) {
+        $select = preg_replace('/^SELECT /', "SELECT $distSql AS distance_km, ", $select, 1);
+    }
+    $sql = $select . " WHERE $whereSql AND COALESCE(NULLIF(tc.title, ''), ts.title) IS NOT NULL
             ORDER BY $order LIMIT " . MPB_PER_PAGE . ' OFFSET ' . (($page - 1) * MPB_PER_PAGE);
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params + [':lang' => $lang]);
@@ -535,7 +572,7 @@ function mpb_auto_translate(PDO $pdo, array $rows, string $lang): array
 /** Оголошення за id з текстами (без контактів) — будь-який статус; видимість перевіряє викликач. */
 function mpb_listing(PDO $pdo, int $id, string $lang): ?array
 {
-    $stmt = $pdo->prepare(mpb_select_sql() . " WHERE l.id = :id AND l.section = 'board'");
+    $stmt = $pdo->prepare(mpb_select_sql($pdo) . " WHERE l.id = :id AND l.section = 'board'");
     $stmt->execute([':lang' => $lang, ':id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row === false) {
@@ -1026,6 +1063,12 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
         $insP = $pdo->prepare('INSERT INTO mp_listing_photos (listing_id, file_name, thumb_name, sort_order) VALUES (:l, :f, :t, :s)');
         foreach ($newPhotos as $ph) {
             $insP->execute([':l' => $id, ':f' => $ph['file_name'], ':t' => $ph['thumb_name'], ':s' => ++$n]);
+        }
+
+        // Географія й ціна в USD (етап 6, app/mp-geo.php) — якщо форма їх передала (міграції застосовано).
+        if (!empty($d['geo'])) {
+            mpg_save_listing_geo($pdo, $id, $d['geo']);
+            $pdo->prepare('UPDATE mp_listings SET price_usd = :u WHERE id = :id')->execute([':u' => $d['geo']['price_usd'] ?? null, ':id' => $id]);
         }
 
         $pdo->commit();

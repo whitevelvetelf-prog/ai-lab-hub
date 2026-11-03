@@ -1,0 +1,140 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * AI LAB HUB — Marketplace, етап 6: розбір GET розширеного пошуку (marketplace.php) за білими списками.
+ * Підключати після app/marketplace-board.php (він підключає app/mp-geo.php).
+ */
+
+/** Ключі GET розширеного пошуку (усе інше ігнорується). */
+const MPB_SEARCH_KEYS = ['q', 'section', 'cat', 'price_type', 'price_min', 'price_max', 'country', 'place', 'radius', 'format',
+    'listing_lang', 'with_photos', 'verified', 'sort', 'page'];
+const MPB_SEARCH_SORTS = ['new', 'price_asc', 'price_desc', 'distance'];
+
+/**
+ * Нормалізовані фільтри пошуку з GET. Некоректні значення відкидаються мовчки (ніби параметра немає).
+ * Синоніми старих посилань: category=solutions|N, sub=N, min/max, remote=1 → format=online, city=<текст> → place
+ * (перше місто з автопідказки), sort=cheap|expensive.
+ * Налаштування відвідувача (mpg_prefs) підставляються, лише якщо в GET немає жодного параметра місця (country,
+ * place, radius, format, city, remote) — інакше діє явний вибір.
+ *
+ * @return array<string,mixed> фільтри для mpb_search() + page, url (канонічні параметри для посилань), units, from_prefs
+ */
+function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): array
+{
+    $s = static fn(string $k, int $max = 100): string => is_string($get[$k] ?? null) ? mb_substr(trim((string) $get[$k]), 0, $max) : '';
+    $int = static fn(string $k): int => preg_match('/^\d{1,9}$/', $s($k, 10)) === 1 ? (int) $s($k, 10) : 0;
+    $num = static function (string $k) use ($s): ?float {
+        $raw = str_replace([' ', ','], ['', '.'], $s($k, 14));
+
+        return preg_match('/^\d{1,9}(\.\d{1,2})?$/', $raw) === 1 ? (float) $raw : null;
+    };
+    $boardCats = array_column(mpb_categories($pdo, $lang), 'id');
+    $solCats = array_column(mp_public_categories($pdo, $lang), 'id');
+
+    // Розділ і категорія (+ старі category / sub)
+    $section = in_array($s('section', 20), ['board', MPB_SOLUTIONS], true) ? $s('section', 20) : '';
+    $cat = $int('cat');
+    $legacyCat = $s('category', 20);
+    if ($section === '' && $legacyCat === MPB_SOLUTIONS) {
+        $section = MPB_SOLUTIONS;
+        $cat = $cat ?: $int('sub');
+    } elseif ($section === '' && preg_match('/^\d{1,9}$/', $legacyCat) === 1 && (int) $legacyCat > 0) {
+        $section = 'board';
+        $cat = $cat ?: (int) $legacyCat;
+    }
+    if ($cat > 0) {
+        if ($section === '') {
+            $section = in_array($cat, $boardCats, true) ? 'board' : (in_array($cat, $solCats, true) ? MPB_SOLUTIONS : '');
+        }
+        $ok = ($section === 'board' && in_array($cat, $boardCats, true)) || ($section === MPB_SOLUTIONS && in_array($cat, $solCats, true));
+        if (!$ok) {
+            $cat = 0;
+        }
+    }
+
+    $priceMin = $num('price_min') ?? $num('min');
+    $priceMax = $num('price_max') ?? $num('max');
+    $sort = $s('sort', 12);
+    $sort = ['cheap' => 'price_asc', 'expensive' => 'price_desc'][$sort] ?? $sort;
+    $sort = in_array($sort, MPB_SEARCH_SORTS, true) ? $sort : 'new';
+
+    // Місце: явний вибір у GET → інакше налаштування відвідувача
+    $hasGeoParam = false;
+    foreach (['country', 'place', 'radius', 'format', 'city', 'remote'] as $k) {
+        if (array_key_exists($k, $get)) {
+            $hasGeoParam = true;
+        }
+    }
+    $units = ($prefs['units'] ?? 'km') === 'mi' ? 'mi' : 'km';
+    $format = in_array($s('format', 10), array_merge(['any'], MPG_FORMATS), true) ? $s('format', 10) : 'any';
+    if ($format === 'any' && $s('remote', 2) === '1') {
+        $format = 'online';
+    }
+    $radius = in_array($int('radius'), MPG_RADII, true) ? $int('radius') : MPG_DEFAULT_RADIUS;
+    $cc = strtoupper($s('country', 10));   // без обрізання: «AU' OR …» не стає «AU»
+    $country = preg_match('/^[A-Z]{2}$/', $cc) === 1 ? $cc : '';
+    $place = null;
+    if ($int('place') > 0) {
+        $place = mpg_place($pdo, $int('place'));
+    } elseif ($s('city', 120) !== '') {
+        $first = mpg_suggest($pdo, $s('city', 120), $lang, ['city'], 1)[0] ?? null;
+        $place = $first !== null ? mpg_place($pdo, (int) $first['id']) : null;
+    }
+    if ($place !== null && $place['type'] !== 'city') {
+        $country = $country ?: $place['country_code'];
+        $place = null;
+    }
+    $fromPrefs = false;
+    $showOnline = true;
+    if (!$hasGeoParam && !empty($prefs['saved'])) {
+        $fromPrefs = true;
+        $place = (int) $prefs['place_id'] > 0 ? mpg_place($pdo, (int) $prefs['place_id']) : null;
+        $country = $place['country_code'] ?? (string) $prefs['country_code'];
+        $radius = (int) $prefs['radius_km'];
+        $showOnline = (bool) $prefs['show_online'];
+    }
+    if ($country !== '' && mpg_country_id($pdo, $country) === null) {
+        $country = '';
+    }
+    if ($place !== null) {
+        $country = $place['country_code'];
+    }
+    $radiusKm = $units === 'mi' ? $radius * MPG_KM_PER_MI : (float) $radius;
+
+    $ll = in_array($s('listing_lang', 5), MPG_LISTING_LANGS, true) ? $s('listing_lang', 5) : '';
+    $langs = $ll !== '' ? [$ll] : (array_key_exists('listing_lang', $get) ? [] : (array) ($prefs['listing_langs'] ?? []));
+    $sort = $sort === 'distance' && $place === null ? 'new' : $sort;
+
+    $f = [
+        'q' => $s('q'), 'section' => $section, 'cat' => $cat,
+        'price_type' => in_array($s('price_type', 20), MPB_PRICE_TYPES, true) ? $s('price_type', 20) : '',
+        'price_min' => $priceMin, 'price_max' => $priceMax,
+        'listing_langs' => array_values(array_intersect($langs, MPG_LISTING_LANGS)), 'listing_lang' => $ll,
+        'with_photos' => $s('with_photos', 1) === '1', 'verified' => $s('verified', 1) === '1',
+        'geo' => ['format' => $format, 'show_online' => $showOnline, 'country' => $country, 'place' => $place, 'radius_km' => $radiusKm],
+        'country' => $country, 'place_id' => $place['id'] ?? 0, 'radius' => $radius, 'format' => $format,
+        'sort' => $sort, 'page' => max(1, min(10000, $int('page') ?: 1)),
+        'units' => $units, 'from_prefs' => $fromPrefs,
+    ];
+    // Канонічні параметри для посилань (пагінація) — лише непорожні.
+    $f['url'] = array_filter([
+        'q' => $f['q'], 'section' => $section, 'cat' => $cat ?: null, 'price_type' => $f['price_type'],
+        'price_min' => $priceMin, 'price_max' => $priceMax, 'country' => $country !== '' && $place === null ? $country : null,
+        'place' => $place['id'] ?? null, 'radius' => $place !== null ? $radius : null,
+        'format' => $format !== 'any' ? $format : null, 'listing_lang' => $ll,
+        'with_photos' => $f['with_photos'] ? 1 : null, 'verified' => $f['verified'] ? 1 : null,
+        'sort' => $sort !== 'new' ? $sort : null,
+    ], static fn($x): bool => $x !== null && $x !== '');
+
+    return $f;
+}
+
+/** Чи задано хоч один фільтр (для тексту «нічого не знайдено» й кнопки «Скинути»). */
+function mpb_search_has_filters(array $f): bool
+{
+    return $f['q'] !== '' || $f['section'] !== '' || $f['cat'] > 0 || $f['price_type'] !== '' || $f['price_min'] !== null
+        || $f['price_max'] !== null || $f['country'] !== '' || $f['format'] !== 'any' || $f['listing_langs'] !== []
+        || $f['with_photos'] || $f['verified'];
+}

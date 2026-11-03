@@ -160,3 +160,13 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 
 ### Що НЕ заливати
 `config/marketplace.local.php`, `config/database.php` (на сервері свій), `storage/`, `marketplace-seed/` і `scripts/` (крім одноразового імпорту кроку 10), тестові дані.
+
+---
+
+## Етап 6 (2026-11-03): геолокація, розширений пошук, налаштування відвідувача — **НЕ залито**
+
+Пакет SQL: `hosting-upload/marketplace-geo/` (не в git; README там же). Порядок: резервна копія → `15-marketplace-geo-places.sql` → `geo-data-01…05.sql` (GeoNames cities5000, 9,2 МБ, кожна частина ≤ 2 МБ) → `16-marketplace-listing-geo.sql` → `17-marketplace-ui-strings-geo.sql` → код. Джерела міграцій у git: `database/migration-2026-11-03-marketplace-{geo-places,listing-geo,ui-strings-geo}.sql`; дані перегенерувати: `php scripts/geo-import.php <тека GeoNames>`.
+
+Код (без міграцій поводиться як раніше — `mpg_ready()`): `app/mp-geo.php`, `app/mp-geo-form.php`, `app/mp-search.php`, `public/mp-geo-suggest.php`, `public/mp-settings.php`, `public/assets/js/mp-geo.js`, `public/assets/css/mp-geo.css`; змінені `app/marketplace-board.php`, `app/marketplace.php` (`ip_limit_geo_suggest`), `app/mpb-card.php`, `app/mpb-offer.php`, `app/translations.php`, `public/marketplace.php`, `public/marketplace-post.php`, `public/mp-add-offer.php`, `cron/marketplace-daily.php` (перерахунок `price_usd`).
+
+Перевірка після заливки: `php tests/mp-geo-tests.php` — лише локально (тест тимчасово вмикає `marketplace_public` і створює тестові оголошення).
