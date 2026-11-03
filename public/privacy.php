@@ -133,7 +133,13 @@ require_once __DIR__ . '/../app/translations.php';
         <p class="stub__text">При завантаженні оригіналу фіксуємо користувача, матеріал, час, хеш виданого файлу й анонімний хеш IP-адреси (не саму адресу). Для захисту від масового копіювання превʼю ведемо журнал запитів з анонімним хешем IP; записи зберігаються до 7 днів, журнал підозрілої активності — доки потрібно для розгляду.</p>
         <p class="stub__text">Скарги на порушення авторських прав містять ім'я й контакти заявника; ми використовуємо їх лише для розгляду скарги й можемо повідомити автору матеріалу суть скарги (без зайвих персональних даних заявника, якщо інше не потрібно для процедури).</p>
 
-        <p class="stub__text legal-updated">Останнє оновлення: 11 жовтня 2026 р.; пункт 3.4 (чернетка) — 22 жовтня 2026 р.</p>
+        <?php /* ЧЕРНЕТКА: пункт про cookie потребує перевірки юристом. Текст — у системі перекладу (cc/legal_privacy_cookies_*). */ ?>
+        <h2 class="legal-heading" id="cookies"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
+
+        <p class="stub__text legal-updated">Останнє оновлення: 11 жовтня 2026 р.; пункт 3.4 (чернетка) — 22 жовтня 2026 р.; пункт 3.5 (cookie) — 3 листопада 2026 р.</p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>

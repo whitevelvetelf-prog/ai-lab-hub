@@ -554,3 +554,20 @@
         transform: none;
     }
 }
+
+/* Немає згоди на cookie — підпис над мініатюрою YouTube (відео вантажиться лише після «▶»). */
+.adp-yt-note {
+    position: absolute;
+    z-index: 2;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: rgba(0, 3, 44, 0.78);
+    color: #fff;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    text-align: center;
+    pointer-events: none;
+}

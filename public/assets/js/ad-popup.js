@@ -71,6 +71,15 @@
     // reduced-motion не вимикає автозапуск (у Windows його вмикає вимкнена анімація системи, часто заради
     // швидкодії): відео стартує, але лише без звуку; вимикається тільки анімація вікна.
     var allowAutoplay = !saveData;
+    // Згода на cookie (app/cookie-consent.php): без «Прийняти всі» YouTube не вантажиться сам —
+    // мініатюра й «▶», плеєр лише після кліку глядача. Без банера (немає window.alhConsent) — теж без згоди.
+    function ytConsented() {
+        try {
+            return !!(window.alhConsent && window.alhConsent.get() === 'all');
+        } catch (e) {
+            return false;
+        }
+    }
 
     function noop() {}
 
@@ -701,6 +710,10 @@
                 e.stopPropagation();   // не відкривати рекламодавця
                 ytPlayBtn.remove();
                 ytPlayBtn = null;
+                var note = ytBox.querySelector('.adp-yt-note');
+                if (note) {
+                    note.remove();
+                }
                 if (yt && yt.playVideo) {
                     yt.mute();
                     yt.playVideo();
@@ -843,7 +856,7 @@
         }
 
         if (ytBox) {
-            if (allowAutoplay) {
+            if (allowAutoplay && ytConsented()) {
                 window.setTimeout(function () {
                     if (!started) {
                         debug('YouTube: не стартував за', YT_START_FALLBACK_MS, 'мс — відлік іде');
@@ -853,7 +866,11 @@
                 }, YT_START_FALLBACK_MS);
                 ytStart();
             } else {
-                // saveData — плеєр лише на дію глядача.
+                // saveData або немає згоди на cookie — плеєр лише на дію глядача.
+                if (!ytConsented() && labels.ytConsent) {
+                    ytBox.appendChild(el('span', 'adp-yt-note', labels.ytConsent));
+                }
+                impressionMode = 'still';
                 ytShowPlay();
                 startCountdown();
             }

@@ -1437,6 +1437,7 @@ require_once __DIR__ . '/marketplace.php';
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
             <li><a href="terms.php"><?= htmlspecialchars(t('footer_terms'), ENT_QUOTES) ?></a></li>
             <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
+            <li><a href="privacy.php#cookies" class="cc-settings-link" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></li>
             <li><a href="advertise.php"><?= htmlspecialchars(t('footer_advertise'), ENT_QUOTES) ?></a></li>
             <li><a href="promo-rules.php"><?= htmlspecialchars(t('footer_promo_rules'), ENT_QUOTES) ?></a></li>
         </ul>
@@ -1891,5 +1892,7 @@ require_once __DIR__ . '/marketplace.php';
 <?php
 // Реклама спливаючим вікном: лише правила й скрипт (вікно показує JS, не сервер) — app/ad-popup.php.
 require_once __DIR__ . '/ad-popup.php';
+require_once __DIR__ . '/cookie-consent.php';
+echo cookie_consent_html();   // банер cookie: до реклами, бо ad-popup.js читає window.alhConsent
 echo promo_quiet_html(translation_pdo());   // body[data-promo-suppress] — тиша на сторінках входу й після нього
 echo ad_popup_bootstrap(translation_pdo());
