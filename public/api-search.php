@@ -5,17 +5,13 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — живий пошук продуктів для поля в шапці.
  *
- * GET ?q=... (мінімум 2 символи після trim, інакше 400).
- * Шукає лише серед status = 'published' за products.name (LIKE
- * '%query%' — при поточному обсязі ~165+ рядків це швидше й простіше за
- * FULLTEXT, який до того ж не шукає підрядки й ігнорує короткі слова).
+ * GET ?q=... (мінімум 2 символи після trim, інакше 400; довше за 100 — обрізається).
+ * Пошук — спільна функція search_products() з app/search.php (словниковий індекс назв, категорій
+ * і описів усіма мовами, синоніми, «надто загальні» слова). Лише опубліковані продукти.
+ * Ліміт частоти з IP — search_rate_ok() (429).
  *
- * Бренднейми продуктів — латиницею в обох мовах інтерфейсу, тож пошук
- * однаково працює в UA/EN. Розкладку клавіатури (укр./лат.) вирівнює
- * app/search.php — див. його докблок.
- *
- * Повертає JSON: { ok, query, results: [{ id, name, logo_url, initials,
- * category, subcategory }] }, максимум 10 рядків.
+ * Повертає JSON: { ok, query, broad, total, results: [{ id, name, logo_url, initials,
+ * category, subcategory }] }, максимум suggest_limit рядків (config/search.php).
  */
 
 require_once __DIR__ . '/../app/translations.php';
@@ -40,12 +36,33 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     search_respond(['ok' => false, 'error' => 'method_not_allowed'], 405);
 }
 
-$query = trim((string) ($_GET['q'] ?? ''));
+$query = mb_substr(trim((string) preg_replace('/\s+/u', ' ', (string) ($_GET['q'] ?? ''))), 0, SEARCH_MAX_QUERY);
 if (mb_strlen($query) < 2) {
     search_respond(['ok' => false, 'error' => 'query_too_short'], 400);
 }
 
-$results = search_products_by_name($pdo, $query, 'id, name, logo_url', 10);
+// Журнал запитів і ліміт частоти: сесію лише читаємо (без блокування паралельних запитів під час набору).
+if (session_status() === PHP_SESSION_NONE && isset($_COOKIE[session_name()])) {
+    session_start(['read_and_close' => true]);
+}
+if (!search_rate_ok($pdo)) {
+    search_respond(['ok' => false, 'error' => 'rate_limited'], 429);
+}
+
+$found = search_products($pdo, $query, 1, search_config()['suggest_limit']);
+$results = [];
+if ($found['ids'] !== []) {
+    $byId = [];
+    foreach ($pdo->query('SELECT id, name, logo_url FROM products WHERE id IN (' . implode(',', $found['ids']) . ")
+                          AND status = 'published'") as $row) {
+        $byId[(int) $row['id']] = $row;
+    }
+    foreach ($found['ids'] as $fid) {
+        if (isset($byId[$fid])) {
+            $results[] = $byId[$fid];
+        }
+    }
+}
 
 /** Ініціали для логотипа-заглушки (по словах / CamelCase) — як на product.php. */
 function search_result_initials(string $name): string
@@ -110,10 +127,6 @@ foreach ($results as $row) {
     ];
 }
 
-// Журнал запитів: сесію лише читаємо (без блокування паралельних запитів під час набору).
-if (session_status() === PHP_SESSION_NONE && isset($_COOKIE[session_name()])) {
-    session_start(['read_and_close' => true]);
-}
 search_log_query($pdo, $query, 'header', count($items));
 
-search_respond(['ok' => true, 'query' => $query, 'results' => $items]);
+search_respond(['ok' => true, 'query' => $query, 'broad' => $found['status'] === 'broad', 'total' => (int) $found['total'], 'results' => $items]);

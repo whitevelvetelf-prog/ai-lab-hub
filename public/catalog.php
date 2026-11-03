@@ -32,8 +32,12 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 $subcategoryId = (int) ($_GET['subcategory'] ?? 0);
 $categoryId    = (int) ($_GET['category'] ?? 0);
-$searchQuery   = trim((string) ($_GET['search'] ?? ''));
-$isSearch      = mb_strlen($searchQuery) >= 2;
+$searchQuery   = mb_substr(trim((string) preg_replace('/\s+/u', ' ', (string) ($_GET['search'] ?? ''))), 0, SEARCH_MAX_QUERY);
+// Будь-який ?search= — сторінка пошуку (і коротка чи порожня — теж: не весь каталог).
+$isSearch      = array_key_exists('search', $_GET);
+$searchResult  = null;
+$searchSections = [];
+$searchBroadCats = [];
 
 // page_slug — вид сторінки каталогу для ємності місць реклами (app/promo-placements.php):
 // sub:<id> — підкатегорія, cat:<id> — усі продукти категорії, search — пошук, all — усі продукти.
@@ -45,8 +49,39 @@ $backLink    = null;
 
 if ($isSearch) {
     $pageHeading = sprintf(t('search_results_heading'), $searchQuery);
-    $products = search_products_by_name($pdo, $searchQuery, 'id, name, short_description');
-    search_log_query($pdo, $searchQuery, 'catalog', count($products));
+    $products = [];
+    if (!search_rate_ok($pdo)) {
+        http_response_code(429);
+        $searchResult = ['status' => 'limited', 'total' => 0, 'ids' => [], 'page' => 1, 'pages' => 1, 'layout' => null];
+    } else {
+        $searchResult = search_products($pdo, $searchQuery, (int) ($_GET['page'] ?? 1));
+        if ($searchResult['ids'] !== []) {
+            $byId = [];
+            $in = implode(',', $searchResult['ids']);
+            foreach ($pdo->query("SELECT id, name, short_description FROM products WHERE id IN ($in) AND status = 'published'") as $row) {
+                $byId[(int) $row['id']] = $row;
+            }
+            foreach ($searchResult['ids'] as $sid) {
+                if (isset($byId[$sid])) {
+                    $products[] = $byId[$sid];
+                }
+            }
+        }
+        if ($searchResult['status'] === 'broad') {
+            $searchBroadCats = $pdo->query(
+                "SELECT c.id, c.name, c.name_en, COUNT(pc.product_id) AS cnt FROM categories c
+                 JOIN product_categories pc ON pc.category_id = c.id
+                 JOIN products p ON p.id = pc.product_id AND p.status = 'published'
+                 GROUP BY c.id, c.name, c.name_en ORDER BY c.id"
+            )->fetchAll();
+        } elseif ($searchResult['status'] === 'empty' || $searchResult['status'] === 'invalid') {
+            $searchSections = search_matching_sections($pdo, $searchQuery);
+        }
+        if ($searchResult['status'] === 'empty' && (int) ($_GET['page'] ?? 1) <= 1) {
+            search_log_zero($pdo, $searchQuery, current_lang());
+        }
+        search_log_query($pdo, $searchQuery, 'catalog', (int) $searchResult['total']);
+    }
 } elseif ($subcategoryId > 0) {
     $subStmt = $pdo->prepare("SELECT id, name, name_en, slug, category_id FROM subcategories WHERE id = :id");
     $subStmt->execute([':id' => $subcategoryId]);
@@ -395,6 +430,22 @@ $cardColors = [
             background: rgba(255, 255, 255, 0.1);
         }
 
+        /* Пошук: лічильник, «надто загальний», плитки розділів, пагінація, Еля. */
+        .search-note { margin: -8px 0 18px; color: var(--text-muted); font-size: 0.95rem; }
+        .search-note--broad { color: #ffffff; font-weight: 600; }
+        .search-subtitle { margin: 24px 0 12px; font-size: 1.1rem; }
+        .search-tiles { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+        .search-tile {
+            display: inline-block; padding: 8px 14px; border-radius: 999px; text-decoration: none; color: #ffffff;
+            background: var(--card-bg); border: 1px solid var(--card-border); font-size: 0.9rem;
+        }
+        .search-tile:hover { background: rgba(255, 255, 255, 0.1); }
+        .search-tile span { color: var(--text-muted); }
+        .search-pager { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: center; margin: 24px 0 8px; }
+        .search-eli { margin: 16px 0; }
+        .search-eli--small { text-align: center; font-size: 0.85rem; }
+        .search-eli--small a { color: var(--text-muted); }
+
         @media (max-width: 600px) {
             .site-header {
                 justify-content: center;
@@ -420,12 +471,36 @@ $cardColors = [
         <?= subcategory_note_html([(string) $subcategory['slug']]) ?>
         <?php endif; ?>
 
-        <?php if ($products === [] && $isSearch): ?>
-        <p class="catalog__empty">
-            <?= htmlspecialchars(t('search_no_results'), ENT_QUOTES) ?><br>
-            <?= htmlspecialchars(t('search_no_results_hint'), ENT_QUOTES) ?>
-            <a href="eli.php"><?= htmlspecialchars(t('search_ask_eli_link'), ENT_QUOTES) ?></a>.
-        </p>
+        <?php
+        $eliHref = 'eli.php' . ($searchQuery !== '' ? '?q=' . rawurlencode($searchQuery) : '');
+        $sStatus = $searchResult['status'] ?? '';
+        ?>
+        <?php if ($isSearch && $sStatus === 'limited'): ?>
+        <p class="catalog__empty"><?= htmlspecialchars(t('search_rate_limited'), ENT_QUOTES) ?></p>
+        <?php elseif ($isSearch && $sStatus === 'broad'): ?>
+        <p class="search-note search-note--broad"><?= htmlspecialchars(t('search_too_broad'), ENT_QUOTES) ?></p>
+        <div class="search-tiles">
+            <?php foreach ($searchBroadCats as $bc): ?>
+            <a class="search-tile" href="category.php?id=<?= (int) $bc['id'] ?>"><?= htmlspecialchars(localized_name($bc), ENT_QUOTES) ?> <span>(<?= (int) $bc['cnt'] ?>)</span></a>
+            <?php endforeach; ?>
+        </div>
+        <?php if ($products !== []): ?><h2 class="search-subtitle"><?= htmlspecialchars(t('search_broad_top'), ENT_QUOTES) ?></h2><?php endif; ?>
+        <?php elseif ($isSearch && $sStatus === 'ok'): ?>
+        <p class="search-note"><?= htmlspecialchars(sprintf(t('search_found'), (int) $searchResult['total']), ENT_QUOTES) ?><?php if (!empty($searchResult['layout'])): ?> · <?= htmlspecialchars(sprintf(t('search_layout_note'), $searchResult['layout']), ENT_QUOTES) ?><?php endif; ?></p>
+        <?php endif; ?>
+
+        <?php if ($products === [] && $isSearch && $sStatus !== 'broad' && $sStatus !== 'limited'): ?>
+        <p class="catalog__empty"><?= htmlspecialchars(t('search_no_results'), ENT_QUOTES) ?></p>
+        <?php if ($searchSections !== []): ?>
+        <h2 class="search-subtitle"><?= htmlspecialchars(t('search_matching_sections'), ENT_QUOTES) ?></h2>
+        <div class="search-tiles">
+            <?php foreach ($searchSections as $sec): ?>
+            <a class="search-tile" href="<?= $sec['type'] === 'category' ? 'category.php?id=' . $sec['id'] : 'catalog.php?subcategory=' . $sec['id'] ?>"><?= htmlspecialchars(localized_name($sec), ENT_QUOTES) ?></a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <p class="search-eli"><a class="btn" href="<?= htmlspecialchars($eliHref, ENT_QUOTES) ?>"><?= htmlspecialchars(t('search_not_found_eli'), ENT_QUOTES) ?></a></p>
+        <?php elseif ($products === [] && $isSearch): ?>
         <?php elseif ($products === []): ?>
         <p class="catalog__empty"><?= htmlspecialchars(t('catalog_empty'), ENT_QUOTES) ?></p>
         <?php else: ?>
@@ -468,6 +543,20 @@ $cardColors = [
                 </article>
             <?php endforeach; ?>
         </div>
+        <?php if ($isSearch && $sStatus === 'ok' && (int) $searchResult['pages'] > 1):
+            $pg = (int) $searchResult['page'];
+            $pages = (int) $searchResult['pages'];
+            $pgUrl = static fn(int $n): string => 'catalog.php?' . http_build_query(['search' => $searchQuery] + ($n > 1 ? ['page' => $n] : []));
+        ?>
+        <nav class="search-pager" aria-label="<?= htmlspecialchars(sprintf(t('search_page_of'), $pg, $pages), ENT_QUOTES) ?>">
+            <?php if ($pg > 1): ?><a class="btn" href="<?= htmlspecialchars($pgUrl($pg - 1), ENT_QUOTES) ?>" rel="prev"><?= htmlspecialchars(t('search_page_prev'), ENT_QUOTES) ?></a><?php endif; ?>
+            <span><?= htmlspecialchars(sprintf(t('search_page_of'), $pg, $pages), ENT_QUOTES) ?></span>
+            <?php if ($pg < $pages): ?><a class="btn" href="<?= htmlspecialchars($pgUrl($pg + 1), ENT_QUOTES) ?>" rel="next"><?= htmlspecialchars(t('search_page_next'), ENT_QUOTES) ?></a><?php endif; ?>
+        </nav>
+        <?php endif; ?>
+        <?php if ($isSearch): ?>
+        <p class="search-eli search-eli--small"><a href="<?= htmlspecialchars($eliHref, ENT_QUOTES) ?>"><?= htmlspecialchars(t('search_ask_eli_small'), ENT_QUOTES) ?></a></p>
+        <?php endif; ?>
         <?php endif; ?>
     </div>
     <?php include __DIR__ . '/../app/footer.php'; ?>

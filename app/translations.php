@@ -438,6 +438,18 @@ $GLOBALS['TRANSLATIONS'] = [
     'search_no_results_hint' => 'Спробуйте інший запит або',
     'search_ask_eli_link'  => 'запитайте Елю',
     'search_view_all'      => 'Показати всі результати',
+    'search_found'               => 'Знайдено: %d',
+    'search_too_broad'           => 'Запит надто загальний, оберіть категорію',
+    'search_broad_top'           => 'Найрелевантніші за назвою',
+    'search_not_found_eli'       => 'Не знайшли? Запитайте Елю',
+    'search_ask_eli_small'       => 'Спитати Елю',
+    'search_matching_sections'   => 'Розділи, що відповідають запиту',
+    'search_layout_note'         => 'Показано результати для «%s»',
+    'search_page_prev'           => '← Попередня',
+    'search_page_next'           => 'Наступна →',
+    'search_page_of'             => 'Сторінка %1$d з %2$d',
+    'search_rate_limited'        => 'Забагато пошукових запитів. Спробуйте пізніше.',
+    'search_categories_title'    => 'Категорії',
     'search_results_heading' => 'Результати пошуку: «%s»',
 
     // --- catalog.php / category.php: спільні написи каталогу ---
@@ -517,6 +529,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'account_crm_add_link'       => 'додати новий AI-продукт',
     'account_crm_ads_link'       => 'реклама',
     'account_crm_donations_link' => 'донати',
+    'account_crm_search_link' => 'Пошук: індекс, синоніми, запити без результатів',
     'account_logout'             => 'Вийти з акаунту',
 
     // --- account.php: акордеон-структура кабінету ---

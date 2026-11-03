@@ -1616,7 +1616,7 @@ require_once __DIR__ . '/marketplace.php';
         viewAll: <?= json_encode(t('search_view_all'), JSON_UNESCAPED_UNICODE) ?>
     };
 </script>
-<script src="/assets/js/site-search.js"></script>
+<script src="/assets/js/site-search.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/site-search.js') ?>"></script>
 <script>
     /* Мобільна шапка (≤ 768px): іконка пошуку розкриває наявне поле .site-search на всю
        ширину рядка шапки (клас .is-search-open), стрілка або Esc — закривають. Логіка пошуку

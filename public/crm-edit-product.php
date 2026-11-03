@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/search.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -660,6 +661,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $pdo->commit();
             $saved = true;
+            search_index_product($pdo, (int) $productId);   // пошуковий індекс — одразу (помилки лише в журнал)
 
             // Перечитуємо продукт, щоб форма показала збережений стан.
             $productStmt->execute([':id' => $productId]);

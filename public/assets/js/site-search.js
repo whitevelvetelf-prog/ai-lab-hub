@@ -145,7 +145,7 @@
         results.hidden = false;
     }
 
-    function renderResults(items, query) {
+    function renderResults(items, query, data) {
         activeIndex = -1;
         results.innerHTML = '';
 
@@ -195,7 +195,8 @@
             results.appendChild(a);
         });
 
-        if (items.length >= VIEW_ALL_THRESHOLD) {
+        // «Показати всі»: результатів більше, ніж у списку, або запит надто загальний (сторінка покаже категорії).
+        if (items.length >= VIEW_ALL_THRESHOLD || (data && (data.broad || data.total > items.length))) {
             var viewAll = document.createElement('a');
             viewAll.className = 'site-search__viewall';
             viewAll.href = 'catalog.php?search=' + encodeURIComponent(query);
@@ -217,7 +218,7 @@
                     return; // застаріла відповідь — новіший запит вже в польоті
                 }
                 if (data && data.ok) {
-                    renderResults(data.results, query);
+                    renderResults(data.results, query, data);
                     input.setAttribute('aria-expanded', 'true');
                 }
             })

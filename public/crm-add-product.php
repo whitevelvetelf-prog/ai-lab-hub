@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/search.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -711,6 +712,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $pdo->commit();
+            search_index_product($pdo, $savedProductId);   // пошуковий індекс — одразу (помилки лише в журнал)
 
             // Успіх — очищаємо форму.
             $old = array_merge($old, [

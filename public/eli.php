@@ -640,7 +640,9 @@ require_once __DIR__ . '/../app/translations.php';
         </div>
 
         <form class="composer" id="composer" onsubmit="return false;">
+            <?php // ?q= — запит зі сторінки пошуку («Не знайшли? Запитайте Елю»): лише підставляється в поле, не надсилається. ?>
             <input id="composerInput" class="composer__input" type="text" autocomplete="off"
+                   value="<?= htmlspecialchars(mb_substr(trim((string) preg_replace('/\s+/u', ' ', is_string($_GET['q'] ?? null) ? $_GET['q'] : '')), 0, 100), ENT_QUOTES) ?>"
                    placeholder="<?= htmlspecialchars(t('eli_input_placeholder'), ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars(t('eli_input_aria'), ENT_QUOTES) ?>">
             <button class="composer__btn" type="submit"><?= htmlspecialchars(t('eli_send'), ENT_QUOTES) ?></button>
         </form>

@@ -26,6 +26,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/translations.php';
+require_once __DIR__ . '/search.php';
 
 /** Змінюється разом із системним промптом — старий кеш тоді не використовується. */
 const ELI_PROMPT_VERSION = 'v3-2026-10-23'; // v3: запит про чутливу тему — лише продукти її підкатегорії
@@ -326,7 +327,11 @@ function eli_first_sentence(string $text): string
  *   ids — кандидати для промпта (за релевантністю), matched — лише ті, що мають
  *   збіг зі словами запиту (для запасного режиму), subcats — релевантні підкатегорії.
  */
-function eli_candidates(array $index, string $message, int $limit): array
+/**
+ * @param list<int> $extra Додаткові кандидати зі спільного пошуку (app/search.php): стають після власних збігів Елі
+ *                         й перед доповненням за популярністю, лише якщо проходять ті самі правила чутливих розділів.
+ */
+function eli_candidates(array $index, string $message, int $limit, array $extra = []): array
 {
     $kw = eli_keywords($message);
     $open = eli_sensitive_open($index, $message);
@@ -400,6 +405,19 @@ function eli_candidates(array $index, string $message, int $limit): array
     $relSubs = array_slice(array_map('intval', array_keys($relSubs)), 0, 6);
 
     $ids = array_slice($matched, 0, $limit);
+    if (count($ids) < $limit && $extra !== []) {
+        $have = array_flip($ids);
+        foreach ($extra as $pid) {
+            $pid = (int) $pid;
+            if (count($ids) >= $limit) {
+                break;
+            }
+            if (!isset($have[$pid]) && isset($products[$pid])) {   // $products — уже з фільтром чутливих розділів
+                $ids[] = $pid;
+                $have[$pid] = true;
+            }
+        }
+    }
     if (count($ids) < $limit) {
         $have = array_flip($ids);
         $pad = [];
@@ -1152,7 +1170,17 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
                         'products' => eli_cards($pdo, array_keys($ids), $userId)], $log);
     }
 
-    $cand = eli_candidates($index, $message, $cfg['max_candidates']);
+    // Спільний пошук сайту (синоніми, UA/EN) — лише для коротких запитів-ключових слів: у довгому реченні
+    // «І» між усіма словами нічого не дасть. Помилка чи відсутній індекс — просто без доповнення.
+    $extra = [];
+    if (count(search_query_tokens($message)) <= 4) {
+        try {
+            $extra = search_product_ids($pdo, $message, 30);
+        } catch (Throwable $e) {
+            error_log('[eli-chat] search: ' . $e->getMessage());
+        }
+    }
+    $cand = eli_candidates($index, $message, $cfg['max_candidates'], $extra);
     $answer = null;
     if ($cfg['api_key'] !== '') {
         $context = eli_product_context($index, $cand['ids'], $lang);
