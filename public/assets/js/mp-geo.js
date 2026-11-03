@@ -98,8 +98,35 @@
             form.querySelectorAll('[data-geo-show]').forEach(function (s) {
                 s.hidden = s.dataset.geoShow.split(' ').indexOf(wf) === -1;
             });
+            // Країни — лише для «Вибрані країни»; наступне поле країни/міста з'являється після заповнення попереднього.
+            var scope = form.querySelector('input[name="online_scope"]:checked');
+            var countries = form.querySelector('.mp-geo-countries');
+            if (countries) { countries.hidden = !scope || scope.value !== 'country'; }
+            reveal(form.querySelectorAll('.mp-geo-countries select'), function (el) { return el.value !== ''; });
+            reveal(form.querySelectorAll('.mp-geo-extra__row'), function (el) {
+                var h = el.querySelector('[data-geo-id]');
+                return !!(h && h.value);
+            });
         }
-        form.querySelectorAll('[data-geo-format]').forEach(function (r) { r.addEventListener('change', sync); });
+        function reveal(nodes, filled) {
+            var prevFilled = true;
+            Array.prototype.forEach.call(nodes, function (el) {
+                var f = filled(el);
+                el.hidden = !(prevFilled || f);
+                prevFilled = f;
+            });
+        }
+        form.querySelectorAll('[data-geo-format], input[name="online_scope"], .mp-geo-countries select').forEach(function (r) {
+            r.addEventListener('change', function () {
+                if (r.tagName === 'SELECT' && r.value) {
+                    var c = form.querySelector('input[name="online_scope"][value="country"]');
+                    if (c) { c.checked = true; }
+                }
+                sync();
+            });
+        });
+        form.addEventListener('geo:change', sync);
+        form.addEventListener('focusout', function () { setTimeout(sync, 200); });
         sync();
     }
 

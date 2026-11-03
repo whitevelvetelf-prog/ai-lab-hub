@@ -103,7 +103,7 @@ function mpg_form_html(PDO $pdo, array $v, string $lang): string
             </div>
         </div>
     </fieldset>
-    <script src="/assets/js/mp-geo.js" defer></script>
+    <script src="/assets/js/mp-geo.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/mp-geo.js') ?>" defer></script>
     <?php
 
     return (string) ob_get_clean();

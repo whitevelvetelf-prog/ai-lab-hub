@@ -250,7 +250,7 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
                 });
             }());
             </script>
-            <script src="/assets/js/mp-geo.js" defer></script>
+            <script src="/assets/js/mp-geo.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-geo.js') ?>" defer></script>
         <?php endif; ?>
 
         <?php

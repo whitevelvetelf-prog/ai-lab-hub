@@ -774,7 +774,13 @@ function mpg_distance_text(float $km, string $units): string
 {
     $v = $units === 'mi' ? $km / MPG_KM_PER_MI : $km;
 
-    return ($v < 10 ? number_format($v, 1, '.', '') : (string) (int) round($v)) . "\u{00A0}" . t($units === 'mi' ? 'mpg_unit_mi' : 'mpg_unit_km');
+    $unit = "\u{00A0}" . t($units === 'mi' ? 'mpg_unit_mi' : 'mpg_unit_km');
+    if ($v < 1) {
+        return "<\u{00A0}1" . $unit;
+    }
+    $sep = current_lang() === 'uk' ? ',' : '.';
+
+    return ($v < 10 ? number_format($v, 1, $sep, '') : (string) (int) round($v)) . $unit;
 }
 
 // --- Налаштування відвідувача ------------------------------------------------------------

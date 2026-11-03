@@ -144,7 +144,7 @@ mpb_open(t('mpg_settings_title'), true, 'board');
                 <button class="mp-btn" type="submit"><?= mp_e(t('mpg_forget_btn')) ?></button>
             </form>
         <?php endif; ?>
-        <script src="/assets/js/mp-geo.js" defer></script>
+        <script src="/assets/js/mp-geo.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-geo.js') ?>" defer></script>
         <?= mpg_attribution_html() ?>
     </div>
 <?php mpb_close(); ?>

@@ -357,7 +357,7 @@ $maxMb = round(((int) $cfg['max_upload_bytes']) / 1048576, 1);
     <title>AI LAB HUB — Marketplace: <?= $isEdit ? 'редагування' : 'нова' ?> пропозиція</title>
     <link rel="stylesheet" href="/assets/css/crm-ads.css">
     <link rel="stylesheet" href="/assets/css/mp-crm.css">
-    <link rel="stylesheet" href="/assets/css/mp-geo.css">
+    <link rel="stylesheet" href="/assets/css/mp-geo.css?v=<?= (int) @filemtime(__DIR__ . '/assets/css/mp-geo.css') ?>">
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
 <body>
