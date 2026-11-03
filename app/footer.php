@@ -432,6 +432,15 @@ require_once __DIR__ . '/marketplace.php';
        гамбургер. Кнопка асистента ЗАВЖДИ показує короткий підпис поруч з
        іконкою (ніколи не лишається самою іконкою) і має пріоритет: не
        стискається і завжди видима повністю. */
+    /* Кабінет: у меню є ще «Блог» (app/site-header.php) — на ПК вужчі бокові відступи пунктів,
+       щоб шапка з Marketplace лишалась в один рядок на 1366 px («Поділитися» не переноситься). */
+    @media (min-width: 769px) {
+        .site-header .site-nav:has([data-nav-blog]) > .site-nav__link {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+    }
+
     @media (max-width: 768px) {
         .site-header {
             justify-content: flex-start;
