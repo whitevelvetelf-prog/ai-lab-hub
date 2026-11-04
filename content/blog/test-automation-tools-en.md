@@ -71,6 +71,8 @@ If analysts or manual testers write the test cases while automation engineers im
 - **[WireMock](product:WireMock)** and **[Mockoon](product:Mockoon)** replace unavailable services with stubs, and **[Testcontainers](product:Testcontainers)** spins up a real database or message broker in Docker for the duration of a test.
 - To check emails and SMS in automated tests, use **[Mailosaur](product:Mailosaur)** or a local **[Mailpit](product:Mailpit)**.
 
+For what exactly to check in an API, see [API testing](blog-post.php?slug=api-testing&hl=en).
+
 ## Unit tests
 
 Developers usually write unit tests, but automation engineers need to know these frameworks, since UI and API tests are often built on them:

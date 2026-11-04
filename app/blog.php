@@ -109,6 +109,10 @@ const BLOG_ARTICLES = [
         'uk' => 'trenazhery-dlya-testuvalnykiv-ua.md',
         'en' => 'practice-sites-for-testers-en.md',
     ],
+    'api-testing' => [
+        'uk' => 'testuvannya-api-ua.md',
+        'en' => 'api-testing-en.md',
+    ],
 ];
 
 /**
@@ -147,6 +151,7 @@ const BLOG_ARTICLE_TOPICS = [
     'manual-testing-tools' => ['development-it/testing', 'development-it/qa-practice'],
     'test-automation-tools' => ['development-it/testing', 'development-it/qa-practice'],
     'qa-practice-sites' => ['development-it/qa-practice', 'development-it/testing'],
+    'api-testing' => ['development-it/testing', 'development-it/api', 'development-it/qa-practice'],
 ];
 
 /**
