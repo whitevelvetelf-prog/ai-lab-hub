@@ -149,7 +149,7 @@ Start simple: how do response time and error rate change as concurrent users gro
 
 Typical API vulnerabilities are listed in the OWASP API Security Top 10: access to other users' objects by changing an id, weak authentication, overly verbose responses, no rate limiting. A manual tester can check the basics: requests without a token, with someone else's token, with extra fields (for example `"role": "admin"` in a profile update request).
 
-For deeper checks there is **[ZAP](product:ZAP)** (a free open-source scanner) and **[Burp Suite](product:Burp Suite)**. Only test the security of systems you have permission to test.
+For deeper checks there is **[ZAP](product:ZAP)** (a free open-source scanner) and **[Burp Suite](product:Burp Suite)**. Only test the security of systems you have permission to test. More in [Security testing](blog-post.php?slug=security-testing&hl=en).
 
 ## Where to practise
 

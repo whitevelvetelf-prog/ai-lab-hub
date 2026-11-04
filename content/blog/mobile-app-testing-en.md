@@ -142,7 +142,7 @@ Mobile apps end up directly in an attacker's hands: an APK or IPA can be unpacke
 - **[Frida](product:Frida)** lets you observe and change an app's behaviour at runtime, a tool for deeper pentesting.
 - Traffic is checked with [Burp Suite](product:Burp Suite) or [ZAP](product:ZAP).
 
-Only examine your own apps or apps you have permission to test.
+Only examine your own apps or apps you have permission to test. For the general principles, see [Security testing](blog-post.php?slug=security-testing&hl=en).
 
 ## Where to practise
 
