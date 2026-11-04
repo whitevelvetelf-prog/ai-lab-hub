@@ -100,6 +100,8 @@ Load tests check the server, but users also feel how fast the page is in the bro
 - **[GTmetrix](product:GTmetrix)**: a report with a request waterfall showing what slows loading down;
 - **[sitespeed.io](product:sitespeed.io)**: regular measurements in real browsers with page load video and monitoring in Grafana.
 
+To find and fix exactly these problems (Core Web Vitals, bundles, real-user monitoring), see [Front-end performance testing](blog-post.php?slug=frontend-performance-testing&hl=en).
+
 A good practice is to combine both: load the back end with [Grafana k6](product:Grafana k6) or [Artillery](product:Artillery) and at the same time measure how the page opens for a single user under that load.
 
 ## Common mistakes

@@ -129,6 +129,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-dostupnosti-ua.md',
         'en' => 'accessibility-testing-en.md',
     ],
+    'frontend-performance-testing' => [
+        'uk' => 'testuvannya-produktyvnosti-frontendu-ua.md',
+        'en' => 'frontend-performance-testing-en.md',
+    ],
 ];
 
 /**
@@ -172,6 +176,7 @@ const BLOG_ARTICLE_TOPICS = [
     'mobile-app-testing' => ['development-it/testing', 'development-it/mobile-development'],
     'security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/qa-practice'],
     'accessibility-testing' => ['development-it/testing', 'accessibility/digital-accessibility'],
+    'frontend-performance-testing' => ['development-it/testing', 'development-it/web-development'],
 ];
 
 /**
