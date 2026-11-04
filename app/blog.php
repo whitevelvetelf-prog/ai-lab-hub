@@ -113,6 +113,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-api-ua.md',
         'en' => 'api-testing-en.md',
     ],
+    'load-testing' => [
+        'uk' => 'navantazhuvalne-testuvannya-ua.md',
+        'en' => 'load-testing-en.md',
+    ],
 ];
 
 /**
@@ -152,6 +156,7 @@ const BLOG_ARTICLE_TOPICS = [
     'test-automation-tools' => ['development-it/testing', 'development-it/qa-practice'],
     'qa-practice-sites' => ['development-it/qa-practice', 'development-it/testing'],
     'api-testing' => ['development-it/testing', 'development-it/api', 'development-it/qa-practice'],
+    'load-testing' => ['development-it/testing'],
 ];
 
 /**

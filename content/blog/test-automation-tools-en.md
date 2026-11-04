@@ -88,6 +88,8 @@ Developers usually write unit tests, but automation engineers need to know these
 - **[Gatling](product:Gatling)**: scenarios as code in Java, Kotlin, Scala or JavaScript with detailed reports.
 - **[Locust](product:Locust)** defines user behaviour in Python, and **[Artillery](product:Artillery)** offers YAML scenarios and load with real browsers via Playwright.
 
+For how to plan a test and read the results, see [Load testing](blog-post.php?slug=load-testing&hl=en).
+
 ## Visual regression testing
 
 A functional test won't notice that a button moved by 20 pixels. Visual tests compare screenshots with a baseline for that.

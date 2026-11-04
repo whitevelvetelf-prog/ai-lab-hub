@@ -143,7 +143,7 @@ An API that answers one tester quickly may fall over under a thousand users. To 
 - **[Apache JMeter](product:Apache JMeter)**: a graphical editor and the widest protocol support;
 - **[Gatling](product:Gatling)**, **[Locust](product:Locust)** (Python) and **[Artillery](product:Artillery)** (YAML): scenarios as code.
 
-Start simple: how do response time and error rate change as concurrent users grow from 10 to 100?
+Start simple: how do response time and error rate change as concurrent users grow from 10 to 100? More in [Load testing](blog-post.php?slug=load-testing&hl=en).
 
 ## API security
 
