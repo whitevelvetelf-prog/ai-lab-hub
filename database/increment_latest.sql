@@ -1,67 +1,60 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-11-04: «Розробка та IT» → «Тестування» / «Тренажери для тестувальників» і «Кібербезпека» → «Безпека коду та застосунків» (slug appsec).
--- Партія 6: 28 нових продуктів — тестування безпеки (для статті про тестування безпеки); також «Кібербезпека» → «Безпека коду та застосунків».
+-- AI LAB HUB — партія 2026-11-04: «Розробка та IT» → «Тестування» і «Доступність» → «Цифрова доступність для бізнесу» (slug digital-accessibility).
+-- Партія 7: 21 нових продуктів — тестування доступності (для статті про тестування доступності); екранні читачі також у «Для незрячих і слабозорих».
 -- Тексти UA/EN написано за офіційними сторінками, звірено 2026-11-04. Якщо продукт з такою адресою чи назвою вже є — лише прив’язка.
 -- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою. Повторний запуск безпечний.
---   Nmap
---   Nuclei
---   Nikto
---   sqlmap
---   Metasploit
---   Kali Linux
---   Wireshark
---   SonarQube
---   Trivy
---   Gitleaks
---   TruffleHog
---   OWASP Dependency-Check
---   Invicti
---   Detectify
---   Intruder
---   Nessus
---   OpenVAS
---   Caido
---   ffuf
---   HTTP Observatory
---   SSL Labs
---   Security Headers
---   HackerOne
---   Bugcrowd
---   Hack The Box
---   TryHackMe
---   DVWA
---   OWASP crAPI
+--   Accessibility Insights
+--   Pa11y
+--   axe-core
+--   IBM Equal Access Accessibility Checker
+--   ARC Toolkit
+--   ANDI
+--   Sa11y
+--   Colour Contrast Analyser
+--   WebAIM Contrast Checker
+--   Who Can Use
+--   Color Oracle
+--   Sim Daltonism
+--   VoiceOver
+--   TalkBack
+--   Windows Narrator
+--   Orca
+--   Accessibility Scanner
+--   Accessibility Inspector
+--   PAC PDF Accessibility Checker
+--   eslint-plugin-jsx-a11y
+--   Storybook
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'development-it' LIMIT 1);
 
--- Nmap — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmap.org' OR LOWER(`name`) = 'nmap')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Nmap', NULL, 'https://nmap.org', NULL, NULL, 'Безкоштовний відкритий сканер мереж і портів: які хости доступні, які порти відкриті й які сервіси на них працюють.', 'Free open-source network and port scanner: which hosts are up, which ports are open and what services run on them.', 'Nmap досліджує мережу: знаходить активні хости, відкриті порти, визначає сервіси, їхні версії й операційну систему. Скриптовий рушій NSE додає сотні перевірок, зокрема на відомі вразливості. Є графічна оболонка Zenmap. Працює на Linux, Windows і macOS. Один із базових інструментів будь-якого тестування безпеки інфраструктури.', 'Nmap explores a network: it finds live hosts and open ports and identifies services, their versions and the operating system. The NSE scripting engine adds hundreds of checks, including for known vulnerabilities. Zenmap provides a graphical interface. It runs on Linux, Windows and macOS. One of the basic tools of any infrastructure security test.', 'Сканування портів і хостів
-Визначення сервісів, версій і ОС
-Скрипти NSE
-Графічна оболонка Zenmap', 'Port and host scanning
-Service, version and OS detection
-NSE scripts
-Zenmap GUI', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmap.org' OR LOWER(`name`) = 'nmap') ORDER BY `id` LIMIT 1);
+-- Accessibility Insights — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'accessibilityinsights.io' OR LOWER(`name`) = 'accessibility insights')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Accessibility Insights', NULL, 'https://accessibilityinsights.io', NULL, NULL, 'Безкоштовні відкриті інструменти Microsoft для тестування доступності вебсторінок і Windows-застосунків.', 'Free open-source Microsoft tools for testing the accessibility of web pages and Windows applications.', 'Accessibility Insights for Web — розширення для Chrome і Edge: FastPass за кілька хвилин знаходить найпоширеніші помилки, а режим Assessment покроково веде через перевірку на відповідність WCAG 2.1 AA, зокрема ручні тести, з наочними підказками на сторінці. Accessibility Insights for Windows перевіряє настільні застосунки: властивості UI Automation через Live Inspect і контраст кольорів. Інструменти відкриті на GitHub.', 'Accessibility Insights for Web is an extension for Chrome and Edge: FastPass finds the most common errors in a few minutes, and Assessment guides you step by step through a WCAG 2.1 AA check, including manual tests, with visual helpers on the page. Accessibility Insights for Windows tests desktop apps: UI Automation properties via Live Inspect and colour contrast. The tools are open source on GitHub.', 'FastPass — швидка автоматична перевірка
+Покрокова оцінка WCAG 2.1 AA з ручними тестами
+Візуалізація порядку табуляції й орієнтирів
+Версія для Windows-застосунків', 'FastPass quick automated check
+Guided WCAG 2.1 AA assessment with manual tests
+Tab-order and landmark visualisations
+Windows app version', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web,desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'accessibilityinsights.io' OR LOWER(`name`) = 'accessibility insights') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free open-source network and port scanner: which hosts are up, which ports are open and what services run on them.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Nmap explores a network: it finds live hosts and open ports and identifies services, their versions and the operating system. The NSE scripting engine adds hundreds of checks, including for known vulnerabilities. Zenmap provides a graphical interface. It runs on Linux, Windows and macOS. One of the basic tools of any infrastructure security test.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Port and host scanning
-Service, version and OS detection
-NSE scripts
-Zenmap GUI', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free open-source Microsoft tools for testing the accessibility of web pages and Windows applications.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Accessibility Insights for Web is an extension for Chrome and Edge: FastPass finds the most common errors in a few minutes, and Assessment guides you step by step through a WCAG 2.1 AA check, including manual tests, with visual helpers on the page. Accessibility Insights for Windows tests desktop apps: UI Automation properties via Live Inspect and colour contrast. The tools are open source on GitHub.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'FastPass quick automated check
+Guided WCAG 2.1 AA assessment with manual tests
+Tab-order and landmark visualisations
+Windows app version', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -71,30 +64,30 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Nuclei — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/projectdiscovery/nuclei' OR LOWER(`name`) = 'nuclei')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Nuclei', NULL, 'https://github.com/projectdiscovery/nuclei', NULL, NULL, 'Швидкий відкритий сканер вразливостей на шаблонах YAML, які пише й оновлює спільнота.', 'Fast open-source vulnerability scanner driven by community-maintained YAML templates.', 'Nuclei перевіряє сайти, API, мережеві сервіси й хмарні конфігурації за тисячами готових шаблонів: відомі CVE, неправильні налаштування, відкриті адмінки, витоки файлів. Шаблон — це простий YAML-файл, тож команда може описати власні перевірки. Зручно запускати в CI. Відкритий код від ProjectDiscovery.', 'Nuclei checks websites, APIs, network services and cloud configurations against thousands of ready-made templates: known CVEs, misconfigurations, exposed admin panels and leaked files. A template is a simple YAML file, so a team can write its own checks. Easy to run in CI. Open source from ProjectDiscovery.', 'Тисячі шаблонів від спільноти
-Власні перевірки в YAML
-Веб, API, мережа, хмара
-Запуск у CI', 'Thousands of community templates
-Custom checks in YAML
-Web, API, network, cloud
-Runs in CI', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/projectdiscovery/nuclei' OR LOWER(`name`) = 'nuclei') ORDER BY `id` LIMIT 1);
+-- Pa11y — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pa11y.org' OR LOWER(`name`) = 'pa11y')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Pa11y', NULL, 'https://pa11y.org', NULL, NULL, 'Відкриті інструменти для автоматичного тестування доступності: командний рядок, CI і дашборд.', 'Open-source automated accessibility testing tools: command line, CI and a dashboard.', 'Pa11y завантажує вебсторінку й показує знайдені проблеми доступності. Pa11y CI проходить списком сторінок і зручний для конвеєрів збирання, Pa11y Dashboard щодня перевіряє сайти й показує графіки покращень і регресій, а Pa11y Webservice віддає дані через JSON API. Безкоштовно, відкритий код.', 'Pa11y loads a web page and reports the accessibility issues it finds. Pa11y CI iterates over a list of pages and suits build pipelines, Pa11y Dashboard tests sites daily and charts improvements and regressions, and Pa11y Webservice exposes the data through a JSON API. Free and open source.', 'Перевірка сторінки з командного рядка
+Pa11y CI для конвеєрів
+Дашборд із графіками регресій
+JSON-вебсервіс', 'Command-line page checks
+Pa11y CI for pipelines
+Dashboard with regression charts
+JSON webservice', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pa11y.org' OR LOWER(`name`) = 'pa11y') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Fast open-source vulnerability scanner driven by community-maintained YAML templates.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Nuclei checks websites, APIs, network services and cloud configurations against thousands of ready-made templates: known CVEs, misconfigurations, exposed admin panels and leaked files. A template is a simple YAML file, so a team can write its own checks. Easy to run in CI. Open source from ProjectDiscovery.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Thousands of community templates
-Custom checks in YAML
-Web, API, network, cloud
-Runs in CI', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source automated accessibility testing tools: command line, CI and a dashboard.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Pa11y loads a web page and reports the accessibility issues it finds. Pa11y CI iterates over a list of pages and suits build pipelines, Pa11y Dashboard tests sites daily and charts improvements and regressions, and Pa11y Webservice exposes the data through a JSON API. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Command-line page checks
+Pa11y CI for pipelines
+Dashboard with regression charts
+JSON webservice', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -104,63 +97,30 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Nikto — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/sullo/nikto' OR LOWER(`name`) = 'nikto')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Nikto', NULL, 'https://github.com/sullo/nikto', NULL, NULL, 'Класичний відкритий сканер вебсерверів: небезпечні файли, застарілі версії й помилки конфігурації.', 'Classic open-source web server scanner for dangerous files, outdated versions and misconfigurations.', 'Nikto швидко перевіряє вебсервер на тисячі відомих проблем: потенційно небезпечні файли й скрипти, застарілі версії серверного ПЗ, небезпечні HTTP-методи, відсутні заголовки безпеки. Працює з командного рядка й формує звіт. Сканує «гучно», тож підходить для власних тестових середовищ, а не для прихованих перевірок. Відкритий код.', 'Nikto quickly checks a web server for thousands of known issues: potentially dangerous files and scripts, outdated server software, risky HTTP methods and missing security headers. It runs from the command line and produces a report. It scans "loudly", so it suits your own test environments rather than stealthy assessments. Open source.', 'Небезпечні файли й скрипти
-Застарілі версії ПЗ
-Помилки конфігурації
-Звіти з командного рядка', 'Dangerous files and scripts
-Outdated software versions
-Misconfigurations
-Command-line reports', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/sullo/nikto' OR LOWER(`name`) = 'nikto') ORDER BY `id` LIMIT 1);
+-- axe-core — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/dequelabs/axe-core' OR LOWER(`name`) = 'axe-core')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'axe-core', NULL, 'https://github.com/dequelabs/axe-core', NULL, NULL, 'Відкритий рушій автоматичних перевірок доступності від Deque, на якому працюють axe DevTools і Lighthouse.', 'Open-source accessibility testing engine from Deque that powers axe DevTools and Lighthouse.', 'axe-core — JavaScript-бібліотека, що перевіряє HTML-сторінку за правилами WCAG і повертає список порушень із поясненнями. Її вбудовують у тести Playwright, Cypress, Selenium, Jest (через пакети @axe-core/playwright, cypress-axe, jest-axe тощо), щоб автоматичні перевірки доступності запускалися разом з іншими тестами. Безкоштовно, відкритий код.', 'axe-core is a JavaScript library that checks an HTML page against WCAG rules and returns a list of violations with explanations. It is embedded in Playwright, Cypress, Selenium and Jest tests (via packages such as @axe-core/playwright, cypress-axe and jest-axe) so accessibility checks run alongside other tests. Free and open source.', 'Правила WCAG 2.x
+Інтеграція з Playwright, Cypress, Selenium, Jest
+Мало хибних спрацювань
+Відкритий код', 'WCAG 2.x rules
+Integrates with Playwright, Cypress, Selenium, Jest
+Few false positives
+Open source', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/dequelabs/axe-core' OR LOWER(`name`) = 'axe-core') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Classic open-source web server scanner for dangerous files, outdated versions and misconfigurations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Nikto quickly checks a web server for thousands of known issues: potentially dangerous files and scripts, outdated server software, risky HTTP methods and missing security headers. It runs from the command line and produces a report. It scans "loudly", so it suits your own test environments rather than stealthy assessments. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Dangerous files and scripts
-Outdated software versions
-Misconfigurations
-Command-line reports', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- sqlmap — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sqlmap.org' OR LOWER(`name`) = 'sqlmap')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'sqlmap', NULL, 'https://sqlmap.org', NULL, NULL, 'Відкритий інструмент, що автоматично знаходить і підтверджує SQL-ін’єкції у вебзастосунках.', 'Open-source tool that automatically detects and confirms SQL injection in web applications.', 'sqlmap перевіряє параметри запитів, форми, cookies і заголовки на SQL-ін’єкції різних типів, визначає СУБД і показує, які дані можна отримати через вразливість. Підтримує MySQL, PostgreSQL, Microsoft SQL Server, Oracle, SQLite та інші. Використовуйте лише на власних системах або з дозволом власника. Відкритий код (GPLv2).', 'sqlmap tests request parameters, forms, cookies and headers for various types of SQL injection, identifies the DBMS and shows what data could be reached through the flaw. It supports MySQL, PostgreSQL, Microsoft SQL Server, Oracle, SQLite and more. Use it only on your own systems or with the owner''s permission. Open source (GPLv2).', 'Автоматичний пошук SQL-ін’єкцій
-Визначення СУБД
-Параметри, форми, cookies, заголовки
-Відкритий код', 'Automatic SQL injection detection
-DBMS fingerprinting
-Parameters, forms, cookies, headers
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sqlmap.org' OR LOWER(`name`) = 'sqlmap') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source tool that automatically detects and confirms SQL injection in web applications.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'sqlmap tests request parameters, forms, cookies and headers for various types of SQL injection, identifies the DBMS and shows what data could be reached through the flaw. It supports MySQL, PostgreSQL, Microsoft SQL Server, Oracle, SQLite and more. Use it only on your own systems or with the owner''s permission. Open source (GPLv2).', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Automatic SQL injection detection
-DBMS fingerprinting
-Parameters, forms, cookies, headers
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source accessibility testing engine from Deque that powers axe DevTools and Lighthouse.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'axe-core is a JavaScript library that checks an HTML page against WCAG rules and returns a list of violations with explanations. It is embedded in Playwright, Cypress, Selenium and Jest tests (via packages such as @axe-core/playwright, cypress-axe and jest-axe) so accessibility checks run alongside other tests. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'WCAG 2.x rules
+Integrates with Playwright, Cypress, Selenium, Jest
+Few false positives
 Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -170,63 +130,162 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Metasploit — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'metasploit.com' OR LOWER(`name`) = 'metasploit')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Metasploit', NULL, 'https://www.metasploit.com', NULL, NULL, 'Платформа для тестування на проникнення від Rapid7: перевірка вразливостей готовими модулями.', 'Rapid7 penetration testing platform for verifying vulnerabilities with ready-made modules.', 'Metasploit містить тисячі модулів для сканування, перевірки й експлуатації відомих вразливостей, а також інструменти для подальших кроків пентесту. Безкоштовний відкритий Metasploit Framework працює з командного рядка; комерційний Metasploit Pro додає графічний інтерфейс, автоматизацію й звіти. Інструмент для досвідчених пентестерів і лише для систем, на тестування яких є дозвіл.', 'Metasploit contains thousands of modules for scanning, verifying and exploiting known vulnerabilities, plus tools for later pentest stages. The free open-source Metasploit Framework runs from the command line; the commercial Metasploit Pro adds a GUI, automation and reports. A tool for experienced pentesters, and only for systems you are authorised to test.', 'Тисячі модулів
-Перевірка відомих вразливостей
-Безкоштовний Metasploit Framework
-Metasploit Pro зі звітами', 'Thousands of modules
-Verification of known vulnerabilities
-Free Metasploit Framework
-Metasploit Pro with reports', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'metasploit.com' OR LOWER(`name`) = 'metasploit') ORDER BY `id` LIMIT 1);
+-- IBM Equal Access Accessibility Checker — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/ibma/equal-access' OR LOWER(`name`) = 'ibm equal access accessibility checker')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'IBM Equal Access Accessibility Checker', NULL, 'https://github.com/IBMa/equal-access', NULL, NULL, 'Безкоштовний відкритий набір IBM: розширення для браузерів і пакети для автоматичних перевірок доступності в CI.', 'Free open-source IBM toolkit: browser extensions and packages for automated accessibility checks in CI.', 'Розширення для Chrome, Firefox і Edge вбудовується в інструменти розробника й показує порушення доступності на сторінці. Пакет accessibility-checker для Node запускає ті самі перевірки в CI разом із Selenium, Puppeteer чи Playwright, а cypress-accessibility-checker — у Cypress. Відкритий код.', 'Extensions for Chrome, Firefox and Edge plug into the developer tools and show accessibility violations on the page. The accessibility-checker Node package runs the same checks in CI with Selenium, Puppeteer or Playwright, and cypress-accessibility-checker does so in Cypress. Open source.', 'Розширення для Chrome, Firefox, Edge
+Пакет для CI
+Обгортка для Cypress
+Відкритий код', 'Chrome, Firefox and Edge extensions
+CI package
+Cypress wrapper
+Open source', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web,desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/ibma/equal-access' OR LOWER(`name`) = 'ibm equal access accessibility checker') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Rapid7 penetration testing platform for verifying vulnerabilities with ready-made modules.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Metasploit contains thousands of modules for scanning, verifying and exploiting known vulnerabilities, plus tools for later pentest stages. The free open-source Metasploit Framework runs from the command line; the commercial Metasploit Pro adds a GUI, automation and reports. A tool for experienced pentesters, and only for systems you are authorised to test.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Thousands of modules
-Verification of known vulnerabilities
-Free Metasploit Framework
-Metasploit Pro with reports', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free open-source IBM toolkit: browser extensions and packages for automated accessibility checks in CI.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Extensions for Chrome, Firefox and Edge plug into the developer tools and show accessibility violations on the page. The accessibility-checker Node package runs the same checks in CI with Selenium, Puppeteer or Playwright, and cypress-accessibility-checker does so in Cypress. Open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Chrome, Firefox and Edge extensions
+CI package
+Cypress wrapper
+Open source', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Kali Linux — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kali.org' OR LOWER(`name`) = 'kali linux')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Kali Linux', NULL, 'https://www.kali.org', NULL, NULL, 'Безкоштовний дистрибутив Linux для тестування на проникнення з сотнями встановлених інструментів безпеки.', 'Free Linux distribution for penetration testing with hundreds of security tools preinstalled.', 'Kali Linux від Offensive Security містить готовий набір інструментів для тестування безпеки: сканери мереж і вебзастосунків, проксі, інструменти аналізу паролів, бездротових мереж і криміналістики. Його можна встановити як основну систему, у віртуальну машину, WSL на Windows або запускати з флешки. Популярне середовище для навчання й роботи пентестерів.', 'Kali Linux from Offensive Security comes with a ready set of security testing tools: network and web application scanners, proxies, password analysis, wireless and forensics tools. You can install it as a main system, in a virtual machine, in WSL on Windows or run it from a USB stick. A popular environment for pentesters to learn and work in.', 'Сотні інструментів безпеки
-Віртуальна машина, WSL, USB
-Регулярні оновлення
-Безкоштовно', 'Hundreds of security tools
-Virtual machine, WSL, USB
-Regular updates
-Free', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kali.org' OR LOWER(`name`) = 'kali linux') ORDER BY `id` LIMIT 1);
+-- ARC Toolkit — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'chromewebstore.google.com/detail/chdkkkccnlfncngelccgbgfmjebmkmce' OR LOWER(`name`) = 'arc toolkit')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ARC Toolkit', NULL, 'https://chromewebstore.google.com/detail/chdkkkccnlfncngelccgbgfmjebmkmce', NULL, NULL, 'Безкоштовне розширення TPGi для інструментів розробника Chrome: перевірки WCAG, контраст і порядок табуляції.', 'Free TPGi extension for Chrome DevTools: WCAG checks, contrast and tab order.', 'ARC Toolkit додає в Chrome DevTools панель, яка знаходить проблеми доступності за правилами WCAG 2.x, EN 301 549 і Section 508, перевіряє контраст і дозволяє тестувати окремий компонент. Окремо показує цифрами й лініями порядок табуляції — як сторінкою рухається людина, яка користується лише клавіатурою. Працює локально, зокрема зі сторінками в розробці.', 'ARC Toolkit adds a Chrome DevTools panel that finds accessibility issues against WCAG 2.x, EN 301 549 and Section 508 rules, checks contrast and lets you test a single component. It also shows tab order with numbers and lines, illustrating how a keyboard-only user moves through the page. It runs locally, including on pages in development.', 'Перевірки WCAG, EN 301 549, Section 508
+Порядок табуляції на сторінці
+Перевірка контрасту
+Тест окремого компонента', 'WCAG, EN 301 549 and Section 508 checks
+Tab-order overlay
+Contrast checks
+Single-component testing', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'chromewebstore.google.com/detail/chdkkkccnlfncngelccgbgfmjebmkmce' OR LOWER(`name`) = 'arc toolkit') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free Linux distribution for penetration testing with hundreds of security tools preinstalled.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Kali Linux from Offensive Security comes with a ready set of security testing tools: network and web application scanners, proxies, password analysis, wireless and forensics tools. You can install it as a main system, in a virtual machine, in WSL on Windows or run it from a USB stick. A popular environment for pentesters to learn and work in.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hundreds of security tools
-Virtual machine, WSL, USB
-Regular updates
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free TPGi extension for Chrome DevTools: WCAG checks, contrast and tab order.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ARC Toolkit adds a Chrome DevTools panel that finds accessibility issues against WCAG 2.x, EN 301 549 and Section 508 rules, checks contrast and lets you test a single component. It also shows tab order with numbers and lines, illustrating how a keyboard-only user moves through the page. It runs locally, including on pages in development.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'WCAG, EN 301 549 and Section 508 checks
+Tab-order overlay
+Contrast checks
+Single-component testing', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- ANDI — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ssa.gov/accessibility/andi/help/install.html' OR LOWER(`name`) = 'andi')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ANDI', NULL, 'https://www.ssa.gov/accessibility/andi/help/install.html', NULL, NULL, 'Безкоштовний букмарклет Адміністрації соцзахисту США для ручного тестування доступності сторінок.', 'Free bookmarklet from the US Social Security Administration for manual accessibility testing of pages.', 'ANDI (Accessible Name & Description Inspector) запускається закладкою в браузері й показує, що саме зачитає екранний читач для кожного елемента: доступні імена й описи, заголовки, таблиці, зображення, посилання, контраст. Це інструмент для ручної перевірки, який пояснює знайдені проблеми. Безкоштовно.', 'ANDI (Accessible Name & Description Inspector) launches from a browser bookmark and shows what a screen reader will announce for each element: accessible names and descriptions, headings, tables, images, links and contrast. It is a manual testing aid that explains the issues it finds. Free.', 'Доступні імена й описи елементів
+Модулі для таблиць, зображень, посилань, контрасту
+Працює як закладка
+Пояснення проблем', 'Accessible names and descriptions
+Modules for tables, images, links, contrast
+Runs as a bookmarklet
+Explains issues', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ssa.gov/accessibility/andi/help/install.html' OR LOWER(`name`) = 'andi') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free bookmarklet from the US Social Security Administration for manual accessibility testing of pages.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ANDI (Accessible Name & Description Inspector) launches from a browser bookmark and shows what a screen reader will announce for each element: accessible names and descriptions, headings, tables, images, links and contrast. It is a manual testing aid that explains the issues it finds. Free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Accessible names and descriptions
+Modules for tables, images, links, contrast
+Runs as a bookmarklet
+Explains issues', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Sa11y — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sa11y.netlify.app' OR LOWER(`name`) = 'sa11y')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sa11y', NULL, 'https://sa11y.netlify.app', NULL, NULL, 'Відкритий помічник для авторів контенту: підсвічує проблеми доступності прямо на сторінці.', 'Open-source assistant for content authors that highlights accessibility issues right on the page.', 'Sa11y виконує понад 80 перевірок — заголовки, альтернативний текст, посилання, контраст, таблиці — і показує проблеми підказками поруч із контентом. Створений для редакторів сайтів, а не для аудиту коду. Є плагіни для WordPress, Drupal і Joomla, а також букмарклет. Безкоштовно, відкритий код.', 'Sa11y runs over 80 checks (headings, alt text, links, contrast, tables) and shows issues as tooltips next to the content. It is built for site editors rather than code audits. Plugins exist for WordPress, Drupal and Joomla, plus a bookmarklet. Free and open source.', 'Понад 80 перевірок контенту
+Підказки просто на сторінці
+Плагіни WordPress, Drupal, Joomla
+Відкритий код', 'Over 80 content checks
+Inline tooltips on the page
+WordPress, Drupal and Joomla plugins
+Open source', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sa11y.netlify.app' OR LOWER(`name`) = 'sa11y') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source assistant for content authors that highlights accessibility issues right on the page.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sa11y runs over 80 checks (headings, alt text, links, contrast, tables) and shows issues as tooltips next to the content. It is built for site editors rather than code audits. Plugins exist for WordPress, Drupal and Joomla, plus a bookmarklet. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 80 content checks
+Inline tooltips on the page
+WordPress, Drupal and Joomla plugins
+Open source', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Colour Contrast Analyser — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tpgi.com/color-contrast-checker' OR LOWER(`name`) = 'colour contrast analyser')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Colour Contrast Analyser', NULL, 'https://www.tpgi.com/color-contrast-checker/', NULL, NULL, 'Безкоштовна програма Vispero (TPGi) для Windows і Mac: перевірка контрасту будь-яких кольорів на екрані за WCAG.', 'Free Vispero (TPGi) app for Windows and Mac that checks the contrast of any on-screen colours against WCAG.', 'Colour Contrast Analyser (CCA) бере кольори піпеткою з будь-якого місця екрана — сайту, застосунку, PDF, презентації — і показує, чи проходить пара кольорів рівні WCAG A, AA і AAA для звичайного й великого тексту та елементів інтерфейсу. Безкоштовно.', 'Colour Contrast Analyser (CCA) picks colours with an eyedropper from anywhere on the screen (a website, app, PDF or slide) and shows whether the pair passes WCAG A, AA and AAA for normal and large text and UI elements. Free.', 'Піпетка з будь-якого місця екрана
+Рівні WCAG A, AA, AAA
+Windows і Mac
+Безкоштовно', 'Eyedropper anywhere on screen
+WCAG A, AA and AAA levels
+Windows and Mac
+Free', 'Дизайнери, тестувальники й розробники, що перевіряють контраст і читабельність кольорів', 'Designers, testers and developers checking colour contrast and colour readability', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tpgi.com/color-contrast-checker' OR LOWER(`name`) = 'colour contrast analyser') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free Vispero (TPGi) app for Windows and Mac that checks the contrast of any on-screen colours against WCAG.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Colour Contrast Analyser (CCA) picks colours with an eyedropper from anywhere on the screen (a website, app, PDF or slide) and shows whether the pair passes WCAG A, AA and AAA for normal and large text and UI elements. Free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Eyedropper anywhere on screen
+WCAG A, AA and AAA levels
+Windows and Mac
 Free', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Designers, testers and developers checking colour contrast and colour readability', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -236,451 +295,30 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Wireshark — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wireshark.org' OR LOWER(`name`) = 'wireshark')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Wireshark', NULL, 'https://www.wireshark.org', NULL, NULL, 'Найпопулярніший відкритий аналізатор мережевого трафіку: перехоплення й розбір пакетів сотень протоколів.', 'The most popular open-source network protocol analyser for capturing and inspecting packets of hundreds of protocols.', 'Wireshark перехоплює мережеві пакети й показує їх у зрозумілому вигляді: хто з ким з’єднується, якими протоколами і які дані передаються. У тестуванні безпеки допомагає перевірити, чи не передаються паролі й особисті дані відкритим текстом, а в загальному тестуванні — розібратися з мережевими збоями. Працює на Windows, macOS і Linux.', 'Wireshark captures network packets and shows them in readable form: who connects to whom, over which protocols and with what data. In security testing it helps check that passwords and personal data are not sent in plain text, and in general testing it helps investigate network failures. Runs on Windows, macOS and Linux.', 'Перехоплення пакетів
-Розбір сотень протоколів
-Фільтри й статистика
-Відкритий код', 'Packet capture
-Hundreds of protocol dissectors
-Filters and statistics
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wireshark.org' OR LOWER(`name`) = 'wireshark') ORDER BY `id` LIMIT 1);
+-- WebAIM Contrast Checker — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'webaim.org/resources/contrastchecker' OR LOWER(`name`) = 'webaim contrast checker')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'WebAIM Contrast Checker', NULL, 'https://webaim.org/resources/contrastchecker/', NULL, NULL, 'Безкоштовний онлайн-калькулятор контрасту кольорів тексту й фону за WCAG від WebAIM.', 'Free online WebAIM calculator for text and background colour contrast against WCAG.', 'Вводите кольори тексту й фону — сервіс рахує коефіцієнт контрасту й показує, чи проходить пара вимоги WCAG AA і AAA для звичайного й великого тексту та графічних елементів. Можна робити відтінок світлішим чи темнішим, доки перевірка не пройде. Безкоштовно.', 'Enter text and background colours and the tool calculates the contrast ratio and shows whether the pair meets WCAG AA and AAA for normal and large text and graphical objects. You can lighten or darken a shade until it passes. Free.', 'Коефіцієнт контрасту
+WCAG AA і AAA
+Підбір відтінку
+Безкоштовно', 'Contrast ratio
+WCAG AA and AAA
+Shade adjustment
+Free', 'Дизайнери, тестувальники й розробники, що перевіряють контраст і читабельність кольорів', 'Designers, testers and developers checking colour contrast and colour readability', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'webaim.org/resources/contrastchecker' OR LOWER(`name`) = 'webaim contrast checker') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'The most popular open-source network protocol analyser for capturing and inspecting packets of hundreds of protocols.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Wireshark captures network packets and shows them in readable form: who connects to whom, over which protocols and with what data. In security testing it helps check that passwords and personal data are not sent in plain text, and in general testing it helps investigate network failures. Runs on Windows, macOS and Linux.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Packet capture
-Hundreds of protocol dissectors
-Filters and statistics
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- SonarQube — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sonarsource.com/products/sonarqube' OR LOWER(`name`) = 'sonarqube')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'SonarQube', NULL, 'https://www.sonarsource.com/products/sonarqube/', NULL, NULL, 'Платформа Sonar для статичного аналізу коду: баги, вразливості, «запахи» коду й перевірка коду, написаного АІ.', 'Sonar platform for static code analysis: bugs, vulnerabilities, code smells and checks for AI-generated code.', 'SonarQube аналізує код понад 30 мов програмування й знаходить баги, вразливості, проблемні з погляду безпеки місця й надмірну складність. «Ворота якості» (quality gate) не дають злити в основну гілку код, що не відповідає вимогам. Працює як серверна версія (зокрема безкоштовна Community Build), хмарна SonarQube Cloud і плагін для IDE.', 'SonarQube analyses code in over 30 programming languages and finds bugs, vulnerabilities, security hotspots and excessive complexity. A quality gate blocks code that doesn''t meet the requirements from being merged. It is available as a server (including the free Community Build), as SonarQube Cloud and as an IDE plugin.', 'Статичний аналіз 30+ мов
-Вразливості й security hotspots
-Quality gate у CI
-Безкоштовна Community Build', 'Static analysis for 30+ languages
-Vulnerabilities and security hotspots
-Quality gate in CI
-Free Community Build', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web,desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sonarsource.com/products/sonarqube' OR LOWER(`name`) = 'sonarqube') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Sonar platform for static code analysis: bugs, vulnerabilities, code smells and checks for AI-generated code.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'SonarQube analyses code in over 30 programming languages and finds bugs, vulnerabilities, security hotspots and excessive complexity. A quality gate blocks code that doesn''t meet the requirements from being merged. It is available as a server (including the free Community Build), as SonarQube Cloud and as an IDE plugin.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Static analysis for 30+ languages
-Vulnerabilities and security hotspots
-Quality gate in CI
-Free Community Build', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Trivy — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trivy.dev' OR LOWER(`name`) = 'trivy')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Trivy', NULL, 'https://trivy.dev', NULL, NULL, 'Відкритий сканер безпеки від Aqua: вразливості в контейнерах, залежностях, Kubernetes і конфігураціях IaC.', 'Open-source security scanner from Aqua for vulnerabilities in containers, dependencies, Kubernetes and IaC.', 'Trivy однією командою перевіряє образи Docker, файлові системи, Git-репозиторії й кластери Kubernetes на відомі вразливості пакетів, секрети в коді й небезпечні налаштування Terraform, Dockerfile чи Kubernetes-маніфестів. Також генерує SBOM. Легко вбудовується в CI. Відкритий код.', 'Trivy checks Docker images, file systems, Git repositories and Kubernetes clusters with a single command for known package vulnerabilities, secrets in code and risky Terraform, Dockerfile or Kubernetes manifest settings. It also generates SBOMs. Easy to plug into CI. Open source.', 'Сканування контейнерів і залежностей
-Секрети в коді
-Конфігурації IaC і Kubernetes
-SBOM', 'Container and dependency scanning
-Secrets in code
-IaC and Kubernetes configs
-SBOM', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trivy.dev' OR LOWER(`name`) = 'trivy') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source security scanner from Aqua for vulnerabilities in containers, dependencies, Kubernetes and IaC.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Trivy checks Docker images, file systems, Git repositories and Kubernetes clusters with a single command for known package vulnerabilities, secrets in code and risky Terraform, Dockerfile or Kubernetes manifest settings. It also generates SBOMs. Easy to plug into CI. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Container and dependency scanning
-Secrets in code
-IaC and Kubernetes configs
-SBOM', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Gitleaks — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/gitleaks/gitleaks' OR LOWER(`name`) = 'gitleaks')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Gitleaks', NULL, 'https://github.com/gitleaks/gitleaks', NULL, NULL, 'Відкритий інструмент для пошуку паролів, ключів API й токенів у коді та історії Git.', 'Open-source tool for finding passwords, API keys and tokens in code and Git history.', 'Gitleaks сканує репозиторій, зокрема всю історію комітів, і знаходить випадково закомічені секрети: ключі хмарних сервісів, токени, паролі, приватні ключі. Можна запускати перед комітом (pre-commit hook) або в CI, щоб секрет не потрапив у репозиторій. Відкритий код.', 'Gitleaks scans a repository, including its full commit history, and finds accidentally committed secrets: cloud keys, tokens, passwords and private keys. It can run as a pre-commit hook or in CI so that a secret never reaches the repository. Open source.', 'Пошук секретів у коді й історії Git
-Pre-commit hook
-Запуск у CI
-Відкритий код', 'Secrets in code and Git history
-Pre-commit hook
-Runs in CI
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/gitleaks/gitleaks' OR LOWER(`name`) = 'gitleaks') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source tool for finding passwords, API keys and tokens in code and Git history.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Gitleaks scans a repository, including its full commit history, and finds accidentally committed secrets: cloud keys, tokens, passwords and private keys. It can run as a pre-commit hook or in CI so that a secret never reaches the repository. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Secrets in code and Git history
-Pre-commit hook
-Runs in CI
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- TruffleHog — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/trufflesecurity/trufflehog' OR LOWER(`name`) = 'trufflehog')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'TruffleHog', NULL, 'https://github.com/trufflesecurity/trufflehog', NULL, NULL, 'Відкритий пошук витоків облікових даних, який ще й перевіряє, чи знайдений ключ досі дійсний.', 'Open-source leaked credential finder that also checks whether a found key is still valid.', 'TruffleHog шукає секрети в Git-репозиторіях, файлах, хмарних сховищах, Slack, Jira та інших джерелах і розпізнає сотні типів ключів. Головна особливість — перевірка: інструмент звертається до відповідного сервісу й показує, чи ключ досі працює, тож команда спершу відкликає справді небезпечні. Відкритий код від Truffle Security.', 'TruffleHog searches for secrets in Git repositories, files, cloud storage, Slack, Jira and other sources and recognises hundreds of key types. Its key feature is verification: it calls the relevant service and shows whether a key still works, so the team can revoke the truly dangerous ones first. Open source from Truffle Security.', 'Сотні типів секретів
-Перевірка, чи ключ дійсний
-Git, файли, хмара, Slack, Jira
-Відкритий код', 'Hundreds of secret types
-Checks whether a key is live
-Git, files, cloud, Slack, Jira
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/trufflesecurity/trufflehog' OR LOWER(`name`) = 'trufflehog') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source leaked credential finder that also checks whether a found key is still valid.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'TruffleHog searches for secrets in Git repositories, files, cloud storage, Slack, Jira and other sources and recognises hundreds of key types. Its key feature is verification: it calls the relevant service and shows whether a key still works, so the team can revoke the truly dangerous ones first. Open source from Truffle Security.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hundreds of secret types
-Checks whether a key is live
-Git, files, cloud, Slack, Jira
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- OWASP Dependency-Check — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'owasp.org/www-project-dependency-check' OR LOWER(`name`) = 'owasp dependency-check')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'OWASP Dependency-Check', NULL, 'https://owasp.org/www-project-dependency-check/', NULL, NULL, 'Відкритий інструмент OWASP, що знаходить у проєкті бібліотеки з відомими вразливостями (SCA).', 'Open-source OWASP tool that finds libraries with known vulnerabilities in a project (SCA).', 'Dependency-Check визначає залежності проєкту (Java, .NET, JavaScript, Python, Ruby та інших) і звіряє їх із базами відомих вразливостей. Звіт показує, які бібліотеки оновити. Працює з командного рядка й як плагін для Maven, Gradle, Jenkins. Безкоштовна альтернатива комерційним SCA-сервісам.', 'Dependency-Check identifies a project''s dependencies (Java, .NET, JavaScript, Python, Ruby and more) and matches them against databases of known vulnerabilities. The report shows which libraries to update. It runs from the command line and as a plugin for Maven, Gradle and Jenkins. A free alternative to commercial SCA services.', 'Аналіз залежностей (SCA)
-Бази відомих вразливостей
-Maven, Gradle, Jenkins
-Відкритий код', 'Software composition analysis
-Known vulnerability databases
-Maven, Gradle, Jenkins
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'owasp.org/www-project-dependency-check' OR LOWER(`name`) = 'owasp dependency-check') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source OWASP tool that finds libraries with known vulnerabilities in a project (SCA).', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Dependency-Check identifies a project''s dependencies (Java, .NET, JavaScript, Python, Ruby and more) and matches them against databases of known vulnerabilities. The report shows which libraries to update. It runs from the command line and as a plugin for Maven, Gradle and Jenkins. A free alternative to commercial SCA services.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Software composition analysis
-Known vulnerability databases
-Maven, Gradle, Jenkins
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Invicti — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'invicti.com' OR LOWER(`name`) = 'invicti')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Invicti', NULL, 'https://www.invicti.com', NULL, NULL, 'Корпоративна платформа безпеки вебзастосунків і API з DAST-сканером, що підтверджує знайдені вразливості.', 'Enterprise web application and API security platform with a DAST scanner that confirms findings.', 'Invicti (до складу якої входить Acunetix) автоматично сканує тисячі сайтів і API на вразливості на кшталт SQL-ін’єкцій і XSS і для частини знахідок безпечно доводить, що вразливість реальна, — так команда менше витрачає часу на хибні спрацювання. Платформа також має SAST, аналіз залежностей і пошук секретів. Ціни — за запитом.', 'Invicti (which includes Acunetix) automatically scans thousands of websites and APIs for vulnerabilities such as SQL injection and XSS and, for many findings, safely proves that the flaw is real, so the team spends less time on false positives. The platform also offers SAST, dependency analysis and secret detection. Pricing on request.', 'DAST-сканування сайтів і API
-Підтвердження вразливостей
-SAST, SCA, секрети
-Інтеграція з CI', 'DAST for websites and APIs
-Proof of exploitability
-SAST, SCA, secrets
-CI integration', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'invicti.com' OR LOWER(`name`) = 'invicti') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Enterprise web application and API security platform with a DAST scanner that confirms findings.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Invicti (which includes Acunetix) automatically scans thousands of websites and APIs for vulnerabilities such as SQL injection and XSS and, for many findings, safely proves that the flaw is real, so the team spends less time on false positives. The platform also offers SAST, dependency analysis and secret detection. Pricing on request.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'DAST for websites and APIs
-Proof of exploitability
-SAST, SCA, secrets
-CI integration', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Detectify — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'detectify.com' OR LOWER(`name`) = 'detectify')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Detectify', NULL, 'https://detectify.com', NULL, NULL, 'Хмарний сканер безпеки вебзастосунків і API на основі досліджень спільноти етичних хакерів.', 'Cloud web application and API security scanner built on research from a community of ethical hackers.', 'Detectify постійно стежить за зовнішньою поверхнею атаки компанії — доменами, піддоменами, сайтами й API — і перевіряє їх на вразливості, які знаходять учасники його спільноти етичних хакерів. Не потребує встановлення. Є тариф Starter для невеликих команд, пробний період і платні тарифи для бізнесу.', 'Detectify continuously monitors a company''s external attack surface (domains, subdomains, websites and APIs) and tests it for vulnerabilities found by its community of ethical hackers. Nothing to install. A Starter plan for small teams, a trial and paid business plans are available.', 'Сканування сайтів і API
-Моніторинг піддоменів
-Перевірки від спільноти хакерів
-Хмарний сервіс', 'Website and API scanning
-Subdomain monitoring
-Checks from a hacker community
-Cloud service', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'detectify.com' OR LOWER(`name`) = 'detectify') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Cloud web application and API security scanner built on research from a community of ethical hackers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Detectify continuously monitors a company''s external attack surface (domains, subdomains, websites and APIs) and tests it for vulnerabilities found by its community of ethical hackers. Nothing to install. A Starter plan for small teams, a trial and paid business plans are available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Website and API scanning
-Subdomain monitoring
-Checks from a hacker community
-Cloud service', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Intruder — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'intruder.io' OR LOWER(`name`) = 'intruder')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Intruder', NULL, 'https://www.intruder.io', NULL, NULL, 'Хмарне управління вразливостями для невеликих команд безпеки: інфраструктура, вебзастосунки, хмара.', 'Cloud vulnerability management for lean security teams: infrastructure, web apps and cloud.', 'Intruder регулярно сканує зовнішні й внутрішні сервери, вебзастосунки, API та хмарні акаунти, пріоритезує знайдені вразливості й пояснює, як їх виправити. Стежить за появою нових сервісів, доступних з інтернету. Розрахований на компанії без великого відділу безпеки. Є пробний період.', 'Intruder regularly scans external and internal servers, web apps, APIs and cloud accounts, prioritises the vulnerabilities it finds and explains how to fix them. It watches for new internet-facing services. Built for companies without a large security team. A free trial is available.', 'Сканування інфраструктури й вебзастосунків
-Хмарні акаунти
-Пріоритети й поради з виправлення
-Моніторинг поверхні атаки', 'Infrastructure and web app scanning
-Cloud accounts
-Prioritised fixes
-Attack surface monitoring', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'intruder.io' OR LOWER(`name`) = 'intruder') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Cloud vulnerability management for lean security teams: infrastructure, web apps and cloud.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Intruder regularly scans external and internal servers, web apps, APIs and cloud accounts, prioritises the vulnerabilities it finds and explains how to fix them. It watches for new internet-facing services. Built for companies without a large security team. A free trial is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Infrastructure and web app scanning
-Cloud accounts
-Prioritised fixes
-Attack surface monitoring', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Nessus — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tenable.com/products/nessus' OR LOWER(`name`) = 'nessus')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Nessus', NULL, 'https://www.tenable.com/products/nessus', NULL, NULL, 'Один із найвідоміших сканерів вразливостей від Tenable: перевірка серверів, ОС, мережевого обладнання.', 'One of the best-known vulnerability scanners, from Tenable, for servers, operating systems and network devices.', 'Nessus перевіряє хости на десятки тисяч відомих вразливостей, слабкі налаштування й відсутні оновлення, зокрема з автентифікацією в системі для глибшої перевірки. Звіти групують знахідки за критичністю. Є безкоштовна версія Nessus Essentials для навчання й невеликих мереж та платна Nessus Professional.', 'Nessus checks hosts for tens of thousands of known vulnerabilities, weak configurations and missing patches, including authenticated scans for deeper checks. Reports group findings by severity. A free Nessus Essentials version for learning and small networks and the paid Nessus Professional are available.', 'Десятки тисяч перевірок
-Сканування з автентифікацією
-Звіти за критичністю
-Безкоштовна Nessus Essentials', 'Tens of thousands of checks
-Authenticated scanning
-Severity-based reports
-Free Nessus Essentials', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tenable.com/products/nessus' OR LOWER(`name`) = 'nessus') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'One of the best-known vulnerability scanners, from Tenable, for servers, operating systems and network devices.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Nessus checks hosts for tens of thousands of known vulnerabilities, weak configurations and missing patches, including authenticated scans for deeper checks. Reports group findings by severity. A free Nessus Essentials version for learning and small networks and the paid Nessus Professional are available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tens of thousands of checks
-Authenticated scanning
-Severity-based reports
-Free Nessus Essentials', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- OpenVAS — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'openvas.org' OR LOWER(`name`) = 'openvas')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'OpenVAS', NULL, 'https://www.openvas.org', NULL, NULL, 'Відкритий сканер вразливостей від Greenbone зі щоденно оновлюваною базою перевірок.', 'Open-source vulnerability scanner from Greenbone with a daily updated feed of checks.', 'OpenVAS — повнофункціональний сканер вразливостей: перевіряє системи без автентифікації та з нею, підтримує багато інтернет- і промислових протоколів, а тести отримує зі щоденно оновлюваного фіду Greenbone. Безкоштовна альтернатива комерційним сканерам на кшталт Nessus. Відкритий код.', 'OpenVAS is a full-featured vulnerability scanner: it tests systems with and without authentication, supports many internet and industrial protocols and gets its tests from a daily updated Greenbone feed. A free alternative to commercial scanners such as Nessus. Open source.', 'Сканування з автентифікацією й без
-Щоденний фід перевірок
-Інтернет- і промислові протоколи
-Відкритий код', 'Authenticated and unauthenticated scans
-Daily updated feed
-Internet and industrial protocols
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'openvas.org' OR LOWER(`name`) = 'openvas') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source vulnerability scanner from Greenbone with a daily updated feed of checks.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'OpenVAS is a full-featured vulnerability scanner: it tests systems with and without authentication, supports many internet and industrial protocols and gets its tests from a daily updated Greenbone feed. A free alternative to commercial scanners such as Nessus. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Authenticated and unauthenticated scans
-Daily updated feed
-Internet and industrial protocols
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Caido — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'caido.io' OR LOWER(`name`) = 'caido')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Caido', NULL, 'https://caido.io', NULL, NULL, 'Сучасний набір інструментів для ручного тестування безпеки вебзастосунків — легка альтернатива Burp Suite.', 'Modern toolkit for manual web application security testing, a lightweight alternative to Burp Suite.', 'Caido працює як перехоплювальний проксі: показує HTTP-історію з фільтрами на мові HTTPQL, дає змогу змінювати й повторювати запити, автоматизувати перевірки воркфлоу й розширювати плагінами. Платні тарифи додають АІ-асистента й необмежені проєкти. Безкоштовний тариф Basic — 2 проєкти й основні HTTP-інструменти.', 'Caido works as an intercepting proxy: it shows HTTP history with HTTPQL filters and lets you modify and replay requests, automate checks with workflows and extend it with plugins. Paid plans add an AI assistant and unlimited projects. The free Basic plan includes 2 projects and the core HTTP tools.', 'Перехоплювальний проксі
-Фільтри HTTPQL
-Повтор і зміна запитів
-Безкоштовний тариф Basic', 'Intercepting proxy
-HTTPQL filters
-Replay and modify requests
-Free Basic plan', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'caido.io' OR LOWER(`name`) = 'caido') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Modern toolkit for manual web application security testing, a lightweight alternative to Burp Suite.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Caido works as an intercepting proxy: it shows HTTP history with HTTPQL filters and lets you modify and replay requests, automate checks with workflows and extend it with plugins. Paid plans add an AI assistant and unlimited projects. The free Basic plan includes 2 projects and the core HTTP tools.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Intercepting proxy
-HTTPQL filters
-Replay and modify requests
-Free Basic plan', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- ffuf — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/ffuf/ffuf' OR LOWER(`name`) = 'ffuf')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ffuf', NULL, 'https://github.com/ffuf/ffuf', NULL, NULL, 'Швидкий відкритий веб-фазер на Go: пошук прихованих сторінок, файлів, параметрів і піддоменів.', 'Fast open-source web fuzzer written in Go for finding hidden pages, files, parameters and subdomains.', 'ffuf підставляє значення зі словника в будь-яку частину запиту — шлях, параметр, заголовок, тіло — і за кодом відповіді, розміром чи вмістом показує цікаві результати. Так знаходять забуті адмінки, резервні копії, тестові сторінки й незадокументовані параметри API. Відкритий код.', 'ffuf substitutes wordlist values into any part of a request (path, parameter, header or body) and highlights interesting results by status code, size or content. That is how forgotten admin panels, backups, test pages and undocumented API parameters are found. Open source.', 'Фазинг шляхів, параметрів, заголовків
-Фільтри за кодом і розміром
-Дуже швидкий
-Відкритий код', 'Fuzzing paths, parameters, headers
-Filters by status and size
-Very fast
-Open source', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/ffuf/ffuf' OR LOWER(`name`) = 'ffuf') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Fast open-source web fuzzer written in Go for finding hidden pages, files, parameters and subdomains.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ffuf substitutes wordlist values into any part of a request (path, parameter, header or body) and highlights interesting results by status code, size or content. That is how forgotten admin panels, backups, test pages and undocumented API parameters are found. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Fuzzing paths, parameters, headers
-Filters by status and size
-Very fast
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- HTTP Observatory — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'developer.mozilla.org/en-us/observatory' OR LOWER(`name`) = 'http observatory')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'HTTP Observatory', NULL, 'https://developer.mozilla.org/en-US/observatory', NULL, NULL, 'Безкоштовна перевірка заголовків безпеки сайту від MDN (Mozilla): CSP, HSTS, cookies та інші.', 'Free website security header check from MDN (Mozilla): CSP, HSTS, cookies and more.', 'HTTP Observatory перевіряє, чи правильно сайт налаштував заголовки безпеки — Content-Security-Policy, Strict-Transport-Security, X-Frame-Options, атрибути cookies тощо, — ставить оцінку й дає конкретні рекомендації з виправлення. Достатньо ввести адресу сайту.', 'HTTP Observatory checks whether a site has configured its security headers correctly (Content-Security-Policy, Strict-Transport-Security, X-Frame-Options, cookie attributes and more), gives a grade and offers concrete fixes. Just enter the site address.', 'Перевірка CSP, HSTS, cookies
-Оцінка сайту
-Рекомендації з виправлення
-Безкоштовно', 'CSP, HSTS and cookie checks
-Site grade
-Actionable recommendations
-Free', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'developer.mozilla.org/en-us/observatory' OR LOWER(`name`) = 'http observatory') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free website security header check from MDN (Mozilla): CSP, HSTS, cookies and more.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'HTTP Observatory checks whether a site has configured its security headers correctly (Content-Security-Policy, Strict-Transport-Security, X-Frame-Options, cookie attributes and more), gives a grade and offers concrete fixes. Just enter the site address.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'CSP, HSTS and cookie checks
-Site grade
-Actionable recommendations
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free online WebAIM calculator for text and background colour contrast against WCAG.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Enter text and background colours and the tool calculates the contrast ratio and shows whether the pair meets WCAG AA and AAA for normal and large text and graphical objects. You can lighten or darken a shade until it passes. Free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Contrast ratio
+WCAG AA and AAA
+Shade adjustment
 Free', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Designers, testers and developers checking colour contrast and colour readability', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -690,30 +328,132 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- SSL Labs — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ssllabs.com/ssltest' OR LOWER(`name`) = 'ssl labs')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'SSL Labs', NULL, 'https://www.ssllabs.com/ssltest/', NULL, NULL, 'Безкоштовна перевірка налаштувань HTTPS вебсервера від Qualys: сертифікат, протоколи, шифри.', 'Free Qualys check of a web server''s HTTPS setup: certificate, protocols and ciphers.', 'SSL Server Test від Qualys SSL Labs аналізує HTTPS публічного сервера: дійсність і ланцюжок сертифіката, підтримувані версії TLS, набори шифрів, відомі вразливості протоколу — і ставить оцінку від A+ до F. Стандартний інструмент, щоб переконатися, що сайт не використовує застарілих налаштувань.', 'The Qualys SSL Labs SSL Server Test analyses a public server''s HTTPS: certificate validity and chain, supported TLS versions, cipher suites and known protocol vulnerabilities, and gives a grade from A+ to F. The standard way to make sure a site isn''t using outdated settings.', 'Перевірка сертифіката й ланцюжка
-Версії TLS і шифри
-Оцінка від A+ до F
-Безкоштовно', 'Certificate and chain check
-TLS versions and ciphers
-A+ to F grade
-Free', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ssllabs.com/ssltest' OR LOWER(`name`) = 'ssl labs') ORDER BY `id` LIMIT 1);
+-- Who Can Use — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'whocanuse.com' OR LOWER(`name`) = 'who can use')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Who Can Use', NULL, 'https://www.whocanuse.com', NULL, NULL, 'Безкоштовний сервіс: показує, як пару кольорів побачать люди з різними порушеннями зору.', 'Free tool that shows how a colour pair looks to people with different vision impairments.', 'Who Can Use рахує контраст і оцінку WCAG, а потім симулює, як ця комбінація виглядає при різних типах дальтонізму, катаракті, глаукомі, слабкому зорі й навіть на яскравому сонці. Допомагає дизайнерам і тестувальникам побачити, кому саме заважає слабкий контраст. Безкоштовно.', 'Who Can Use calculates contrast and the WCAG grade, then simulates how the combination looks with different types of colour blindness, cataracts, glaucoma, low vision and even in direct sunlight. It helps designers and testers see exactly who is affected by weak contrast. Free.', 'Контраст і оцінка WCAG
+Симуляція типів дальтонізму
+Катаракта, глаукома, слабкий зір
+Ситуативні умови, як-от яскраве сонце', 'Contrast and WCAG grade
+Colour-blindness simulations
+Cataracts, glaucoma, low vision
+Situational conditions such as sunlight', 'Дизайнери, тестувальники й розробники, що перевіряють контраст і читабельність кольорів', 'Designers, testers and developers checking colour contrast and colour readability', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'whocanuse.com' OR LOWER(`name`) = 'who can use') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free Qualys check of a web server''s HTTPS setup: certificate, protocols and ciphers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Qualys SSL Labs SSL Server Test analyses a public server''s HTTPS: certificate validity and chain, supported TLS versions, cipher suites and known protocol vulnerabilities, and gives a grade from A+ to F. The standard way to make sure a site isn''t using outdated settings.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Certificate and chain check
-TLS versions and ciphers
-A+ to F grade
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free tool that shows how a colour pair looks to people with different vision impairments.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Who Can Use calculates contrast and the WCAG grade, then simulates how the combination looks with different types of colour blindness, cataracts, glaucoma, low vision and even in direct sunlight. It helps designers and testers see exactly who is affected by weak contrast. Free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Contrast and WCAG grade
+Colour-blindness simulations
+Cataracts, glaucoma, low vision
+Situational conditions such as sunlight', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Designers, testers and developers checking colour contrast and colour readability', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Color Oracle — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'colororacle.org' OR LOWER(`name`) = 'color oracle')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Color Oracle', NULL, 'https://colororacle.org', NULL, NULL, 'Безкоштовний відкритий симулятор дальтонізму для Windows, Mac і Linux із фільтром на весь екран.', 'Free open-source colour-blindness simulator for Windows, Mac and Linux with a full-screen filter.', 'Color Oracle накладає на весь екран фільтр, який у реальному часі показує, як зображення побачать люди з поширеними порушеннями кольорового зору. Працює незалежно від програми — у браузері, графічному редакторі чи застосунку. Безкоштовно, відкритий код.', 'Color Oracle applies a full-screen filter that shows in real time how people with common colour-vision impairments see the image. It works independently of the software in use, whether a browser, graphics editor or app. Free and open source.', 'Фільтр на весь екран
+Поширені типи дальтонізму
+Windows, Mac, Linux
+Відкритий код', 'Full-screen filter
+Common colour-vision impairments
+Windows, Mac, Linux
+Open source', 'Дизайнери, тестувальники й розробники, що перевіряють контраст і читабельність кольорів', 'Designers, testers and developers checking colour contrast and colour readability', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'colororacle.org' OR LOWER(`name`) = 'color oracle') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free open-source colour-blindness simulator for Windows, Mac and Linux with a full-screen filter.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Color Oracle applies a full-screen filter that shows in real time how people with common colour-vision impairments see the image. It works independently of the software in use, whether a browser, graphics editor or app. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Full-screen filter
+Common colour-vision impairments
+Windows, Mac, Linux
+Open source', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Designers, testers and developers checking colour contrast and colour readability', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Sim Daltonism — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'michelf.ca/projects/sim-daltonism' OR LOWER(`name`) = 'sim daltonism')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sim Daltonism', NULL, 'https://michelf.ca/projects/sim-daltonism/', NULL, NULL, 'Відкритий симулятор дальтонізму для Mac і iOS: фільтр області екрана або камери.', 'Open-source colour-blindness simulator for Mac and iOS: filters a screen region or the camera.', 'Sim Daltonism показує кольори так, як їх сприймають люди з різними типами дальтонізму. На Mac він фільтрує вибрану область екрана, на iPhone і iPad — зображення з камери, тож можна перевірити і інтерфейс, і друковані матеріали. Відкритий код.', 'Sim Daltonism shows colours as people with different types of colour blindness perceive them. On Mac it filters a chosen region of the screen, and on iPhone and iPad it filters the camera feed, so you can check both interfaces and printed materials. Open source.', 'Різні типи дальтонізму
+Фільтр області екрана на Mac
+Камера на iOS
+Відкритий код', 'Several types of colour blindness
+Screen-region filter on Mac
+Camera on iOS
+Open source', 'Дизайнери, тестувальники й розробники, що перевіряють контраст і читабельність кольорів', 'Designers, testers and developers checking colour contrast and colour readability', 'desktop,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'michelf.ca/projects/sim-daltonism' OR LOWER(`name`) = 'sim daltonism') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source colour-blindness simulator for Mac and iOS: filters a screen region or the camera.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sim Daltonism shows colours as people with different types of colour blindness perceive them. On Mac it filters a chosen region of the screen, and on iPhone and iPad it filters the camera feed, so you can check both interfaces and printed materials. Open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Several types of colour blindness
+Screen-region filter on Mac
+Camera on iOS
+Open source', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Designers, testers and developers checking colour contrast and colour readability', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- VoiceOver — Тестування, Цифрова доступність для бізнесу, Для незрячих і слабозорих
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.apple.com/guide/voiceover/welcome/mac' OR LOWER(`name`) = 'voiceover')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'VoiceOver', NULL, 'https://support.apple.com/guide/voiceover/welcome/mac', NULL, NULL, 'Вбудований екранний читач Apple для Mac, iPhone і iPad — основний інструмент ручного тестування доступності на пристроях Apple.', 'Apple’s built-in screen reader for Mac, iPhone and iPad and the main manual accessibility testing tool on Apple devices.', 'VoiceOver зачитує вміст екрана й дає керувати пристроєм клавіатурою, жестами, трекпадом або брайлівським дисплеєм. Для тестувальника це спосіб перевірити, чи зрозуміло озвучуються кнопки, поля, зображення й заголовки та чи логічний порядок фокуса. Вбудований у macOS та iOS, безкоштовний.', 'VoiceOver reads out what is on the screen and lets you control the device with the keyboard, gestures, the trackpad or a braille display. For testers it is the way to check whether buttons, fields, images and headings are announced clearly and the focus order makes sense. Built into macOS and iOS, free.', 'Вбудований у macOS та iOS
+Керування клавіатурою, жестами, брайлем
+Ротор для навігації заголовками й орієнтирами
+Безкоштовно', 'Built into macOS and iOS
+Keyboard, gesture and braille control
+Rotor for heading and landmark navigation
+Free', 'Незрячі й слабозорі користувачі, а також тестувальники й розробники, що перевіряють роботу з екранним читачем', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'desktop,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.apple.com/guide/voiceover/welcome/mac' OR LOWER(`name`) = 'voiceover') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'blind-low-vision' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Apple’s built-in screen reader for Mac, iPhone and iPad and the main manual accessibility testing tool on Apple devices.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'VoiceOver reads out what is on the screen and lets you control the device with the keyboard, gestures, the trackpad or a braille display. For testers it is the way to check whether buttons, fields, images and headings are announced clearly and the focus order makes sense. Built into macOS and iOS, free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Built into macOS and iOS
+Keyboard, gesture and braille control
+Rotor for heading and landmark navigation
 Free', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -723,30 +463,33 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Security Headers — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'securityheaders.com' OR LOWER(`name`) = 'security headers')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Security Headers', NULL, 'https://securityheaders.com', NULL, NULL, 'Швидкий онлайн-аналіз HTTP-заголовків безпеки сайту з оцінкою від A+ до F.', 'Quick online analysis of a website''s HTTP security headers with an A+ to F grade.', 'Security Headers за кілька секунд показує, які заголовки безпеки сайт надсилає, а яких бракує (Content-Security-Policy, Strict-Transport-Security, Referrer-Policy, Permissions-Policy та інші), і ставить загальну оцінку. Зручно для швидкої перевірки після релізу чи зміни налаштувань сервера. Є API.', 'Security Headers shows in seconds which security headers a site sends and which are missing (Content-Security-Policy, Strict-Transport-Security, Referrer-Policy, Permissions-Policy and others) and gives an overall grade. Handy for a quick check after a release or server change. An API is available.', 'Аналіз заголовків безпеки
-Оцінка від A+ до F
-Пояснення кожного заголовка
-API', 'Security header analysis
-A+ to F grade
-Explanation of each header
-API', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'securityheaders.com' OR LOWER(`name`) = 'security headers') ORDER BY `id` LIMIT 1);
+-- TalkBack — Тестування, Цифрова доступність для бізнесу, Для незрячих і слабозорих
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accessibility/android/answer/6283677' OR LOWER(`name`) = 'talkback')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'TalkBack', NULL, 'https://support.google.com/accessibility/android/answer/6283677', NULL, NULL, 'Екранний читач Google, вбудований в Android: керування без погляду на екран і ручне тестування доступності.', 'Google’s screen reader built into Android: eyes-free control and manual accessibility testing.', 'TalkBack озвучує елементи інтерфейсу Android і дає керувати пристроєм жестами без погляду на екран. Розробники й тестувальники вмикають його, щоб перевірити підписи кнопок і зображень, порядок фокуса та роботу власних елементів керування. Входить до складу Android, безкоштовно.', 'TalkBack announces Android interface elements and lets you control the device with gestures without looking at the screen. Developers and testers turn it on to check button and image labels, focus order and custom controls. Part of Android, free.', 'Вбудований в Android
+Керування жестами
+Перевірка підписів і порядку фокуса
+Безкоштовно', 'Built into Android
+Gesture control
+Checks labels and focus order
+Free', 'Незрячі й слабозорі користувачі, а також тестувальники й розробники, що перевіряють роботу з екранним читачем', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accessibility/android/answer/6283677' OR LOWER(`name`) = 'talkback') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Quick online analysis of a website''s HTTP security headers with an A+ to F grade.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Security Headers shows in seconds which security headers a site sends and which are missing (Content-Security-Policy, Strict-Transport-Security, Referrer-Policy, Permissions-Policy and others) and gives an overall grade. Handy for a quick check after a release or server change. An API is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Security header analysis
-A+ to F grade
-Explanation of each header
-API', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'blind-low-vision' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Google’s screen reader built into Android: eyes-free control and manual accessibility testing.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'TalkBack announces Android interface elements and lets you control the device with gestures without looking at the screen. Developers and testers turn it on to check button and image labels, focus order and custom controls. Part of Android, free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Built into Android
+Gesture control
+Checks labels and focus order
+Free', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -756,154 +499,69 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- HackerOne — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hackerone.com' OR LOWER(`name`) = 'hackerone')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'HackerOne', NULL, 'https://www.hackerone.com', NULL, NULL, 'Платформа bug bounty й тестування безпеки за участю найбільшої спільноти дослідників безпеки.', 'Bug bounty and security testing platform powered by the largest community of security researchers.', 'HackerOne допомагає компаніям запускати програми bug bounty, приймати звіти про вразливості (vulnerability disclosure) і замовляти пентести в спільноти етичних хакерів, а також тестувати безпеку АІ-систем. Для дослідників це легальний спосіб шукати вразливості в продуктах, власники яких дозволили це, і отримувати винагороди.', 'HackerOne helps companies run bug bounty programmes, receive vulnerability reports (vulnerability disclosure) and order pentests from a community of ethical hackers, as well as test the security of AI systems. For researchers it is a legal way to look for vulnerabilities in products whose owners allow it and to earn rewards.', 'Програми bug bounty
-Приймання звітів про вразливості
-Пентести від спільноти
-Тестування безпеки АІ', 'Bug bounty programmes
-Vulnerability disclosure
-Community pentests
-AI security testing', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hackerone.com' OR LOWER(`name`) = 'hackerone') ORDER BY `id` LIMIT 1);
+-- Windows Narrator — Тестування, Цифрова доступність для бізнесу, Для незрячих і слабозорих
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.microsoft.com/en-us/accessibility/windows/narrator/complete-guide-to-narrator' OR LOWER(`name`) = 'windows narrator')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Windows Narrator', NULL, 'https://support.microsoft.com/en-us/accessibility/windows/narrator/complete-guide-to-narrator', NULL, NULL, 'Екранний диктор, вбудований у Windows: озвучення екрана й керування з клавіатури.', 'Screen reader built into Windows that reads the screen aloud and supports keyboard control.', 'Екранний диктор (Narrator) зачитує текст і елементи інтерфейсу Windows і браузера, підтримує брайлівські дисплеї. Тестувальникам зручний для швидкої перевірки сайту чи Windows-застосунку з екранним читачем без встановлення додаткових програм. Вбудований у Windows, безкоштовно.', 'Narrator reads text and interface elements in Windows and the browser and supports braille displays. Testers find it handy for a quick screen-reader check of a website or Windows app without installing anything. Built into Windows, free.', 'Вбудований у Windows
+Режим сканування для вебсторінок
+Брайлівські дисплеї
+Безкоштовно', 'Built into Windows
+Scan mode for web pages
+Braille displays
+Free', 'Незрячі й слабозорі користувачі, а також тестувальники й розробники, що перевіряють роботу з екранним читачем', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.microsoft.com/en-us/accessibility/windows/narrator/complete-guide-to-narrator' OR LOWER(`name`) = 'windows narrator') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Bug bounty and security testing platform powered by the largest community of security researchers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'HackerOne helps companies run bug bounty programmes, receive vulnerability reports (vulnerability disclosure) and order pentests from a community of ethical hackers, as well as test the security of AI systems. For researchers it is a legal way to look for vulnerabilities in products whose owners allow it and to earn rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Bug bounty programmes
-Vulnerability disclosure
-Community pentests
-AI security testing', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'blind-low-vision' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Screen reader built into Windows that reads the screen aloud and supports keyboard control.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Narrator reads text and interface elements in Windows and the browser and supports braille displays. Testers find it handy for a quick screen-reader check of a website or Windows app without installing anything. Built into Windows, free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Built into Windows
+Scan mode for web pages
+Braille displays
+Free', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Bugcrowd — Тестування, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bugcrowd.com' OR LOWER(`name`) = 'bugcrowd')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Bugcrowd', NULL, 'https://www.bugcrowd.com', NULL, NULL, 'Краудсорсингова платформа кібербезпеки: bug bounty, пентести й програми розкриття вразливостей.', 'Crowdsourced cybersecurity platform: bug bounty, pentesting and vulnerability disclosure programmes.', 'Bugcrowd з’єднує компанії з дослідниками безпеки: програми bug bounty, пентести як сервіс і програми розкриття вразливостей, через які будь-хто може повідомити компанії про знайдену проблему. Для дослідників — легальні цілі для пошуку вразливостей і винагороди.', 'Bugcrowd connects companies with security researchers through bug bounty programmes, pentesting as a service and vulnerability disclosure programmes that let anyone report a problem to the company. For researchers it offers legal targets and rewards.', 'Bug bounty
-Пентести як сервіс
-Програми розкриття вразливостей
-Спільнота дослідників', 'Bug bounty
-Pentesting as a service
-Vulnerability disclosure programmes
-Researcher community', 'QA-інженери, пентестери, DevSecOps-інженери й розробники, що перевіряють захищеність застосунків і інфраструктури', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bugcrowd.com' OR LOWER(`name`) = 'bugcrowd') ORDER BY `id` LIMIT 1);
+-- Orca — Тестування, Цифрова доступність для бізнесу, Для незрячих і слабозорих
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'orca.gnome.org' OR LOWER(`name`) = 'orca')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Orca', NULL, 'https://orca.gnome.org', NULL, NULL, 'Безкоштовний відкритий екранний читач для Linux-десктопів.', 'Free open-source screen reader for Linux desktops.', 'Orca озвучує вміст екрана, працює з брайлівськими дисплеями й збільшенням, підтримує застосунки й браузери на Linux. Для тестувальників — спосіб перевірити доступність на Linux. Відкритий код, розробляється в межах проєкту GNOME.', 'Orca reads screen content aloud, works with braille displays and magnification, and supports Linux apps and browsers. For testers it is the way to check accessibility on Linux. Open source, developed within the GNOME project.', 'Мовлення й брайль
+Підтримка браузерів на Linux
+Гнучкі налаштування
+Відкритий код', 'Speech and braille
+Supports Linux browsers
+Flexible settings
+Open source', 'Незрячі й слабозорі користувачі, а також тестувальники й розробники, що перевіряють роботу з екранним читачем', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'orca.gnome.org' OR LOWER(`name`) = 'orca') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Crowdsourced cybersecurity platform: bug bounty, pentesting and vulnerability disclosure programmes.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Bugcrowd connects companies with security researchers through bug bounty programmes, pentesting as a service and vulnerability disclosure programmes that let anyone report a problem to the company. For researchers it offers legal targets and rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Bug bounty
-Pentesting as a service
-Vulnerability disclosure programmes
-Researcher community', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, pentesters, DevSecOps engineers and developers checking the security of applications and infrastructure', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hack The Box — Тренажери для тестувальників, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hackthebox.com' OR LOWER(`name`) = 'hack the box')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hack The Box', NULL, 'https://www.hackthebox.com', NULL, NULL, 'Платформа для практики кібербезпеки: тисячі хакерських лабораторій, курси Academy й змагання.', 'Cybersecurity practice platform with thousands of hacking labs, Academy courses and competitions.', 'Hack The Box дає легальні вразливі машини й завдання, на яких тренуються тестувати безпеку вебзастосунків, мереж і систем. HTB Academy пропонує курси від основ до просунутого рівня, є змагання CTF і сертифікації. Почати можна безкоштовно, розширений доступ — за підпискою.', 'Hack The Box provides legal vulnerable machines and challenges to practise testing the security of web apps, networks and systems. HTB Academy offers courses from the basics to advanced level, plus CTF competitions and certifications. You can start for free; extended access requires a subscription.', 'Тисячі лабораторій
-Курси HTB Academy
-CTF-змагання
-Сертифікації', 'Thousands of labs
-HTB Academy courses
-CTF competitions
-Certifications', 'Тестувальники й студенти, які вчаться тестуванню безпеки та етичному хакінгу на легальних тренажерах', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hackthebox.com' OR LOWER(`name`) = 'hack the box') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'qa-practice' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'blind-low-vision' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Cybersecurity practice platform with thousands of hacking labs, Academy courses and competitions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hack The Box provides legal vulnerable machines and challenges to practise testing the security of web apps, networks and systems. HTB Academy offers courses from the basics to advanced level, plus CTF competitions and certifications. You can start for free; extended access requires a subscription.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Thousands of labs
-HTB Academy courses
-CTF competitions
-Certifications', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- TryHackMe — Тренажери для тестувальників, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tryhackme.com' OR LOWER(`name`) = 'tryhackme')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'TryHackMe', NULL, 'https://tryhackme.com', NULL, NULL, 'Онлайн-платформа для навчання кібербезпеці через практичні лабораторії прямо в браузері.', 'Online platform for learning cybersecurity through hands-on labs right in the browser.', 'TryHackMe веде від основ до професійних навичок через гейміфіковані «кімнати» й навчальні шляхи: вебвразливості, мережі, Linux, пентест, захист. Віртуальні машини запускаються в браузері, тож нічого не потрібно встановлювати. Підходить для повних новачків. Є безкоштовний доступ і преміум-підписка.', 'TryHackMe takes you from the basics to professional skills through gamified rooms and learning paths: web vulnerabilities, networking, Linux, pentesting and defence. Virtual machines run in the browser, so there''s nothing to install. Suitable for complete beginners. Free access and a premium subscription are available.', 'Практичні лабораторії в браузері
-Навчальні шляхи
-Для новачків
-Безкоштовний доступ', 'Hands-on labs in the browser
-Learning paths
-Beginner-friendly
-Free access', 'Тестувальники й студенти, які вчаться тестуванню безпеки та етичному хакінгу на легальних тренажерах', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tryhackme.com' OR LOWER(`name`) = 'tryhackme') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'qa-practice' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online platform for learning cybersecurity through hands-on labs right in the browser.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'TryHackMe takes you from the basics to professional skills through gamified rooms and learning paths: web vulnerabilities, networking, Linux, pentesting and defence. Virtual machines run in the browser, so there''s nothing to install. Suitable for complete beginners. Free access and a premium subscription are available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hands-on labs in the browser
-Learning paths
-Beginner-friendly
-Free access', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовний тариф або версія з обмеженнями.', 'A free plan or limited free version is available.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- DVWA — Тренажери для тестувальників, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/digininja/dvwa' OR LOWER(`name`) = 'dvwa')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'DVWA', NULL, 'https://github.com/digininja/DVWA', NULL, NULL, 'Damn Vulnerable Web Application — навмисно вразливий PHP-застосунок для локальної практики тестування безпеки.', 'Damn Vulnerable Web Application: a deliberately vulnerable PHP app for practising security testing locally.', 'DVWA містить типові вебвразливості — SQL-ін’єкції, XSS, CSRF, завантаження файлів, ін’єкції команд — із кількома рівнями складності захисту. Його розгортають локально (наприклад, у Docker) і тренуються, зокрема з Burp Suite, ZAP чи sqlmap, не порушуючи закону. Не можна розміщувати в інтернеті. Відкритий код.', 'DVWA contains common web vulnerabilities (SQL injection, XSS, CSRF, file upload and command injection) with several security difficulty levels. You deploy it locally (for example in Docker) and practise legally, including with Burp Suite, ZAP or sqlmap. It must not be exposed to the internet. Open source.', 'Типові вебвразливості
-Рівні складності
-Локальне розгортання
-Відкритий код', 'Common web vulnerabilities
-Difficulty levels
-Local deployment
-Open source', 'Тестувальники й студенти, які вчаться тестуванню безпеки та етичному хакінгу на легальних тренажерах', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/digininja/dvwa' OR LOWER(`name`) = 'dvwa') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'qa-practice' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Damn Vulnerable Web Application: a deliberately vulnerable PHP app for practising security testing locally.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'DVWA contains common web vulnerabilities (SQL injection, XSS, CSRF, file upload and command injection) with several security difficulty levels. You deploy it locally (for example in Docker) and practise legally, including with Burp Suite, ZAP or sqlmap. It must not be exposed to the internet. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Common web vulnerabilities
-Difficulty levels
-Local deployment
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free open-source screen reader for Linux desktops.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Orca reads screen content aloud, works with braille displays and magnification, and supports Linux apps and browsers. For testers it is the way to check accessibility on Linux. Open source, developed within the GNOME project.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Speech and braille
+Supports Linux browsers
+Flexible settings
 Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Blind and low-vision users, and testers and developers checking how products work with a screen reader', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -913,30 +571,30 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- OWASP crAPI — Тренажери для тестувальників, Безпека коду та застосунків
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/owasp/crapi' OR LOWER(`name`) = 'owasp crapi')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'OWASP crAPI', NULL, 'https://github.com/OWASP/crAPI', NULL, NULL, 'Completely Ridiculous API — навмисно вразливий API від OWASP для практики тестування безпеки API.', 'Completely Ridiculous API: a deliberately vulnerable API from OWASP for practising API security testing.', 'crAPI імітує сервіс для власників автомобілів із мікросервісами, мобільним і веб-клієнтом і містить вразливості зі списку OWASP API Security Top 10: доступ до чужих об’єктів, слабку автентифікацію, надмірне розкриття даних тощо. Розгортається локально в Docker. Відкритий код.', 'crAPI simulates a service for car owners with microservices and mobile and web clients and contains vulnerabilities from the OWASP API Security Top 10: access to other users'' objects, broken authentication, excessive data exposure and more. Deployed locally in Docker. Open source.', 'Вразливості OWASP API Top 10
-Мікросервісна архітектура
-Локально в Docker
-Відкритий код', 'OWASP API Top 10 vulnerabilities
-Microservice architecture
-Local Docker deployment
-Open source', 'Тестувальники й студенти, які вчаться тестуванню безпеки та етичному хакінгу на легальних тренажерах', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/owasp/crapi' OR LOWER(`name`) = 'owasp crapi') ORDER BY `id` LIMIT 1);
+-- Accessibility Scanner — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accessibility/android/answer/6376570' OR LOWER(`name`) = 'accessibility scanner')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Accessibility Scanner', NULL, 'https://support.google.com/accessibility/android/answer/6376570', NULL, NULL, 'Безкоштовний застосунок Google для Android: сканує екран застосунку й підказує, як покращити доступність.', 'Free Google app for Android that scans an app screen and suggests accessibility improvements.', 'Accessibility Scanner перевіряє відкритий екран будь-якого Android-застосунку й підказує проблеми: відсутні підписи елементів, замалі зони дотику, клікабельні елементи без опису, слабкий контраст тексту й зображень. Google наголошує, що сканер не замінює ручного тестування. Безкоштовно.', 'Accessibility Scanner checks the open screen of any Android app and flags issues: missing content labels, small touch targets, unlabelled clickable items and weak text and image contrast. Google stresses that it does not replace manual testing. Free.', 'Підписи елементів
+Розмір зон дотику
+Контраст тексту й зображень
+Безкоштовно', 'Content labels
+Touch target size
+Text and image contrast
+Free', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'support.google.com/accessibility/android/answer/6376570' OR LOWER(`name`) = 'accessibility scanner') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'qa-practice' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Completely Ridiculous API: a deliberately vulnerable API from OWASP for practising API security testing.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'crAPI simulates a service for car owners with microservices and mobile and web clients and contains vulnerabilities from the OWASP API Security Top 10: access to other users'' objects, broken authentication, excessive data exposure and more. Deployed locally in Docker. Open source.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'OWASP API Top 10 vulnerabilities
-Microservice architecture
-Local Docker deployment
-Open source', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Testers and students learning security testing and ethical hacking on legal practice platforms', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free Google app for Android that scans an app screen and suggests accessibility improvements.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Accessibility Scanner checks the open screen of any Android app and flags issues: missing content labels, small touch targets, unlabelled clickable items and weak text and image contrast. Google stresses that it does not replace manual testing. Free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Content labels
+Touch target size
+Text and image contrast
+Free', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -946,20 +604,203 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Наявні продукти → «Безпека коду та застосунків»
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'appsec' LIMIT 1);
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'OWASP Juice Shop' ORDER BY `id` LIMIT 1);
+-- Accessibility Inspector — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'developer.apple.com/documentation/accessibility/accessibility-inspector' OR LOWER(`name`) = 'accessibility inspector')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Accessibility Inspector', NULL, 'https://developer.apple.com/documentation/accessibility/accessibility-inspector', NULL, NULL, 'Інструмент Apple у складі Xcode: показує, як застосунок представлено технологіям доступності, і проводить аудит.', 'Apple tool bundled with Xcode that shows how an app presents itself to accessibility technologies and runs audits.', 'Accessibility Inspector показує для кожного елемента застосунку на Mac, iPhone чи iPad підпис, роль, значення й дії, які отримає VoiceOver, дає симулювати налаштування доступності й запустити автоматичний аудит із підказками. Постачається разом із Xcode, безкоштовно.', 'Accessibility Inspector shows the label, role, value and actions VoiceOver will receive for each element of a Mac, iPhone or iPad app, lets you simulate accessibility settings and runs an automatic audit with suggestions. Ships with Xcode, free.', 'Властивості доступності елементів
+Автоматичний аудит
+Симуляція налаштувань
+У складі Xcode', 'Element accessibility properties
+Automatic audit
+Settings simulation
+Bundled with Xcode', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'developer.apple.com/documentation/accessibility/accessibility-inspector' OR LOWER(`name`) = 'accessibility inspector') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'PortSwigger Web Security Academy' ORDER BY `id` LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'MobSF' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Apple tool bundled with Xcode that shows how an app presents itself to accessibility technologies and runs audits.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Accessibility Inspector shows the label, role, value and actions VoiceOver will receive for each element of a Mac, iPhone or iPad app, lets you simulate accessibility settings and runs an automatic audit with suggestions. Ships with Xcode, free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Element accessibility properties
+Automatic audit
+Settings simulation
+Bundled with Xcode', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- PAC PDF Accessibility Checker — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pac.pdf-accessibility.org/en' OR LOWER(`name`) = 'pac pdf accessibility checker')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'PAC PDF Accessibility Checker', NULL, 'https://pac.pdf-accessibility.org/en', NULL, NULL, 'Безкоштовна програма для перевірки доступності PDF за PDF/UA і WCAG; у версії PAC 2026 є АІ-перевірки.', 'Free tool for checking PDF accessibility against PDF/UA and WCAG; PAC 2026 adds AI-assisted checks.', 'PAC перевіряє PDF-документ на відповідність PDF/UA і WCAG: перетягуєте файл — і за секунди бачите технічні помилки. Перегляд структури й «екранного читача» показує, що саме зачитає допоміжна технологія, а у версії PAC 2026 АІ-перевірки зменшують обсяг ручної роботи. Фінансується Федеральним міністерством праці й соціальних справ Німеччини, безкоштовно.', 'PAC checks a PDF for PDF/UA and WCAG conformance: drag the file in and see technical errors in seconds. The structure and screen-reader previews show what assistive technology will read, and in PAC 2026 AI-assisted checks reduce manual work. Funded by the German Federal Ministry of Labour and Social Affairs, free.', 'Перевірка PDF/UA і WCAG
+Попередній перегляд для екранного читача
+АІ-перевірки у PAC 2026
+Безкоштовно', 'PDF/UA and WCAG checks
+Screen-reader preview
+AI-assisted checks in PAC 2026
+Free', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pac.pdf-accessibility.org/en' OR LOWER(`name`) = 'pac pdf accessibility checker') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Frida' ORDER BY `id` LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'mitmproxy' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free tool for checking PDF accessibility against PDF/UA and WCAG; PAC 2026 adds AI-assisted checks.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'PAC checks a PDF for PDF/UA and WCAG conformance: drag the file in and see technical errors in seconds. The structure and screen-reader previews show what assistive technology will read, and in PAC 2026 AI-assisted checks reduce manual work. Funded by the German Federal Ministry of Labour and Social Affairs, free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'PDF/UA and WCAG checks
+Screen-reader preview
+AI-assisted checks in PAC 2026
+Free', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- eslint-plugin-jsx-a11y — Тестування, Цифрова доступність для бізнесу
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/jsx-eslint/eslint-plugin-jsx-a11y' OR LOWER(`name`) = 'eslint-plugin-jsx-a11y')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'eslint-plugin-jsx-a11y', NULL, 'https://github.com/jsx-eslint/eslint-plugin-jsx-a11y', NULL, NULL, 'Відкритий плагін ESLint, що знаходить помилки доступності в JSX ще під час написання коду React.', 'Open-source ESLint plugin that catches accessibility errors in JSX while you write React code.', 'Плагін статично аналізує JSX і попереджає про типові проблеми: зображення без alt, клікабельні div без ролі й обробки клавіатури, неправильні атрибути ARIA, поля форм без підписів. Помилки видно прямо в редакторі й у CI, ще до запуску застосунку. Безкоштовно, відкритий код.', 'The plugin statically analyses JSX and warns about common problems: images without alt, clickable divs without a role or keyboard handling, invalid ARIA attributes and form fields without labels. Errors show up in the editor and in CI before the app even runs. Free and open source.', 'Статичний аналіз JSX
+Правила для alt, ARIA, ролей, клавіатури
+Помилки в редакторі й CI
+Відкритий код', 'Static JSX analysis
+Rules for alt, ARIA, roles and keyboard
+Errors in the editor and CI
+Open source', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'github.com/jsx-eslint/eslint-plugin-jsx-a11y' OR LOWER(`name`) = 'eslint-plugin-jsx-a11y') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source ESLint plugin that catches accessibility errors in JSX while you write React code.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The plugin statically analyses JSX and warns about common problems: images without alt, clickable divs without a role or keyboard handling, invalid ARIA attributes and form fields without labels. Errors show up in the editor and in CI before the app even runs. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Static JSX analysis
+Rules for alt, ARIA, roles and keyboard
+Errors in the editor and CI
+Open source', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Storybook — Тестування, Веб-розробка
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'storybook.js.org' OR LOWER(`name`) = 'storybook')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Storybook', NULL, 'https://storybook.js.org', NULL, NULL, 'Відкрита «майстерня» для розробки й тестування UI-компонентів окремо від застосунку, з вбудованими перевірками доступності.', 'Open-source workshop for building and testing UI components in isolation, with built-in accessibility checks.', 'Storybook показує кожен компонент інтерфейсу в різних станах окремо від застосунку. Аддон доступності на основі axe-core перевіряє кожну «історію» й показує порушення прямо в інтерфейсі, а тести компонентів, взаємодій і візуальні тести запускаються локально й у CI. Команди також використовують його для документування дизайн-систем. Безкоштовно, відкритий код.', 'Storybook renders every UI component in its different states in isolation from the app. The axe-core-based accessibility addon checks each story and shows violations right in the UI, while component, interaction and visual tests run locally and in CI. Teams also use it to document design systems. Free and open source.', 'Компоненти в ізоляції
+Аддон доступності на axe-core
+Тести взаємодій і візуальні тести
+Документація дизайн-систем', 'Components in isolation
+axe-core accessibility addon
+Interaction and visual tests
+Design system docs', 'QA-інженери, розробники й дизайнери, які перевіряють доступність сайтів і застосунків для людей з інвалідністю', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'web,desktop', 'none', 'published', 0, 'found', @uid, '2026-11-04 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'storybook.js.org' OR LOWER(`name`) = 'storybook') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'web-development' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Open-source workshop for building and testing UI components in isolation, with built-in accessibility checks.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Storybook renders every UI component in its different states in isolation from the app. The axe-core-based accessibility addon checks each story and shows violations right in the UI, while component, interaction and visual tests run locally and in CI. Teams also use it to document design systems. Free and open source.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Components in isolation
+axe-core accessibility addon
+Interaction and visual tests
+Design system docs', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'QA engineers, developers and designers checking the accessibility of websites and apps for people with disabilities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно (безкоштовний продукт або відкритий код).', 'Free (free product or open source).' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free (free product or open source).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Наявні продукти → «Тестування» / «Цифрова доступність для бізнесу»
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Lighthouse' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Polypane' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'axe DevTools' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'WAVE (WebAIM)' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'digital-accessibility' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'NVDA' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'JAWS' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Stark' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Silktide' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Pope Tech' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Evinced' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Fable' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Siteimprove Accessibility' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `slug` = 'testing' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+

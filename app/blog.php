@@ -125,6 +125,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-bezpeky-ua.md',
         'en' => 'security-testing-en.md',
     ],
+    'accessibility-testing' => [
+        'uk' => 'testuvannya-dostupnosti-ua.md',
+        'en' => 'accessibility-testing-en.md',
+    ],
 ];
 
 /**
@@ -167,6 +171,7 @@ const BLOG_ARTICLE_TOPICS = [
     'load-testing' => ['development-it/testing'],
     'mobile-app-testing' => ['development-it/testing', 'development-it/mobile-development'],
     'security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/qa-practice'],
+    'accessibility-testing' => ['development-it/testing', 'accessibility/digital-accessibility'],
 ];
 
 /**

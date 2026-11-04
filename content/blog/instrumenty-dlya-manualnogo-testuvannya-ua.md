@@ -62,7 +62,7 @@ updated: "2026-11-04"
 - Адаптивність зручно перевіряти в **[Responsively App](product:Responsively App)** (безкоштовний, відкритий код), **[Polypane](product:Polypane)** чи розширенні **[Responsive Viewer](product:Responsive Viewer)**: сторінка показується одразу на кількох екранах із синхронною прокруткою.
 - **[Chrome DevTools](product:Chrome DevTools)** — без нього не обійтися: емуляція пристроїв і повільної мережі, консоль, cookies, мережеві запити. А **[Lighthouse](product:Lighthouse)** і **[GTmetrix](product:GTmetrix)** дадуть звіт про швидкість і базову доступність.
 
-Для доступності додайте **WAVE** від WebAIM і **[axe DevTools](product:axe DevTools)** — вони показують проблеми з контрастом, підписами полів і структурою заголовків.
+Для доступності додайте **WAVE** від WebAIM і **[axe DevTools](product:axe DevTools)** — вони показують проблеми з контрастом, підписами полів і структурою заголовків. Детальніше — у статті [«Тестування доступності»](blog-post.php?slug=accessibility-testing).
 
 ## Jira, Confluence і тест-менеджмент
 

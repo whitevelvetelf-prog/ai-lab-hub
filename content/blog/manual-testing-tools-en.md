@@ -62,7 +62,7 @@ Checking whether the layout matches the mockup is a big part of a manual tester'
 - Responsiveness is easy to check in **[Responsively App](product:Responsively App)** (free, open source), **[Polypane](product:Polypane)** or the **[Responsive Viewer](product:Responsive Viewer)** extension: the page appears on several screens at once with synced scrolling.
 - **[Chrome DevTools](product:Chrome DevTools)** is a must: device and slow-network emulation, console, cookies, network requests. **[Lighthouse](product:Lighthouse)** and **[GTmetrix](product:GTmetrix)** give you a speed and basic accessibility report.
 
-For accessibility, add **WAVE** by WebAIM and **[axe DevTools](product:axe DevTools)**: they flag contrast problems, missing field labels and heading structure issues.
+For accessibility, add **WAVE** by WebAIM and **[axe DevTools](product:axe DevTools)**: they flag contrast problems, missing field labels and heading structure issues. More in [Accessibility testing](blog-post.php?slug=accessibility-testing&hl=en).
 
 ## Jira, Confluence and test management
 

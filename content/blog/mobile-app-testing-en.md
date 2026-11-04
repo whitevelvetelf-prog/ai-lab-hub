@@ -74,6 +74,8 @@ This article explains how mobile testing differs from web testing, what to check
 - works with TalkBack (Android) and VoiceOver (iOS) screen readers: are buttons and fields announced?
 - tap target size, contrast, larger font.
 
+More in [Accessibility testing](blog-post.php?slug=accessibility-testing&hl=en).
+
 ## Emulators or real devices
 
 **Emulators and simulators** are fast and free, ideal for everyday functional checks:
