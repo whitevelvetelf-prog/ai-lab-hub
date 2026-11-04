@@ -101,6 +101,10 @@ const BLOG_ARTICLES = [
         'uk' => 'instrumenty-dlya-manualnogo-testuvannya-ua.md',
         'en' => 'manual-testing-tools-en.md',
     ],
+    'test-automation-tools' => [
+        'uk' => 'instrumenty-dlya-avtomatyzatsiyi-testuvannya-ua.md',
+        'en' => 'test-automation-tools-en.md',
+    ],
 ];
 
 /**
@@ -137,6 +141,7 @@ const BLOG_ARTICLE_TOPICS = [
     'programa-dlya-zapysu-igor-insights-capture' => ['multimedia/for-gamers', 'sports/esports'],
     'online-booking-altegio' => ['ukrainian-apps/ua-booking'],
     'manual-testing-tools' => ['development-it/testing', 'development-it/qa-practice'],
+    'test-automation-tools' => ['development-it/testing', 'development-it/qa-practice'],
 ];
 
 /**
