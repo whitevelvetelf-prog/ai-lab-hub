@@ -125,7 +125,7 @@ Yes. Jam or ShareX for bug reports, PerfectPixel and DevTools for UI, Jira and C
 Jira. Almost every team uses it, while test management tools (TestRail, Xray, Qase) are usually introduced on the project.
 
 **Does a manual tester need SQL?**
-It helps. Basic SELECT and JOIN queries let you verify that data was actually saved, and they often come up in interviews.
+It helps. Basic SELECT and JOIN queries let you verify that data was actually saved, and they often come up in interviews. Ready-made SQL checks and tools are in [Database testing](blog-post.php?slug=database-testing&hl=en).
 
 **Not sure where to start?**
 Ask [Elya](eli.php): she will pick tools for your project and level.

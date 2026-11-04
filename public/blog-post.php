@@ -311,6 +311,23 @@ if ($article !== null) {
             margin-bottom: 0;
         }
 
+        .article pre.blog-code {
+            margin: 0 0 20px;
+            padding: 14px 16px;
+            overflow-x: auto;
+            border: 1px solid rgba(188, 208, 255, 0.25);
+            border-radius: 10px;
+            background: rgba(0, 3, 44, 0.6);
+            font-size: 0.88rem;
+            line-height: 1.5;
+        }
+
+        .article pre.blog-code code {
+            font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+            color: #e6ecff;
+            white-space: pre;
+        }
+
         .blog-draft {
             margin: 0 0 16px;
             padding: 10px 14px;

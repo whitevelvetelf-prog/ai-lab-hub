@@ -133,6 +133,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-produktyvnosti-frontendu-ua.md',
         'en' => 'frontend-performance-testing-en.md',
     ],
+    'database-testing' => [
+        'uk' => 'testuvannya-baz-danykh-ua.md',
+        'en' => 'database-testing-en.md',
+    ],
 ];
 
 /**
@@ -177,6 +181,7 @@ const BLOG_ARTICLE_TOPICS = [
     'security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/qa-practice'],
     'accessibility-testing' => ['development-it/testing', 'accessibility/digital-accessibility'],
     'frontend-performance-testing' => ['development-it/testing', 'development-it/web-development'],
+    'database-testing' => ['development-it/testing', 'development-it/databases'],
 ];
 
 /**
@@ -518,7 +523,7 @@ function blog_inline_html(string $text): string
  * Мінімальний Markdown → HTML для статей блогу.
  * Підтримує: #/##/### заголовки (перший # у тілі пропускається — дублює
  * H1 сторінки), **жирний**, *курсив*, [текст](url), списки "- ", таблиці "| ... |",
- * роздільник "---", дрібний шрифт "^ ".
+ * роздільник "---", дрібний шрифт "^ ", блоки коду між рядками ```.
  */
 function blog_markdown_to_html(string $markdown): string
 {
@@ -529,6 +534,7 @@ function blog_markdown_to_html(string $markdown): string
     $tableBuffer = [];
     $noteBuffer = [];
     $skippedH1 = false;
+    $codeBuffer = null;
 
     $flushList = static function () use (&$listBuffer, &$html): void {
         if ($listBuffer === []) {
@@ -594,6 +600,26 @@ function blog_markdown_to_html(string $markdown): string
 
     foreach ($lines as $line) {
         $trimmed = trim($line);
+
+        // Блок коду ``` … ``` — вміст без жодної розмітки.
+        if ($codeBuffer !== null) {
+            if (str_starts_with($trimmed, '```')) {
+                $html[] = '<pre class="blog-code"><code>' . htmlspecialchars(implode("
+", $codeBuffer), ENT_QUOTES, 'UTF-8') . '</code></pre>';
+                $codeBuffer = null;
+            } else {
+                $codeBuffer[] = rtrim($line, "
+");
+            }
+            continue;
+        }
+        if (str_starts_with($trimmed, '```')) {
+            $flushList();
+            $flushTable();
+            $flushNote();
+            $codeBuffer = [];
+            continue;
+        }
 
         if ($trimmed === '>' || str_starts_with($trimmed, '> ')) {
             $flushList();
