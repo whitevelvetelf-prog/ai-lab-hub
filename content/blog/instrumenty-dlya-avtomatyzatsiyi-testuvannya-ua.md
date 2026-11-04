@@ -60,7 +60,7 @@ updated: "2026-11-04"
 - **[Detox](product:Detox)** створено для застосунків на React Native.
 - **[Maestro](product:Maestro)** описує тести короткими YAML-кроками й сам чекає на елементи — найпростіший старт для мобільної автоматизації.
 
-Емулятори Android дає **[Genymotion](product:Genymotion)**, а реальні пристрої в хмарі — **[BrowserStack](product:BrowserStack)**, **[Sauce Labs](product:Sauce Labs)**, **[LambdaTest](product:LambdaTest)**, **[Kobiton](product:Kobiton)** чи **[BitBar](product:BitBar)**.
+Емулятори Android дає **[Genymotion](product:Genymotion)**, а реальні пристрої в хмарі — **[BrowserStack](product:BrowserStack)**, **[Sauce Labs](product:Sauce Labs)**, **[LambdaTest](product:LambdaTest)**, **[Kobiton](product:Kobiton)** чи **[BitBar](product:BitBar)**. Що саме перевіряти в мобільному застосунку — у статті [«Тестування мобільних застосунків»](blog-post.php?slug=mobile-app-testing).
 
 ## API та інтеграції
 

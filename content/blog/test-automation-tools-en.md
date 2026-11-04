@@ -60,7 +60,7 @@ If analysts or manual testers write the test cases while automation engineers im
 - **[Detox](product:Detox)** is built for React Native apps.
 - **[Maestro](product:Maestro)** describes tests as short YAML steps and waits for elements by itself, the simplest start for mobile automation.
 
-**[Genymotion](product:Genymotion)** provides Android emulators, while **[BrowserStack](product:BrowserStack)**, **[Sauce Labs](product:Sauce Labs)**, **[LambdaTest](product:LambdaTest)**, **[Kobiton](product:Kobiton)** and **[BitBar](product:BitBar)** offer real devices in the cloud.
+**[Genymotion](product:Genymotion)** provides Android emulators, while **[BrowserStack](product:BrowserStack)**, **[Sauce Labs](product:Sauce Labs)**, **[LambdaTest](product:LambdaTest)**, **[Kobiton](product:Kobiton)** and **[BitBar](product:BitBar)** offer real devices in the cloud. For what to check in a mobile app, see [Mobile app testing](blog-post.php?slug=mobile-app-testing&hl=en).
 
 ## APIs and integrations
 

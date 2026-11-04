@@ -117,6 +117,10 @@ const BLOG_ARTICLES = [
         'uk' => 'navantazhuvalne-testuvannya-ua.md',
         'en' => 'load-testing-en.md',
     ],
+    'mobile-app-testing' => [
+        'uk' => 'testuvannya-mobilnykh-zastosunkiv-ua.md',
+        'en' => 'mobile-app-testing-en.md',
+    ],
 ];
 
 /**
@@ -157,6 +161,7 @@ const BLOG_ARTICLE_TOPICS = [
     'qa-practice-sites' => ['development-it/qa-practice', 'development-it/testing'],
     'api-testing' => ['development-it/testing', 'development-it/api', 'development-it/qa-practice'],
     'load-testing' => ['development-it/testing'],
+    'mobile-app-testing' => ['development-it/testing', 'development-it/mobile-development'],
 ];
 
 /**
