@@ -22,7 +22,7 @@ This article explains where to start, which yoga style to pick, how apps differ 
 | A big library and many teachers | [Glo](product:Glo) | [Yoga Anytime](product:Yoga Anytime), [Gaia](product:Gaia) |
 | Going deeper: philosophy, anatomy, Yoga Alliance credits | [Yoga International](product:Yoga International) | [Omstars](product:Omstars) |
 | Ashtanga and live classes | [Omstars](product:Omstars) | — |
-| Yoga as part of general fitness | [Peloton App](product:Peloton App) | [Apple Fitness+](product:Apple Fitness+), [Nike Training Club](product:Nike Training Club) |
+| Yoga as part of general fitness | [Peloton](product:Peloton) | [Apple Fitness+](product:Apple Fitness+), [Nike Training Club](product:Nike Training Club) |
 | Traditional hatha yoga | [Isha Hatha Yoga](product:Isha Hatha Yoga) | [Yoga Anytime](product:Yoga Anytime) |
 
 ## Which yoga style to choose
@@ -47,7 +47,7 @@ For the first month, hatha or slow beginner vinyasa is enough. Add yin or restor
 
 **Going deeper.** Besides 3,000+ classes, [Yoga International](product:Yoga International) offers 300+ courses on philosophy, anatomy and yoga therapy that count as Yoga Alliance continuing education credits for teachers. [Omstars](product:Omstars) was founded by Ashtanga teacher Kino MacGregor: 5,000+ classes, multi-week courses, daily live classes and yin yoga teacher training.
 
-**A free start.** [Yoga With Adriene](product:Yoga With Adriene) is a YouTube channel with 12M+ subscribers, beginner foundations and yearly 30-day journeys that make a regular practice easy to build. The paid Find What Feels Good membership adds 700+ ad-free videos. Yoga is also part of general fitness services: [Peloton App](product:Peloton App) (unlimited yoga on the App One plan, 30 days free), [Apple Fitness+](product:Apple Fitness+) and [Nike Training Club](product:Nike Training Club).
+**A free start.** [Yoga With Adriene](product:Yoga With Adriene) is a YouTube channel with 12M+ subscribers, beginner foundations and yearly 30-day journeys that make a regular practice easy to build. The paid Find What Feels Good membership adds 700+ ad-free videos. Yoga is also part of general fitness services: [Peloton](product:Peloton) (unlimited yoga on the App One plan, 30 days free), [Apple Fitness+](product:Apple Fitness+) and [Nike Training Club](product:Nike Training Club).
 
 **Tradition.** [Isha Hatha Yoga](product:Isha Hatha Yoga) offers classical hatha yoga programs from the Isha Foundation, led by trained teachers; the site helps you find the nearest program in your country. These are in-person sessions, but you get hands-on technique you can then continue at home.
 
@@ -61,7 +61,7 @@ For the first month, hatha or slow beginner vinyasa is enough. Add yin or restor
 | [Yoga International](product:Yoga International) | $169 per year or $19.99 per month | 7 days |
 | [Yoga Anytime](product:Yoga Anytime) | $19.99 per month | 15 days |
 | [Omstars](product:Omstars) | from $18 per month or $199 per year | 7 days |
-| [Peloton App](product:Peloton App) | App One and App+ plans | 30 days (card required) |
+| [Peloton](product:Peloton) | App One and App+ plans | 30 days (card required) |
 
 Tip: use the trials one after another. Set a reminder a day before each trial ends so you can cancel if the service is not right for you.
 

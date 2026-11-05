@@ -22,7 +22,7 @@ updated: "2026-11-05"
 | Велика бібліотека й різні викладачі | [Glo](product:Glo) | [Yoga Anytime](product:Yoga Anytime), [Gaia](product:Gaia) |
 | Поглибитися в йогу, філософія, анатомія, бали Yoga Alliance | [Yoga International](product:Yoga International) | [Omstars](product:Omstars) |
 | Аштанга й живі заняття | [Omstars](product:Omstars) | — |
-| Йога як частина загального фітнесу | [Peloton App](product:Peloton App) | [Apple Fitness+](product:Apple Fitness+), [Nike Training Club](product:Nike Training Club) |
+| Йога як частина загального фітнесу | [Peloton](product:Peloton) | [Apple Fitness+](product:Apple Fitness+), [Nike Training Club](product:Nike Training Club) |
 | Традиційна хатха-йога | [Isha Hatha Yoga](product:Isha Hatha Yoga) | [Yoga Anytime](product:Yoga Anytime) |
 
 ## Який стиль йоги обрати
@@ -47,7 +47,7 @@ updated: "2026-11-05"
 
 **Для тих, хто хоче глибше.** [Yoga International](product:Yoga International) крім понад 3000 занять пропонує понад 300 курсів з філософії, анатомії й йоготерапії. Викладачам ці курси зараховуються як бали безперервної освіти Yoga Alliance. [Omstars](product:Omstars) заснувала викладачка аштанги Кіно Макгрегор: понад 5000 занять, багатотижневі курси, щоденні живі заняття й підготовка викладачів інь-йоги.
 
-**Безкоштовний старт.** [Yoga With Adriene](product:Yoga With Adriene) — канал на YouTube із понад 12 мільйонами підписників. Там є основи йоги для новачків і щорічні 30-денні «подорожі», з якими легко втягнутися в регулярну практику. Платне членство Find What Feels Good дає понад 700 відео без реклами. Йога також входить у загальні фітнес-сервіси: [Peloton App](product:Peloton App) (необмежена йога в тарифі App One, 30 днів безкоштовно), [Apple Fitness+](product:Apple Fitness+) і [Nike Training Club](product:Nike Training Club).
+**Безкоштовний старт.** [Yoga With Adriene](product:Yoga With Adriene) — канал на YouTube із понад 12 мільйонами підписників. Там є основи йоги для новачків і щорічні 30-денні «подорожі», з якими легко втягнутися в регулярну практику. Платне членство Find What Feels Good дає понад 700 відео без реклами. Йога також входить у загальні фітнес-сервіси: [Peloton](product:Peloton) (необмежена йога в тарифі App One, 30 днів безкоштовно), [Apple Fitness+](product:Apple Fitness+) і [Nike Training Club](product:Nike Training Club).
 
 **Традиція.** [Isha Hatha Yoga](product:Isha Hatha Yoga) — програми класичної хатха-йоги від фонду Isha. Їх ведуть підготовлені вчителі, а на сайті можна знайти найближчу програму у своїй країні. Це вже очні заняття, зате з живою постановкою техніки, яку потім можна продовжувати вдома.
 
@@ -61,7 +61,7 @@ updated: "2026-11-05"
 | [Yoga International](product:Yoga International) | $169 на рік або $19,99 на місяць | 7 днів |
 | [Yoga Anytime](product:Yoga Anytime) | $19,99 на місяць | 15 днів |
 | [Omstars](product:Omstars) | від $18 на місяць або $199 на рік | 7 днів |
-| [Peloton App](product:Peloton App) | тарифи App One і App+ | 30 днів (потрібна картка) |
+| [Peloton](product:Peloton) | тарифи App One і App+ | 30 днів (потрібна картка) |
 
 Порада: використайте пробні періоди по черзі. Поставте нагадування за день до кінця пробного періоду, щоб скасувати підписку, якщо сервіс не підійшов.
 

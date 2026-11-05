@@ -11,7 +11,7 @@ SET NAMES utf8mb4;
 --   Yoga Anytime
 --   Omstars
 --   Yoga With Adriene
---   Peloton App
+--   Peloton
 --   Pocket Yoga
 -- =====================================================================
 
@@ -179,16 +179,16 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free plan or limited free version is available.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Peloton App — Йога
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'onepeloton.com/app' OR LOWER(`name`) = 'peloton app')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Peloton App', NULL, 'https://www.onepeloton.com/app', NULL, NULL, 'Фітнес-застосунок Peloton: необмежені заняття йогою, медитацією, розтяжкою й силовими без тренажерів у тарифі App One.', 'Peloton fitness app: unlimited yoga, meditation, stretching and strength classes without equipment on the App One plan.', 'Застосунок Peloton не потребує велотренажера чи бігової доріжки компанії: у тарифі App One доступні необмежені заняття йогою, медитацією, силовими й тренуваннями на підлозі, біг на вулиці й тренування в залі, а також 3 кардіозаняття на тренажерах на місяць; App+ додає необмежене кардіо на будь-якому тренажері. Загалом понад 15 типів тренувань. Нові користувачі мають 30 днів безкоштовно (потрібна картка).', 'The Peloton app does not require the company’s bike or treadmill: the App One plan includes unlimited yoga, meditation, strength and floor classes, outdoor running and gym workouts, plus 3 equipment cardio classes per month; App+ adds unlimited cardio on any machine. 15+ workout types in all. New members get 30 days free (card required).', 'Необмежена йога в App One
+-- Peloton — Йога
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'onepeloton.com' OR LOWER(`name`) = 'peloton')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Peloton', NULL, 'https://www.onepeloton.com', NULL, NULL, 'Фітнес-застосунок Peloton: необмежені заняття йогою, медитацією, розтяжкою й силовими без тренажерів у тарифі App One.', 'Peloton fitness app: unlimited yoga, meditation, stretching and strength classes without equipment on the App One plan.', 'Застосунок Peloton не потребує велотренажера чи бігової доріжки компанії: у тарифі App One доступні необмежені заняття йогою, медитацією, силовими й тренуваннями на підлозі, біг на вулиці й тренування в залі, а також 3 кардіозаняття на тренажерах на місяць; App+ додає необмежене кардіо на будь-якому тренажері. Загалом понад 15 типів тренувань. Нові користувачі мають 30 днів безкоштовно (потрібна картка).', 'The Peloton app does not require the company’s bike or treadmill: the App One plan includes unlimited yoga, meditation, strength and floor classes, outdoor running and gym workouts, plus 3 equipment cardio classes per month; App+ adds unlimited cardio on any machine. 15+ workout types in all. New members get 30 days free (card required).', 'Необмежена йога в App One
 Медитація й розтяжка
 15+ типів тренувань
 30 днів безкоштовно', 'Unlimited yoga on App One
 Meditation and stretching
 15+ workout types
 30-day free trial', 'Усі, хто займається йогою вдома: новачки, досвідчені практики й люди, яким потрібна м’яка активність', 'Anyone practising yoga at home: beginners, experienced practitioners and people who need gentle activity', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-05 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'onepeloton.com/app' OR LOWER(`name`) = 'peloton app') ORDER BY `id` LIMIT 1);
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'onepeloton.com' OR LOWER(`name`) = 'peloton') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
@@ -231,7 +231,7 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Наявні Apple Fitness+, Nike Training Club, Gaia, Isha Hatha Yoga → «Йога»
+-- Наявні Apple Fitness+, Nike Training Club, Gaia, Isha Hatha Yoga, Alo Moves, Yoga Studio, Yogaia, FitOn → «Йога» (якщо є в базі)
 SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Apple Fitness+' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
@@ -248,6 +248,26 @@ SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slu
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Isha Hatha Yoga' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Alo Moves' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Yoga Studio' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Yogaia' ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, (SELECT `category_id` FROM `subcategories` WHERE `id` = @sub) FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'FitOn' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
 SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'yoga' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
