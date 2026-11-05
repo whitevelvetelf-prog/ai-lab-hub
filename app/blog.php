@@ -137,6 +137,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-baz-danykh-ua.md',
         'en' => 'database-testing-en.md',
     ],
+    'mobile-security-testing' => [
+        'uk' => 'testuvannya-bezpeky-mobilnykh-zastosunkiv-ua.md',
+        'en' => 'mobile-security-testing-en.md',
+    ],
 ];
 
 /**
@@ -182,6 +186,7 @@ const BLOG_ARTICLE_TOPICS = [
     'accessibility-testing' => ['development-it/testing', 'accessibility/digital-accessibility'],
     'frontend-performance-testing' => ['development-it/testing', 'development-it/web-development'],
     'database-testing' => ['development-it/testing', 'development-it/databases'],
+    'mobile-security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/mobile-development'],
 ];
 
 /**

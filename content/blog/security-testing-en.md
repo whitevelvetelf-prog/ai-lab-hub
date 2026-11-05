@@ -127,7 +127,7 @@ Run these checks in [GitHub Actions](product:GitHub Actions) or [Jenkins](produc
 
 **APIs** are the most common attack target: the UI doesn't protect against a request sent directly. Check access to other users' objects, extra fields, rate limiting and authorisation on every method. Send requests with [Postman](product:Postman) or Burp Suite, and see [API testing](blog-post.php?slug=api-testing&hl=en) for more.
 
-**Mobile apps** can be analysed with [MobSF](product:MobSF) for risky permissions, keys in code and weak cryptography, while [Frida](product:Frida) lets you examine app behaviour at runtime. More in [Mobile app testing](blog-post.php?slug=mobile-app-testing&hl=en).
+**Mobile apps** can be analysed with [MobSF](product:MobSF) for risky permissions, keys in code and weak cryptography, while [Frida](product:Frida) lets you examine app behaviour at runtime. More in [Mobile app security testing](blog-post.php?slug=mobile-security-testing&hl=en) and [Mobile app testing](blog-post.php?slug=mobile-app-testing&hl=en).
 
 ## Where to practise legally
 
