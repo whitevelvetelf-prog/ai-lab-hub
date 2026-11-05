@@ -145,6 +145,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-ai-zastosunkiv-ua.md',
         'en' => 'llm-app-testing-en.md',
     ],
+    'yoga-at-home' => [
+        'uk' => 'yoga-vdoma-ua.md',
+        'en' => 'yoga-at-home-en.md',
+    ],
 ];
 
 /**
@@ -192,6 +196,7 @@ const BLOG_ARTICLE_TOPICS = [
     'database-testing' => ['development-it/testing', 'development-it/databases'],
     'mobile-security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/mobile-development'],
     'llm-app-testing' => ['development-it/testing', 'development-it/llmops', 'cybersecurity/appsec'],
+    'yoga-at-home' => ['sports/yoga', 'sports/sports-fitness'],
 ];
 
 /**

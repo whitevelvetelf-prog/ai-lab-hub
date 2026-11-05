@@ -167,6 +167,7 @@ $subcategoryIcons = [
     'load-recovery-monitoring' => 'gauge',
     'sports-analytics-scouting' => 'binoculars',
     'esports'            => 'gamepad-2',
+    'yoga'               => 'flower-2',
     // Кар'єра та робота
     'resume-builders'    => 'file-user',
     'interview-prep'     => 'messages-square',

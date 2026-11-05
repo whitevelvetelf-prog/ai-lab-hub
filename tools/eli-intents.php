@@ -164,6 +164,7 @@ const ELI_INTENTS = [
     ['спорт, фітнес, тренування, тренуватися, вправи, sport, sports, fitness, workout, exercise', 'sports', 'sports-fitness', 1.0],
     ['тренер, coach, coaching', 'sports', 'coaching-tools', 1.0],
     ['кіберспорт, esports', 'sports', 'esports', 1.0],
+    ['йога, йоги, асана, асани, yoga, asana, asanas', 'sports', 'yoga', 1.0],
 
     // --- Кар'єра та робота
     ['резюме, cv, resume', 'career', 'resume-builders', 1.0],
