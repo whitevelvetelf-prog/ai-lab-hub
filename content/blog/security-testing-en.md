@@ -129,6 +129,8 @@ Run these checks in [GitHub Actions](product:GitHub Actions) or [Jenkins](produc
 
 **Mobile apps** can be analysed with [MobSF](product:MobSF) for risky permissions, keys in code and weak cryptography, while [Frida](product:Frida) lets you examine app behaviour at runtime. More in [Mobile app security testing](blog-post.php?slug=mobile-security-testing&hl=en) and [Mobile app testing](blog-post.php?slug=mobile-app-testing&hl=en).
 
+**AI apps and chatbots** have vulnerabilities of their own: prompt injection, system prompt leakage and agents with excessive permissions. How to find them with the OWASP Top 10 for LLM is covered in [Testing AI and LLM applications](blog-post.php?slug=llm-app-testing&hl=en).
+
 ## Where to practise legally
 
 - **[PortSwigger Web Security Academy](product:PortSwigger Web Security Academy)**: the best free course on web vulnerabilities, with interactive labs from the makers of Burp Suite;

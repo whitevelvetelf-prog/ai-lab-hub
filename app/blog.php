@@ -141,6 +141,10 @@ const BLOG_ARTICLES = [
         'uk' => 'testuvannya-bezpeky-mobilnykh-zastosunkiv-ua.md',
         'en' => 'mobile-security-testing-en.md',
     ],
+    'llm-app-testing' => [
+        'uk' => 'testuvannya-ai-zastosunkiv-ua.md',
+        'en' => 'llm-app-testing-en.md',
+    ],
 ];
 
 /**
@@ -187,6 +191,7 @@ const BLOG_ARTICLE_TOPICS = [
     'frontend-performance-testing' => ['development-it/testing', 'development-it/web-development'],
     'database-testing' => ['development-it/testing', 'development-it/databases'],
     'mobile-security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/mobile-development'],
+    'llm-app-testing' => ['development-it/testing', 'development-it/llmops', 'cybersecurity/appsec'],
 ];
 
 /**
