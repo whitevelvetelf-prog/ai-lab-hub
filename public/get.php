@@ -43,7 +43,7 @@ $id = (int) ($_GET['id'] ?? 0);
 $stmt = $pdo->prepare(
     "SELECT id, delivery_type, delivery_url, file_id
      FROM mp_listings
-     WHERE id = :id AND section = 'solution' AND status = 'published'"
+     WHERE id = :id AND section = 'solution' AND post_form = '' AND status = 'published'"
 );
 $stmt->execute([':id' => $id]);
 $offer = $id > 0 ? $stmt->fetch(PDO::FETCH_ASSOC) : false;

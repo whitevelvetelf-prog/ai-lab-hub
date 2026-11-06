@@ -92,16 +92,16 @@ $stmt = $pdo->prepare(
      LEFT JOIN users u ON u.id = l.created_by
      LEFT JOIN mp_listing_translations tu ON tu.listing_id = l.id AND tu.lang = 'uk'
      LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
-     WHERE l.section = 'board' AND $whereSql
+     WHERE l.post_form = 'ad' AND $whereSql
      ORDER BY l.updated_at ASC, l.id ASC
      LIMIT 100"
 );
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$queueCount = (int) $pdo->query("SELECT COUNT(*) FROM mp_listings WHERE section = 'board' AND status = 'pending'")->fetchColumn();
+$queueCount = (int) $pdo->query("SELECT COUNT(*) FROM mp_listings WHERE post_form = 'ad' AND status = 'pending'")->fetchColumn();
 $reportsCount = (int) $pdo->query(
-    "SELECT COUNT(*) FROM mp_listings l WHERE l.section = 'board' AND l.status IN ('published', 'pending') AND $reportsSql > 0"
+    "SELECT COUNT(*) FROM mp_listings l WHERE l.post_form = 'ad' AND l.status IN ('published', 'pending') AND $reportsSql > 0"
 )->fetchColumn();
 $statusLabels = mp_status_labels();
 $reasonLabels = ['fraud' => 'Шахрайство', 'prohibited' => 'Заборонений товар чи послуга', 'spam' => 'Спам', 'wrong_category' => 'Неправильна категорія', 'other' => 'Інше'];

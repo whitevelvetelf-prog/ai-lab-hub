@@ -1,7 +1,7 @@
 <?php
 
 /**
- * AI LAB HUB — сторінка оголошення дошки (marketplace-offer.php?id=N для section='board').
+ * AI LAB HUB — сторінка оголошення користувача (marketplace-offer.php?id=N для post_form='ad', будь-який блок дерева).
  *
  * Партіал: підключається з public/marketplace-offer.php, який уже зробив mp_public_require(), відкрив $pdo,
  * визначив $lang та поклав у $board рядок із mpb_listing() (тексти, фото, категорії; БЕЗ контактів).
@@ -33,9 +33,11 @@ $priceText = mpb_price_label($board);   // '' — ціну не вказано
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
 
-mpb_open((string) $board['title'], !$isLive, 'board');
+mpb_open((string) $board['title'], !$isLive, 'home');
 ?>
     <div class="mp-page mp-page--narrow">
+        <?= mpt_crumbs(mpt_offer_crumbs($pdo, $bid, (string) $board['section'], (string) $board['title'])) ?>
+        <?php if ((string) $board['section'] === 'solution'): ?><p class="mp-card__tag"><span class="mp-card__tag--author"><?= mp_e(t('mpt_from_author')) ?></span></p><?php endif; ?>
         <?= mpb_flash_html() ?>
 
         <?php if (!$isLive): ?>

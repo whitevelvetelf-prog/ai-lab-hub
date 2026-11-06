@@ -14,7 +14,7 @@ const MPB_SEARCH_SORTS = ['new', 'price_asc', 'price_desc', 'distance'];
 
 /**
  * Нормалізовані фільтри пошуку з GET. Некоректні значення відкидаються мовчки (ніби параметра немає).
- * Синоніми старих посилань: category=solutions|N, sub=N, min/max, remote=1 → format=online, city=<текст> → place
+ * Синоніми старих посилань: min/max, remote=1 → format=online, city=<текст> → place
  * (перше місто з автопідказки), sort=cheap|expensive.
  * Налаштування відвідувача (mpg_prefs) підставляються, лише якщо в GET немає жодного параметра місця (country,
  * place, radius, format, city, remote) — інакше діє явний вибір.
@@ -30,27 +30,16 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
 
         return preg_match('/^\d{1,9}(\.\d{1,2})?$/', $raw) === 1 ? (float) $raw : null;
     };
-    $boardCats = array_column(mpb_categories($pdo, $lang), 'id');
-    $solCats = array_column(mp_public_categories($pdo, $lang), 'id');
-
-    // Розділ і категорія (+ старі category / sub)
-    $section = in_array($s('section', 20), ['board', MPB_SOLUTIONS], true) ? $s('section', 20) : '';
+    // Блок дерева (section) і підкатегорія (cat). Старі адреси (category=…, section=board|solutions, sub) —
+    // 301 у marketplace.php ще до цього розбору.
+    $section = in_array($s('section', 20), MPT_SECTIONS, true) ? $s('section', 20) : '';
     $cat = $int('cat');
-    $legacyCat = $s('category', 20);
-    if ($section === '' && $legacyCat === MPB_SOLUTIONS) {
-        $section = MPB_SOLUTIONS;
-        $cat = $cat ?: $int('sub');
-    } elseif ($section === '' && preg_match('/^\d{1,9}$/', $legacyCat) === 1 && (int) $legacyCat > 0) {
-        $section = 'board';
-        $cat = $cat ?: (int) $legacyCat;
-    }
     if ($cat > 0) {
-        if ($section === '') {
-            $section = in_array($cat, $boardCats, true) ? 'board' : (in_array($cat, $solCats, true) ? MPB_SOLUTIONS : '');
-        }
-        $ok = ($section === 'board' && in_array($cat, $boardCats, true)) || ($section === MPB_SOLUTIONS && in_array($cat, $solCats, true));
-        if (!$ok) {
+        $node = mpt_node(mpt_tree($pdo, $lang), $cat);
+        if ($node === null || ($section !== '' && $node['block']['section'] !== $section)) {
             $cat = 0;
+        } else {
+            $section = $node['block']['section'];
         }
     }
 

@@ -25,8 +25,10 @@ function mp_config(): array
             'cover_dir'          => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
             // Публічна частина (marketplace.php, marketplace-offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
             'public_enabled'     => false,
-            // Блоки-категорії вакансій/курсів/послуг: показувати й категорії без активних оголошень (як у каталозі — ні).
+            // Дерево категорій (app/mp-tree.php): показувати й підкатегорії без живих оголошень (як у каталозі — ні).
             'show_empty_categories' => false,
+            // Блоки, що видно на головній навіть порожніми («Оголошень поки немає. Станьте першим»); інші порожні — приховано.
+            'always_visible_blocks' => ['job', 'course', 'service', 'solution'],
             // Дошка оголошень (етап 4) — пояснення в config/marketplace.php.
             'photo_dir'          => dirname(__DIR__) . '/storage/marketplace/photos',
             'photo_max_count'    => 8,
@@ -201,7 +203,7 @@ function mp_categories(PDO $pdo, string $section = 'solution'): array
         "SELECT c.id, c.slug, COALESCE(t.name, c.slug) AS name
          FROM mp_categories c
          LEFT JOIN mp_category_translations t ON t.category_id = c.id AND t.lang = 'uk'
-         WHERE c.section = :section AND c.is_active = 1
+         WHERE c.section = :section AND c.is_active = 1 AND c.parent_id IS NOT NULL
          ORDER BY c.sort_order, c.id"
     );
     $stmt->execute([':section' => $section]);
@@ -695,11 +697,11 @@ function mp_public_categories(PDO $pdo, string $lang, string $section = 'solutio
                 COALESCE(NULLIF(tl.name, ''), NULLIF(ts.name, ''), c.slug) AS name,
                 (SELECT COUNT(*) FROM mp_listing_categories lc
                    JOIN mp_listings l ON l.id = lc.listing_id
-                  WHERE lc.category_id = c.id AND l.section = :section2 AND l.status = 'published') AS cnt
+                  WHERE lc.category_id = c.id AND l.section = :section2 AND l.post_form = '' AND l.status = 'published') AS cnt
          FROM mp_categories c
          LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = :lang
          LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = :src
-         WHERE c.section = :section AND c.is_active = 1
+         WHERE c.section = :section AND c.is_active = 1 AND c.parent_id IS NOT NULL
          ORDER BY c.sort_order, c.id"
     );
     $stmt->execute([':section' => $section, ':section2' => $section, ':lang' => $lang, ':src' => mp_source_lang()]);
@@ -726,7 +728,7 @@ function mp_public_select(): string
             LEFT JOIN mp_sellers s ON s.id = l.seller_id
             LEFT JOIN mp_listing_translations tc ON tc.listing_id = l.id AND tc.lang = :lang
             LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
-            WHERE l.section = 'solution' AND l.status = 'published'
+            WHERE l.section = 'solution' AND l.post_form = '' AND l.status = 'published'
               AND COALESCE(NULLIF(tc.title, ''), ts.title) IS NOT NULL";
 }
 

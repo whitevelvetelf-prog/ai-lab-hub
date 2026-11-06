@@ -106,12 +106,23 @@ foreach (BLOG_ARTICLES as $slug => $files) {
 require_once __DIR__ . '/../app/marketplace.php';
 if (mp_public_enabled()) {
     try {
-        foreach (['job', 'course', 'service'] as $lt) {
-            $urls[] = ['loc' => 'listings.php?type=' . $lt, 'lastmod' => $today, 'priority' => '0.5'];
+        // Блоки й підкатегорії дерева Marketplace (app/mp-tree.php) — лише з живими оголошеннями.
+        require_once __DIR__ . '/../app/mp-tree.php';
+        $mpCounts = mpt_counts($pdo);
+        $urls[] = ['loc' => 'marketplace.php', 'lastmod' => $today, 'priority' => '0.6'];
+        foreach (mpt_tree($pdo, 'uk') as $mpBlock) {
+            if (($mpCounts['blocks'][$mpBlock['section']] ?? 0) > 0) {
+                $urls[] = ['loc' => 'marketplace-category.php?id=' . $mpBlock['id'], 'lastmod' => $today, 'priority' => '0.5'];
+            }
+            foreach ($mpBlock['children'] as $mpSub) {
+                if (($mpCounts['cats'][$mpSub['id']] ?? 0) > 0) {
+                    $urls[] = ['loc' => 'marketplace-category.php?id=' . $mpSub['id'], 'lastmod' => $today, 'priority' => '0.4'];
+                }
+            }
         }
         $listings = $pdo->query(
             "SELECT id, slug, updated_at FROM mp_listings
-             WHERE section IN ('job', 'course', 'service') AND status = 'published' AND expires_at > NOW() ORDER BY id"
+             WHERE section IN ('job', 'course', 'service') AND post_form = '' AND status = 'published' AND expires_at > NOW() ORDER BY id"
         )->fetchAll();
         foreach ($listings as $row) {
             $urls[] = [

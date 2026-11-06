@@ -214,7 +214,7 @@ try {
         && str_contains($html, 'ast-origin--ai_assisted') && str_contains($html, 'copyright-report.php?listing=' . $idA), "http={$code}");
     [$code, $html] = $http('assets.php');
     $check('сторінки', 'список активів показує опублікований матеріал', $code === 200 && str_contains($html, 'TEST asset A'), "http={$code}");
-    foreach (['marketplace.php', 'listings.php?type=job', 'copyright-policy.php', 'copyright-report.php', 'index.php'] as $p) {
+    foreach (['marketplace.php', 'marketplace-category.php?id=' . (int) $pdo->query("SELECT id FROM mp_categories WHERE section = 'job' AND parent_id IS NULL")->fetchColumn(), 'copyright-policy.php', 'copyright-report.php', 'index.php'] as $p) {
         [$code, $html] = $http($p);
         $check('сторінки', $p . ' відкривається без помилок', $code === 200 && stripos($html, 'fatal error') === false, "http={$code}");
     }

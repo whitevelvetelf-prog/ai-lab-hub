@@ -431,8 +431,9 @@ function promo_mp_board_categories(PDO $pdo, string $lang): array
              FROM mp_categories c
              LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = :lang
              LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = 'uk'
-             WHERE c.section = 'board' AND c.is_active = 1
-             ORDER BY c.sort_order, c.id"
+             WHERE c.section IN ('job', 'course', 'service', 'solution', 'goods', 'other') AND c.is_active = 1
+               AND (c.parent_id IS NOT NULL OR c.section = 'other')
+             ORDER BY c.section, c.sort_order, c.id"
         );
         $st->execute([':lang' => $lang]);
 

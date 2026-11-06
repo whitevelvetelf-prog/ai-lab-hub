@@ -5,8 +5,11 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: подача й редагування оголошення (будь-який залогінений користувач).
  *
- *   marketplace-post.php          — нове оголошення
- *   marketplace-post.php?id=N     — редагування (лише власні; чуже/неіснуюче → 404)
+ *   marketplace-post.php            — крок 1: вибір блока (плитки, як на головній Marketplace)
+ *   marketplace-post.php?block=S    — крок 2: форма для блока S (solution | goods | other) з підкатегоріями
+ *                                     (чекбокси, 1–3, лише свого блока). Вакансії/курси/послуги → listing-post.php?type=S,
+ *                                     «Цифрові матеріали» → asset-post.php
+ *   marketplace-post.php?id=N       — редагування (лише власні; чуже/неіснуюче → 404); &block=S — інший блок
  *
  * Оголошення звичайного користувача після збереження отримує status='pending' (модерація);
  * employee/admin публікують одразу. delivery_type завжди 'contact': контакти показує mp-contact.php.
@@ -61,8 +64,6 @@ if ($sentId > 0 && ($sent = mpb_own_listing($pdo, $sentId, $userId)) !== null) {
 $cfg = mp_config();
 $lang = current_lang();
 $isStaff = mpb_is_staff();
-$categories = mpb_categories($pdo, $lang);
-$catIds = array_column($categories, 'id');
 $maxPhotos = (int) $cfg['photo_max_count'];
 
 // --- Редагування: лише власне оголошення ------------------------------------
@@ -74,6 +75,48 @@ if ($id > 0) {
         mp_not_found();
     }
 }
+
+// --- Блок дерева категорій ------------------------------------------------------
+$tree = mpt_tree($pdo, $lang);
+$reqBlock = is_string($_GET['block'] ?? null) ? (string) $_GET['block'] : '';
+$allowedBlocks = MPT_AD_SECTIONS;
+if ($existing !== null && !in_array((string) $existing['section'], $allowedBlocks, true)) {
+    $allowedBlocks[] = (string) $existing['section'];   // оголошення з колишньої дошки в блоці послуг тощо
+}
+if ($existing === null && $reqBlock !== '' && !in_array($reqBlock, $allowedBlocks, true)) {
+    if (in_array($reqBlock, MPT_LST_SECTIONS, true) || $reqBlock === 'asset') {
+        header('Location: ' . mpt_post_url($reqBlock), true, 303);
+        exit;
+    }
+    $reqBlock = '';
+}
+$blockSec = in_array($reqBlock, $allowedBlocks, true) ? $reqBlock : ($existing !== null ? (string) $existing['section'] : '');
+$block = $blockSec !== '' ? mpt_block($tree, $blockSec) : null;
+if ($block === null) {
+    // Крок 1: вибір блока (картки як на головній Marketplace). Є чернетка — «Продовжити заповнення».
+    $draftRow = mpd_get($pdo, $userId, 'board');
+    $draftBlock = is_string($draftRow['data']['block'] ?? null) && in_array($draftRow['data']['block'], MPT_AD_SECTIONS, true) ? (string) $draftRow['data']['block'] : '';
+    $items = [];
+    foreach ($tree as $b) {
+        $items[] = [$b['name'], $b['icon'], mpt_post_url($b['section']), null];
+    }
+    $assets = mpt_assets_tile(['cats' => [], 'blocks' => [], 'assets' => 1]);
+    if ($assets !== null) {
+        array_splice($items, max(0, count($items) - 1), 0, [[$assets[0], $assets[1], 'asset-post.php', null]]);
+    }
+    mpt_open(t('mpb_post_title') . ' — ' . t('title_marketplace'), t('mpt_pick_block'), 'marketplace-post.php', true, 'post');
+    echo '<div class="mp-page">' . mpt_crumbs([[t('mp_heading'), 'marketplace.php'], [t('mpb_post_title'), null]])
+        . '<h1 class="mp-title">' . mp_e(t('mpb_post_title')) . '</h1><p class="mp-subtitle">' . mp_e(t('mpt_pick_block')) . '</p>';
+    if ($draftBlock !== '') {
+        echo '<p class="mp-note mp-note--box"><a class="mp-btn" href="marketplace-post.php?block=' . mp_e($draftBlock) . '">'
+            . mp_e(mpf_tr('draft_continue')) . '</a> ' . mp_e($draftRow['title'] !== '' ? $draftRow['title'] : mpf_tr('draft_untitled')) . '</p>';
+    }
+    echo '<div class="mpt-pick">' . mpt_tiles($items, t('mpt_pick_block')) . '</div></div>';
+    mpt_close();
+    exit;
+}
+$categories = mpb_categories($pdo, $lang, $blockSec);
+$catIds = array_column($categories, 'id');
 
 // --- Початкові значення ------------------------------------------------------
 $v = [
@@ -152,6 +195,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
         // Категорії (лише активні категорії дошки, 1–3)
         $v['categories'] = array_values(array_intersect($v['categories'], $catIds));
+        if ($block['children'] === []) {
+            $v['categories'] = $catIds;   // блок без підкатегорій («Інше») — категорія сам блок
+        }
         if ($v['categories'] === [] || count($v['categories']) > 3) {
             $errors[] = 'mpb_err_categories';
         }
@@ -288,7 +334,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 $sellerId ??= mpb_seller_for_user($pdo, $userId, (string) $user['name']);
                 $savedId = mpb_save_listing($pdo, [
                     'title' => $v['title'], 'short_desc' => $v['short_desc'], 'full_desc' => $v['full_desc'],
-                    'categories' => $v['categories'], 'price_type' => $v['price_type'],
+                    'section' => $blockSec, 'categories' => $v['categories'], 'price_type' => $v['price_type'],
                     'price_amount' => $priceAmount, 'currency' => $currency,
                     'is_remote' => $v['is_remote'], 'city' => $v['city'] !== '' ? $v['city'] : null,
                     'contact' => $contact,
@@ -321,7 +367,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 $pageTitle = t($existing === null ? 'mpb_post_title' : 'mpb_edit_title');
 $currencyKeys = array_keys(MPB_CURRENCIES);
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
-$formAction = 'marketplace-post.php' . ($existing !== null ? '?id=' . $id : '');
+$formAction = 'marketplace-post.php?' . http_build_query(($existing !== null ? ['id' => $id] : []) + ['block' => $blockSec]);
 // Помилки біля полів (ключ t() → поле); решта — у загальному блоці вгорі.
 $errField = [
     'mpb_err_title' => 'title', 'mpb_err_short' => 'short_desc', 'mpb_err_full' => 'full_desc', 'mpb_err_links' => 'full_desc',
@@ -380,6 +426,19 @@ mpb_open($pageTitle, true, 'post');
 
             <fieldset class="mpf-block" id="blk-section">
                 <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_section')) ?></legend>
+                <input type="hidden" name="block" value="<?= mp_e($blockSec) ?>">
+                <p class="mp-text"><?= mp_e(t('mpt_block_label')) ?>: <strong><?= mp_e($block['name']) ?></strong>
+                    <?php if ($existing === null): ?> · <a href="marketplace-post.php"><?= mp_e(t('mpt_change_block')) ?></a><?php endif; ?>
+                </p>
+                <?php if ($existing !== null && in_array((string) $existing['section'], MPT_AD_SECTIONS, true)): ?>
+                    <p class="mp-hint"><?= mp_e(t('mpt_change_block')) ?>:
+                        <?php foreach (MPT_AD_SECTIONS as $abs): ?>
+                            <?php $ab = mpt_block($tree, $abs); ?>
+                            <?php if ($ab !== null && $abs !== $blockSec): ?><a class="mp-chip" href="marketplace-post.php?id=<?= (int) $id ?>&amp;block=<?= mp_e($abs) ?>"><?= mp_e($ab['name']) ?></a><?php endif; ?>
+                        <?php endforeach; ?>
+                    </p>
+                <?php endif; ?>
+            <?php if ($block['children'] !== []): ?>
             <fieldset class="mp-field mp-fieldset">
                 <legend class="mp-label"><?= mp_e(t('mpb_f_categories')) ?> <span class="mpf-req">*</span></legend>
                 <div class="mp-checks">
@@ -390,6 +449,7 @@ mpb_open($pageTitle, true, 'post');
                 <p class="mp-hint"><?= mp_e(t('mpb_f_categories_hint')) ?></p>
                 <?= $fieldErr('categories') ?>
             </fieldset>
+            <?php endif; ?>
             </fieldset>
             <fieldset class="mpf-block" id="blk-main">
                 <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_main')) ?></legend>

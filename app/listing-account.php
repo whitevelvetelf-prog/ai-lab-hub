@@ -23,7 +23,7 @@ function lst_account_board_rows(PDO $pdo, int $userId): array
         "SELECT l.id, l.status, l.created_at, l.expires_at, l.reject_reason, (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed, t.title
          FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
          LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
-         WHERE s.user_id = :u AND l.section = 'board'
+         WHERE s.user_id = :u AND l.post_form = 'ad'
          ORDER BY FIELD(l.status, 'pending', 'published', 'rejected', 'expired', 'draft', 'archived'), l.id DESC LIMIT 100"
     );
     $st->execute([':u' => $userId]);

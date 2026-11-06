@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: сторінка пропозиції (?id=N).
  *
- * Розділ 'board' (оголошення користувачів) — app/mpb-offer.php. Розділ 'solution' нижче:
+ * Оголошення користувачів (post_form='ad', будь-який блок) — app/mpb-offer.php. Матеріали платформи (section='solution') нижче:
  * показує лише status='published'; чернетки, архів, невідомий id і вимкнений перемикач → 404.
  * Кнопка «Отримати» веде на get.php — єдину точку видачі (посилання/файл/контакт). Прямий URL
  * посилання, контакт і файл тут не виводяться. Рейтингів і відгуків немає.
@@ -24,7 +24,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 $lang = current_lang();
 $id = (int) ($_GET['id'] ?? 0);
 
-// Дошка оголошень (section='board'): окремий шаблон, контакти — лише через mp-contact.php.
+// Оголошення користувача (post_form='ad'): окремий шаблон, контакти — лише через mp-contact.php.
 $board = $id > 0 ? mpb_listing($pdo, $id, $lang) : null;
 if ($board !== null) {
     include __DIR__ . '/../app/mpb-offer.php';
@@ -33,6 +33,15 @@ if ($board !== null) {
 
 $offer = $id > 0 ? mp_public_listing($pdo, $id, $lang) : null;
 if ($offer === null) {
+    // Вакансія / курс / послуга компанії — власна сторінка listing.php.
+    $kind = $id > 0 ? $pdo->prepare("SELECT id, section, post_form, slug FROM mp_listings WHERE id = :id") : null;
+    $kind?->execute([':id' => $id]);
+    $k = $kind?->fetch(PDO::FETCH_ASSOC);
+    if (is_array($k) && mpt_is_lst($k)) {
+        require_once __DIR__ . '/../app/listing.php';
+        header('Location: /' . lst_url($k), true, 301);
+        exit;
+    }
     mp_not_found();
 }
 analytics_log_view($pdo, 'marketplace_listing', (int) $offer['id'], 'solutions');
@@ -80,9 +89,11 @@ $blocks = [
 </head>
 <body class="mp-body">
     <?php include __DIR__ . '/../app/site-header.php'; ?>
-    <?= mp_section_nav('solutions') ?>
+    <?= mp_section_nav('home') ?>
 
     <div class="mp-page mp-page--narrow">
+        <?= mpt_crumbs(mpt_offer_crumbs($pdo, (int) $offer['id'], 'solution', (string) $offer['title'])) ?>
+        <p class="mp-card__tag"><span class="mp-card__tag--platform"><?= mp_e(t('mpt_from_platform')) ?></span></p>
         <h1 class="mp-title"><?= mp_e($offer['title']) ?></h1>
 
         <?php if ($fallbackLang !== null): ?>

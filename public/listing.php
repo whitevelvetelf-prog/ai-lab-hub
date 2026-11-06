@@ -26,6 +26,13 @@ $id = (int) ($_GET['id'] ?? 0);
 $lang = current_lang();
 $row = $id > 0 ? lst_listing($pdo, $id, $lang) : null;
 if ($row === null) {
+    // Оголошення користувача в блоці вакансій/курсів/послуг (post_form='ad') — сторінка marketplace-offer.php.
+    $k = $id > 0 ? $pdo->prepare("SELECT 1 FROM mp_listings WHERE id = :id AND post_form = 'ad'") : null;
+    $k?->execute([':id' => $id]);
+    if ($k !== null && $k->fetchColumn() !== false) {
+        header('Location: /marketplace-offer.php?id=' . $id, true, 301);
+        exit;
+    }
     mp_not_found();
 }
 $uid = auth_user_id();
@@ -66,10 +73,10 @@ if ($ld !== null) {
     $head .= "
 " . '<script type="application/ld+json">' . json_encode($ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) . '</script>';
 }
-lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'lst_' . $type);
+lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home');
 ?>
     <div class="mp-page mp-page--narrow">
-        <p><a class="mp-back" href="listings.php?type=<?= lst_e($type) ?>"><?= lst_e(lst_tr('back_list')) ?></a></p>
+        <?= mpt_crumbs(mpt_offer_crumbs($pdo, $id, $type, (string) $row['title'])) ?>
         <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= lst_e(lst_tr('disclaimer')) ?> <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a></p>
         <?= mpb_flash_html() ?>
         <?php if (!$live && !$expired): ?>

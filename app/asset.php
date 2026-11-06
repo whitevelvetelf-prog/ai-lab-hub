@@ -1024,6 +1024,7 @@ function ast_approve(PDO $pdo, int $id, int $actorId): bool
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();   // лічильник блока «Цифрові матеріали» на головній Marketplace
     mp_log($pdo, $id, $actorId, 'approved', 'актив');
     ast_mail($pdo, $id, 'asset_approved');
 
@@ -1044,6 +1045,7 @@ function ast_reject(PDO $pdo, int $id, int $actorId, string $reason): bool
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();   // лічильник блока «Цифрові матеріали» на головній Marketplace
     mp_log($pdo, $id, $actorId, 'rejected', $reason);
     ast_mail($pdo, $id, 'asset_rejected', ['reason' => $reason]);
 
@@ -1058,6 +1060,7 @@ function ast_remove(PDO $pdo, int $id, int $actorId, string $note = ''): bool
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();   // лічильник блока «Цифрові матеріали» на головній Marketplace
     mp_log($pdo, $id, $actorId, 'archived', $note !== '' ? $note : null);
 
     return true;

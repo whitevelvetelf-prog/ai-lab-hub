@@ -25,10 +25,50 @@ foreach (['outreach-admin.php', 'outreach-mail-admin.php'] as $lstExtra) {   // 
 
 const LST_ADMIN_STATUS_UK = ['draft' => 'Чернетка', 'pending' => 'На модерації', 'published' => 'Опубліковано', 'rejected' => 'Відхилено', 'expired' => 'Термін минув', 'archived' => 'Знято'];
 const LST_ADMIN_TYPE_UK = ['job' => 'Вакансія', 'course' => 'Курс', 'service' => 'Послуга'];
-/** Усі розділи mp_listings для черги й «Усіх оголошень». */
-const LST_ADMIN_ALL_TYPES_UK = LST_ADMIN_TYPE_UK + ['board' => 'Дошка', 'solution' => 'Готове рішення', 'asset' => 'Цифровий матеріал'];
-/** Розділи, що потрапляють у вкладку «Модерація» (asset — окрема вкладка «Цифрові матеріали»). */
-const LST_ADMIN_QUEUE_TYPES = ['job', 'course', 'service', 'board', 'solution'];
+/** Блоки дерева (mp_listings.section) для черги й «Усіх оголошень» + цифрові матеріали. */
+const LST_ADMIN_ALL_TYPES_UK = LST_ADMIN_TYPE_UK + ['solution' => 'Готове рішення', 'goods' => 'Обладнання', 'other' => 'Інше', 'asset' => 'Цифровий матеріал'];
+/** Блоки, що потрапляють у вкладку «Модерація» (asset — окрема вкладка «Цифрові матеріали»). */
+const LST_ADMIN_QUEUE_TYPES = ['job', 'course', 'service', 'solution', 'goods', 'other'];
+
+/**
+ * Блок і підкатегорії оголошень (назви українською) для черги й списку: id => ['block' => …, 'subs' => list<string>].
+ *
+ * @param list<int> $ids
+ * @return array<int,array{block:string,subs:list<string>}>
+ */
+function lst_admin_tree_cats(PDO $pdo, array $ids): array
+{
+    $ids = array_values(array_unique(array_filter(array_map('intval', $ids))));
+    if ($ids === []) {
+        return [];
+    }
+    $names = [];
+    $blockOf = [];
+    $blockNames = [];
+    foreach (mpt_tree($pdo, 'uk', true) as $b) {
+        $blockNames[$b['section']] = $b['name'];
+        $names[$b['id']] = $b['name'];
+        $blockOf[$b['id']] = $b['section'];
+        foreach ($b['children'] as $c) {
+            $names[$c['id']] = $c['name'];
+            $blockOf[$c['id']] = $b['section'];
+        }
+    }
+    $st = $pdo->prepare('SELECT l.id, l.section, lc.category_id FROM mp_listings l LEFT JOIN mp_listing_categories lc ON lc.listing_id = l.id
+                         WHERE l.id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')');
+    $st->execute($ids);
+    $out = [];
+    foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+        $lid = (int) $r['id'];
+        $out[$lid] ??= ['block' => $blockNames[(string) $r['section']] ?? (string) $r['section'], 'subs' => []];
+        $cid = (int) $r['category_id'];
+        if ($cid > 0 && ($blockOf[$cid] ?? '') === (string) $r['section'] && isset($names[$cid]) && $names[$cid] !== $out[$lid]['block']) {
+            $out[$lid]['subs'][] = $names[$cid];
+        }
+    }
+
+    return $out;
+}
 
 /**
  * Лічильники для бейджів: усі оголошення на модерації (крім матеріалів), матеріали на модерації.
@@ -54,9 +94,12 @@ function lst_admin_pending_counts(PDO $pdo): array
 /** Адреса перегляду оголошення будь-якого розділу для модератора. */
 function lst_admin_view_url(array $r): string
 {
+    if ((string) ($r['post_form'] ?? '') === 'ad') {
+        return 'mp-moderation.php?id=' . (int) $r['id'];
+    }
+
     return match ((string) $r['section']) {
         'job', 'course', 'service' => lst_url($r),
-        'board' => 'mp-moderation.php?id=' . (int) $r['id'],
         'solution' => 'mp-add-offer.php?id=' . (int) $r['id'],
         'asset' => 'asset.php?id=' . (int) $r['id'],
         default => '#',
@@ -99,7 +142,7 @@ function lst_admin_render(PDO $pdo, array $user): void
     $inTypes = "'" . implode("', '", LST_ADMIN_QUEUE_TYPES) . "'";
     $queueByType = $pdo->query("SELECT section, COUNT(*) FROM mp_listings WHERE status = 'pending' AND section IN ($inTypes) GROUP BY section")->fetchAll(PDO::FETCH_KEY_PAIR);
     $qst = $pdo->prepare(
-        "SELECT l.id, l.section FROM mp_listings l WHERE l.status = 'pending' AND l.section IN ($inTypes)"
+        "SELECT l.id, l.section, l.post_form FROM mp_listings l WHERE l.status = 'pending' AND l.section IN ($inTypes)"
         . ($qType !== '' ? ' AND l.section = :qt' : '') . ' ORDER BY l.updated_at, l.id LIMIT 200'
     );
     $qst->execute($qType !== '' ? [':qt' => $qType] : []);
@@ -108,7 +151,7 @@ function lst_admin_render(PDO $pdo, array $user): void
     $items = [];   // загальний порядок: ['kind' => 'lst'|'gen', 'row' => …]
     $genIds = [];
     foreach ($pending as $p) {
-        if (lst_type_valid((string) $p['section'])) {
+        if (mpt_is_lst($p)) {
             $row = lst_listing($pdo, (int) $p['id'], 'orig');   // 'orig' — не активна мова: тексти мовою оригіналу, без автоперекладу
             if ($row !== null) {
                 $row['signals'] = lst_risk_signals($pdo, $row);
@@ -124,7 +167,7 @@ function lst_admin_render(PDO $pdo, array $user): void
     $gen = [];
     if ($genIds !== []) {
         $gs = $pdo->prepare(
-            'SELECT l.id, l.section, l.status, l.updated_at, l.created_at, l.price_type, l.price_amount, l.currency, l.city, l.is_remote,
+            'SELECT l.id, l.section, l.post_form, l.status, l.updated_at, l.created_at, l.price_type, l.price_amount, l.currency, l.city, l.is_remote,
                     ts.title, ts.short_desc, ts.full_desc, u.email, u.name AS author_name, s.display_name AS seller_name,
                     (SELECT COUNT(*) FROM mp_reports r WHERE r.listing_id = l.id) AS reports_total
              FROM mp_listings l LEFT JOIN mp_sellers s ON s.id = l.seller_id
@@ -147,6 +190,7 @@ function lst_admin_render(PDO $pdo, array $user): void
         }
     }
     $items = array_values($items);
+    $treeCats = lst_admin_tree_cats($pdo, array_map(static fn(array $it): int => (int) ($it['row']['id'] ?? $it['id'] ?? 0), $items));
     $pc = lst_admin_pending_counts($pdo);
     try {
         $suspCount = (int) $pdo->query('SELECT COUNT(DISTINCT anon_hash) FROM asset_suspicious WHERE created_at >= NOW() - INTERVAL 7 DAY')->fetchColumn();
@@ -195,7 +239,7 @@ function lst_admin_render(PDO $pdo, array $user): void
     $all = [];
     if ($tab === 'all') {
         $st = $pdo->prepare(
-            "SELECT l.id, l.section, l.status, l.slug, l.company_name, l.created_at, l.published_at, l.expires_at,
+            "SELECT l.id, l.section, l.post_form, l.status, l.slug, l.company_name, l.created_at, l.published_at, l.expires_at,
                     (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed, t.title, u.email
              FROM mp_listings l LEFT JOIN mp_sellers s ON s.id = l.seller_id LEFT JOIN users u ON u.id = COALESCE(s.user_id, l.created_by)
              LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
@@ -204,6 +248,7 @@ function lst_admin_render(PDO $pdo, array $user): void
         $st->execute($params);
         $all = $st->fetchAll(PDO::FETCH_ASSOC);
     }
+    $allCats = lst_admin_tree_cats($pdo, array_map(static fn(array $r): int => (int) $r['id'], $all));
     $allStats = lst_stats($pdo, array_map(static fn($r) => (int) $r['id'], $all), 30);
     $counts = $pdo->query("SELECT status, COUNT(*) FROM mp_listings WHERE section IN ('" . implode("', '", array_keys(LST_ADMIN_ALL_TYPES_UK)) . "') GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
     $badge = static fn(string $s): string => '<span class="pc-badge pc-badge--' . lst_e($s) . '">' . lst_e(LST_ADMIN_STATUS_UK[$s] ?? $s) . '</span>';
@@ -226,7 +271,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                         <div class="pc-box pc-system">
                             <p><strong>Маркетплейс для відвідувачів: <?= mp_public_enabled() ? 'ПОКАЗАНО' : 'ПРИХОВАНО' ?></strong>
                                 <span class="pc-muted">Перемикач — у розділі CRM. Поки приховано, сторінки вакансій, курсів і послуг бачать лише співробітники.</span></p>
-                            <p class="pc-muted">Розділи: <a href="listings.php?type=job">вакансії</a> · <a href="listings.php?type=course">курси</a> · <a href="listings.php?type=service">послуги</a>
+                            <p class="pc-muted">Розділ: <a href="marketplace.php">Marketplace</a> · <a href="mp-categories.php">категорії</a>
                                 · безкоштовно до: <strong><?= $settings['free_until'] !== '' ? lst_e(date('d.m.Y', (int) strtotime($settings['free_until']))) : 'не задано' ?></strong>
                                 · строк: <strong><?= $settings['days'] ?> дн.</strong> · мета розгляду: <strong><?= $settings['review_hours'] ?> год</strong></p>
                             <?php if ($overdue > 0): ?><p class="pc-warn-text">Довше за мету розгляду (<?= $settings['review_hours'] ?> год) чекають: <?= $overdue ?>.</p><?php endif; ?>
@@ -253,7 +298,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                                     · <a href="mp-moderation.php?tab=reports">Скарги на дошці</a></p>
                                 <form method="get" action="account.php" class="pc-inline-form">
                                     <input type="hidden" name="ladm_tab" value="mod">
-                                    <label>Тип <select class="pc-input" name="ladm_qtype"><option value="">Усі типи</option>
+                                    <label>Блок <select class="pc-input" name="ladm_qtype"><option value="">Усі блоки</option>
                                         <?php foreach (LST_ADMIN_QUEUE_TYPES as $t): ?><option value="<?= $t ?>"<?= $qType === $t ? ' selected' : '' ?>><?= lst_e(LST_ADMIN_ALL_TYPES_UK[$t]) ?> (<?= (int) ($queueByType[$t] ?? 0) ?>)</option><?php endforeach; ?>
                                     </select></label>
                                     <button class="pc-btn pc-btn--small" type="submit">Показати</button>
@@ -274,7 +319,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                             <?php endif; ?>
                             <?php foreach ($items as $it):
                                 if ($it['kind'] === 'gen') {
-                                    echo lst_admin_gen_card($it['row'], $csrf, (int) $settings['review_hours']);
+                                    echo lst_admin_gen_card($it['row'], $csrf, (int) $settings['review_hours'], $treeCats[(int) $it['row']['id']] ?? null);
                                     continue;
                                 }
                                 $q = $it['row'];
@@ -290,6 +335,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                                         <p><?= lst_e($q['short_desc']) ?></p>
                                         <ul class="lst-facts-admin">
                                             <?php foreach (lst_facts($q) as [$l, $val]): ?><li><strong><?= lst_e($l) ?>:</strong> <?= lst_e($val) ?></li><?php endforeach; ?>
+                                            <li><strong>Блок:</strong> <?= lst_e($treeCats[$qid]['block'] ?? '—') ?> · <strong>Підкатегорії:</strong> <?= lst_e(implode(', ', $treeCats[$qid]['subs'] ?? []) ?: '—') ?></li>
                                             <li><strong>Теги:</strong> <?= lst_e(implode(', ', array_column($q['categories'] ?? [], 'name')) ?: '—') ?></li>
                                             <li><strong>Посилання:</strong> <a href="<?= lst_e($q['delivery_url']) ?>" target="_blank" rel="noopener noreferrer nofollow"><?= lst_e($q['delivery_url']) ?></a></li>
                                         </ul>
@@ -328,7 +374,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                             <form method="get" action="account.php" class="pc-inline-form">
                                 <input type="hidden" name="ladm_tab" value="all">
                                 <select class="pc-input" name="ladm_status"><option value="">Усі статуси</option><?php foreach (LST_ADMIN_STATUS_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fStatus === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
-                                <select class="pc-input" name="ladm_type"><option value="">Усі типи</option><?php foreach (LST_ADMIN_ALL_TYPES_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fType === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
+                                <select class="pc-input" name="ladm_type" aria-label="Блок"><option value="">Усі блоки</option><?php foreach (LST_ADMIN_ALL_TYPES_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fType === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
                                 <input class="pc-input" type="search" name="ladm_q" maxlength="100" value="<?= lst_e($fQ) ?>" placeholder="Назва або email автора" aria-label="Пошук за назвою або email автора">
                                 <button class="pc-btn pc-btn--small" type="submit">Показати</button>
                             </form>
@@ -338,23 +384,25 @@ function lst_admin_render(PDO $pdo, array $user): void
                                 <p class="pc-empty">Нічого не знайдено.</p>
                             <?php else: ?>
                                 <div class="pc-table-wrap"><table class="pc-table">
-                                    <thead><tr><th>#</th><th>Оголошення</th><th>Статус</th><th>Перегляди / переходи (30 дн.)</th><th>До</th><th>Дії</th></tr></thead>
+                                    <thead><tr><th>#</th><th>Оголошення</th><th>Блок</th><th>Підкатегорії</th><th>Статус</th><th>Перегляди / переходи (30 дн.)</th><th>До</th><th>Дії</th></tr></thead>
                                     <tbody>
                                     <?php foreach ($all as $r): $rid = (int) $r['id']; $s = $allStats[$rid] ?? ['views' => 0, 'clicks' => 0];
                                         $status = (string) $r['status'] === 'published' && (int) $r['elapsed'] === 1 ? 'expired' : (string) $r['status']; ?>
                                         <tr>
                                             <td data-label="#"><?= $rid ?></td>
                                             <td data-label="Оголошення"><a href="<?= lst_e(lst_admin_view_url($r)) ?>" target="_blank" rel="noopener"><?= lst_e($r['title'] ?? '—') ?></a><br><span class="pc-muted"><?= lst_e(LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? $r['section']) ?><?= ($r['company_name'] ?? '') !== '' ? ' · ' . lst_e($r['company_name']) : '' ?> · <?= lst_e($r['email'] ?? '') ?> · <?= lst_e(date('d.m.Y', (int) strtotime((string) $r['created_at']))) ?></span></td>
+                                            <td data-label="Блок"><?= lst_e($allCats[$rid]['block'] ?? (LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? $r['section'])) ?></td>
+                                            <td data-label="Підкатегорії"><?= lst_e(implode(', ', $allCats[$rid]['subs'] ?? []) ?: '—') ?></td>
                                             <td data-label="Статус"><?= $badge($status) ?></td>
                                             <td data-label="Перегляди / переходи"><?= $s['views'] ?> / <?= $s['clicks'] ?></td>
                                             <td data-label="До"><?= $status === 'published' && !empty($r['expires_at']) ? lst_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) : '—' ?></td>
                                             <td data-label="Дії">
-                                                <?php if (!lst_type_valid((string) $r['section'])): ?>
+                                                <?php if (!mpt_is_lst($r)): ?>
                                                     <a class="pc-btn pc-btn--small" href="<?= lst_e(lst_admin_view_url($r)) ?>">Відкрити</a>
                                                 <?php elseif (in_array($status, ['pending', 'published', 'expired', 'rejected'], true)): ?>
                                                     <form method="post" action="listing-admin-action.php" class="pc-inline-form" data-pc-confirm="Зняти оголошення #<?= $rid ?> з публікації?"><?= $csrf ?><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="return_tab" value="all"><button class="pc-btn pc-btn--small pc-btn--danger" type="submit">Зняти</button></form>
                                                 <?php endif; ?>
-                                                <?php if (lst_type_valid((string) $r['section']) && in_array($status, ['rejected', 'archived', 'expired'], true)): ?>
+                                                <?php if (mpt_is_lst($r) && in_array($status, ['rejected', 'archived', 'expired'], true)): ?>
                                                     <form method="post" action="listing-admin-action.php" class="pc-inline-form"><?= $csrf ?><input type="hidden" name="action" value="to_pending"><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="return_tab" value="all"><button class="pc-btn pc-btn--small" type="submit">На модерацію</button></form>
                                                 <?php endif; ?>
                                             </td>
@@ -396,15 +444,17 @@ function lst_admin_render(PDO $pdo, array $user): void
 }
 
 /**
- * Картка черги для дошки й готових рішень: тип, назва, автор, час подачі, швидкий перегляд і дії.
- * Дошка — схвалити/відхилити тут (POST у mp-moderation.php, return=account); рішення — редактор mp-add-offer.php.
+ * Картка черги для оголошень користувачів (post_form='ad', будь-який блок) і матеріалів платформи: блок, підкатегорії,
+ * назва, автор, час подачі, дії. Оголошення — схвалити/відхилити тут (POST у mp-moderation.php, return=account);
+ * матеріал платформи — редактор mp-add-offer.php.
  */
-function lst_admin_gen_card(array $r, string $csrf, int $reviewHours): string
+function lst_admin_gen_card(array $r, string $csrf, int $reviewHours, ?array $cats = null): string
 {
     $id = (int) $r['id'];
     $waitH = (int) floor((time() - (int) strtotime((string) $r['updated_at'])) / 3600);
     $over = $waitH >= $reviewHours;
-    $type = LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? (string) $r['section'];
+    $isAd = (string) ($r['post_form'] ?? '') === 'ad';
+    $type = ($cats['block'] ?? LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? (string) $r['section']) . ($isAd ? ' · оголошення користувача' : ' · матеріал платформи');
     $author = trim((string) ($r['seller_name'] ?: $r['author_name'] ?: '')) . ((string) ($r['email'] ?? '') !== '' ? ' · ' . $r['email'] : '');
     $h = '<article class="pc-mod lst-mod' . ($over ? ' pc-mod--overdue' : '') . '">'
         . '<p class="lst-mod__pick">#' . $id . ' · ' . lst_e($type) . '</p>'
@@ -412,9 +462,10 @@ function lst_admin_gen_card(array $r, string $csrf, int $reviewHours): string
         . ' · автор: ' . lst_e($author !== '' ? $author : '—') . ((int) $r['reports_total'] > 0 ? ' · скарг: ' . (int) $r['reports_total'] : '') . '</span>'
         . '<div class="mp-panel lst-preview"><h3 class="pc-h3">' . lst_e((string) ($r['title'] ?? '—')) . '</h3>'
         . '<p>' . lst_e((string) ($r['short_desc'] ?? '')) . '</p>'
+        . '<p class="pc-muted"><strong>Блок:</strong> ' . lst_e($cats['block'] ?? '—') . ' · <strong>Підкатегорії:</strong> ' . lst_e(implode(', ', $cats['subs'] ?? []) ?: '—') . '</p>'
         . (trim((string) ($r['full_desc'] ?? '')) !== '' ? '<details><summary>Повний опис</summary><div class="mp-text mp-text--pre">' . lst_e($r['full_desc']) . '</div></details>' : '')
         . '</div><div class="lst-mod__actions">';
-    if ($r['section'] === 'board') {
+    if ($isAd) {
         $h .= '<form method="post" action="mp-moderation.php" class="pc-inline-form">' . $csrf
             . '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="return" value="account">'
             . '<button class="pc-btn pc-btn--primary" type="submit" name="action" value="approve">Схвалити</button></form>'

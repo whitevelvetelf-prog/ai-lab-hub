@@ -1263,107 +1263,271 @@ textarea.mp-input {
 }
 
 /* ---------------------------------------------------------------------------
-   Блоки-категорії (вакансії, курси, послуги)
+   Дерево категорій Marketplace (app/mp-tree.php): блоки й підкатегорії.
+   Плитки — ті самі класи й вигляд, що на головній каталогу (public/index.php: .direction-grid / .direction-card);
+   стилі каталогу вбудовані в його сторінки, тож тут їх копія з тими самими значеннями. На телефоні — 2 в ряд.
    --------------------------------------------------------------------------- */
-.mpc-grid {
+.direction-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap: 14px;
-    margin: 0 0 24px;
+    gap: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0 0 28px;
 }
 
-.mpc-tile {
+@media (max-width: 900px) {
+    .direction-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.direction-card {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: flex-start;
+    gap: 16px;
     min-width: 0;
-    padding: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    padding: 22px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 16px;
-    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
     color: #ffffff;
     text-decoration: none;
     transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
-.mpc-tile:hover,
-.mpc-tile:focus-visible {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.45);
+.direction-card:hover,
+.direction-card:focus-visible {
+    transform: translateY(-3px);
+    border-color: rgba(91, 140, 255, 0.5);
 }
 
-.mpc-tile__icon {
-    display: inline-flex;
+.direction-card__icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.12);
+    color: #5b8cff;
+    background: rgba(91, 140, 255, 0.12);
+    border: 1px solid rgba(91, 140, 255, 0.25);
 }
 
-.mpc-tile__icon svg {
-    width: 24px;
-    height: 24px;
+.direction-card__icon svg {
+    width: 26px;
+    height: 26px;
 }
 
-.mpc-tile__name {
+.direction-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+
+.direction-card__name {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.2rem;
     font-weight: 700;
     line-height: 1.3;
     overflow-wrap: anywhere;
 }
 
-.mpc-tile__count {
-    margin: 0;
-    font-size: 0.85rem;
-    color: rgba(255, 255, 255, 0.8);
+.direction-card__count {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.72);
 }
 
-.mpc-head {
+@media (max-width: 560px) {
+    .direction-grid {
+        gap: 12px;
+    }
+
+    .direction-card {
+        gap: 12px;
+        padding: 14px;
+    }
+
+    .direction-card__icon {
+        width: 44px;
+        height: 44px;
+    }
+
+    .direction-card__name {
+        font-size: 1rem;
+    }
+}
+
+/* Дві помітні кнопки — лише бренд-кольори (#00032c, #2116ad, білий текст) */
+.mpt-cta {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 8px 16px;
-    margin: 8px 0 12px;
+    gap: 12px;
+    margin: 0 0 24px;
 }
 
-.mpc-head a {
-    color: #bcd0ff;
-    font-weight: 600;
+.mpt-cta__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 52px;
+    padding: 12px 24px;
+    border: 2px solid #2116ad;
+    border-radius: 14px;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 8px 24px rgba(33, 22, 173, 0.45);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.mpc-head h2 {
-    margin: 0;
-    font-size: 1.2rem;
+.mpt-cta__btn svg {
+    width: 22px;
+    height: 22px;
 }
 
-.mpc-search {
+.mpt-cta__btn--post {
+    background: #2116ad;
+}
+
+.mpt-cta__btn--free {
+    background: #00032c;
+    border-color: #2116ad;
+}
+
+.mpt-cta__btn:hover,
+.mpt-cta__btn:focus-visible {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(33, 22, 173, 0.65);
+    color: #ffffff;
+}
+
+@media (max-width: 560px) {
+    .mpt-cta__btn {
+        flex: 1 1 100%;
+    }
+}
+
+.mpt-search {
     display: flex;
     gap: 8px;
-    margin: 0 0 20px;
+    margin: 0 0 18px;
 }
 
-.mpc-search .mp-input {
+.mpt-search .mp-input {
     flex: 1 1 auto;
     min-width: 0;
 }
 
-@media (max-width: 600px) {
-    .mpc-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-    }
+.mpt-crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 0 0 10px;
+    padding: 0;
+    list-style: none;
+    font-size: 0.92rem;
+    color: rgba(255, 255, 255, 0.75);
+}
 
-    .mpc-tile {
-        padding: 12px;
-    }
+.mpt-crumbs li + li::before {
+    content: "›";
+    margin-right: 4px;
+    color: rgba(255, 255, 255, 0.5);
+}
 
-    .mpc-tile__name {
-        font-size: 0.92rem;
-    }
+.mpt-crumbs a {
+    color: #bcd0ff;
+}
+
+.mpt-empty {
+    margin: 0 0 24px;
+    padding: 20px;
+    border: 1px dashed rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    text-align: center;
+}
+
+.mpt-empty p {
+    margin: 0 0 14px;
+}
+
+.mpt-filters {
+    margin: 0 0 18px;
+}
+
+.mpt-focus summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.mpt-focus .mp-cats {
+    margin-top: 10px;
+}
+
+.mp-card__tag--platform,
+.mp-card__tag--author {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.mp-card__tag--platform {
+    background: #2116ad;
+    color: #ffffff;
+}
+
+.mp-card__tag--author {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+}
+
+/* Вибір блока у формі подачі */
+.mpt-pick {
+    margin: 0 0 20px;
+}
+
+/* Керування категоріями (mp-categories.php) */
+.mpt-admin-block {
+    margin: 0 0 20px;
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+}
+
+.mpt-admin-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 8px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mpt-admin-row .mp-input {
+    width: auto;
+    min-width: 0;
+    flex: 1 1 160px;
+}
+
+.mpt-admin-row .mp-input--num {
+    flex: 0 0 72px;
+}
+
+.mpt-admin-row.is-off {
+    opacity: 0.6;
+}
+
+.mpt-badge-draft {
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    font-size: 0.78rem;
 }
 
 .mp-visually-hidden {

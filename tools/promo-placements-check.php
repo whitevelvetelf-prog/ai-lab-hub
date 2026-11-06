@@ -244,7 +244,7 @@ try {
     $check('маркетплейс: розділи', 'реклама для «Вакансій» — лише у вакансіях; категорії каталогу на маркетплейс не впливають',
         $pJob !== null && (int) $pJob['id'] === $jobCr && $pCourse === null && $pCat !== null,
         json_encode([$pJob['id'] ?? null, $pCourse['id'] ?? null, $pCat['id'] ?? null, $jobCr]));
-    $boardCat = (int) $one("SELECT id FROM mp_categories WHERE section = 'board' AND is_active = 1 ORDER BY id LIMIT 1");
+    $boardCat = (int) $one("SELECT id FROM mp_categories WHERE section IN ('service', 'goods', 'job', 'course') AND parent_id IS NOT NULL AND is_active = 1 ORDER BY id LIMIT 1");
     if ($boardCat > 0) {
         $pdo->prepare("UPDATE ad_targets SET mp_section = :s WHERE campaign_id = :c")->execute([':s' => 'board:' . $boardCat, ':c' => $jobCid]);
         promo_cache_flush();

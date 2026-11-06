@@ -690,13 +690,17 @@ function promo_admin_placement_preview_url(PDO $pdo, string $key): ?string
         'blog_list' => 'blog.php',
         'blog_article' => promo_admin_preview_article($pdo),
         'marketplace_home', 'marketplace_feed' => 'marketplace.php',
-        'marketplace_category' => 'listings.php?type=job',
+        'marketplace_category' => (static function () use ($pdo): string {
+            require_once __DIR__ . '/mp-tree.php';
+
+            return 'marketplace-category.php?id=' . (int) (mpt_block(mpt_tree($pdo, 'uk'), 'job')['id'] ?? 0);
+        })(),
         'marketplace_search' => 'marketplace.php?q=ai',
         'marketplace_listing_page' => (static function () use ($one): ?string {
             // Живе оголошення: компанії — listing.php, дошка й Готові рішення — marketplace-offer.php.
-            $row = $one("SELECT CONCAT(l.section, ':', l.id) FROM mp_listings l
-                         WHERE l.status = 'published' AND (l.section = 'solution' OR l.expires_at > NOW())
-                         ORDER BY FIELD(l.section, 'job', 'course', 'service', 'board', 'solution'), l.id DESC LIMIT 1");
+            $row = $one("SELECT CONCAT(IF(l.post_form = 'ad', 'ad', l.section), ':', l.id) FROM mp_listings l
+                         WHERE l.status = 'published' AND l.section <> 'asset' AND (l.section = 'solution' OR l.expires_at > NOW())
+                         ORDER BY FIELD(IF(l.post_form = 'ad', 'ad', l.section), 'job', 'course', 'service', 'ad', 'solution'), l.id DESC LIMIT 1");
             if ($row === null) {
                 return null;
             }

@@ -53,7 +53,7 @@ $counts = [];
 foreach ($tabs as $key => [$cond]) {
     $c = $pdo->prepare(
         "SELECT COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE s.user_id = :u AND l.section = 'board' AND ($cond)"
+         WHERE s.user_id = :u AND l.post_form = 'ad' AND ($cond)"
     );
     $c->execute([':u' => $userId]);
     $counts[$key] = (int) $c->fetchColumn();
@@ -61,7 +61,7 @@ foreach ($tabs as $key => [$cond]) {
 
 // --- Список вибраної вкладки ---------------------------------------------------------
 $stmt = $pdo->prepare(
-    mpb_select_sql() . " WHERE l.section = 'board' AND s.user_id = :u AND (" . $tabs[$tab][0] . ')
+    mpb_select_sql() . " WHERE l.post_form = 'ad' AND s.user_id = :u AND (" . $tabs[$tab][0] . ')
      ORDER BY l.updated_at DESC, l.id DESC LIMIT 200'
 );
 $stmt->execute([':lang' => $lang, ':u' => $userId]);

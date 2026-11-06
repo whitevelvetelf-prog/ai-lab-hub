@@ -236,7 +236,7 @@ function lst_slug(string $title): string
 /** Умова публічної видимості (alias l). */
 function lst_visible_sql(): string
 {
-    return "l.section IN ('job', 'course', 'service') AND l.status = 'published' AND l.expires_at > NOW()";
+    return "l.section IN ('job', 'course', 'service') AND l.post_form = '' AND l.status = 'published' AND l.expires_at > NOW()";
 }
 
 /** SELECT з текстами поточною мовою (запасний варіант — мова оригіналу). */
@@ -359,7 +359,7 @@ function lst_search(PDO $pdo, string $lang, string $type, array $f, int $page, i
 /** Оголошення за id (будь-який статус) або null; видимість перевіряє викликач. */
 function lst_listing(PDO $pdo, int $id, string $lang): ?array
 {
-    $stmt = $pdo->prepare(lst_select_sql() . " WHERE l.id = :id AND l.section IN ('job', 'course', 'service')");
+    $stmt = $pdo->prepare(lst_select_sql() . " WHERE l.id = :id AND l.section IN ('job', 'course', 'service') AND l.post_form = ''");
     $stmt->execute([':lang' => $lang, ':id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -372,7 +372,7 @@ function lst_own(PDO $pdo, int $id, int $userId): ?array
     $stmt = $pdo->prepare(
         "SELECT l.*, (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed
          FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE l.id = :id AND l.section IN ('job', 'course', 'service') AND s.user_id = :u"
+         WHERE l.id = :id AND l.section IN ('job', 'course', 'service') AND l.post_form = '' AND s.user_id = :u"
     );
     $stmt->execute([':id' => $id, ':u' => $userId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -388,7 +388,7 @@ function lst_user_listings(PDO $pdo, int $userId): array
                 (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed, t.title
          FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
          LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
-         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service')
+         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service') AND l.post_form = ''
          ORDER BY FIELD(l.status, 'pending', 'published', 'rejected', 'expired', 'draft', 'archived'), l.id DESC LIMIT 200"
     );
     $stmt->execute([':u' => $userId]);
@@ -619,7 +619,7 @@ function lst_pending_count(PDO $pdo, int $userId, int $exceptId = 0): int
 {
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service') AND l.status = 'pending' AND l.id <> :ex"
+         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service') AND l.post_form = '' AND l.status = 'pending' AND l.id <> :ex"
     );
     $stmt->execute([':u' => $userId, ':ex' => $exceptId]);
 
@@ -631,7 +631,7 @@ function lst_new_today_count(PDO $pdo, int $userId): int
 {
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service') AND l.created_at > (NOW() - INTERVAL 1 DAY)"
+         WHERE s.user_id = :u AND l.section IN ('job', 'course', 'service') AND l.post_form = '' AND l.created_at > (NOW() - INTERVAL 1 DAY)"
     );
     $stmt->execute([':u' => $userId]);
 
@@ -669,7 +669,8 @@ function lst_form_stamp_ok(string $stamp): bool
  * редагування схваленого оголошення. Перевірку посилання робить викликач і передає в $d['check'].
  *
  * @param array<string,mixed> $d нормалізовані поля: type, title, short_desc, full_desc, company_name, url, country,
- *                               offer_lang, is_remote, details (array), focus (list<int>), check (array)
+ *                               offer_lang, is_remote, details (array), cats (підкатегорії блока, 1–3),
+ *                               focus (тематичні категорії, 0–3), check (array)
  */
 function lst_save(PDO $pdo, array $d, ?array $existing, int $userId, int $sellerId, string $lang): int
 {
@@ -706,7 +707,7 @@ function lst_save(PDO $pdo, array $d, ?array $existing, int $userId, int $seller
                         country = :country, offer_lang = :olang, details = :details, slug = :slug, link_check_status = :lcs,
                         link_check_json = :lcj, link_checked_at = NOW(), rules_accepted_at = NOW(), rules_version = :rv,
                         reject_reason = NULL
-                 WHERE id = :id AND section IN ('job', 'course', 'service')"
+                 WHERE id = :id AND section IN ('job', 'course', 'service') AND post_form = ''"
             );
             $upd->execute($common + [':id' => $id]);
             mp_log($pdo, $id, $userId, 'edited', 'після редагування — на модерації (було: ' . $existing['status'] . ')');
@@ -722,10 +723,11 @@ function lst_save(PDO $pdo, array $d, ?array $existing, int $userId, int $seller
 
         $pdo->prepare('DELETE FROM mp_listing_categories WHERE listing_id = :id')->execute([':id' => $id]);
         $lc = $pdo->prepare('INSERT INTO mp_listing_categories (listing_id, category_id) VALUES (:id, :c)');
-        foreach ($d['focus'] as $cid) {
+        foreach (array_unique(array_merge($d['cats'] ?? [], $d['focus'])) as $cid) {
             $lc->execute([':id' => $id, ':c' => (int) $cid]);
         }
         $pdo->commit();
+        mpt_cache_reset();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -752,7 +754,7 @@ function lst_expiry_sql(PDO $pdo, array $row): string
 /** pending → published. false — оголошення вже не pending. */
 function lst_approve(PDO $pdo, int $id, int $actorId): bool
 {
-    $st = $pdo->prepare("SELECT * FROM mp_listings WHERE id = :id AND section IN ('job', 'course', 'service')");
+    $st = $pdo->prepare("SELECT * FROM mp_listings WHERE id = :id AND section IN ('job', 'course', 'service') AND post_form = ''");
     $st->execute([':id' => $id]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
     if ($row === false) {
@@ -762,12 +764,13 @@ function lst_approve(PDO $pdo, int $id, int $actorId): bool
     $upd = $pdo->prepare(
         "UPDATE mp_listings SET status = 'published', published_at = COALESCE(published_at, NOW()), expires_at = $exp,
                 moderated_by = :a, moderated_at = NOW(), reject_reason = NULL, expiry_notified_at = NULL
-         WHERE id = :id AND status = 'pending' AND section IN ('job', 'course', 'service')"
+         WHERE id = :id AND status = 'pending' AND section IN ('job', 'course', 'service') AND post_form = ''"
     );
     $upd->execute([':a' => $actorId, ':id' => $id]);
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $actorId, 'approved');
     lst_mail($pdo, $id, 'approved');
 
@@ -783,12 +786,13 @@ function lst_reject(PDO $pdo, int $id, int $actorId, string $reason): bool
     }
     $upd = $pdo->prepare(
         "UPDATE mp_listings SET status = 'rejected', reject_reason = :r, moderated_by = :a, moderated_at = NOW()
-         WHERE id = :id AND status IN ('pending', 'published') AND section IN ('job', 'course', 'service')"
+         WHERE id = :id AND status IN ('pending', 'published') AND section IN ('job', 'course', 'service') AND post_form = ''"
     );
     $upd->execute([':r' => $reason, ':a' => $actorId, ':id' => $id]);
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $actorId, 'rejected', $reason);
     lst_mail($pdo, $id, 'rejected', ['reason' => $reason]);
 
@@ -800,12 +804,13 @@ function lst_remove(PDO $pdo, int $id, int $actorId, string $note = ''): bool
 {
     $upd = $pdo->prepare(
         "UPDATE mp_listings SET status = 'archived'
-         WHERE id = :id AND status IN ('draft', 'pending', 'published', 'expired', 'rejected') AND section IN ('job', 'course', 'service')"
+         WHERE id = :id AND status IN ('draft', 'pending', 'published', 'expired', 'rejected') AND section IN ('job', 'course', 'service') AND post_form = ''"
     );
     $upd->execute([':id' => $id]);
     if ($upd->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $actorId, 'archived', $note !== '' ? $note : null);
 
     return true;
@@ -831,12 +836,13 @@ function lst_extend(PDO $pdo, array $own, int $userId): string
     $exp = lst_expiry_sql($pdo, $own);
     $upd = $pdo->prepare(
         "UPDATE mp_listings SET status = 'published', expires_at = $exp, expiry_notified_at = NULL
-         WHERE id = :id AND status IN ('published', 'expired') AND section IN ('job', 'course', 'service')"
+         WHERE id = :id AND status IN ('published', 'expired') AND section IN ('job', 'course', 'service') AND post_form = ''"
     );
     $upd->execute([':id' => (int) $own['id']]);
     if ($upd->rowCount() === 0) {
         return 'err_extend_status';
     }
+    mpt_cache_reset();
     mp_log($pdo, (int) $own['id'], $userId, 'extended');
 
     return 'ok';
@@ -846,7 +852,7 @@ function lst_extend(PDO $pdo, array $own, int $userId): string
 function lst_expire_due(PDO $pdo): int
 {
     $ids = $pdo->query(
-        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND status = 'published'
+        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND post_form = '' AND status = 'published'
            AND expires_at IS NOT NULL AND expires_at <= NOW()"
     )->fetchAll(PDO::FETCH_COLUMN);
     $upd = $pdo->prepare("UPDATE mp_listings SET status = 'expired' WHERE id = :id AND status = 'published' AND expires_at <= NOW()");
@@ -854,6 +860,7 @@ function lst_expire_due(PDO $pdo): int
     foreach ($ids as $id) {
         $upd->execute([':id' => (int) $id]);
         if ($upd->rowCount() > 0) {
+            mpt_cache_reset();
             mp_log($pdo, (int) $id, null, 'expired', 'термін минув');
             $n++;
         }
@@ -1163,7 +1170,7 @@ function lst_daily(PDO $pdo): string
 
     $notice = 0;
     $rows = $pdo->query(
-        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND status = 'published'
+        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND post_form = '' AND status = 'published'
            AND expiry_notified_at IS NULL AND expires_at > NOW() AND expires_at <= NOW() + INTERVAL " . LST_EXPIRY_NOTICE_DAYS . ' DAY LIMIT 200'
     )->fetchAll(PDO::FETCH_COLUMN);
     foreach ($rows as $id) {
@@ -1175,7 +1182,7 @@ function lst_daily(PDO $pdo): string
 
     $reports = 0;
     $rows = $pdo->query(
-        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND status IN ('published', 'expired')
+        "SELECT id FROM mp_listings WHERE section IN ('job', 'course', 'service') AND post_form = '' AND status IN ('published', 'expired')
            AND report_sent_at IS NULL AND published_at IS NOT NULL AND published_at <= NOW() - INTERVAL " . LST_REPORT_AFTER_DAYS . ' DAY LIMIT 200'
     )->fetchAll(PDO::FETCH_COLUMN);
     $stats = lst_stats($pdo, array_map('intval', $rows), LST_REPORT_AFTER_DAYS);
@@ -1335,7 +1342,7 @@ function lst_rules_html(): string
  * Початок сторінки розділу, як mpb_open(), але з додатковими тегами в <head> (canonical, JSON-LD).
  * $head — уже екранований HTML. Закривати mpb_close().
  */
-function lst_open(string $title, bool $noindex, string $head = '', string $nav = 'board'): void
+function lst_open(string $title, bool $noindex, string $head = '', string $nav = 'home'): void
 {
     $lang = current_lang();
     echo "<!DOCTYPE html>\n<html lang=\"" . lst_e($lang) . "\">\n<head>\n<meta charset=\"utf-8\">\n"

@@ -36,7 +36,7 @@ if (!in_array($fCat, $catIds, true)) {
     $fCat = 0;
 }
 
-$where = ["l.section IN ('solution', 'board')"];
+$where = ["(l.section = 'solution' OR l.post_form = 'ad')"];
 $params = [];
 if ($fStatus !== '') {
     $where[] = 'l.status = :status';
@@ -54,7 +54,7 @@ if ($fQ !== '') {
 $whereSql = implode(' AND ', $where);
 
 $stmt = $pdo->prepare(
-    "SELECT l.id, l.section, l.status, l.delivery_type, l.claims_count, l.updated_at,
+    "SELECT l.id, l.section, l.post_form, l.status, l.delivery_type, l.claims_count, l.updated_at,
             (SELECT COUNT(*) FROM mp_reports r WHERE r.listing_id = l.id AND r.created_at > COALESCE(l.moderated_at, '1970-01-01 00:00:00')) AS reports_count,
             t.title,
             s.display_name AS seller_name,
@@ -79,7 +79,7 @@ $rows = array_slice($rows, 0, MP_LIST_LIMIT);
 
 // Підсумок за статусами (без фільтрів — загальна картина)
 $counts = array_fill_keys(array_keys($statusLabels), 0);
-foreach ($pdo->query("SELECT status, COUNT(*) c FROM mp_listings WHERE section IN ('solution', 'board') GROUP BY status")->fetchAll(PDO::FETCH_ASSOC) as $r) {
+foreach ($pdo->query("SELECT status, COUNT(*) c FROM mp_listings WHERE (section = 'solution' OR post_form = 'ad') GROUP BY status")->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $counts[(string) $r['status']] = (int) $r['c'];
 }
 $total = array_sum($counts);
@@ -183,7 +183,7 @@ $deliveryLabels = mp_delivery_labels();
                             $id = (int) $r['id'];
                             $status = (string) $r['status'];
                             $updated = strtotime((string) $r['updated_at']);
-                            $isBoard = (string) $r['section'] === 'board';
+                            $isBoard = (string) ($r['post_form'] ?? '') === 'ad';
                             $editUrl = $isBoard ? 'mp-moderation.php?id=' . $id : 'mp-add-offer.php?id=' . $id;
                             ?>
                             <tr>

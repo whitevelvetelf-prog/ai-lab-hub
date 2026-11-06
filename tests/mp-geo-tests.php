@@ -52,12 +52,12 @@ const TEST_IP = '203.0.113.77';
 $created = [];
 $prevSwitch = $pdo->query("SELECT setting_value FROM site_settings WHERE setting_key = 'marketplace_public'")->fetchColumn();
 
-/** Тестове оголошення дошки (опубліковане) + текст мовою $lang + географія через mpg_save_listing_geo(). */
+/** Тестове оголошення користувача (блок «Інше», post_form=ad; опубліковане) + текст мовою $lang + географія через mpg_save_listing_geo(). */
 $mk = static function (string $title, string $lang, array $geo, ?string $price = null, string $cur = 'USD', int $seller = 1) use ($pdo, &$created): int {
     $pdo->prepare(
-        "INSERT INTO mp_listings (section, seller_id, status, pricing_model, price_type, price_amount, currency, delivery_type, source_lang,
+        "INSERT INTO mp_listings (section, post_form, seller_id, status, pricing_model, price_type, price_amount, currency, delivery_type, source_lang,
                                   is_remote, published_at, expires_at, created_at, updated_at)
-         VALUES ('board', :s, 'published', 'free', :pt, :pa, :cur, 'contact', :lang, 1, NOW(), NOW() + INTERVAL 30 DAY, NOW(), NOW())"
+         VALUES ('other', 'ad', :s, 'published', 'free', :pt, :pa, :cur, 'contact', :lang, 1, NOW(), NOW() + INTERVAL 30 DAY, NOW(), NOW())"
     )->execute([':s' => $seller, ':pt' => $price !== null ? 'fixed' : 'none', ':pa' => $price, ':cur' => $price !== null ? $cur : null, ':lang' => $lang]);
     $id = (int) $pdo->lastInsertId();
     $created[] = $id;

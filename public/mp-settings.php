@@ -74,7 +74,7 @@ $placeLabel = $prefs['place_id'] > 0 ? (mpg_labels($pdo, [$prefs['place_id']], $
 $countries = mpg_countries($pdo, $lang);
 $isGuest = $userId === null;
 
-mpb_open(t('mpg_settings_title'), true, 'board');
+mpb_open(t('mpg_settings_title'), true, 'home');
 ?>
     <div class="mp-page mp-page--narrow">
         <h1 class="mp-title"><?= mp_e(t('mpg_settings_title')) ?></h1>

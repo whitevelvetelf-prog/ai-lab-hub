@@ -51,7 +51,7 @@ if ($sentId > 0 && ($sent = lst_own($pdo, $sentId, $userId)) !== null) {
         $isPending ? mpf_tr('sent_title') : lst_tr('saved'),
         ($isPending ? '<p class="mp-text">' . mp_e(mpf_tr('sent_text', (int) $settings['review_hours'])) . '</p>' : '')
         . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="account.php#acc-listings">' . mp_e(mpf_tr('sent_my')) . '</a>'
-        . '<a class="mp-btn" href="listings.php?type=' . mp_e((string) $sent['section']) . '">' . mp_e(lst_tr('type_' . $sent['section'])) . '</a></p>',
+        . '<a class="mp-btn" href="' . mp_e(mpt_url((int) (mpt_block(mpt_tree($pdo, $lang), (string) $sent['section'])['id'] ?? 0))) . '">' . mp_e(lst_tr('type_' . $sent['section'])) . '</a></p>',
         null
     );
 }
@@ -64,14 +64,19 @@ if ($id > 0) {
         mp_not_found();
     }
 }
-$type = $existing !== null ? (string) $existing['section'] : (string) ($_GET['type'] ?? $_POST['type'] ?? 'job');
+$type = $existing !== null ? (string) $existing['section'] : (string) ($_GET['type'] ?? $_POST['type'] ?? '');
 if (!lst_type_valid($type)) {
-    $type = 'job';
+    header('Location: marketplace-post.php', true, 303);   // крок 1 — вибір блока
+    exit;
 }
+// Підкатегорії блока (дерево app/mp-tree.php): обов'язково 1–3, лише свого блока. Тематичні (focus) — необов'язково, до 3.
+$lstBlock = mpt_block(mpt_tree($pdo, $lang), $type);
+$subCats = $lstBlock['children'] ?? [];
+$subIds = array_column($subCats, 'id');
 
 $v = [
     'title' => '', 'company_name' => '', 'short_desc' => '', 'full_desc' => '', 'url' => '', 'country' => '', 'offer_lang' => '',
-    'is_remote' => $type !== 'course', 'focus' => [], 'd' => [], 'rules' => false,
+    'is_remote' => $type !== 'course', 'cats' => [], 'focus' => [], 'd' => [], 'rules' => false,
 ];
 if ($existing !== null) {
     $tx = $pdo->prepare('SELECT title, short_desc, full_desc FROM mp_listing_translations WHERE listing_id = :id AND lang = :lang');
@@ -83,9 +88,11 @@ if ($existing !== null) {
         'title' => (string) $t0['title'], 'company_name' => (string) $existing['company_name'], 'short_desc' => (string) ($t0['short_desc'] ?? ''),
         'full_desc' => (string) ($t0['full_desc'] ?? ''), 'url' => (string) $existing['delivery_url'], 'country' => (string) $existing['country'],
         'offer_lang' => (string) $existing['offer_lang'], 'is_remote' => (int) $existing['is_remote'] === 1,
-        'focus' => array_map('intval', $cs->fetchAll(PDO::FETCH_COLUMN)),
+        'focus' => array_map('intval', $cs->fetchAll(PDO::FETCH_COLUMN)), 'cats' => [],
         'd' => array_map('strval', lst_details($existing)), 'rules' => false,
     ];
+    $v['cats'] = array_values(array_intersect($v['focus'], $subIds));
+    $v['focus'] = array_values(array_intersect($v['focus'], $focusIds));
 }
 
 $errors = [];   // ключ lst_tr або [ключ, аргументи...]
@@ -108,6 +115,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $v['offer_lang'] = $str('offer_lang');
     $v['is_remote'] = ($_POST['is_remote'] ?? '') === '1';
     $v['focus'] = array_values(array_intersect(array_unique(array_map('intval', is_array($_POST['focus'] ?? null) ? $_POST['focus'] : [])), $focusIds));
+    $v['cats'] = array_values(array_intersect(array_unique(array_map('intval', is_array($_POST['cats'] ?? null) ? $_POST['cats'] : [])), $subIds));
     $v['d'] = is_array($_POST['d'] ?? null) ? array_map(static fn($x): string => is_string($x) ? $x : '', $_POST['d']) : [];
     $v['rules'] = ($_POST['rules'] ?? '') === '1';
 
@@ -141,7 +149,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if (!in_array($v['offer_lang'], LST_LANGS, true)) {
         $errors[] = 'err_lang';
     }
-    if ($v['focus'] === [] || count($v['focus']) > 3) {
+    if ($subIds !== [] && ($v['cats'] === [] || count($v['cats']) > MPT_MAX_CATS)) {
+        $errors[] = 'err_subcats';
+    }
+    if (count($v['focus']) > 3) {
         $errors[] = 'err_focus';
     }
     $details = lst_details_normalize($type, $v['d'], $errors);
@@ -199,7 +210,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $savedId = lst_save($pdo, [
                 'type' => $type, 'title' => $v['title'], 'short_desc' => $v['short_desc'], 'full_desc' => $v['full_desc'],
                 'company_name' => $v['company_name'], 'url' => $v['url'], 'country' => $v['country'], 'offer_lang' => $v['offer_lang'],
-                'is_remote' => $v['is_remote'], 'details' => $details, 'focus' => $v['focus'], 'check' => $check,
+                'is_remote' => $v['is_remote'], 'details' => $details, 'cats' => $v['cats'], 'focus' => $v['focus'], 'check' => $check,
             ], $existing, $userId, $sellerId, $lang);
             lst_mail($pdo, $savedId, 'received');
             // Оголошення за запрошенням аутрічу (marketplace-join.php) → лід «Розмістили».
@@ -249,7 +260,7 @@ $currency = static function (string $name, string $current): string {
 const LP_ERR_FIELD = [
     'err_title' => 'title', 'err_company' => 'company_name', 'err_short' => 'short_desc', 'err_desc' => 'full_desc',
     'err_desc_job' => 'full_desc', 'err_links' => 'full_desc', 'err_url' => 'url', 'err_link_blocked' => 'url',
-    'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_job_location' => 'city',
+    'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_subcats' => 'cats', 'err_job_location' => 'city',
     'err_rules' => 'rules', 'err_number' => 'number', 'err_date' => 'date', 'err_apply_past' => 'date', 'err_salary_range' => 'salary',
 ];
 $byField = [];
@@ -304,16 +315,29 @@ mpb_open($pageTitle, true, 'post');
             <p class="mp-hint"><?= lst_e(mpf_tr('required_note')) ?></p>
 
             <?php // 1. Розділ і категорія ?>
-            <fieldset class="mpf-block<?= $fieldErr('focus') !== '' ? ' mpf-block--error' : '' ?>" id="blk-section">
+            <fieldset class="mpf-block<?= ($fieldErr('cats') . $fieldErr('focus')) !== '' ? ' mpf-block--error' : '' ?>" id="blk-section">
                 <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_section')) ?></legend>
-                <p class="mp-text mpf-type"><?= lst_e(lst_tr('type1_' . $type)) ?></p>
-                <span class="mp-label" id="lbl_focus"><?= lst_e(lst_tr('f_focus')) ?> <span class="mpf-req">*</span></span>
-                <div class="mp-checks" role="group" aria-labelledby="lbl_focus">
-                    <?php foreach ($focusTags as $tg): ?>
-                        <label class="mp-check"><input type="checkbox" name="focus[]" value="<?= (int) $tg['id'] ?>"<?= in_array($tg['id'], $v['focus'], true) ? ' checked' : '' ?>> <span><?= lst_e($tg['name']) ?></span></label>
+                <p class="mp-text mpf-type"><?= lst_e(t('mpt_block_label')) ?>: <strong><?= lst_e($lstBlock['name'] ?? lst_tr('type1_' . $type)) ?></strong>
+                    <?php if ($existing === null): ?> · <a href="marketplace-post.php"><?= lst_e(t('mpt_change_block')) ?></a><?php endif; ?></p>
+                <?php if ($subCats !== []): ?>
+                <span class="mp-label" id="lbl_cats"><?= lst_e(t('mpt_subcategories')) ?> <span class="mpf-req">*</span></span>
+                <div class="mp-checks" role="group" aria-labelledby="lbl_cats">
+                    <?php foreach ($subCats as $sc): ?>
+                        <label class="mp-check"><input type="checkbox" name="cats[]" value="<?= (int) $sc['id'] ?>"<?= in_array($sc['id'], $v['cats'], true) ? ' checked' : '' ?>> <span><?= lst_e($sc['name']) ?></span></label>
                     <?php endforeach; ?>
                 </div>
-                <p class="mp-hint"><?= lst_e(lst_tr('f_focus_hint')) ?></p>
+                <p class="mp-hint"><?= lst_e(t('mpb_f_categories_hint')) ?></p>
+                <?= $fieldErr('cats') ?>
+                <?php endif; ?>
+                <details class="mpt-focus"<?= $v['focus'] !== [] ? ' open' : '' ?>>
+                    <summary><?= lst_e(lst_tr('f_focus')) ?> (<?= lst_e(t('mpt_optional')) ?>)</summary>
+                    <div class="mp-checks" role="group" aria-label="<?= lst_e(lst_tr('f_focus')) ?>">
+                        <?php foreach ($focusTags as $tg): ?>
+                            <label class="mp-check"><input type="checkbox" name="focus[]" value="<?= (int) $tg['id'] ?>"<?= in_array($tg['id'], $v['focus'], true) ? ' checked' : '' ?>> <span><?= lst_e($tg['name']) ?></span></label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="mp-hint"><?= lst_e(lst_tr('f_focus_hint')) ?></p>
+                </details>
                 <?= $fieldErr('focus') ?>
             </fieldset>
 

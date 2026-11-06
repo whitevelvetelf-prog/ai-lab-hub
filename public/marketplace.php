@@ -3,24 +3,26 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — Marketplace: дошка оголошень (у стилі OLX; публікують користувачі) разом із Готовими AI-рішеннями
- * платформи (section='solution', автор — AI LAB HUB, безкоштовно).
+ * AI LAB HUB — Marketplace: головна розділу і розширений пошук.
  *
- * Оголошення — лише status='published' І expires_at > NOW(); рішення — status='published'. Розширений пошук
- * (етап 6, усе через GET і білі списки — app/mp-search.php): q, section, cat, price_type, price_min/price_max (USD),
- * country, place, radius, format, listing_lang, with_photos, verified, sort (new|price_asc|price_desc|distance), page.
- * Старі посилання (category, sub, min, max, city, remote, sort=cheap|expensive) працюють як синоніми.
- * Без параметрів місця підставляються налаштування відвідувача (mp-settings.php / cookie mp_loc). Пагінація по 12.
+ * Без параметрів пошуку — головна, як головна каталогу: пошук, кнопки «Подати оголошення» і «Безкоштовні рішення»,
+ * сітка блоків-категорій (app/mp-tree.php; лічильник — живі оголошення блока) і «Свіжі оголошення» (до MPT_FRESH).
+ * Блок → marketplace-category.php?id=N (підкатегорії) → підкатегорія (список по 20) → оголошення.
+ * З параметрами (q, section — блок, cat — підкатегорія, price_type, price_min/price_max у USD, country, place, radius,
+ * format, listing_lang, with_photos, verified, sort, page; app/mp-search.php) — результати з усіх джерел:
+ * оголошення користувачів, вакансії/курси/послуги компаній, матеріали платформи. Пагінація по 12.
+ * Старі адреси (category=solutions|N, sub, section=board|solutions) — 301 на сторінку блока чи підкатегорії.
  * Поки config/marketplace.php → public_enabled = false — 404. Платформа в угодах не бере участі.
- * Колишні вітрини рішень marketplace-solutions.php / marketplace-category.php — 301 сюди.
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/listing.php';
 require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/mp-search.php';
 require_once __DIR__ . '/../app/mp-geo-form.php';
+require_once __DIR__ . '/../app/mp-legacy-redirect.php';
 
 mp_public_require();
 
@@ -29,33 +31,71 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 $lang = current_lang();
 $userId = auth_user_id();
-// Розширений пошук (етап 6): усі параметри — за білими списками (app/mp-search.php); без міграцій — без географії.
+$tree = mpt_tree($pdo, $lang);
+
+// Старі адреси → сторінка блока / підкатегорії (301).
+$g = static fn(string $k): string => is_string($_GET[$k] ?? null) ? (string) $_GET[$k] : '';
+$legacyId = 0;
+if ($g('category') === 'solutions' || $g('section') === 'solutions') {
+    $legacyId = (int) ($g('sub') ?: $g('cat')) ?: (int) (mpt_block($tree, 'solution')['id'] ?? 0);
+} elseif ($g('section') === 'board' || ctype_digit($g('category'))) {
+    $legacyId = (int) ($g('cat') ?: $g('category'));
+    $legacyId = $legacyId ?: -1;
+}
+if ($legacyId !== 0) {
+    $keep = array_intersect_key($_GET, array_flip(['q', 'sort']));
+    if ($legacyId > 0 && mpt_node($tree, $legacyId) !== null) {
+        mp_legacy_redirect('marketplace-category.php', ['id' => $legacyId] + $keep, array_keys($_GET));
+    }
+    mp_legacy_redirect('marketplace.php', $keep, array_keys($_GET));
+}
+
+$isHub = array_intersect(array_keys($_GET), MPB_SEARCH_KEYS) === [];
+
+if ($isHub) {
+    // ===== Головна Marketplace =====
+    $counts = mpt_counts($pdo);
+    $fresh = mpt_search($pdo, $lang, [], 1, MPT_FRESH);
+    analytics_log_view($pdo, 'marketplace_home', null, 'hub');
+    mpt_open(t('mpt_home_title'), t('mpt_home_desc'), 'marketplace.php', false, 'home');
+    ?>
+    <div class="mp-page">
+        <h1 class="mp-title"><?= mp_e(t('mp_heading')) ?></h1>
+        <p class="mp-subtitle"><?= mp_e(t('mpt_home_subtitle')) ?></p>
+        <?= mpt_search_form('marketplace.php', '') ?>
+        <?= mpt_cta_html($tree) ?>
+        <?= mpb_flash_html() ?>
+        <h2 class="mp-section-title"><?= mp_e(t('mpt_blocks_title')) ?></h2>
+        <?= mpt_tiles(mpt_home_tiles($tree, $counts), t('mpt_blocks_title')) ?>
+        <?php if ($fresh['rows'] !== []): ?>
+            <h2 class="mp-section-title"><?= mp_e(t('mpt_fresh')) ?></h2>
+            <div class="mp-grid">
+                <?php foreach ($fresh['rows'] as $card): ?><?= mpt_card_html($pdo, $card) ?><?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+        <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
+    </div>
+    <?php
+    mpt_close();
+    exit;
+}
+
+// ===== Розширений пошук =====
 $geoReady = mpg_ready($pdo);
 $prefs = $geoReady ? mpg_prefs($pdo, $userId) : ['saved' => false, 'units' => 'km'];
 $filters = mpb_search_filters($pdo, $_GET, $lang, $prefs);
-$isSolutions = $filters['section'] === MPB_SOLUTIONS;
-$categories = mpb_categories($pdo, $lang);
-$solutionCats = $isSolutions ? mp_public_categories($pdo, $lang) : [];
-$boardCat = $filters['section'] === 'board' ? $filters['cat'] : 0;
 $page = $filters['page'];
 $result = mpb_search($pdo, $lang, $filters, $page);
 $hasFilters = mpb_search_has_filters($filters);
 $place = $filters['geo']['place'];
 $placeLabel = $place !== null ? (mpg_labels($pdo, [$place['id']], $lang)[$place['id']]['label'] ?? '') : '';
 $countries = $geoReady ? mpg_countries($pdo, $lang) : [];
+$selBlock = $filters['section'] !== '' ? mpt_block($tree, $filters['section']) : null;
+$selSubs = $selBlock['children'] ?? [];
 
-// Реклама й облік переглядів: пошук/фільтри → marketplace_search; категорія чи Готові рішення →
-// marketplace_category (блок на початку списку); інакше стрічка (marketplace_feed) і на першій
-// сторінці — головна маркетплейсу (marketplace_home, блок над списком).
-$isSearch = $filters['q'] !== '' || $filters['price_type'] !== '' || $filters['price_min'] !== null || $filters['price_max'] !== null
-    || $filters['country'] !== '' || $filters['format'] !== 'any' || $filters['listing_langs'] !== [] || $filters['with_photos'] || $filters['verified'];
-$mpSections = $isSolutions ? ['solutions'] : ($boardCat !== 0 ? promo_mp_page_sections('board', $boardCat) : ['board', 'solutions']);
-$mpMode = $isSearch ? 'search' : (($boardCat !== 0 || $isSolutions) ? 'category' : 'feed');
-if ($mpMode === 'feed') {
-    analytics_log_view($pdo, 'marketplace_home', null, $page > 1 ? 'p:' . $page : implode(',', $mpSections));
-} else {
-    analytics_log_view($pdo, 'marketplace_' . $mpMode, null, implode(',', $mpSections));
-}
+// Облік переглядів і реклама: пошук → marketplace_search.
+$mpSections = $filters['section'] !== '' ? [$filters['section'] === 'solution' ? 'solutions' : $filters['section']] : ['board', 'solutions'];
+analytics_log_view($pdo, 'marketplace_search', null, implode(',', $mpSections));
 
 /** Посилання зі збереженням фільтрів ($over — замінити параметри; null / '' / 0 — прибрати). */
 $url = static function (array $over = []) use ($filters): string {
@@ -75,7 +115,6 @@ $url = static function (array $over = []) use ($filters): string {
     return 'marketplace.php?' . http_build_query($q);
 };
 $pageUrl = static fn(int $p): string => $url(['page' => $p > 1 ? $p : null]);
-$subUrl = static fn(int $subId): string => $url(['section' => MPB_SOLUTIONS, 'cat' => $subId ?: null, 'page' => null]);
 
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $sortLabels = ['new' => t('mpb_sort_new'), 'price_asc' => t('mpb_sort_cheap'), 'price_desc' => t('mpb_sort_expensive')];
@@ -84,53 +123,42 @@ if ($place !== null) {
 }
 $unitLabel = t($filters['units'] === 'mi' ? 'mpg_unit_mi' : 'mpg_unit_km');
 
-$heading = $isSolutions ? t('mp_nav_solutions') : t('mp_heading');
-mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
+$heading = $filters['q'] !== '' ? sprintf(t('mpt_search_title_q'), $filters['q']) : t('mpt_search_title');
+mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marketplace.php', true, 'home');
 ?>
     <div class="mp-page">
+        <?= mpt_crumbs([[t('mp_heading'), 'marketplace.php'], [t('mpt_search_title'), null]]) ?>
         <h1 class="mp-title"><?= mp_e($heading) ?></h1>
-        <p class="mp-subtitle"><?= mp_e(t($isSolutions ? 'mp_subtitle' : 'mpb_subtitle')) ?></p>
         <?php // Платформа не бере участі в угодах — завжди вгорі, до списку. ?>
         <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
-
-        <?php if ($solutionCats !== []): ?>
-            <ul class="mp-cats">
-                <li><a class="mp-chip<?= $filters['cat'] === 0 ? ' is-active' : '' ?>" href="<?= mp_e($subUrl(0)) ?>"><?= mp_e(t('mp_all_categories')) ?></a></li>
-                <?php foreach ($solutionCats as $c): ?>
-                    <?php if ($c['cnt'] > 0): ?>
-                        <li>
-                            <a class="mp-chip<?= $c['id'] === $filters['cat'] ? ' is-active' : '' ?>" href="<?= mp_e($subUrl($c['id'])) ?>">
-                                <?= mp_e($c['name']) ?>
-                                <span class="mp-chip__count"><?= (int) $c['cnt'] ?></span>
-                            </a>
-                        </li>
-                    <?php endif; ?>
-                <?php endforeach; ?>
-            </ul>
-        <?php endif; ?>
 
         <?= mpb_flash_html() ?>
 
         <form class="mp-filters" method="get" action="marketplace.php" role="search">
-            <?php if ($isSolutions && $filters['cat'] > 0): ?>
-                <input type="hidden" name="cat" value="<?= (int) $filters['cat'] ?>" data-mp-cat>
-            <?php endif; ?>
             <div class="mp-field mp-field--grow">
                 <label class="mp-label" for="f_q"><?= mp_e(t('mpb_f_search')) ?></label>
                 <input class="mp-input" type="search" id="f_q" name="q" maxlength="100" value="<?= mp_e($filters['q']) ?>" placeholder="<?= mp_e(t('mp_search_placeholder')) ?>">
             </div>
             <div class="mp-field">
                 <label class="mp-label" for="f_section"><?= mp_e(t('mpb_f_category')) ?></label>
-                <?php // Одне поле: розділ «Готові рішення» або категорія дошки (section=board + cat=N через data-cat). ?>
-                <select class="mp-input" id="f_section" name="section" data-mp-section>
+                <select class="mp-input" id="f_section" name="section">
                     <option value=""><?= mp_e(t('mp_all_categories')) ?></option>
-                    <option value="<?= MPB_SOLUTIONS ?>"<?= $isSolutions ? ' selected' : '' ?>><?= mp_e(t('mp_nav_solutions')) ?></option>
-                    <?php foreach ($categories as $c): ?>
-                        <option value="board" data-cat="<?= (int) $c['id'] ?>"<?= $boardCat === $c['id'] ? ' selected' : '' ?>><?= mp_e($c['name']) ?></option>
+                    <?php foreach ($tree as $b): ?>
+                        <option value="<?= mp_e($b['section']) ?>"<?= $filters['section'] === $b['section'] ? ' selected' : '' ?>><?= mp_e($b['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <?php if ($boardCat > 0): ?><input type="hidden" name="cat" value="<?= (int) $boardCat ?>" data-mp-cat><?php endif; ?>
             </div>
+            <?php if ($selSubs !== []): ?>
+            <div class="mp-field">
+                <label class="mp-label" for="f_cat"><?= mp_e(t('mpt_subcategory')) ?></label>
+                <select class="mp-input" id="f_cat" name="cat">
+                    <option value=""><?= mp_e(t('mpt_all_subcategories')) ?></option>
+                    <?php foreach ($selSubs as $c): ?>
+                        <option value="<?= (int) $c['id'] ?>"<?= $filters['cat'] === $c['id'] ? ' selected' : '' ?>><?= mp_e($c['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <?php endif; ?>
             <?php if ($geoReady): ?>
             <div class="mp-field mp-field--grow">
                 <label class="mp-label" for="f_place"><?= mp_e(t('mpg_f_place')) ?></label>
@@ -234,31 +262,12 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
                     <p class="mp-hint"><a href="mp-settings.php"><?= mp_e(t('mpg_settings_link')) ?></a></p>
                 <?php endif; ?>
             </div>
-            <script>
-            // «Категорія»: data-cat вибраної категорії дошки → прихований cat.
-            (function () {
-                var sel = document.querySelector('[data-mp-section]');
-                if (!sel) { return; }
-                sel.addEventListener('change', function () {
-                    var opt = sel.options[sel.selectedIndex];
-                    sel.form.querySelectorAll('[data-mp-cat]').forEach(function (h) { h.remove(); });
-                    if (opt.dataset.cat) {
-                        var hid = document.createElement('input');
-                        hid.type = 'hidden'; hid.name = 'cat'; hid.value = opt.dataset.cat; hid.setAttribute('data-mp-cat', '');
-                        sel.parentNode.appendChild(hid);
-                    }
-                });
-            }());
-            </script>
             <script src="/assets/js/mp-geo.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-geo.js') ?>" defer></script>
         <?php endif; ?>
 
         <?php
         // Реклама в маркетплейсі — лише коли marketplace_public = 1 і місце ввімкнене (promo_slot
         // інакше порожній; адмін із ?promo_preview=1 бачить блоки завжди). Чітко відмінна від оголошень.
-        if ($mpMode === 'feed' && $page === 1 && $result['rows'] !== []) {
-            echo promo_slot($pdo, 'marketplace_home', [], [], ['mp' => $mpSections]);
-        }
         ?>
         <p class="mp-count"><?= mp_e(sprintf(t('mpb_found'), $result['total'])) ?></p>
 
@@ -266,8 +275,8 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>
         <?php else: ?>
             <div class="mp-grid">
-                <?php foreach ($result['rows'] as $i => $card): ?>
-                    <?php include __DIR__ . '/../app/mpb-card.php'; ?>
+                <?php foreach ($result['rows'] as $card): ?>
+                    <?php if (($card['kind'] ?? '') === 'lst'): ?><?= lst_card_html($card) ?><?php else: ?><?php include __DIR__ . '/../app/mpb-card.php'; ?><?php endif; ?>
                 <?php endforeach; ?>
             </div>
 
@@ -288,4 +297,4 @@ mpb_open($heading, false, $isSolutions ? 'solutions' : 'board');
 
         <?= $geoReady ? mpg_attribution_html() : '' ?>
     </div>
-<?php mpb_close(); ?>
+<?php mpt_close(); ?>

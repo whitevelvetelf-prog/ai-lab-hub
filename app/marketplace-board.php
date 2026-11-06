@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace, етап 4: дошка оголошень (публікують користувачі). Хелпери.
  *
- * Розділ mp_listings.section = 'board'. Міграція — database/migration-2026-09-21-marketplace-classifieds.sql.
+ * Оголошення користувачів: mp_listings.post_form = 'ad', section = блок дерева категорій (app/mp-tree.php; до 2026-11-06 —
+ * окремий розділ 'board'). Міграції — database/migration-2026-09-21-marketplace-classifieds.sql, …-2026-11-06-marketplace-category-tree.sql.
  * Підключати після app/auth.php і app/translations.php:
  *   require_once __DIR__ . '/../app/marketplace-board.php';   // сам підключає app/marketplace.php
  *
@@ -19,8 +20,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/marketplace.php';
 require_once __DIR__ . '/mp-section-nav.php';
 require_once __DIR__ . '/mp-geo.php';   // етап 6: географія, пошук за місцем, ціна в USD
+require_once __DIR__ . '/mp-tree.php';  // дерево категорій і лічильники (кеш скидається після змін статусу)
 
-const MPB_SECTION = 'board';
 const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   // 'none' — ціну не вказано
 const MPB_CURRENCIES = ['UAH' => '₴', 'USD' => '$', 'EUR' => '€'];
 const MPB_REPORT_REASONS = ['fraud', 'prohibited', 'spam', 'wrong_category', 'other'];
@@ -374,7 +375,7 @@ function mpb_own_listing(PDO $pdo, int $id, int $userId): ?array
     $stmt = $pdo->prepare(
         "SELECT l.*, (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed
          FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE l.id = :id AND l.section = 'board' AND s.user_id = :u"
+         WHERE l.id = :id AND l.post_form = 'ad' AND s.user_id = :u"
     );
     $stmt->execute([':id' => $id, ':u' => $userId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -389,7 +390,7 @@ function mpb_own_listing(PDO $pdo, int $id, int $userId): ?array
 /** Умова видимості в публічних запитах (alias l). */
 function mpb_visible_sql(): string
 {
-    return "l.section = 'board' AND l.status = 'published' AND l.expires_at > NOW()";
+    return "l.post_form = 'ad' AND l.status = 'published' AND l.expires_at > NOW()";
 }
 
 /**
@@ -414,7 +415,7 @@ function mpb_select_sql(?PDO $pdo = null): string
     // Колонки етапу 6 (формат, місце) — лише якщо міграцію застосовано.
     $geo = $pdo !== null && mpg_ready($pdo) ? ' l.work_format, l.service_scope, l.primary_place_id, l.country_code, l.service_radius_km, l.price_usd,' : '';
 
-    return "SELECT l.id, l.section, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,{$geo}
+    return "SELECT l.id, l.section, l.post_form, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,{$geo}
                    l.published_at, l.expires_at, l.created_at, l.views_count, l.source_lang, l.reject_reason,
                    s.display_name AS seller_name, s.user_id AS seller_user_id,
                    COALESCE(NULLIF(tc.title, ''), ts.title)           AS title,
@@ -433,7 +434,7 @@ function mpb_select_sql(?PDO $pdo = null): string
 /**
  * Пошук для marketplace.php: оголошення дошки і Готові AI-рішення платформи разом (етап 6 — розширений).
  * Фільтри ($f, уже нормалізовані marketplace.php за білими списками):
- *   section ''|'board'|'solutions', cat (категорія дошки чи рішень — разом із section), price_type,
+ *   section ''|блок дерева (MPT_SECTIONS), cat (підкатегорія), price_type,
  *   price_min / price_max (?float, USD), q, listing_langs (list<uk|en>), with_photos, verified (bool),
  *   geo (?array для mpg_where(): format, show_online, country, place, radius_km); sort new|price_asc|price_desc|distance.
  * Ефективна ціна в USD: free → 0, fixed → price_usd (NULL — курсу немає: у діапазон не потрапляє, але без
@@ -445,18 +446,16 @@ function mpb_select_sql(?PDO $pdo = null): string
 function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
 {
     $geoReady = mpg_ready($pdo);
-    $priceCol = $geoReady ? 'l.price_usd' : 'l.price_amount';
-    $eff = "(CASE l.price_type WHEN 'free' THEN 0 WHEN 'fixed' THEN $priceCol ELSE NULL END)";
+    $eff = $geoReady ? mpt_price_usd_sql($pdo) : "(CASE l.price_type WHEN 'free' THEN 0 WHEN 'fixed' THEN l.price_amount ELSE NULL END)";
     $params = [];
 
+    // Усі джерела дерева: оголошення користувачів, вакансії/курси/послуги компаній, матеріали платформи.
     $section = (string) ($f['section'] ?? '');
     $cat = (int) ($f['cat'] ?? 0);
-    if ($section === MPB_SOLUTIONS) {
-        $where = [mpb_solution_visible_sql()];
-    } elseif ($section === 'board') {
-        $where = [mpb_visible_sql()];
-    } else {
-        $where = ['((' . mpb_visible_sql() . ') OR (' . mpb_solution_visible_sql() . '))'];
+    $where = [mpt_live_sql()];
+    if (in_array($section, MPT_SECTIONS, true)) {
+        $where[] = 'l.section = :fsec';
+        $params[':fsec'] = $section;
     }
     if ($cat > 0) {
         $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)';
@@ -543,27 +542,43 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params + [':lang' => $lang]);
     $rows = mp_attach_categories($pdo, mpb_auto_translate($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang), $lang);
+    // Вакансії/курси/послуги компаній — власний вигляд картки (app/listing.php); решта — картка оголошення.
+    $lstIds = [];
+    foreach ($rows as $r) {
+        if (mpt_is_lst($r)) {
+            $lstIds[] = (int) $r['id'];
+        }
+    }
+    $lstRows = [];
+    foreach (mpt_rows($pdo, $lang, $lstIds) as $lr) {
+        $lstRows[(int) $lr['id']] = $lr;
+    }
+    foreach ($rows as &$r) {
+        $r = isset($lstRows[(int) $r['id']]) ? $lstRows[(int) $r['id']] + ['distance_km' => $r['distance_km'] ?? null]
+            : $r + ['kind' => mpt_is_platform_solution($r) ? 'platform' : 'ad'];
+    }
+    unset($r);
 
     return ['rows' => $rows, 'total' => $total, 'pages' => $pages, 'page' => $page];
 }
 
-/** Категорії дошки з назвами поточною мовою (без лічильників). @return list<array{id:int,slug:string,name:string}> */
-function mpb_categories(PDO $pdo, string $lang): array
+/**
+ * Категорії для вибору в оголошенні користувача: підкатегорії блока $section (блок без підкатегорій — сам блок),
+ * без $section — усі підкатегорії всіх блоків. @return list<array{id:int,slug:string,name:string}>
+ */
+function mpb_categories(PDO $pdo, string $lang, ?string $section = null): array
 {
-    $stmt = $pdo->prepare(
-        "SELECT c.id, c.slug, COALESCE(NULLIF(tl.name, ''), NULLIF(ts.name, ''), c.slug) AS name
-         FROM mp_categories c
-         LEFT JOIN mp_category_translations tl ON tl.category_id = c.id AND tl.lang = :lang
-         LEFT JOIN mp_category_translations ts ON ts.category_id = c.id AND ts.lang = :src
-         WHERE c.section = :section AND c.is_active = 1
-         ORDER BY c.sort_order, c.id"
-    );
-    $stmt->execute([':lang' => $lang, ':src' => mp_source_lang(), ':section' => MPB_SECTION]);
+    $out = [];
+    foreach (mpt_tree($pdo, $lang) as $b) {
+        if ($section !== null && $b['section'] !== $section) {
+            continue;
+        }
+        foreach ($b['children'] !== [] ? $b['children'] : [$b] as $c) {
+            $out[] = ['id' => $c['id'], 'slug' => $c['slug'], 'name' => $c['name']];
+        }
+    }
 
-    return array_map(
-        static fn(array $r): array => ['id' => (int) $r['id'], 'slug' => (string) $r['slug'], 'name' => (string) $r['name']],
-        $stmt->fetchAll(PDO::FETCH_ASSOC)
-    );
+    return $out;
 }
 
 /** Автопереклад оголошень дошки (заголовок і описи) — див. mp_auto_translate() в app/marketplace.php. */
@@ -575,7 +590,7 @@ function mpb_auto_translate(PDO $pdo, array $rows, string $lang): array
 /** Оголошення за id з текстами (без контактів) — будь-який статус; видимість перевіряє викликач. */
 function mpb_listing(PDO $pdo, int $id, string $lang): ?array
 {
-    $stmt = $pdo->prepare(mpb_select_sql($pdo) . " WHERE l.id = :id AND l.section = 'board'");
+    $stmt = $pdo->prepare(mpb_select_sql($pdo) . " WHERE l.id = :id AND l.post_form = 'ad'");
     $stmt->execute([':lang' => $lang, ':id' => $id]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row === false) {
@@ -887,7 +902,7 @@ function mpb_active_count(PDO $pdo, int $userId, int $exceptId = 0): int
 {
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE s.user_id = :u AND l.section = 'board' AND l.status IN ('pending', 'published') AND l.id <> :ex"
+         WHERE s.user_id = :u AND l.post_form = 'ad' AND l.status IN ('pending', 'published') AND l.id <> :ex"
     );
     $stmt->execute([':u' => $userId, ':ex' => $exceptId]);
 
@@ -899,7 +914,7 @@ function mpb_new_today_count(PDO $pdo, int $userId): int
 {
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
-         WHERE s.user_id = :u AND l.section = 'board' AND l.created_at > (NOW() - INTERVAL 1 DAY)"
+         WHERE s.user_id = :u AND l.post_form = 'ad' AND l.created_at > (NOW() - INTERVAL 1 DAY)"
     );
     $stmt->execute([':u' => $userId]);
 
@@ -918,7 +933,7 @@ function mpb_seller_has_title(PDO $pdo, int $sellerId, string $title, int $excep
     }
     $stmt = $pdo->prepare(
         "SELECT t.title FROM mp_listing_translations t JOIN mp_listings l ON l.id = t.listing_id
-         WHERE l.seller_id = :sid AND l.section = 'board' AND l.status IN ('draft', 'pending', 'published') AND l.id <> :ex LIMIT 500"
+         WHERE l.seller_id = :sid AND l.post_form = 'ad' AND l.status IN ('draft', 'pending', 'published') AND l.id <> :ex LIMIT 500"
     );
     $stmt->execute([':sid' => $sellerId, ':ex' => $exceptId]);
     foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $existing) {
@@ -947,6 +962,8 @@ function mpb_seller_has_title(PDO $pdo, int $sellerId, string $title, int $excep
 function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int $sellerId, string $lang, array $newPhotos, array $deletePhotoIds, array $photoOrder): int
 {
     $isStaff = mpb_is_staff();
+    // Блок дерева (section): з форми; без нього — блок наявного оголошення або «Інше».
+    $d['section'] = in_array($d['section'] ?? null, MPT_SECTIONS, true) ? (string) $d['section'] : (string) ($existing['section'] ?? 'other');
     if (!$isStaff && !mp_posting_enabled()) {
         // Найнижчий рівень захисту: навіть якщо якась сторінка забуде перевірку, збереження від не-staff неможливе.
         throw new RuntimeException('Listing submission is closed for regular users');
@@ -967,15 +984,15 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
             $expAt = $isStaff ? "NOW() + INTERVAL $ttl DAY" : 'NULL';
             $ins = $pdo->prepare(
                 "INSERT INTO mp_listings
-                   (section, seller_id, status, pricing_model, price_type, price_amount, currency, delivery_type, source_lang,
+                   (section, post_form, seller_id, status, pricing_model, price_type, price_amount, currency, delivery_type, source_lang,
                     is_remote, city, contact_name, contact_phone, contact_telegram, contact_email, rules_accepted_at, rules_version,
                     created_by, moderated_by, moderated_at, published_at, expires_at)
-                 VALUES ('board', :sid, :st, 'free', :pt, :pa, :cur, 'contact', :lang,
+                 VALUES (:secn, 'ad', :sid, :st, 'free', :pt, :pa, :cur, 'contact', :lang,
                     :rem, :city, :cn, :cp, :ct, :ce, NOW(), :rv,
                     :cb, :mb, $modAt, $modAt, $expAt)"
             );
             $ins->execute([
-                ':sid' => $sellerId, ':st' => $status, ':pt' => $d['price_type'], ':pa' => $d['price_amount'], ':cur' => $d['currency'],
+                ':secn' => $d['section'], ':sid' => $sellerId, ':st' => $status, ':pt' => $d['price_type'], ':pa' => $d['price_amount'], ':cur' => $d['currency'],
                 ':lang' => $lang, ':rem' => $d['is_remote'] ? 1 : 0, ':city' => $d['city'],
                 ':cn' => $d['contact']['name'] ?: null, ':cp' => $d['contact']['phone'] ?: null,
                 ':ct' => $d['contact']['telegram'] ?: null, ':ce' => $d['contact']['email'] ?: null,
@@ -998,14 +1015,14 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
             $pubSql = $isStaff ? 'COALESCE(published_at, NOW())' : 'published_at';
             $expSql = !$isStaff ? 'NULL' : ($keepExpiry ? 'expires_at' : "NOW() + INTERVAL $ttl DAY");
             $upd = $pdo->prepare(
-                "UPDATE mp_listings SET status = :st, price_type = :pt, price_amount = :pa, currency = :cur,
+                "UPDATE mp_listings SET section = :secn, status = :st, price_type = :pt, price_amount = :pa, currency = :cur,
                         is_remote = :rem, city = :city, contact_name = :cn, contact_phone = :cp, contact_telegram = :ct,
                         contact_email = :ce, rules_accepted_at = NOW(), rules_version = :rv, reject_reason = NULL,
                         moderated_by = :mb, moderated_at = $modSql, published_at = $pubSql, expires_at = $expSql
-                 WHERE id = :id AND section = 'board'"
+                 WHERE id = :id AND post_form = 'ad'"
             );
             $upd->execute([
-                ':st' => $status, ':pt' => $d['price_type'], ':pa' => $d['price_amount'], ':cur' => $d['currency'],
+                ':secn' => $d['section'], ':st' => $status, ':pt' => $d['price_type'], ':pa' => $d['price_amount'], ':cur' => $d['currency'],
                 ':rem' => $d['is_remote'] ? 1 : 0, ':city' => $d['city'],
                 ':cn' => $d['contact']['name'] ?: null, ':cp' => $d['contact']['phone'] ?: null,
                 ':ct' => $d['contact']['telegram'] ?: null, ':ce' => $d['contact']['email'] ?: null,
@@ -1075,6 +1092,7 @@ function mpb_save_listing(PDO $pdo, array $d, ?array $existing, int $userId, int
         }
 
         $pdo->commit();
+        mpt_cache_reset();
     } catch (Throwable $e) {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
@@ -1113,14 +1131,14 @@ function mpb_extend(PDO $pdo, array $own, int $userId): string
         }
         $stmt = $pdo->prepare(
             "UPDATE mp_listings SET status = 'published', expires_at = NOW() + INTERVAL $ttl DAY
-             WHERE id = :id AND section = 'board' AND status IN ('expired', 'published')"
+             WHERE id = :id AND post_form = 'ad' AND status IN ('expired', 'published')"
         );
         $stmt->execute([':id' => $id]);
     } elseif ($status === 'published') {
         // Не більше двох термінів уперед — щоб не «накопичувати» безкінечно.
         $stmt = $pdo->prepare(
             "UPDATE mp_listings SET expires_at = expires_at + INTERVAL $ttl DAY
-             WHERE id = :id AND section = 'board' AND status = 'published'
+             WHERE id = :id AND post_form = 'ad' AND status = 'published'
                AND expires_at IS NOT NULL AND expires_at + INTERVAL $ttl DAY <= NOW() + INTERVAL " . ($ttl * 2) . ' DAY'
         );
         $stmt->execute([':id' => $id]);
@@ -1130,6 +1148,7 @@ function mpb_extend(PDO $pdo, array $own, int $userId): string
     } else {
         return 'mpb_err_extend_status';
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $userId, 'extended', '+' . $ttl . ' днів');
 
     return 'ok';
@@ -1139,12 +1158,13 @@ function mpb_archive(PDO $pdo, array $own, int $userId): bool
 {
     $stmt = $pdo->prepare(
         "UPDATE mp_listings SET status = 'archived'
-         WHERE id = :id AND section = 'board' AND status IN ('pending', 'published', 'expired', 'rejected')"
+         WHERE id = :id AND post_form = 'ad' AND status IN ('pending', 'published', 'expired', 'rejected')"
     );
     $stmt->execute([':id' => (int) $own['id']]);
     if ($stmt->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, (int) $own['id'], $userId, 'archived');
 
     return true;
@@ -1161,12 +1181,13 @@ function mpb_approve(PDO $pdo, int $id, int $actorId): bool
     $stmt = $pdo->prepare(
         "UPDATE mp_listings SET status = 'published', published_at = NOW(), expires_at = NOW() + INTERVAL $ttl DAY,
                 moderated_by = :a, moderated_at = NOW(), reject_reason = NULL
-         WHERE id = :id AND section = 'board' AND status = 'pending'"
+         WHERE id = :id AND post_form = 'ad' AND status = 'pending'"
     );
     $stmt->execute([':a' => $actorId, ':id' => $id]);
     if ($stmt->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $actorId, 'approved', 'опубліковано на ' . $ttl . ' днів');
 
     return true;
@@ -1181,12 +1202,13 @@ function mpb_reject(PDO $pdo, int $id, int $actorId, string $reason): bool
     }
     $stmt = $pdo->prepare(
         "UPDATE mp_listings SET status = 'rejected', reject_reason = :r, moderated_by = :a, moderated_at = NOW()
-         WHERE id = :id AND section = 'board' AND status IN ('pending', 'published')"
+         WHERE id = :id AND post_form = 'ad' AND status IN ('pending', 'published')"
     );
     $stmt->execute([':r' => $reason, ':a' => $actorId, ':id' => $id]);
     if ($stmt->rowCount() === 0) {
         return false;
     }
+    mpt_cache_reset();
     mp_log($pdo, $id, $actorId, 'rejected', $reason);
 
     return true;
@@ -1197,7 +1219,7 @@ function mpb_dismiss_reports(PDO $pdo, int $id, int $actorId): bool
 {
     $stmt = $pdo->prepare(
         "UPDATE mp_listings SET moderated_by = :a, moderated_at = NOW()
-         WHERE id = :id AND section = 'board' AND status IN ('pending', 'published')"
+         WHERE id = :id AND post_form = 'ad' AND status IN ('pending', 'published')"
     );
     $stmt->execute([':a' => $actorId, ':id' => $id]);
     if ($stmt->rowCount() === 0) {
@@ -1212,18 +1234,19 @@ function mpb_dismiss_reports(PDO $pdo, int $id, int $actorId): bool
 function mpb_expire_due(PDO $pdo): int
 {
     $ids = $pdo->query(
-        "SELECT id FROM mp_listings WHERE section = 'board' AND status = 'published' AND expires_at IS NOT NULL AND expires_at <= NOW()"
+        "SELECT id FROM mp_listings WHERE post_form = 'ad' AND status = 'published' AND expires_at IS NOT NULL AND expires_at <= NOW()"
     )->fetchAll(PDO::FETCH_COLUMN);
     $n = 0;
     $upd = $pdo->prepare(
         "UPDATE mp_listings SET status = 'expired'
-         WHERE id = :id AND section = 'board' AND status = 'published' AND expires_at IS NOT NULL AND expires_at <= NOW()"
+         WHERE id = :id AND post_form = 'ad' AND status = 'published' AND expires_at IS NOT NULL AND expires_at <= NOW()"
     );
     foreach ($ids as $id) {
         $upd->execute([':id' => (int) $id]);
         if ($upd->rowCount() > 0) {
             mp_log($pdo, (int) $id, null, 'expired', 'термін минув');
             $n++;
+            mpt_cache_reset();
         }
     }
 
@@ -1281,7 +1304,7 @@ function mpb_report(PDO $pdo, int $listingId, int $userId, string $reason, strin
     $cnt->execute([':id' => $listingId]);
     $n = (int) $cnt->fetchColumn();
     if ($n >= (int) mp_config()['reports_threshold']) {
-        $upd = $pdo->prepare("UPDATE mp_listings SET status = 'pending' WHERE id = :id AND section = 'board' AND status = 'published'");
+        $upd = $pdo->prepare("UPDATE mp_listings SET status = 'pending' WHERE id = :id AND post_form = 'ad' AND status = 'published'");
         $upd->execute([':id' => $listingId]);
         if ($upd->rowCount() > 0) {
             mp_log($pdo, $listingId, null, 'auto_pending', 'скарг: ' . $n . ' — повернуто на модерацію');
@@ -1358,7 +1381,7 @@ function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
 {
     $stmt = $pdo->prepare(
         "SELECT l.id, (l.status = 'published' AND (l.expires_at > NOW() OR (l.section = 'asset' AND l.expires_at IS NULL))) AS live, s.user_id AS owner
-         FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE l.id = :id AND l.section IN ('board', 'asset')"
+         FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE l.id = :id AND (l.post_form = 'ad' OR l.section = 'asset')"
     );
     $stmt->execute([':id' => $listingId]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
