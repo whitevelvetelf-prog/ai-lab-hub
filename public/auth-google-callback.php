@@ -68,6 +68,10 @@ if ($flow['mode'] === 'link' && auth_check()) {
         throw $ex;
     }
 
+    if ($profile['email_verified']) {
+        require_once __DIR__ . '/../app/mp-verify-core.php';
+        mpv_mark_verified($pdo, $userId, $profile['email']);
+    }
     $_SESSION['account_flash'] = sprintf(t('account_social_linked_flash'), 'Google');
     header('Location: account.php');
     exit;
@@ -80,6 +84,11 @@ if (is_string($result)) {
 }
 
 auth_login($result);
+// Google підтвердив адресу і вона збігається з email акаунта → Marketplace не просить підтверджувати її вдруге.
+if ($profile['email_verified']) {
+    require_once __DIR__ . '/../app/mp-verify-core.php';
+    mpv_mark_verified($pdo, (int) $result['id'], $profile['email']);
+}
 
 header('Location: ' . auth_after_login_url());
 exit;

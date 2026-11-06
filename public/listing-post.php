@@ -17,16 +17,20 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
+require_once __DIR__ . '/../app/mp-drafts.php';
 
 mp_public_or_staff_require();
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
+header('Cache-Control: no-store');
+// Порядок: гість → вхід/реєстрація з поверненням сюди; пошта не підтверджена → екран «Підтвердьте пошту»
+// (з поверненням сюди) ДО показу форми, а не після заповнення.
 $userId = mpb_require_login();
 $user = auth_current_user($pdo);
 if ($user === null) {
-    header('Location: login.php');
+    header('Location: ' . auth_login_url(auth_current_next()));
     exit;
 }
 mpv_require_verified($pdo, $userId);
@@ -37,6 +41,20 @@ $isStaff = mp_is_staff();
 $settings = lst_settings($pdo);
 $focusTags = lst_focus_tags($pdo);
 $focusIds = array_column($focusTags, 'id');
+
+// Після відправлення (PRG): «Оголошення на модерації, відповімо протягом N год» + «Мої оголошення».
+$sentId = (int) ($_GET['sent'] ?? 0);
+if ($sentId > 0 && ($sent = lst_own($pdo, $sentId, $userId)) !== null) {
+    $isPending = (string) $sent['status'] === 'pending';
+    mpb_message_page(
+        200,
+        $isPending ? mpf_tr('sent_title') : lst_tr('saved'),
+        ($isPending ? '<p class="mp-text">' . mp_e(mpf_tr('sent_text', (int) $settings['review_hours'])) . '</p>' : '')
+        . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="account.php#acc-listings">' . mp_e(mpf_tr('sent_my')) . '</a>'
+        . '<a class="mp-btn" href="listings.php?type=' . mp_e((string) $sent['section']) . '">' . mp_e(lst_tr('type_' . $sent['section'])) . '</a></p>',
+        null
+    );
+}
 
 $id = (int) ($_GET['id'] ?? 0);
 $existing = null;
@@ -191,8 +209,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 omail_join_listed($pdo, $joinLead, $savedId);
                 unset($_SESSION['outreach_join_lead']);
             }
-            mpb_flash('ok', lst_tr('saved'));
-            header('Location: account.php#acc-listings', true, 303);
+            if ($existing === null) {
+                mpd_delete($pdo, $userId, 'listing:' . $type);   // чернетку подано — більше не потрібна
+            }
+            header('Location: listing-post.php?sent=' . $savedId, true, 303);
             exit;
         } catch (Throwable $e) {
             error_log('[listing] save failed: ' . $e->getMessage());
@@ -225,6 +245,32 @@ $currency = static function (string $name, string $current): string {
     return $h . '</select>';
 };
 
+// Помилки біля полів: ключ помилки → поле форми. Решта (ліміти, спам, збереження) — у загальному блоці вгорі.
+const LP_ERR_FIELD = [
+    'err_title' => 'title', 'err_company' => 'company_name', 'err_short' => 'short_desc', 'err_desc' => 'full_desc',
+    'err_desc_job' => 'full_desc', 'err_links' => 'full_desc', 'err_url' => 'url', 'err_link_blocked' => 'url',
+    'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_job_location' => 'city',
+    'err_rules' => 'rules', 'err_number' => 'number', 'err_date' => 'date', 'err_apply_past' => 'date', 'err_salary_range' => 'salary',
+];
+$byField = [];
+$generalErrors = [];
+foreach ($errors as $err) {
+    $k = is_array($err) ? $err[0] : $err;
+    $msg = is_array($err) ? lst_tr($err[0], ...array_slice($err, 1)) : lst_tr($err);
+    if (isset(LP_ERR_FIELD[$k])) {
+        $byField[LP_ERR_FIELD[$k]][] = $msg;
+    } else {
+        $generalErrors[] = $msg;
+    }
+}
+$fieldErr = static fn(string $f): string => isset($byField[$f])
+    ? '<p class="mpf-error" id="err_' . lst_e($f) . '">' . lst_e(implode(' ', $byField[$f])) . '</p>' : '';
+$invalid = static fn(string $f): string => isset($byField[$f]) ? ' aria-invalid="true" aria-describedby="err_' . lst_e($f) . '"' : '';
+// Автозбереження чернетки (лише нове оголошення); відновлення — коли форма відкрита вперше (не POST з помилками).
+$draft = $existing === null
+    ? mpd_form_bits($pdo, $userId, 'listing:' . $type, ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST')
+    : ['attrs' => '', 'html' => ''];
+
 mpb_open($pageTitle, true, 'post');
 ?>
     <div class="mp-page mp-page--narrow">
@@ -241,75 +287,96 @@ mpb_open($pageTitle, true, 'post');
             <div class="mp-alert mp-alert--error"><strong><?= lst_e(lst_tr('reject_reason')) ?>:</strong> <?= lst_e($existing['reject_reason']) ?></div>
         <?php endif; ?>
         <?php if ($errors !== []): ?>
-            <div class="mp-alert mp-alert--error" role="alert"><ul class="mp-alert__list">
-                <?php foreach ($errors as $err): ?>
-                    <li><?= lst_e(is_array($err) ? lst_tr($err[0], ...array_slice($err, 1)) : lst_tr($err)) ?></li>
-                <?php endforeach; ?>
-            </ul></div>
+            <div class="mp-alert mp-alert--error" role="alert">
+                <p><strong><?= lst_e(mpf_tr('errors_below')) ?></strong></p>
+                <?php if ($generalErrors !== []): ?><ul class="mp-alert__list">
+                    <?php foreach ($generalErrors as $msg): ?><li><?= lst_e($msg) ?></li><?php endforeach; ?>
+                </ul><?php endif; ?>
+            </div>
         <?php endif; ?>
+        <?= $draft['html'] ?>
 
-        <?= lst_rules_html() ?>
-
-        <form class="mp-form" method="post" action="listing-post.php<?= $existing !== null ? '?id=' . $id : '?type=' . $type ?>" novalidate>
+        <form class="mp-form mpf-form" method="post" action="listing-post.php<?= $existing !== null ? '?id=' . $id : '?type=' . $type ?>" novalidate<?= $draft['attrs'] ?>>
             <?= mp_csrf_field() ?>
             <input type="hidden" name="ft" value="<?= lst_e(lst_form_stamp()) ?>">
             <input type="hidden" name="type" value="<?= lst_e($type) ?>">
             <div class="mp-hp" aria-hidden="true"><label>Website <input type="text" name="website" value="" tabindex="-1" autocomplete="off"></label></div>
+            <p class="mp-hint"><?= lst_e(mpf_tr('required_note')) ?></p>
 
-            <div class="mp-field">
-                <label class="mp-label" for="title"><?= lst_e(lst_tr('f_title')) ?></label>
-                <input class="mp-input" type="text" id="title" name="title" maxlength="<?= LST_TITLE_MAX ?>" required value="<?= lst_e($v['title']) ?>">
-                <p class="mp-hint"><?= lst_e(lst_tr($type === 'job' ? 'f_title_hint_job' : 'f_title_hint', LST_TITLE_MAX)) ?></p>
-            </div>
-            <div class="mp-field">
-                <label class="mp-label" for="company_name"><?= lst_e(lst_tr('f_company')) ?></label>
-                <input class="mp-input" type="text" id="company_name" name="company_name" maxlength="<?= LST_COMPANY_MAX ?>" required value="<?= lst_e($v['company_name']) ?>">
-                <p class="mp-hint"><?= lst_e(lst_tr('f_company_hint')) ?></p>
-            </div>
-            <div class="mp-field">
-                <label class="mp-label" for="url"><?= lst_e(lst_tr('f_url')) ?></label>
-                <input class="mp-input" type="url" id="url" name="url" maxlength="500" required placeholder="https://" value="<?= lst_e($v['url']) ?>">
-                <p class="mp-hint"><?= lst_e(lst_tr('f_url_hint_' . $type)) ?></p>
-                <p class="mp-hint"><?= lst_e(lst_tr('f_domain_hint', $emailDomain)) ?></p>
-            </div>
-            <div class="mp-field">
-                <label class="mp-label" for="short_desc"><?= lst_e(lst_tr('f_short')) ?></label>
-                <textarea class="mp-input" id="short_desc" name="short_desc" rows="3" maxlength="<?= LST_SHORT_MAX ?>" required><?= lst_e($v['short_desc']) ?></textarea>
-                <p class="mp-hint"><?= lst_e(lst_tr('f_short_hint', LST_SHORT_MAX)) ?></p>
-            </div>
-            <div class="mp-field">
-                <label class="mp-label" for="full_desc"><?= lst_e(lst_tr('f_desc')) ?></label>
-                <textarea class="mp-input" id="full_desc" name="full_desc" rows="9" maxlength="<?= LST_DESC_MAX ?>"<?= $type === 'job' ? ' required' : '' ?>><?= lst_e($v['full_desc']) ?></textarea>
-                <p class="mp-hint"><?= lst_e(lst_tr($type === 'job' ? 'f_desc_hint_job' : 'f_desc_hint', LST_DESC_MAX, (int) $cfg['max_links_in_desc'])) ?></p>
-            </div>
+            <?php // 1. Розділ і категорія ?>
+            <fieldset class="mpf-block<?= $fieldErr('focus') !== '' ? ' mpf-block--error' : '' ?>" id="blk-section">
+                <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_section')) ?></legend>
+                <p class="mp-text mpf-type"><?= lst_e(lst_tr('type1_' . $type)) ?></p>
+                <span class="mp-label" id="lbl_focus"><?= lst_e(lst_tr('f_focus')) ?> <span class="mpf-req">*</span></span>
+                <div class="mp-checks" role="group" aria-labelledby="lbl_focus">
+                    <?php foreach ($focusTags as $tg): ?>
+                        <label class="mp-check"><input type="checkbox" name="focus[]" value="<?= (int) $tg['id'] ?>"<?= in_array($tg['id'], $v['focus'], true) ? ' checked' : '' ?>> <span><?= lst_e($tg['name']) ?></span></label>
+                    <?php endforeach; ?>
+                </div>
+                <p class="mp-hint"><?= lst_e(lst_tr('f_focus_hint')) ?></p>
+                <?= $fieldErr('focus') ?>
+            </fieldset>
 
-            <div class="mp-row">
+            <?php // 2. Основне ?>
+            <fieldset class="mpf-block" id="blk-main">
+                <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_main')) ?></legend>
                 <div class="mp-field">
-                    <label class="mp-label" for="country"><?= lst_e(lst_tr('f_country')) ?></label>
-                    <select class="mp-input" id="country" name="country" required>
-                        <option value=""><?= lst_e(lst_tr('f_any')) ?></option>
-                        <?php foreach (array_keys(LST_COUNTRIES) as $cc): ?>
-                            <option value="<?= $cc ?>"<?= $v['country'] === $cc ? ' selected' : '' ?>><?= lst_e(lst_country_name($cc)) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <?php if ($type === 'job'): ?><p class="mp-hint"><?= lst_e(lst_tr('f_country_hint_job')) ?></p><?php endif; ?>
+                    <label class="mp-label" for="title"><?= lst_e(lst_tr('f_title')) ?> <span class="mpf-req">*</span></label>
+                    <input class="mp-input" type="text" id="title" name="title" maxlength="<?= LST_TITLE_MAX ?>" required value="<?= lst_e($v['title']) ?>"<?= $invalid('title') ?>>
+                    <p class="mp-hint"><?= lst_e(lst_tr($type === 'job' ? 'f_title_hint_job' : 'f_title_hint', LST_TITLE_MAX)) ?></p>
+                    <?= $fieldErr('title') ?>
                 </div>
                 <div class="mp-field">
-                    <label class="mp-label" for="offer_lang"><?= lst_e(lst_tr('f_lang')) ?></label>
-                    <select class="mp-input" id="offer_lang" name="offer_lang" required>
-                        <option value=""><?= lst_e(lst_tr('f_any')) ?></option>
-                        <?php foreach (LST_LANGS as $l): ?>
-                            <option value="<?= $l ?>"<?= $v['offer_lang'] === $l ? ' selected' : '' ?>><?= lst_e(lst_tr('lang_' . $l)) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                    <label class="mp-label" for="company_name"><?= lst_e(lst_tr('f_company')) ?> <span class="mpf-req">*</span></label>
+                    <input class="mp-input" type="text" id="company_name" name="company_name" maxlength="<?= LST_COMPANY_MAX ?>" required value="<?= lst_e($v['company_name']) ?>"<?= $invalid('company_name') ?>>
+                    <p class="mp-hint"><?= lst_e(lst_tr('f_company_hint')) ?></p>
+                    <?= $fieldErr('company_name') ?>
                 </div>
-            </div>
-            <div class="mp-field mp-field--check">
-                <label class="mp-check"><input type="checkbox" name="is_remote" value="1"<?= $v['is_remote'] ? ' checked' : '' ?>> <span><?= lst_e(lst_tr($type === 'job' ? 'f_remote_job' : 'f_remote')) ?></span></label>
-            </div>
+                <div class="mp-field">
+                    <label class="mp-label" for="short_desc"><?= lst_e(lst_tr('f_short')) ?> <span class="mpf-req">*</span></label>
+                    <textarea class="mp-input" id="short_desc" name="short_desc" rows="3" maxlength="<?= LST_SHORT_MAX ?>" required<?= $invalid('short_desc') ?>><?= lst_e($v['short_desc']) ?></textarea>
+                    <p class="mp-hint"><?= lst_e(lst_tr('f_short_hint', LST_SHORT_MAX)) ?></p>
+                    <?= $fieldErr('short_desc') ?>
+                </div>
+                <div class="mp-field">
+                    <label class="mp-label" for="full_desc"><?= lst_e(lst_tr('f_desc')) ?><?= $type === 'job' ? ' <span class="mpf-req">*</span>' : '' ?></label>
+                    <textarea class="mp-input" id="full_desc" name="full_desc" rows="9" maxlength="<?= LST_DESC_MAX ?>"<?= $type === 'job' ? ' required' : '' ?><?= $invalid('full_desc') ?>><?= lst_e($v['full_desc']) ?></textarea>
+                    <p class="mp-hint"><?= lst_e(lst_tr($type === 'job' ? 'f_desc_hint_job' : 'f_desc_hint', LST_DESC_MAX, (int) $cfg['max_links_in_desc'])) ?></p>
+                    <?= $fieldErr('full_desc') ?>
+                </div>
+            </fieldset>
 
-            <fieldset class="mp-field mp-fieldset">
-                <legend class="mp-label"><?= lst_e(lst_tr('f_details')) ?></legend>
+            <?php // 3. Місце й формат (+ деталі типу) ?>
+            <fieldset class="mpf-block" id="blk-place">
+                <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_place')) ?></legend>
+                <div class="mp-row">
+                    <div class="mp-field">
+                        <label class="mp-label" for="country"><?= lst_e(lst_tr('f_country')) ?> <span class="mpf-req">*</span></label>
+                        <select class="mp-input" id="country" name="country" required<?= $invalid('country') ?>>
+                            <option value=""><?= lst_e(lst_tr('f_any')) ?></option>
+                            <?php foreach (array_keys(LST_COUNTRIES) as $cc): ?>
+                                <option value="<?= $cc ?>"<?= $v['country'] === $cc ? ' selected' : '' ?>><?= lst_e(lst_country_name($cc)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?php if ($type === 'job'): ?><p class="mp-hint"><?= lst_e(lst_tr('f_country_hint_job')) ?></p><?php endif; ?>
+                        <?= $fieldErr('country') ?>
+                    </div>
+                    <div class="mp-field">
+                        <label class="mp-label" for="offer_lang"><?= lst_e(lst_tr('f_lang')) ?> <span class="mpf-req">*</span></label>
+                        <select class="mp-input" id="offer_lang" name="offer_lang" required<?= $invalid('offer_lang') ?>>
+                            <option value=""><?= lst_e(lst_tr('f_any')) ?></option>
+                            <?php foreach (LST_LANGS as $l): ?>
+                                <option value="<?= $l ?>"<?= $v['offer_lang'] === $l ? ' selected' : '' ?>><?= lst_e(lst_tr('lang_' . $l)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <?= $fieldErr('offer_lang') ?>
+                    </div>
+                </div>
+                <div class="mp-field mp-field--check">
+                    <label class="mp-check"><input type="checkbox" name="is_remote" value="1"<?= $v['is_remote'] ? ' checked' : '' ?>> <span><?= lst_e(lst_tr($type === 'job' ? 'f_remote_job' : 'f_remote')) ?></span></label>
+                </div>
+
+                <h3 class="mpf-sub"><?= lst_e(lst_tr('f_details')) ?></h3>
                 <?php if ($type === 'job'): ?>
                     <div class="mp-row">
                         <div class="mp-field"><label class="mp-label" for="d_employment"><?= lst_e(lst_tr('d_employment')) ?></label><?= $select('employment', LST_DETAILS['job']['employment'], $dv('employment')) ?></div>
@@ -327,10 +394,11 @@ mpb_open($pageTitle, true, 'post');
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <?= $fieldErr('salary') ?>
                     </div>
                     <div class="mp-row">
-                        <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"></div>
-                        <div class="mp-field"><label class="mp-label" for="d_apply_until"><?= lst_e(lst_tr('d_apply_until')) ?></label><input class="mp-input" type="date" id="d_apply_until" name="d[apply_until]" min="<?= date('Y-m-d') ?>" value="<?= lst_e($dv('apply_until')) ?>"></div>
+                        <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"<?= $invalid('city') ?>><?= $fieldErr('city') ?></div>
+                        <div class="mp-field"><label class="mp-label" for="d_apply_until"><?= lst_e(lst_tr('d_apply_until')) ?></label><input class="mp-input" type="date" id="d_apply_until" name="d[apply_until]" min="<?= date('Y-m-d') ?>" value="<?= lst_e($dv('apply_until')) ?>"<?= $invalid('date') ?>><?= $fieldErr('date') ?></div>
                     </div>
                 <?php elseif ($type === 'course'): ?>
                     <div class="mp-row">
@@ -339,12 +407,13 @@ mpb_open($pageTitle, true, 'post');
                     </div>
                     <div class="mp-row">
                         <div class="mp-field"><label class="mp-label" for="d_duration"><?= lst_e(lst_tr('d_duration')) ?></label><input class="mp-input" type="text" id="d_duration" name="d[duration]" maxlength="60" placeholder="<?= lst_e(lst_tr('d_duration_ph')) ?>" value="<?= lst_e($dv('duration')) ?>"></div>
-                        <div class="mp-field"><label class="mp-label" for="d_start_date"><?= lst_e(lst_tr('d_start_date')) ?></label><input class="mp-input" type="date" id="d_start_date" name="d[start_date]" value="<?= lst_e($dv('start_date')) ?>"></div>
+                        <div class="mp-field"><label class="mp-label" for="d_start_date"><?= lst_e(lst_tr('d_start_date')) ?></label><input class="mp-input" type="date" id="d_start_date" name="d[start_date]" value="<?= lst_e($dv('start_date')) ?>"<?= $invalid('date') ?>><?= $fieldErr('date') ?></div>
                     </div>
                     <div class="mp-field mp-field--check"><label class="mp-check"><input type="checkbox" name="d[is_free]" value="1" id="d_is_free"<?= $dv('is_free') === '1' ? ' checked' : '' ?>> <span><?= lst_e(lst_tr('d_is_free')) ?></span></label></div>
                     <div class="mp-field" id="coursePrice">
                         <label class="mp-label" for="d_price"><?= lst_e(lst_tr('d_price')) ?></label>
-                        <div class="mp-inline"><input class="mp-input mp-input--num" type="text" inputmode="numeric" id="d_price" name="d[price]" maxlength="9" value="<?= lst_e($dv('price')) ?>"><?= $currency('currency', $dv('currency') ?: 'USD') ?></div>
+                        <div class="mp-inline"><input class="mp-input mp-input--num" type="text" inputmode="numeric" id="d_price" name="d[price]" maxlength="9" value="<?= lst_e($dv('price')) ?>"<?= $invalid('number') ?>><?= $currency('currency', $dv('currency') ?: 'USD') ?></div>
+                        <?= $fieldErr('number') ?>
                     </div>
                     <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"></div>
                 <?php else: ?>
@@ -354,34 +423,44 @@ mpb_open($pageTitle, true, 'post');
                     </div>
                     <div class="mp-field">
                         <label class="mp-label" for="d_price_from"><?= lst_e(lst_tr('d_price_from')) ?></label>
-                        <div class="mp-inline"><input class="mp-input mp-input--num" type="text" inputmode="numeric" id="d_price_from" name="d[price_from]" maxlength="9" value="<?= lst_e($dv('price_from')) ?>"><?= $currency('currency', $dv('currency') ?: 'USD') ?></div>
+                        <div class="mp-inline"><input class="mp-input mp-input--num" type="text" inputmode="numeric" id="d_price_from" name="d[price_from]" maxlength="9" value="<?= lst_e($dv('price_from')) ?>"<?= $invalid('number') ?>><?= $currency('currency', $dv('currency') ?: 'USD') ?></div>
+                        <?= $fieldErr('number') ?>
                     </div>
                 <?php endif; ?>
             </fieldset>
 
-            <fieldset class="mp-field mp-fieldset">
-                <legend class="mp-label"><?= lst_e(lst_tr('f_focus')) ?></legend>
-                <div class="mp-checks">
-                    <?php foreach ($focusTags as $tg): ?>
-                        <label class="mp-check"><input type="checkbox" name="focus[]" value="<?= (int) $tg['id'] ?>"<?= in_array($tg['id'], $v['focus'], true) ? ' checked' : '' ?>> <span><?= lst_e($tg['name']) ?></span></label>
-                    <?php endforeach; ?>
+            <?php // 4. Контакти й посилання ?>
+            <fieldset class="mpf-block" id="blk-contacts">
+                <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_contacts')) ?></legend>
+                <div class="mp-field">
+                    <label class="mp-label" for="url"><?= lst_e(lst_tr('f_url')) ?> <span class="mpf-req">*</span></label>
+                    <input class="mp-input" type="url" id="url" name="url" maxlength="500" required placeholder="https://" inputmode="url" value="<?= lst_e($v['url']) ?>"<?= $invalid('url') ?>>
+                    <p class="mp-hint"><?= lst_e(lst_tr('f_url_hint_' . $type)) ?></p>
+                    <p class="mp-hint"><?= lst_e(lst_tr('f_domain_hint', $emailDomain)) ?></p>
+                    <?= $fieldErr('url') ?>
                 </div>
-                <p class="mp-hint"><?= lst_e(lst_tr('f_focus_hint')) ?></p>
             </fieldset>
 
-            <div class="mp-field">
-                <label class="mp-check mp-check--block">
-                    <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?>>
-                    <span><?= lst_e(lst_tr('f_rules')) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= lst_e(lst_tr('f_rules_link')) ?></a></span>
-                </label>
-            </div>
-            <p class="mp-note"><?= lst_e(lst_tr('disclaimer')) ?></p>
-            <div class="mp-actions">
-                <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit"><?= lst_e(lst_tr($existing === null ? 'f_submit_new' : 'f_submit_save')) ?></button>
-                <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('f_cancel')) ?></a>
-            </div>
+            <?php // Правила й відправлення ?>
+            <fieldset class="mpf-block" id="blk-rules">
+                <legend class="mpf-block__title"><?= lst_e(mpf_tr('blk_rules')) ?></legend>
+                <?= lst_rules_html() ?>
+                <div class="mp-field">
+                    <label class="mp-check mp-check--block">
+                        <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?><?= $invalid('rules') ?>>
+                        <span><?= lst_e(lst_tr('f_rules')) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= lst_e(lst_tr('f_rules_link')) ?></a> <span class="mpf-req">*</span></span>
+                    </label>
+                    <?= $fieldErr('rules') ?>
+                </div>
+                <p class="mp-note"><?= lst_e(lst_tr('disclaimer')) ?></p>
+                <div class="mp-actions">
+                    <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit"><?= lst_e(lst_tr($existing === null ? 'f_submit_new' : 'f_submit_save')) ?></button>
+                    <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('f_cancel')) ?></a>
+                </div>
+            </fieldset>
         </form>
     </div>
+    <script src="/assets/js/mp-draft.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-draft.js') ?>" defer></script>
     <?php if ($type === 'course'): ?>
     <script>
     (function () {

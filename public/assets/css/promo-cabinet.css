@@ -934,3 +934,24 @@
 .pc-house-edit[open] {
     margin-bottom: 160px;
 }
+
+/* Єдина черга модерації оголошень (app/listing-admin-cabinet.php) */
+.pc-mod--overdue {
+    border-color: rgba(251, 191, 36, 0.75) !important;
+    box-shadow: inset 4px 0 0 rgba(251, 191, 36, 0.85);
+}
+
+@media (max-width: 640px) {
+    /* Компактні вкладки: один рядок із горизонтальною прокруткою замість довгої колонки */
+    .lst-adm .pc-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+    }
+
+    .lst-adm .pc-tab {
+        flex: 0 0 auto;
+        white-space: nowrap;
+    }
+}

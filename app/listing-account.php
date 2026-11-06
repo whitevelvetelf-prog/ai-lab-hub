@@ -9,15 +9,38 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/listing.php';
+require_once __DIR__ . '/mp-drafts.php';
+require_once __DIR__ . '/mp-flow-i18n.php';
+
+/**
+ * Оголошення дошки користувача (той самий рядок mp_listings, що бачить модератор у «Модерації»).
+ *
+ * @return list<array<string,mixed>>
+ */
+function lst_account_board_rows(PDO $pdo, int $userId): array
+{
+    $st = $pdo->prepare(
+        "SELECT l.id, l.status, l.created_at, l.expires_at, l.reject_reason, (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed, t.title
+         FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
+         LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
+         WHERE s.user_id = :u AND l.section = 'board'
+         ORDER BY FIELD(l.status, 'pending', 'published', 'rejected', 'expired', 'draft', 'archived'), l.id DESC LIMIT 100"
+    );
+    $st->execute([':u' => $userId]);
+
+    return $st->fetchAll(PDO::FETCH_ASSOC);
+}
 
 function lst_account_render(PDO $pdo, array $user): void
 {
     try {
         $rows = lst_user_listings($pdo, (int) $user['id']);
+        $boardRows = lst_account_board_rows($pdo, (int) $user['id']);
     } catch (Throwable $e) {
         return;   // міграцію ще не застосовано
     }
-    if ($rows === [] && !mp_public_enabled() && !mp_is_staff()) {
+    $drafts = mpd_list($pdo, (int) $user['id']);
+    if ($rows === [] && $boardRows === [] && $drafts === [] && !mp_public_enabled() && !mp_is_staff()) {
         return;
     }
     $stats = lst_stats($pdo, array_map(static fn($r) => (int) $r['id'], $rows), 30);
@@ -26,7 +49,8 @@ function lst_account_render(PDO $pdo, array $user): void
     ?>
             <div class="accordion" id="acc-listings">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-listings-panel">
-                    <span class="accordion__title"><?= lst_e(lst_tr('my_title')) ?><?= $rows !== [] ? ' (' . count($rows) . ')' : '' ?></span>
+                    <?php $myTotal = count($rows) + count($boardRows) + count($drafts); ?>
+                    <span class="accordion__title"><?= lst_e(lst_tr('my_title')) ?><?= $myTotal > 0 ? ' (' . $myTotal . ')' : '' ?></span>
                     <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
                 </button>
                 <div class="accordion__panel" id="acc-listings-panel">
@@ -39,7 +63,38 @@ function lst_account_render(PDO $pdo, array $user): void
                             <?php if ($rows !== []): ?><a class="pc-btn" href="listing-action.php?export=csv"><?= lst_e(lst_tr('my_csv')) ?></a><?php endif; ?>
                         </p>
                         <?php $free = lst_free_label($pdo); if ($free !== ''): ?><p class="pc-muted"><?= lst_e($free) ?></p><?php endif; ?>
-                        <?php if ($rows === []): ?>
+                        <?php if ($drafts !== []): ?>
+                            <ul class="lst-drafts">
+                                <?php foreach ($drafts as $d): $dk = (string) $d['form_key']; ?>
+                                    <li><span class="pc-badge pc-badge--draft"><?= lst_e(mpf_tr('draft_badge')) ?></span>
+                                        <strong><?= lst_e($d['title'] !== '' ? $d['title'] : mpf_tr('draft_untitled')) ?></strong>
+                                        <span class="pc-muted"> · <?= lst_e($dk === 'board' ? mpf_tr('draft_board') : lst_tr('type1_' . substr($dk, 8))) ?> · <?= lst_e(date('d.m.Y H:i', (int) strtotime((string) $d['updated_at']))) ?></span>
+                                        <a class="pc-btn pc-btn--small" href="<?= lst_e(mpd_form_url($dk)) ?>"><?= lst_e(mpf_tr('draft_continue')) ?></a></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        <?php endif; ?>
+                        <?php if ($boardRows !== []): ?>
+                            <div class="pc-table-wrap">
+                                <table class="pc-table">
+                                    <thead><tr><th><?= lst_e(mpf_tr('draft_board')) ?></th><th><?= lst_e(lst_tr('my_col_status')) ?></th><th><?= lst_e(lst_tr('my_col_actions')) ?></th></tr></thead>
+                                    <tbody>
+                                    <?php foreach ($boardRows as $b):
+                                        $bid = (int) $b['id'];
+                                        $bst = (string) $b['status'] === 'published' && (int) $b['elapsed'] === 1 ? 'expired' : (string) $b['status']; ?>
+                                        <tr>
+                                            <td data-label="<?= lst_e(mpf_tr('draft_board')) ?>"><a href="marketplace-offer.php?id=<?= $bid ?>"><?= lst_e($b['title'] ?? '#' . $bid) ?></a>
+                                                <?php if ($bst === 'rejected' && !empty($b['reject_reason'])): ?><br><span class="pc-warn-text"><?= lst_e($b['reject_reason']) ?></span><?php endif; ?></td>
+                                            <td data-label="<?= lst_e(lst_tr('my_col_status')) ?>"><span class="pc-badge pc-badge--<?= lst_e($bst) ?>"><?= lst_e(lst_tr('st_' . $bst)) ?></span></td>
+                                            <td data-label="<?= lst_e(lst_tr('my_col_actions')) ?>"><?php if ($bst !== 'archived'): ?><a class="pc-btn pc-btn--small" href="marketplace-post.php?id=<?= $bid ?>"><?= lst_e(lst_tr('my_edit')) ?></a><?php endif; ?>
+                                                <a class="pc-btn pc-btn--small" href="marketplace-my.php"><?= lst_e(lst_tr('my_view')) ?></a></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php endif; ?>
+                        <?php if ($rows === [] && ($boardRows !== [] || $drafts !== [])): ?>
+                        <?php elseif ($rows === []): ?>
                             <p class="pc-empty"><?= lst_e(lst_tr('my_empty')) ?></p>
                         <?php else: ?>
                         <div class="pc-table-wrap">

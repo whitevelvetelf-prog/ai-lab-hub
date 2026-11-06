@@ -14,19 +14,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/marketplace-board.php';
 require_once __DIR__ . '/mailer.php';
-
-/** Дата (DATETIME рядком) першого підтвердження ПОТОЧНОГО email користувача або null. */
-function mpv_verified_at(PDO $pdo, int $userId): ?string
-{
-    $stmt = $pdo->prepare(
-        'SELECT MIN(v.verified_at) FROM mp_email_verifications v JOIN users u ON u.id = v.user_id
-         WHERE v.user_id = :u AND v.verified_at IS NOT NULL AND v.email = u.email'
-    );
-    $stmt->execute([':u' => $userId]);
-    $v = $stmt->fetchColumn();
-
-    return $v === false || $v === null ? null : (string) $v;
-}
+require_once __DIR__ . '/mp-verify-core.php';   // mpv_verified_at(), mpv_mark_verified() — єдине джерело істини
+require_once __DIR__ . '/mp-flow-i18n.php';
 
 /** Чи може користувач виконувати дії, що вимагають підтвердженого email (staff — завжди). */
 function mpv_is_verified(PDO $pdo, int $userId): bool
@@ -34,20 +23,52 @@ function mpv_is_verified(PDO $pdo, int $userId): bool
     return mpb_is_staff() || mpv_verified_at($pdo, $userId) !== null;
 }
 
-/** HTML блоку «Підтвердьте email» з кнопкою надсилання листа. */
-function mpv_block_html(): string
+/**
+ * Останній ДІЙСНИЙ (не прострочений, не використаний) лист для поточного email або null.
+ *
+ * @return array{id:int,created_at:string,expires_at:string}|null
+ */
+function mpv_pending(PDO $pdo, int $userId): ?array
 {
-    return '<p class="mp-text">' . mp_e(t('mpv_block_text')) . '</p>'
-        . '<form method="post" action="mp-verify-email.php" class="mp-inline-form">' . mp_csrf_field()
-        . '<button class="mp-btn mp-btn--primary" type="submit">' . mp_e(t('mpv_send_btn')) . '</button></form>';
+    $st = $pdo->prepare(
+        'SELECT v.id, v.created_at, v.expires_at FROM mp_email_verifications v JOIN users u ON u.id = v.user_id
+         WHERE v.user_id = :u AND v.verified_at IS NULL AND v.expires_at > NOW() AND LOWER(TRIM(v.email)) = LOWER(TRIM(u.email))
+         ORDER BY v.id DESC LIMIT 1'
+    );
+    $st->execute([':u' => $userId]);
+    $r = $st->fetch(PDO::FETCH_ASSOC);
+
+    return $r === false ? null : ['id' => (int) $r['id'], 'created_at' => (string) $r['created_at'], 'expires_at' => (string) $r['expires_at']];
 }
 
-/** Сторінка-блок для HTML-дій; лише для залогінених (гостя раніше відсікає mpb_require_login). */
-function mpv_require_verified(PDO $pdo, int $userId): void
+/** Адреса сторінки «Підтвердьте пошту» з поверненням на $next. */
+function mpv_page_url(?string $next): string
 {
-    if (!mpv_is_verified($pdo, $userId)) {
-        mpb_message_page(403, t('mpv_block_title'), mpv_block_html(), 'marketplace.php');
+    $next = $next !== null ? auth_safe_next($next) : null;
+
+    return 'mp-verify-email.php' . ($next !== null ? '?next=' . rawurlencode($next) : '');
+}
+
+/** HTML блоку «Підтвердьте email» (для JSON-відповідей і старих викликів): посилання на сторінку підтвердження. */
+function mpv_block_html(?string $next = null): string
+{
+    return '<p class="mp-text">' . mp_e(t('mpv_block_text')) . '</p>'
+        . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="' . mp_e(mpv_page_url($next ?? auth_current_next())) . '">'
+        . mp_e(mpf_tr('v_cabinet_btn')) . '</a></p>';
+}
+
+/**
+ * Пошта не підтверджена → на сторінку «Підтвердьте пошту» ДО показу форми, з поверненням на поточну сторінку
+ * (після підтвердження користувач повертається до форми). Лише для залогінених (гостя раніше відсікає mpb_require_login).
+ */
+function mpv_require_verified(PDO $pdo, int $userId, ?string $next = null): void
+{
+    if (mpv_is_verified($pdo, $userId)) {
+        return;
     }
+    header('Location: ' . mpv_page_url($next ?? auth_current_next()), true, 303);
+    header('Cache-Control: no-store');
+    exit;
 }
 
 /**
@@ -79,21 +100,28 @@ function mpv_deliver(string $to, string $subject, string $html, string $text): b
 
 /**
  * Надсилає користувачу лист підтвердження на його поточний email.
+ * Поки є дійсне (не прострочене й не використане) посилання, новий лист НЕ надсилається ('pending') —
+ * крім явного «Надіслати ще раз» ($force). Нове посилання не скасовує попередні: будь-яке дійсне спрацює.
  * Ліміти: не частіше 1 листа на verify_resend_min хв (на користувача) і verify_max_per_day на добу (на користувача й email).
+ * $next — внутрішня сторінка, куди повернути після підтвердження (зберігається з токеном).
  *
- * @return string sent | too_soon | daily | rate | already | fail
+ * @return string sent | pending | too_soon | daily | rate | already | fail
  */
-function mpv_send(PDO $pdo, int $userId): string
+function mpv_send(PDO $pdo, int $userId, ?string $next = null, bool $force = false): string
 {
     $cfg = mp_config();
     $u = $pdo->prepare('SELECT email FROM users WHERE id = :id');
     $u->execute([':id' => $userId]);
     $email = $u->fetchColumn();
-    if ($email === false || $email === '' || mb_strlen((string) $email) > 190) {
+    $email = $email === false ? '' : trim((string) $email);
+    if ($email === '' || mb_strlen($email) > 190) {
         return 'fail';
     }
     if (mpv_is_verified($pdo, $userId)) {
         return 'already';
+    }
+    if (!$force && mpv_pending($pdo, $userId) !== null) {
+        return 'pending';
     }
 
     // Посилання будується лише з site_url. Немає site_url (і це не 'log') — лист не надсилаємо,
@@ -105,6 +133,7 @@ function mpv_send(PDO $pdo, int $userId): string
 
         return 'fail';
     }
+    $next = $next !== null ? auth_safe_next($next) : null;
 
     // Ліміти + запис — під блокуванням користувача (паралельні запити не обходять «1 лист на 2 хв» і «5 на добу»).
     $lock = 'mp_mail_' . $userId;
@@ -114,14 +143,14 @@ function mpv_send(PDO $pdo, int $userId): string
     $token = bin2hex(random_bytes(32));
     $ttl = max(1, (int) $cfg['verify_ttl_hours']);
     try {
-        $soon = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND created_at > (NOW() - INTERVAL ' . max(1, (int) $cfg['verify_resend_min']) . ' MINUTE)');
+        $soon = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND verified_at IS NULL AND created_at > (NOW() - INTERVAL ' . max(1, (int) $cfg['verify_resend_min']) . ' MINUTE)');
         $soon->execute([':u' => $userId]);
         if ((int) $soon->fetchColumn() > 0) {
             return 'too_soon';
         }
         // Добовий ліміт — на пару (користувач, email): після зміни email лічильник починається заново.
-        $day = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND email = :e AND created_at > (NOW() - INTERVAL 1 DAY)');
-        $day->execute([':u' => $userId, ':e' => (string) $email]);
+        $day = $pdo->prepare('SELECT COUNT(*) FROM mp_email_verifications WHERE user_id = :u AND LOWER(TRIM(email)) = LOWER(:e) AND verified_at IS NULL AND created_at > (NOW() - INTERVAL 1 DAY)');
+        $day->execute([':u' => $userId, ':e' => $email]);
         if ((int) $day->fetchColumn() >= (int) $cfg['verify_max_per_day']) {
             return 'daily';
         }
@@ -131,10 +160,16 @@ function mpv_send(PDO $pdo, int $userId): string
             return 'rate';
         }
 
+        $hasNext = mpv_has_next_column($pdo);
         $ins = $pdo->prepare(
-            "INSERT INTO mp_email_verifications (user_id, email, token_hash, expires_at) VALUES (:u, :e, :h, NOW() + INTERVAL $ttl HOUR)"
+            'INSERT INTO mp_email_verifications (user_id, email, token_hash, expires_at' . ($hasNext ? ', next_path' : '') . ')'
+            . " VALUES (:u, :e, :h, NOW() + INTERVAL $ttl HOUR" . ($hasNext ? ', :n' : '') . ')'
         );
-        $ins->execute([':u' => $userId, ':e' => (string) $email, ':h' => hash('sha256', $token)]);
+        $params = [':u' => $userId, ':e' => $email, ':h' => hash('sha256', $token)];
+        if ($hasNext) {
+            $params[':n'] = $next;
+        }
+        $ins->execute($params);
         $rowId = (int) $pdo->lastInsertId();
     } finally {
         mpb_unlock($pdo, $lock);
@@ -146,9 +181,9 @@ function mpv_send(PDO $pdo, int $userId): string
     $html = '<p>' . mp_e(t('mpv_mail_intro')) . '</p><p><a href="' . mp_e($link) . '">' . mp_e(t('mpv_mail_button')) . '</a></p>'
         . '<p>' . mp_e($link) . '</p><p>' . mp_e(sprintf(t('mpv_mail_expiry'), $ttl)) . ' ' . mp_e(t('mpv_mail_ignore')) . '</p>';
 
-    if (!mpv_deliver((string) $email, $subject, $html, $text)) {
+    if (!mpv_deliver($email, $subject, $html, $text)) {
         // не вдалося надіслати — лист не «витрачає» ліміт
-        $pdo->prepare('DELETE FROM mp_email_verifications WHERE id = :id')->execute([':id' => $rowId]);
+        $pdo->prepare('DELETE FROM mp_email_verifications WHERE id = :id AND verified_at IS NULL')->execute([':id' => $rowId]);
 
         return 'fail';
     }
@@ -156,53 +191,72 @@ function mpv_send(PDO $pdo, int $userId): string
     return 'sent';
 }
 
+/** Чи застосовано міграцію 2026-11-06 (колонка next_path). */
+function mpv_has_next_column(PDO $pdo): bool
+{
+    static $has = null;
+    if ($has === null) {
+        try {
+            $pdo->query('SELECT next_path FROM mp_email_verifications LIMIT 0');
+            $has = true;
+        } catch (Throwable $e) {
+            $has = false;
+        }
+    }
+
+    return $has;
+}
+
 /**
- * Стан токена БЕЗ його витрачання (для GET-сторінки з кнопкою).
+ * Стан токена БЕЗ його витрачання (для GET-сторінки з кнопкою). Сесія не потрібна: токен прив'язаний до user_id.
  *
- * @return array{status:string,id:int} status: ok | invalid | expired | used | changed
+ * @return array{status:string,id:int,user_id:int,next:?string} status: ok | invalid | expired | used | changed
  */
 function mpv_check(PDO $pdo, string $token): array
 {
+    $none = ['status' => 'invalid', 'id' => 0, 'user_id' => 0, 'next' => null];
     if (preg_match('/^[a-f0-9]{64}$/', $token) !== 1) {
-        return ['status' => 'invalid', 'id' => 0];
+        return $none;
     }
     $stmt = $pdo->prepare(
-        'SELECT v.id, v.email, v.verified_at, (v.expires_at <= NOW()) AS expired, u.email AS current_email
+        'SELECT v.*, (v.expires_at <= NOW()) AS expired, u.email AS current_email
          FROM mp_email_verifications v LEFT JOIN users u ON u.id = v.user_id WHERE v.token_hash = :h LIMIT 1'
     );
     $stmt->execute([':h' => hash('sha256', $token)]);
     $row = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($row === false) {
-        return ['status' => 'invalid', 'id' => 0];
+        return $none;
     }
-    $id = (int) $row['id'];
+    $res = ['status' => 'ok', 'id' => (int) $row['id'], 'user_id' => (int) $row['user_id'], 'next' => auth_safe_next((string) ($row['next_path'] ?? ''))];
     if ($row['verified_at'] !== null) {
-        return ['status' => 'used', 'id' => $id];
-    }
-    if ((int) $row['expired'] === 1) {
-        return ['status' => 'expired', 'id' => $id];
-    }
-    if ($row['current_email'] === null || strcasecmp((string) $row['current_email'], (string) $row['email']) !== 0) {
-        return ['status' => 'changed', 'id' => $id];   // email змінено після надсилання листа
+        $res['status'] = 'used';
+    } elseif ((int) $row['expired'] === 1) {
+        $res['status'] = 'expired';
+    } elseif ($row['current_email'] === null || mpv_norm_email((string) $row['current_email']) !== mpv_norm_email((string) $row['email'])) {
+        $res['status'] = 'changed';   // email змінено після надсилання листа
     }
 
-    return ['status' => 'ok', 'id' => $id];
+    return $res;
 }
 
 /**
- * Підтвердження за токеном (виконується лише POST-ом із mp-verify.php; одноразове).
+ * Підтвердження за токеном (POST із mp-verify.php; одноразове). Працює без входу: успіх записується в БД
+ * для user_id токена, незалежно від поточної сесії.
  *
- * @return string ok | invalid | expired | used | changed
+ * @return array{status:string,id:int,user_id:int,next:?string} status: ok | invalid | expired | used | changed
  */
-function mpv_confirm(PDO $pdo, string $token): string
+function mpv_confirm(PDO $pdo, string $token): array
 {
     $c = mpv_check($pdo, $token);
     if ($c['status'] !== 'ok') {
-        return $c['status'];
+        return $c;
     }
     // Одноразовість: UPDATE лише поки verified_at ще NULL і термін не минув.
     $upd = $pdo->prepare('UPDATE mp_email_verifications SET verified_at = NOW() WHERE id = :id AND verified_at IS NULL AND expires_at > NOW()');
     $upd->execute([':id' => $c['id']]);
+    if ($upd->rowCount() !== 1) {
+        $c['status'] = 'used';
+    }
 
-    return $upd->rowCount() === 1 ? 'ok' : 'used';
+    return $c;
 }

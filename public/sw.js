@@ -4,7 +4,8 @@
 // Це НЕ офлайн-режим для всього сайту — сторінки з БД (каталог, CRM, Еля)
 // завжди йдуть напряму в мережу.
 
-const CACHE_NAME = 'ailabhub-static-v2';
+// v3 (2026-11-06): нова версія видаляє всі старі кеші (див. activate). Сторінки ніколи не кешуються.
+const CACHE_NAME = 'ailabhub-static-v3';
 
 // Додайте сюди реальні шляхи до логотипу/CSS/іконок, які рідко змінюються
 const STATIC_ASSETS = [
@@ -34,7 +35,15 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   // Кешуємо тільки статику (icons/manifest). Усе інше (сторінки, CRM, Еля,
   // AJAX-запити до БД) завжди йде напряму в мережу — не чіпаємо.
+  // Динамічні й авторизовані сторінки (вхід, кабінет, підтвердження пошти, подача, mp-*, listing-*, CRM)
+  // і будь-які не-GET запити — завжди напряму в мережу, без кешу Service Worker.
+  if (event.request.method !== 'GET' || event.request.mode === 'navigate') {
+    return;
+  }
   const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || /\.php$/.test(url.pathname) || url.pathname === '/') {
+    return;
+  }
   const isStatic = STATIC_ASSETS.some((path) => url.pathname === path);
 
   if (isStatic) {

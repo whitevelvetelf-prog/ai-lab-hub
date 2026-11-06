@@ -836,6 +836,25 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
             color: var(--text-muted);
         }
 
+        .account-verify {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 10px;
+            margin: 6px 0 0;
+            font-size: 0.85rem;
+        }
+
+        .account-verify__ok {
+            color: #7ee2a8;
+            font-weight: 700;
+        }
+
+        .account-verify__need {
+            color: #ffd27a;
+            font-weight: 700;
+        }
+
         .role-badge {
             display: inline-block;
             margin-left: 8px;
@@ -1293,6 +1312,16 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                         <?= htmlspecialchars(t('account_welcome_prefix'), ENT_QUOTES) ?> <?= e($user['name']) ?><span class="role-badge"><?= e($accountBadge) ?></span>
                     </h1>
                     <p class="account-user__meta"><?= e($user['email']) ?></p>
+                    <?php // Стан підтвердження пошти — те саме джерело, що й Marketplace (app/mp-verify-core.php).
+                    $accVerified = mpv_verified_at($pdo, (int) $user['id']) !== null; ?>
+                    <p class="account-verify" id="email-status">
+                        <?php if ($accVerified): ?>
+                            <span class="account-verify__ok"><?= e(mpf_tr('v_ok_state')) ?></span>
+                        <?php else: ?>
+                            <span class="account-verify__need"><?= e(mpf_tr('v_need_state')) ?></span>
+                            <a class="btn btn--ghost btn--small" href="<?= e(mpv_page_url('account.php')) ?>"><?= e(mpf_tr('v_cabinet_btn')) ?></a>
+                        <?php endif; ?>
+                    </p>
                 </div>
             </div>
 
@@ -1685,6 +1714,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                     <div class="accordion__panel" id="acc-crm-panel">
                         <div class="accordion__panel-inner">
                             <div class="staff-note">
+                                <?php $crmPending = lst_admin_pending_counts($pdo); ?>
+                                <a class="crm-mod-link" href="account.php?ladm_tab=mod#acc-listings-admin">Модерація оголошень (<?= (int) $crmPending['total'] ?>)</a><br>
                                 <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
                                 · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a>

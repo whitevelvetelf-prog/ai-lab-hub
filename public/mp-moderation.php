@@ -51,6 +51,15 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $ok = mpb_dismiss_reports($pdo, $id, $actorId);
         mpb_flash($ok ? 'ok' : 'error', 'Оголошення №' . $id . ': ' . ($ok ? 'скарги розглянуто, оголошення залишено.' : 'не виконано (статус уже змінився).'));
     }
+    // Дія з єдиної черги кабінету (account.php → «Маркетплейс: оголошення» → «Модерація») — повертаємося туди
+    // з тим самим повідомленням у форматі вкладки.
+    if (($_POST['return'] ?? '') === 'account') {
+        $msgs = (array) ($_SESSION['mpb_flash'] ?? []);
+        unset($_SESSION['mpb_flash']);
+        $last = end($msgs) ?: ['type' => 'ok', 'text' => ''];
+        $_SESSION['ladm_flash'] = ['ok' => $last['type'] !== 'error', 'msgs' => array_column($msgs, 'text')];
+        mpb_redirect('account.php?ladm_tab=mod');
+    }
     mpb_redirect($back);
 }
 

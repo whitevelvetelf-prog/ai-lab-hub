@@ -9,13 +9,38 @@ declare(strict_types=1);
  *   require_once __DIR__ . '/../app/auth.php';
  */
 
+require_once __DIR__ . '/canonical.php';
+
+// www./http-варіант адреси → 301 на канонічну (site_url): одна адреса — одна сесія (див. app/canonical.php).
+app_canonical_redirect();
+
+/** Скільки живе вхід без активності (секунди): кукі й файл сесії. */
+const AUTH_SESSION_LIFETIME = 30 * 86400;
+
 if (session_status() === PHP_SESSION_NONE) {
-    // Кукі сесії: HttpOnly (JS не читає — XSS не краде сесію), SameSite=Lax (міжсайтові POST не несуть кукі —
-    // додатковий захист від CSRF), Secure — коли запит по HTTPS.
+    // Кукі сесії: HttpOnly (JS не читає — XSS не краде сесію), SameSite=Lax (посилання з листа чи іншого сайту
+    // несе кукі, міжсайтові POST — ні), Secure — коли запит по HTTPS. Домен не задаємо: кукі лише канонічного хоста.
+    // Кукі постійна (30 днів), а не «до закриття браузера»: на iPhone застосунок з екрана «Додому» втрачає
+    // сесійні кукі, щойно система його вивантажує (перехід у Пошту) — і вхід «злітав» посеред підтвердження пошти.
+    // Файли сесій — у власній теці storage/sessions (поза webroot): спільна тека хостингу чиститься за чужим
+    // gc_maxlifetime (типово 24 хв). Тека недоступна для запису — лишаються налаштування PHP за замовчуванням.
+    if (PHP_SAPI !== 'cli') {
+        $authSessDir = dirname(__DIR__) . '/storage/sessions';
+        if (!is_dir($authSessDir)) {
+            @mkdir($authSessDir, 0700, true);
+        }
+        if (is_dir($authSessDir) && is_writable($authSessDir)) {
+            ini_set('session.save_path', $authSessDir);
+            ini_set('session.gc_maxlifetime', (string) AUTH_SESSION_LIFETIME);
+            ini_set('session.gc_probability', '1');
+            ini_set('session.gc_divisor', '200');
+        }
+        ini_set('session.use_strict_mode', '1');
+    }
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => AUTH_SESSION_LIFETIME,
         'path'     => '/',
-        'secure'   => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+        'secure'   => app_request_is_https(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
@@ -106,9 +131,68 @@ function auth_promo_quiet_mark(): void
 function auth_after_login_url(): string
 {
     $target = $_SESSION['after_login'] ?? null;
-    unset($_SESSION['after_login']);
+    $next = auth_safe_next((string) ($_SESSION['after_login_next'] ?? ''));
+    unset($_SESSION['after_login'], $_SESSION['after_login_next']);
 
-    return $target === 'promo_create' ? 'account.php?promo_tab=create#acc-promo' : 'account.php';
+    if ($target === 'promo_create') {
+        return 'account.php?promo_tab=create#acc-promo';
+    }
+
+    return $next ?? 'account.php';
+}
+
+/**
+ * Сторінки, на які можна повернути після входу/підтвердження пошти (параметр next). Лише внутрішні.
+ * Решта адрес → null (відкритого редиректу немає).
+ */
+const AUTH_NEXT_PAGES = [
+    'account.php', 'listing-post.php', 'listings.php', 'listing.php', 'marketplace-post.php', 'marketplace.php',
+    'marketplace-my.php', 'marketplace-offer.php', 'offer.php', 'asset-post.php', 'asset.php', 'assets.php',
+    'mp-verify-email.php', 'advertise.php', 'saved.php', 'mp-favorites.php', 'marketplace-favorites.php',
+];
+
+/**
+ * Перевіряє next: «сторінка.php[?параметри][#якір]» зі списку AUTH_NEXT_PAGES (провідний «/» дозволено).
+ * Повертає нормалізований відносний шлях або null.
+ */
+function auth_safe_next(string $next): ?string
+{
+    $next = ltrim(trim($next), '/');
+    if ($next === '' || strlen($next) > 300) {
+        return null;
+    }
+    if (preg_match('~^([A-Za-z0-9_\-]+\.php)(\?[A-Za-z0-9_=&%\-.\[\]+]*)?(#[A-Za-z0-9_\-]*)?$~', $next, $m) !== 1) {
+        return null;
+    }
+
+    return in_array($m[1], AUTH_NEXT_PAGES, true) ? $next : null;
+}
+
+/** Поточна сторінка як next (для «увійдіть і повертайтеся сюди»); null, якщо її немає в списку. */
+function auth_current_next(): ?string
+{
+    $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+    $path = (string) parse_url($uri, PHP_URL_PATH);
+    $query = (string) parse_url($uri, PHP_URL_QUERY);
+
+    return auth_safe_next(basename($path) . ($query !== '' ? '?' . $query : ''));
+}
+
+/** Запам'ятовує next із GET (login.php, register.php, auth-google.php) — повернення після входу. */
+function auth_remember_next_from_request(): void
+{
+    $next = auth_safe_next(is_string($_GET['next'] ?? null) ? (string) $_GET['next'] : '');
+    if ($next !== null) {
+        $_SESSION['after_login_next'] = $next;
+    }
+}
+
+/** URL сторінки входу (чи реєстрації) з поверненням на $next. */
+function auth_login_url(?string $next, string $page = 'login.php'): string
+{
+    $next = $next !== null ? auth_safe_next($next) : null;
+
+    return $page . ($next !== null ? '?next=' . rawurlencode($next) : '');
 }
 
 /** Повністю знищує сесію користувача. */

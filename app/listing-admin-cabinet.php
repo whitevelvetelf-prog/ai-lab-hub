@@ -5,7 +5,11 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — розділ-акордеон «Маркетплейс: оголошення» в кабінеті (вакансії, курси, послуги компаній).
  *
- * Вкладки: Модерація · Усі оголошення · Налаштування (лише admin) · Стан.
+ * Вкладки: Модерація · Усі оголошення · Налаштування (лише admin) · Стан · (ліди, аутріч) · Цифрові матеріали …
+ * «Модерація» — єдина черга ВСІХ оголошень зі статусом pending з усіх розділів однієї таблиці mp_listings:
+ * вакансії, курси, послуги (повна картка й дії тут), дошка й готові рішення (швидкий перегляд + дії тут або
+ * в mp-moderation.php). Цифрові матеріали й підозріла активність мають власні вкладки — у «Модерації» їхні
+ * лічильники з посиланнями, щоб нічого не ховалося. «Усі оголошення» — усі розділи й статуси, пошук.
  * Модерують співробітники (role employee — наявна роль модератора) і admin; налаштування — лише admin.
  * Дії — public/listing-admin-action.php. Адмінка лише українською (як решта CRM).
  */
@@ -21,6 +25,43 @@ foreach (['outreach-admin.php', 'outreach-mail-admin.php'] as $lstExtra) {   // 
 
 const LST_ADMIN_STATUS_UK = ['draft' => 'Чернетка', 'pending' => 'На модерації', 'published' => 'Опубліковано', 'rejected' => 'Відхилено', 'expired' => 'Термін минув', 'archived' => 'Знято'];
 const LST_ADMIN_TYPE_UK = ['job' => 'Вакансія', 'course' => 'Курс', 'service' => 'Послуга'];
+/** Усі розділи mp_listings для черги й «Усіх оголошень». */
+const LST_ADMIN_ALL_TYPES_UK = LST_ADMIN_TYPE_UK + ['board' => 'Дошка', 'solution' => 'Готове рішення', 'asset' => 'Цифровий матеріал'];
+/** Розділи, що потрапляють у вкладку «Модерація» (asset — окрема вкладка «Цифрові матеріали»). */
+const LST_ADMIN_QUEUE_TYPES = ['job', 'course', 'service', 'board', 'solution'];
+
+/**
+ * Лічильники для бейджів: усі оголошення на модерації (крім матеріалів), матеріали на модерації.
+ *
+ * @return array{queue:int,assets:int,total:int}
+ */
+function lst_admin_pending_counts(PDO $pdo): array
+{
+    try {
+        $rows = $pdo->query("SELECT section, COUNT(*) FROM mp_listings WHERE status = 'pending' GROUP BY section")->fetchAll(PDO::FETCH_KEY_PAIR);
+    } catch (Throwable $e) {
+        return ['queue' => 0, 'assets' => 0, 'total' => 0];
+    }
+    $queue = 0;
+    foreach (LST_ADMIN_QUEUE_TYPES as $t) {
+        $queue += (int) ($rows[$t] ?? 0);
+    }
+    $assets = (int) ($rows['asset'] ?? 0);
+
+    return ['queue' => $queue, 'assets' => $assets, 'total' => $queue + $assets];
+}
+
+/** Адреса перегляду оголошення будь-якого розділу для модератора. */
+function lst_admin_view_url(array $r): string
+{
+    return match ((string) $r['section']) {
+        'job', 'course', 'service' => lst_url($r),
+        'board' => 'mp-moderation.php?id=' . (int) $r['id'],
+        'solution' => 'mp-add-offer.php?id=' . (int) $r['id'],
+        'asset' => 'asset.php?id=' . (int) $r['id'],
+        default => '#',
+    };
+}
 
 /** Ключ CSRF адмінки оголошень (спільний із маркетплейсом). */
 function lst_admin_csrf(): string
@@ -53,16 +94,64 @@ function lst_admin_render(PDO $pdo, array $user): void
     $settings = lst_settings($pdo);
     $csrf = lst_admin_csrf();
 
-    $pending = $pdo->query(
-        "SELECT l.id FROM mp_listings l WHERE l.section IN ('job', 'course', 'service') AND l.status = 'pending' ORDER BY l.updated_at, l.id LIMIT 100"
-    )->fetchAll(PDO::FETCH_COLUMN);
-    $queue = [];
-    foreach ($pending as $pid) {
-        $row = lst_listing($pdo, (int) $pid, 'orig');   // 'orig' — не активна мова: тексти мовою оригіналу, без автоперекладу
-        if ($row !== null) {
-            $row['signals'] = lst_risk_signals($pdo, $row);
-            $queue[] = $row;
+    // Єдина черга: усі pending з усіх розділів (крім цифрових матеріалів), від найстаріших. Фільтр за типом.
+    $qType = is_string($_GET['ladm_qtype'] ?? null) && in_array($_GET['ladm_qtype'], LST_ADMIN_QUEUE_TYPES, true) ? (string) $_GET['ladm_qtype'] : '';
+    $inTypes = "'" . implode("', '", LST_ADMIN_QUEUE_TYPES) . "'";
+    $queueByType = $pdo->query("SELECT section, COUNT(*) FROM mp_listings WHERE status = 'pending' AND section IN ($inTypes) GROUP BY section")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $qst = $pdo->prepare(
+        "SELECT l.id, l.section FROM mp_listings l WHERE l.status = 'pending' AND l.section IN ($inTypes)"
+        . ($qType !== '' ? ' AND l.section = :qt' : '') . ' ORDER BY l.updated_at, l.id LIMIT 200'
+    );
+    $qst->execute($qType !== '' ? [':qt' => $qType] : []);
+    $pending = $qst->fetchAll(PDO::FETCH_ASSOC);
+    $queue = [];   // вакансії/курси/послуги — повні картки
+    $items = [];   // загальний порядок: ['kind' => 'lst'|'gen', 'row' => …]
+    $genIds = [];
+    foreach ($pending as $p) {
+        if (lst_type_valid((string) $p['section'])) {
+            $row = lst_listing($pdo, (int) $p['id'], 'orig');   // 'orig' — не активна мова: тексти мовою оригіналу, без автоперекладу
+            if ($row !== null) {
+                $row['signals'] = lst_risk_signals($pdo, $row);
+                $queue[] = $row;
+                $items[] = ['kind' => 'lst', 'row' => $row];
+            }
+        } else {
+            $genIds[] = (int) $p['id'];
+            $items[] = ['kind' => 'gen', 'id' => (int) $p['id']];
         }
+    }
+    // Дошка й готові рішення: заголовок, тексти мовою оригіналу, автор (продавець або той, хто створив).
+    $gen = [];
+    if ($genIds !== []) {
+        $gs = $pdo->prepare(
+            'SELECT l.id, l.section, l.status, l.updated_at, l.created_at, l.price_type, l.price_amount, l.currency, l.city, l.is_remote,
+                    ts.title, ts.short_desc, ts.full_desc, u.email, u.name AS author_name, s.display_name AS seller_name,
+                    (SELECT COUNT(*) FROM mp_reports r WHERE r.listing_id = l.id) AS reports_total
+             FROM mp_listings l LEFT JOIN mp_sellers s ON s.id = l.seller_id
+             LEFT JOIN users u ON u.id = COALESCE(s.user_id, l.created_by)
+             LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
+             WHERE l.id IN (' . implode(',', array_fill(0, count($genIds), '?')) . ')'
+        );
+        $gs->execute($genIds);
+        foreach ($gs->fetchAll(PDO::FETCH_ASSOC) as $g) {
+            $gen[(int) $g['id']] = $g;
+        }
+    }
+    foreach ($items as $i => $it) {
+        if ($it['kind'] === 'gen') {
+            if (!isset($gen[$it['id']])) {
+                unset($items[$i]);
+                continue;
+            }
+            $items[$i]['row'] = $gen[$it['id']];
+        }
+    }
+    $items = array_values($items);
+    $pc = lst_admin_pending_counts($pdo);
+    try {
+        $suspCount = (int) $pdo->query('SELECT COUNT(DISTINCT anon_hash) FROM asset_suspicious WHERE created_at >= NOW() - INTERVAL 7 DAY')->fetchColumn();
+    } catch (Throwable $e) {
+        $suspCount = 0;
     }
     $owners = [];
     if ($queue !== []) {
@@ -74,17 +163,27 @@ function lst_admin_render(PDO $pdo, array $user): void
         }
     }
     $overdue = 0;
-    foreach ($queue as $q) {
-        if (strtotime((string) $q['updated_at']) < time() - $settings['review_hours'] * 3600) {
+    foreach ($items as $it) {
+        if (strtotime((string) $it['row']['updated_at']) < time() - $settings['review_hours'] * 3600) {
             $overdue++;
         }
     }
 
     // «Усі оголошення»: фільтри
     $fStatus = is_string($_GET['ladm_status'] ?? null) && isset(LST_ADMIN_STATUS_UK[$_GET['ladm_status']]) ? (string) $_GET['ladm_status'] : '';
-    $fType = is_string($_GET['ladm_type'] ?? null) && lst_type_valid((string) $_GET['ladm_type']) ? (string) $_GET['ladm_type'] : '';
-    $where = "l.section IN ('job', 'course', 'service')";
+    $fType = is_string($_GET['ladm_type'] ?? null) && isset(LST_ADMIN_ALL_TYPES_UK[$_GET['ladm_type']]) ? (string) $_GET['ladm_type'] : '';
+    $fQ = is_string($_GET['ladm_q'] ?? null) ? mb_substr(trim((string) $_GET['ladm_q']), 0, 100) : '';
+    $where = "l.section IN ('" . implode("', '", array_keys(LST_ADMIN_ALL_TYPES_UK)) . "')";
     $params = [];
+    if ($fQ !== '') {
+        // Пошук за назвою (будь-якою мовою) і email автора.
+        $where .= " AND (EXISTS (SELECT 1 FROM mp_listing_translations tq WHERE tq.listing_id = l.id AND tq.title LIKE :q1 ESCAPE '\\\\')"
+            . " OR u.email LIKE :q2 ESCAPE '\\\\' OR l.company_name LIKE :q3 ESCAPE '\\\\')";
+        $like = '%' . addcslashes($fQ, '%_\\') . '%';
+        $params[':q1'] = $like;
+        $params[':q2'] = $like;
+        $params[':q3'] = $like;
+    }
     if ($fStatus !== '') {
         $where .= ' AND l.status = :st';
         $params[':st'] = $fStatus;
@@ -98,7 +197,7 @@ function lst_admin_render(PDO $pdo, array $user): void
         $st = $pdo->prepare(
             "SELECT l.id, l.section, l.status, l.slug, l.company_name, l.created_at, l.published_at, l.expires_at,
                     (l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed, t.title, u.email
-             FROM mp_listings l LEFT JOIN mp_sellers s ON s.id = l.seller_id LEFT JOIN users u ON u.id = s.user_id
+             FROM mp_listings l LEFT JOIN mp_sellers s ON s.id = l.seller_id LEFT JOIN users u ON u.id = COALESCE(s.user_id, l.created_by)
              LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
              WHERE $where ORDER BY l.id DESC LIMIT 300"
         );
@@ -106,7 +205,7 @@ function lst_admin_render(PDO $pdo, array $user): void
         $all = $st->fetchAll(PDO::FETCH_ASSOC);
     }
     $allStats = lst_stats($pdo, array_map(static fn($r) => (int) $r['id'], $all), 30);
-    $counts = $pdo->query("SELECT status, COUNT(*) FROM mp_listings WHERE section IN ('job', 'course', 'service') GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
+    $counts = $pdo->query("SELECT status, COUNT(*) FROM mp_listings WHERE section IN ('" . implode("', '", array_keys(LST_ADMIN_ALL_TYPES_UK)) . "') GROUP BY status")->fetchAll(PDO::FETCH_KEY_PAIR);
     $badge = static fn(string $s): string => '<span class="pc-badge pc-badge--' . lst_e($s) . '">' . lst_e(LST_ADMIN_STATUS_UK[$s] ?? $s) . '</span>';
     $rejectSelect = static function (string $name, string $form = ''): string {
         $h = '<select class="pc-input" name="' . $name . '"' . ($form !== '' ? ' form="' . $form . '"' : '') . '>';
@@ -119,11 +218,11 @@ function lst_admin_render(PDO $pdo, array $user): void
     ?>
             <div class="accordion" id="acc-listings-admin">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-listings-admin-panel">
-                    <span class="accordion__title">Маркетплейс: оголошення<?= $queue !== [] ? ' · ' . count($queue) . ' на модерації' : '' ?></span>
+                    <span class="accordion__title">Маркетплейс: оголошення<?= $pc['total'] > 0 ? ' · ' . $pc['total'] . ' на модерації' : '' ?></span>
                     <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
                 </button>
                 <div class="accordion__panel" id="acc-listings-admin-panel">
-                    <div class="accordion__panel-inner pc" data-pc-param="ladm_tab" data-pc-hash="acc-listings-admin">
+                    <div class="accordion__panel-inner pc lst-adm" data-pc-param="ladm_tab" data-pc-hash="acc-listings-admin">
                         <div class="pc-box pc-system">
                             <p><strong>Маркетплейс для відвідувачів: <?= mp_public_enabled() ? 'ПОКАЗАНО' : 'ПРИХОВАНО' ?></strong>
                                 <span class="pc-muted">Перемикач — у розділі CRM. Поки приховано, сторінки вакансій, курсів і послуг бачать лише співробітники.</span></p>
@@ -138,16 +237,33 @@ function lst_admin_render(PDO $pdo, array $user): void
                             </div>
                         <?php endif; ?>
                         <div class="pc-tabs" role="tablist">
-                            <?php foreach ($tabs as $k => $label): $n = $k === 'mod' ? count($queue) : 0; ?>
+                            <?php foreach ($tabs as $k => $label): $n = $k === 'mod' ? $pc['queue'] : ($k === 'assets' ? $pc['assets'] : 0); ?>
                                 <a class="pc-tab<?= $tab === $k ? ' is-active' : '' ?>" role="tab" href="account.php?ladm_tab=<?= $k ?>#acc-listings-admin" data-pc-tab="<?= $k ?>" aria-selected="<?= $tab === $k ? 'true' : 'false' ?>"><?= lst_e($label) ?><?= $n > 0 ? ' (' . $n . ')' : '' ?></a>
                             <?php endforeach; ?>
                         </div>
 
                         <!-- Модерація -->
                         <section class="pc-panel" data-pc-panel="mod"<?= $tab === 'mod' ? '' : ' hidden' ?>>
-                            <?php if ($queue === []): ?>
+                            <div class="pc-box lst-mod-summary">
+                                <p><strong>На модерації: <?= $pc['queue'] ?></strong>
+                                    <?php foreach (LST_ADMIN_QUEUE_TYPES as $t): ?> · <?= lst_e(LST_ADMIN_ALL_TYPES_UK[$t]) ?>: <?= (int) ($queueByType[$t] ?? 0) ?><?php endforeach; ?></p>
+                                <p>Окремі черги:
+                                    <a href="account.php?ladm_tab=assets#acc-listings-admin" data-pc-tab="assets">Цифрові матеріали — <?= $pc['assets'] ?></a>
+                                    · <a href="account.php?ladm_tab=asset_susp#acc-listings-admin" data-pc-tab="asset_susp">Підозріла активність (7 дн.) — <?= $suspCount ?></a>
+                                    · <a href="mp-moderation.php?tab=reports">Скарги на дошці</a></p>
+                                <form method="get" action="account.php" class="pc-inline-form">
+                                    <input type="hidden" name="ladm_tab" value="mod">
+                                    <label>Тип <select class="pc-input" name="ladm_qtype"><option value="">Усі типи</option>
+                                        <?php foreach (LST_ADMIN_QUEUE_TYPES as $t): ?><option value="<?= $t ?>"<?= $qType === $t ? ' selected' : '' ?>><?= lst_e(LST_ADMIN_ALL_TYPES_UK[$t]) ?> (<?= (int) ($queueByType[$t] ?? 0) ?>)</option><?php endforeach; ?>
+                                    </select></label>
+                                    <button class="pc-btn pc-btn--small" type="submit">Показати</button>
+                                    <span class="pc-muted">Від найстаріших. ⚠ — довше за мету розгляду (<?= $settings['review_hours'] ?> год).</span>
+                                </form>
+                            </div>
+                            <?php if ($items === []): ?>
                                 <p class="pc-empty">Черга модерації порожня.</p>
-                            <?php else: ?>
+                            <?php endif; ?>
+                            <?php if ($queue !== []): ?>
                                 <form id="ladmBulk" method="post" action="listing-admin-action.php" class="pc-box lst-bulk" data-pc-confirm="Застосувати дію до позначених оголошень?">
                                     <?= $csrf ?><input type="hidden" name="return_tab" value="mod">
                                     <strong>Масові дії з позначеними:</strong>
@@ -156,13 +272,18 @@ function lst_admin_render(PDO $pdo, array $user): void
                                     <button class="pc-btn pc-btn--danger pc-btn--small" type="submit" name="action" value="bulk_reject">Відхилити</button>
                                 </form>
                             <?php endif; ?>
-                            <?php foreach ($queue as $q):
+                            <?php foreach ($items as $it):
+                                if ($it['kind'] === 'gen') {
+                                    echo lst_admin_gen_card($it['row'], $csrf, (int) $settings['review_hours']);
+                                    continue;
+                                }
+                                $q = $it['row'];
                                 $qid = (int) $q['id'];
                                 $check = json_decode((string) $q['link_check_json'], true);
                                 $waitH = (int) floor((time() - (int) strtotime((string) $q['updated_at'])) / 3600); ?>
-                                <article class="pc-mod lst-mod">
+                                <article class="pc-mod lst-mod<?= $waitH >= $settings['review_hours'] ? ' pc-mod--overdue' : '' ?>">
                                     <label class="lst-mod__pick"><input type="checkbox" name="ids[]" value="<?= $qid ?>" form="ladmBulk"> #<?= $qid ?> · <?= lst_e(LST_ADMIN_TYPE_UK[$q['section']] ?? $q['section']) ?></label>
-                                    <span class="pc-muted"> · чекає <?= $waitH ?> год<?= $waitH >= $settings['review_hours'] ? ' ⚠' : '' ?> · автор: <?= lst_e($owners[(int) $q['seller_user_id']] ?? '—') ?></span>
+                                    <span class="pc-muted"> · подано <?= lst_e(date('d.m.Y H:i', (int) strtotime((string) $q['updated_at']))) ?> · чекає <?= $waitH ?> год<?= $waitH >= $settings['review_hours'] ? ' ⚠' : '' ?> · автор: <?= lst_e($owners[(int) $q['seller_user_id']] ?? '—') ?></span>
                                     <div class="mp-panel lst-preview">
                                         <p class="mp-card__tag"><?= lst_e(LST_ADMIN_TYPE_UK[$q['section']] ?? '') ?> · <?= lst_e($q['company_name']) ?></p>
                                         <h3 class="pc-h3"><?= lst_e($q['title']) ?></h3>
@@ -207,7 +328,8 @@ function lst_admin_render(PDO $pdo, array $user): void
                             <form method="get" action="account.php" class="pc-inline-form">
                                 <input type="hidden" name="ladm_tab" value="all">
                                 <select class="pc-input" name="ladm_status"><option value="">Усі статуси</option><?php foreach (LST_ADMIN_STATUS_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fStatus === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
-                                <select class="pc-input" name="ladm_type"><option value="">Усі типи</option><?php foreach (LST_ADMIN_TYPE_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fType === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
+                                <select class="pc-input" name="ladm_type"><option value="">Усі типи</option><?php foreach (LST_ADMIN_ALL_TYPES_UK as $k => $l): ?><option value="<?= $k ?>"<?= $fType === $k ? ' selected' : '' ?>><?= lst_e($l) ?></option><?php endforeach; ?></select>
+                                <input class="pc-input" type="search" name="ladm_q" maxlength="100" value="<?= lst_e($fQ) ?>" placeholder="Назва або email автора" aria-label="Пошук за назвою або email автора">
                                 <button class="pc-btn pc-btn--small" type="submit">Показати</button>
                             </form>
                             <?php if ($tab !== 'all'): ?>
@@ -222,15 +344,17 @@ function lst_admin_render(PDO $pdo, array $user): void
                                         $status = (string) $r['status'] === 'published' && (int) $r['elapsed'] === 1 ? 'expired' : (string) $r['status']; ?>
                                         <tr>
                                             <td data-label="#"><?= $rid ?></td>
-                                            <td data-label="Оголошення"><a href="<?= lst_e(lst_url($r)) ?>" target="_blank" rel="noopener"><?= lst_e($r['title'] ?? '—') ?></a><br><span class="pc-muted"><?= lst_e(LST_ADMIN_TYPE_UK[$r['section']] ?? '') ?> · <?= lst_e($r['company_name']) ?> · <?= lst_e($r['email'] ?? '') ?></span></td>
+                                            <td data-label="Оголошення"><a href="<?= lst_e(lst_admin_view_url($r)) ?>" target="_blank" rel="noopener"><?= lst_e($r['title'] ?? '—') ?></a><br><span class="pc-muted"><?= lst_e(LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? $r['section']) ?><?= ($r['company_name'] ?? '') !== '' ? ' · ' . lst_e($r['company_name']) : '' ?> · <?= lst_e($r['email'] ?? '') ?> · <?= lst_e(date('d.m.Y', (int) strtotime((string) $r['created_at']))) ?></span></td>
                                             <td data-label="Статус"><?= $badge($status) ?></td>
                                             <td data-label="Перегляди / переходи"><?= $s['views'] ?> / <?= $s['clicks'] ?></td>
                                             <td data-label="До"><?= $status === 'published' && !empty($r['expires_at']) ? lst_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) : '—' ?></td>
                                             <td data-label="Дії">
-                                                <?php if (in_array($status, ['pending', 'published', 'expired', 'rejected'], true)): ?>
+                                                <?php if (!lst_type_valid((string) $r['section'])): ?>
+                                                    <a class="pc-btn pc-btn--small" href="<?= lst_e(lst_admin_view_url($r)) ?>">Відкрити</a>
+                                                <?php elseif (in_array($status, ['pending', 'published', 'expired', 'rejected'], true)): ?>
                                                     <form method="post" action="listing-admin-action.php" class="pc-inline-form" data-pc-confirm="Зняти оголошення #<?= $rid ?> з публікації?"><?= $csrf ?><input type="hidden" name="action" value="remove"><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="return_tab" value="all"><button class="pc-btn pc-btn--small pc-btn--danger" type="submit">Зняти</button></form>
                                                 <?php endif; ?>
-                                                <?php if (in_array($status, ['rejected', 'archived', 'expired'], true)): ?>
+                                                <?php if (lst_type_valid((string) $r['section']) && in_array($status, ['rejected', 'archived', 'expired'], true)): ?>
                                                     <form method="post" action="listing-admin-action.php" class="pc-inline-form"><?= $csrf ?><input type="hidden" name="action" value="to_pending"><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="return_tab" value="all"><button class="pc-btn pc-btn--small" type="submit">На модерацію</button></form>
                                                 <?php endif; ?>
                                             </td>
@@ -269,6 +393,41 @@ function lst_admin_render(PDO $pdo, array $user): void
             </div>
             <?= promo_cabinet_assets() ?>
     <?php
+}
+
+/**
+ * Картка черги для дошки й готових рішень: тип, назва, автор, час подачі, швидкий перегляд і дії.
+ * Дошка — схвалити/відхилити тут (POST у mp-moderation.php, return=account); рішення — редактор mp-add-offer.php.
+ */
+function lst_admin_gen_card(array $r, string $csrf, int $reviewHours): string
+{
+    $id = (int) $r['id'];
+    $waitH = (int) floor((time() - (int) strtotime((string) $r['updated_at'])) / 3600);
+    $over = $waitH >= $reviewHours;
+    $type = LST_ADMIN_ALL_TYPES_UK[$r['section']] ?? (string) $r['section'];
+    $author = trim((string) ($r['seller_name'] ?: $r['author_name'] ?: '')) . ((string) ($r['email'] ?? '') !== '' ? ' · ' . $r['email'] : '');
+    $h = '<article class="pc-mod lst-mod' . ($over ? ' pc-mod--overdue' : '') . '">'
+        . '<p class="lst-mod__pick">#' . $id . ' · ' . lst_e($type) . '</p>'
+        . '<span class="pc-muted"> · подано ' . lst_e(date('d.m.Y H:i', (int) strtotime((string) $r['updated_at']))) . ' · чекає ' . $waitH . ' год' . ($over ? ' ⚠' : '')
+        . ' · автор: ' . lst_e($author !== '' ? $author : '—') . ((int) $r['reports_total'] > 0 ? ' · скарг: ' . (int) $r['reports_total'] : '') . '</span>'
+        . '<div class="mp-panel lst-preview"><h3 class="pc-h3">' . lst_e((string) ($r['title'] ?? '—')) . '</h3>'
+        . '<p>' . lst_e((string) ($r['short_desc'] ?? '')) . '</p>'
+        . (trim((string) ($r['full_desc'] ?? '')) !== '' ? '<details><summary>Повний опис</summary><div class="mp-text mp-text--pre">' . lst_e($r['full_desc']) . '</div></details>' : '')
+        . '</div><div class="lst-mod__actions">';
+    if ($r['section'] === 'board') {
+        $h .= '<form method="post" action="mp-moderation.php" class="pc-inline-form">' . $csrf
+            . '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="return" value="account">'
+            . '<button class="pc-btn pc-btn--primary" type="submit" name="action" value="approve">Схвалити</button></form>'
+            . '<form method="post" action="mp-moderation.php" class="pc-inline-form lst-reject">' . $csrf
+            . '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="return" value="account">'
+            . '<input class="pc-input" type="text" name="reason" maxlength="500" required placeholder="Причина відхилення (обов\'язково)" aria-label="Причина відхилення">'
+            . '<button class="pc-btn pc-btn--danger" type="submit" name="action" value="reject">Відхилити</button></form>'
+            . '<a class="pc-btn pc-btn--small" href="mp-moderation.php?id=' . $id . '" target="_blank" rel="noopener">Повний перегляд (фото, контакти)</a>';
+    } else {
+        $h .= '<a class="pc-btn pc-btn--primary" href="mp-add-offer.php?id=' . $id . '">Відкрити в редакторі рішень</a>';
+    }
+
+    return $h . '</div></article>';
 }
 
 /** Вкладки наступних блоків (ліди, аутріч) — додаються, коли відповідні файли підключено. */

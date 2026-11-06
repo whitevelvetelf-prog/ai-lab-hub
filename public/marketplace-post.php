@@ -20,6 +20,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-email.php';   // підключає marketplace-board.php
 require_once __DIR__ . '/../app/mpb-rules.php';
 require_once __DIR__ . '/../app/mp-geo-form.php';
+require_once __DIR__ . '/../app/mp-drafts.php';
 
 mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
@@ -31,13 +32,31 @@ if (!mpb_posting_open()) {
     mpb_posting_closed_page();
 }
 
+header('Cache-Control: no-store');
+// Порядок: гість → вхід/реєстрація з поверненням сюди; пошта не підтверджена → екран «Підтвердьте пошту»
+// ДО показу форми (з поверненням сюди після підтвердження).
 $userId = mpb_require_login();
 $user = auth_current_user($pdo);
 if ($user === null) {
-    header('Location: login.php');
+    header('Location: ' . auth_login_url(auth_current_next()));
     exit;
 }
 mpv_require_verified($pdo, $userId);   // публікація й редагування — лише з підтвердженим email (staff звільнені)
+
+// Після відправлення (PRG): «Оголошення на модерації, відповімо протягом N год» + «Мої оголошення».
+$sentId = (int) ($_GET['sent'] ?? 0);
+if ($sentId > 0 && ($sent = mpb_own_listing($pdo, $sentId, $userId)) !== null) {
+    require_once __DIR__ . '/../app/listing.php';   // lst_settings(): спільна «мета розгляду»
+    $reviewHours = (int) lst_settings($pdo)['review_hours'];
+    $isPending = (string) $sent['status'] === 'pending';
+    mpb_message_page(
+        200,
+        $isPending ? mpf_tr('sent_title') : t('mpb_saved_published'),
+        ($isPending ? '<p class="mp-text">' . mp_e(mpf_tr('sent_text', $reviewHours)) . '</p>' : '')
+        . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="marketplace-my.php?tab=pending">' . mp_e(mpf_tr('sent_my')) . '</a></p>',
+        null
+    );
+}
 
 $cfg = mp_config();
 $lang = current_lang();
@@ -277,8 +296,14 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     'geo' => $geoReady ? $geo + ['price_usd' => mpg_price_usd($pdo, $priceAmount, $currency)] : null,
                 ], $existing, $userId, $sellerId, $lang, $created, $deleteIds, $photoOrder);
 
-                mpb_flash('ok', t($isStaff ? 'mpb_saved_published' : 'mpb_saved_pending'));
-                mpb_redirect('marketplace-my.php?tab=' . ($isStaff ? 'active' : 'pending'));
+                if ($existing === null) {
+                    mpd_delete($pdo, $userId, 'board');   // чернетку подано — більше не потрібна
+                }
+                if ($isStaff) {
+                    mpb_flash('ok', t('mpb_saved_published'));
+                    mpb_redirect('marketplace-my.php?tab=active');
+                }
+                mpb_redirect('marketplace-post.php?sent=' . $savedId);
             } catch (Throwable $e) {
                 // mpb_save_listing сам прибирає файли при збої; тут — лише ті, що не дійшли до нього.
                 if (!isset($savedId)) {
@@ -297,6 +322,33 @@ $pageTitle = t($existing === null ? 'mpb_post_title' : 'mpb_edit_title');
 $currencyKeys = array_keys(MPB_CURRENCIES);
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $formAction = 'marketplace-post.php' . ($existing !== null ? '?id=' . $id : '');
+// Помилки біля полів (ключ t() → поле); решта — у загальному блоці вгорі.
+$errField = [
+    'mpb_err_title' => 'title', 'mpb_err_short' => 'short_desc', 'mpb_err_full' => 'full_desc', 'mpb_err_links' => 'full_desc',
+    'mpb_err_categories' => 'categories', 'mpb_err_price_type' => 'price', 'mpb_err_price_amount' => 'price',
+    'mpb_err_location' => 'location', 'mpb_err_city_long' => 'location', 'mpb_err_contact_required' => 'contacts',
+    'mpb_err_phone' => 'contacts', 'mpb_err_telegram' => 'contacts', 'mpb_err_email' => 'contacts', 'mpb_err_rules' => 'rules',
+    'mpb_err_photo_count' => 'photos', 'mpb_err_photo_size' => 'photos', 'mpb_err_photo_type' => 'photos',
+    'mpb_err_photo_upload' => 'photos', 'mpb_err_photo_process' => 'photos', 'mpb_err_duplicate' => 'title',
+];
+$byField = [];
+$generalErrors = [];
+foreach ($errors as $err) {
+    $k = is_array($err) ? (string) $err[0] : (string) $err;
+    $msg = is_array($err) ? sprintf(t($err[0]), ...array_slice($err, 1)) : t($err);
+    if (isset($errField[$k])) {
+        $byField[$errField[$k]][] = $msg;
+    } else {
+        $generalErrors[] = $msg;
+    }
+}
+$fieldErr = static fn(string $f): string => isset($byField[$f])
+    ? '<p class="mpf-error" id="err_' . mp_e($f) . '">' . mp_e(implode(' ', $byField[$f])) . '</p>' : '';
+$invalid = static fn(string $f): string => isset($byField[$f]) ? ' aria-invalid="true" aria-describedby="err_' . mp_e($f) . '"' : '';
+// Автозбереження чернетки (лише нове оголошення); відновлення — коли форма відкрита вперше.
+$draft = $existing === null
+    ? mpd_form_bits($pdo, $userId, 'board', ($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST')
+    : ['attrs' => '', 'html' => ''];
 
 mpb_open($pageTitle, true, 'post');
 ?>
@@ -310,46 +362,56 @@ mpb_open($pageTitle, true, 'post');
 
         <?php if ($errors !== []): ?>
             <div class="mp-alert mp-alert--error" role="alert">
-                <ul class="mp-alert__list">
-                    <?php foreach ($errors as $e): ?>
-                        <li><?= mp_e(is_array($e) ? sprintf(t($e[0]), ...array_slice($e, 1)) : t($e)) ?></li>
-                    <?php endforeach; ?>
-                </ul>
+                <p><strong><?= mp_e(mpf_tr('errors_below')) ?></strong></p>
+                <?php if ($generalErrors !== []): ?><ul class="mp-alert__list">
+                    <?php foreach ($generalErrors as $msg): ?><li><?= mp_e($msg) ?></li><?php endforeach; ?>
+                </ul><?php endif; ?>
             </div>
         <?php endif; ?>
+        <?= $draft['html'] ?>
 
-        <form class="mp-form" method="post" action="<?= mp_e($formAction) ?>" enctype="multipart/form-data" novalidate>
+        <form class="mp-form mpf-form" method="post" action="<?= mp_e($formAction) ?>" enctype="multipart/form-data" novalidate<?= $draft['attrs'] ?>>
             <?= mp_csrf_field() ?>
             <div class="mp-hp" aria-hidden="true">
                 <label>Website <input type="text" name="website" value="" tabindex="-1" autocomplete="off"></label>
             </div>
 
-            <div class="mp-field">
-                <label class="mp-label" for="title"><?= mp_e(t('mpb_f_title')) ?></label>
-                <input class="mp-input" type="text" id="title" name="title" maxlength="200" required value="<?= mp_e($v['title']) ?>">
-            </div>
+            <p class="mp-hint"><?= mp_e(mpf_tr('required_note')) ?></p>
 
-            <div class="mp-field">
-                <label class="mp-label" for="short_desc"><?= mp_e(t('mpb_f_short')) ?></label>
-                <textarea class="mp-input" id="short_desc" name="short_desc" rows="3" maxlength="500" required><?= mp_e($v['short_desc']) ?></textarea>
-                <p class="mp-hint"><?= mp_e(t('mpb_f_short_hint')) ?></p>
-            </div>
-
-            <div class="mp-field">
-                <label class="mp-label" for="full_desc"><?= mp_e(t('mpb_f_full')) ?></label>
-                <textarea class="mp-input" id="full_desc" name="full_desc" rows="8" maxlength="5000"><?= mp_e($v['full_desc']) ?></textarea>
-                <p class="mp-hint"><?= mp_e(sprintf(t('mpb_f_full_hint'), (int) $cfg['max_links_in_desc'])) ?></p>
-            </div>
-
+            <fieldset class="mpf-block" id="blk-section">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_section')) ?></legend>
             <fieldset class="mp-field mp-fieldset">
-                <legend class="mp-label"><?= mp_e(t('mpb_f_categories')) ?></legend>
+                <legend class="mp-label"><?= mp_e(t('mpb_f_categories')) ?> <span class="mpf-req">*</span></legend>
                 <div class="mp-checks">
                     <?php foreach ($categories as $c): ?>
                         <label class="mp-check"><input type="checkbox" name="cats[]" value="<?= (int) $c['id'] ?>"<?= in_array($c['id'], $v['categories'], true) ? ' checked' : '' ?>> <span><?= mp_e($c['name']) ?></span></label>
                     <?php endforeach; ?>
                 </div>
                 <p class="mp-hint"><?= mp_e(t('mpb_f_categories_hint')) ?></p>
+                <?= $fieldErr('categories') ?>
             </fieldset>
+            </fieldset>
+            <fieldset class="mpf-block" id="blk-main">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_main')) ?></legend>
+            <div class="mp-field">
+                <label class="mp-label" for="title"><?= mp_e(t('mpb_f_title')) ?> <span class="mpf-req">*</span></label>
+                <input class="mp-input" type="text" id="title" name="title" maxlength="200" required value="<?= mp_e($v['title']) ?>"<?= $invalid('title') ?>>
+                <?= $fieldErr('title') ?>
+            </div>
+
+            <div class="mp-field">
+                <label class="mp-label" for="short_desc"><?= mp_e(t('mpb_f_short')) ?> <span class="mpf-req">*</span></label>
+                <textarea class="mp-input" id="short_desc" name="short_desc" rows="3" maxlength="500" required<?= $invalid('short_desc') ?>><?= mp_e($v['short_desc']) ?></textarea>
+                <?= $fieldErr('short_desc') ?>
+                <p class="mp-hint"><?= mp_e(t('mpb_f_short_hint')) ?></p>
+            </div>
+
+            <div class="mp-field">
+                <label class="mp-label" for="full_desc"><?= mp_e(t('mpb_f_full')) ?></label>
+                <textarea class="mp-input" id="full_desc" name="full_desc" rows="8" maxlength="5000"<?= $invalid('full_desc') ?>><?= mp_e($v['full_desc']) ?></textarea>
+                <?= $fieldErr('full_desc') ?>
+                <p class="mp-hint"><?= mp_e(sprintf(t('mpb_f_full_hint'), (int) $cfg['max_links_in_desc'])) ?></p>
+            </div>
 
             <div class="mp-row">
                 <div class="mp-field">
@@ -371,9 +433,13 @@ mpb_open($pageTitle, true, 'post');
                             <?php endforeach; ?>
                         </select>
                     </div>
+                    <?= $fieldErr('price') ?>
                 </div>
             </div>
 
+            </fieldset>
+            <fieldset class="mpf-block" id="blk-place">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_place')) ?></legend>
             <?php if ($geoReady): ?>
                 <?= mpg_form_html($pdo, $geoV, $lang) ?>
             <?php else: ?>
@@ -387,7 +453,10 @@ mpb_open($pageTitle, true, 'post');
                 </div>
             </div>
             <?php endif; ?>
-
+                <?= $fieldErr('location') ?>
+            </fieldset>
+            <fieldset class="mpf-block" id="blk-contacts">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_contacts')) ?></legend>
             <fieldset class="mp-field mp-fieldset">
                 <legend class="mp-label"><?= mp_e(t('mpb_f_contacts')) ?></legend>
                 <p class="mp-hint"><?= mp_e(t('mpb_f_contacts_hint')) ?></p>
@@ -412,7 +481,10 @@ mpb_open($pageTitle, true, 'post');
                     </div>
                 </div>
             </fieldset>
-
+                <?= $fieldErr('contacts') ?>
+            </fieldset>
+            <fieldset class="mpf-block" id="blk-photos">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_photos')) ?></legend>
             <fieldset class="mp-field mp-fieldset">
                 <legend class="mp-label"><?= mp_e(sprintf(t('mpb_f_photos'), $maxPhotos)) ?></legend>
                 <?php if ($photos !== []): ?>
@@ -432,20 +504,26 @@ mpb_open($pageTitle, true, 'post');
                 <input class="mp-input" type="file" name="photos[]" multiple accept="image/jpeg,image/png,image/webp">
                 <p class="mp-hint"><?= mp_e(sprintf(t('mpb_f_photos_hint'), (int) round((int) $cfg['photo_max_bytes'] / 1048576))) ?></p>
             </fieldset>
-
+                <?= $fieldErr('photos') ?>
+            </fieldset>
+            <fieldset class="mpf-block" id="blk-rules">
+                <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_rules')) ?></legend>
             <div class="mp-field">
                 <label class="mp-check mp-check--block">
                     <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?>>
-                    <span><?= mp_e(mpb_rules_checkbox_text($lang)) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a></span>
+                    <span><?= mp_e(mpb_rules_checkbox_text($lang)) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a> <span class="mpf-req">*</span></span>
                 </label>
+                <?= $fieldErr('rules') ?>
             </div>
 
             <div class="mp-actions">
                 <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit"><?= mp_e(t($existing === null ? 'mpb_submit_new' : 'mpb_submit_save')) ?></button>
                 <a class="mp-btn" href="marketplace-my.php"><?= mp_e(t('mpb_cancel')) ?></a>
             </div>
+            </fieldset>
         </form>
     </div>
+    <script src="/assets/js/mp-draft.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-draft.js') ?>" defer></script>
     <script>
     (function () {
         var type = document.getElementById('price_type');

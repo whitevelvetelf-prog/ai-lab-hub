@@ -29,7 +29,9 @@ const LST_DESC_MAX = 3000;
 const LST_COMPANY_MAX = 150;
 const LST_MAX_PENDING = 3;          // оголошень на модерації одночасно від одного користувача
 const LST_MIN_FILL_SEC = 5;         // мінімальний час заповнення форми
-const LST_PER_PAGE = 12;
+const LST_PER_PAGE = 20;        // список категорії / «Усі …» — по 20, з пагінацією
+const LST_HUB_NEW = 8;          // «Нові оголошення» на головній сторінці розділу
+const LST_FRESH_DAYS = [1, 7, 30];   // фільтр «свіжість»
 const LST_EXTEND_WINDOW_DAYS = 7;   // продовжити можна, коли до кінця терміну лишилося ≤ N днів або термін минув
 const LST_EXPIRY_NOTICE_DAYS = 3;   // лист «скоро спливає термін» — за N днів
 const LST_REPORT_AFTER_DAYS = 30;   // звіт власнику — через N днів після публікації
@@ -180,6 +182,31 @@ function lst_focus_tags(PDO $pdo): array
     );
 }
 
+/**
+ * Кількість АКТИВНИХ оголошень типу $type у кожній категорії (одне оголошення може бути в кількох).
+ *
+ * @return array<int,int> category_id => count
+ */
+function lst_focus_counts(PDO $pdo, string $type): array
+{
+    $st = $pdo->prepare(
+        'SELECT lc.category_id, COUNT(DISTINCT l.id) FROM mp_listings l JOIN mp_listing_categories lc ON lc.listing_id = l.id
+         WHERE ' . lst_visible_sql() . ' AND l.section = :t GROUP BY lc.category_id'
+    );
+    $st->execute([':t' => $type]);
+
+    return array_map('intval', $st->fetchAll(PDO::FETCH_KEY_PAIR));
+}
+
+/** Піктограма Lucide для категорії (за slug); невідома — загальна. */
+function lst_focus_icon(string $slug): string
+{
+    return [
+        'genai-llm' => 'sparkles', 'ml-data' => 'database', 'computer-vision' => 'scan-eye', 'nlp-speech' => 'message-square-text',
+        'automation-agents' => 'bot', 'mlops-dev' => 'code', 'ai-content-design' => 'palette', 'ai-business' => 'briefcase',
+    ][$slug] ?? 'shapes';
+}
+
 /** Адреса сторінки оголошення (відносна). */
 function lst_url(array $row): string
 {
@@ -251,13 +278,15 @@ function lst_hydrate(PDO $pdo, array $rows, string $lang): array
 }
 
 /**
- * Публічний список одного типу. Фільтри: q, lang (uk|en|other), country, remote (bool), focus (id тегу),
- * для курсів — price ('free' | 'paid') і max (макс. ціна).
+ * Публічний список одного типу. Фільтри: q, lang (uk|en|other), country, remote (bool) або format (remote|onsite),
+ * focus (id категорії), city (рядок, у details.city), fresh (1|7|30 днів від публікації),
+ * для курсів — price ('free' | 'paid') і max (макс. ціна). $perPage — розмір сторінки.
  *
  * @return array{rows:list<array<string,mixed>>,total:int,pages:int,page:int}
  */
-function lst_search(PDO $pdo, string $lang, string $type, array $f, int $page): array
+function lst_search(PDO $pdo, string $lang, string $type, array $f, int $page, int $perPage = LST_PER_PAGE): array
 {
+    $perPage = max(1, min(100, $perPage));
     $where = [lst_visible_sql(), 'l.section = :type'];
     $params = [':type' => $type];
     if (in_array((string) ($f['lang'] ?? ''), LST_LANGS, true)) {
@@ -269,8 +298,20 @@ function lst_search(PDO $pdo, string $lang, string $type, array $f, int $page): 
         $where[] = 'l.country = :country';
         $params[':country'] = $country;
     }
-    if (!empty($f['remote'])) {
+    $format = (string) ($f['format'] ?? (!empty($f['remote']) ? 'remote' : ''));
+    if ($format === 'remote') {
         $where[] = 'l.is_remote = 1';
+    } elseif ($format === 'onsite') {
+        $where[] = 'l.is_remote = 0';
+    }
+    $city = trim((string) ($f['city'] ?? ''));
+    if ($city !== '') {
+        $where[] = "JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.city')) LIKE :city ESCAPE '\\\\'";
+        $params[':city'] = '%' . addcslashes(mb_substr($city, 0, 80), '%_\\') . '%';
+    }
+    $fresh = (int) ($f['fresh'] ?? 0);
+    if (in_array($fresh, LST_FRESH_DAYS, true)) {
+        $where[] = 'l.published_at >= NOW() - INTERVAL ' . $fresh . ' DAY';
     }
     $focus = (int) ($f['focus'] ?? 0);
     if ($focus > 0) {
@@ -307,9 +348,9 @@ function lst_search(PDO $pdo, string $lang, string $type, array $f, int $page): 
     );
     $cnt->execute($params + [':lang' => $lang]);
     $total = (int) $cnt->fetchColumn();
-    $pages = max(1, (int) ceil($total / LST_PER_PAGE));
+    $pages = max(1, (int) ceil($total / $perPage));
     $page = max(1, min($page, $pages));
-    $stmt = $pdo->prepare(lst_select_sql() . " WHERE $whereSql ORDER BY l.published_at DESC, l.id DESC LIMIT " . LST_PER_PAGE . ' OFFSET ' . (($page - 1) * LST_PER_PAGE));
+    $stmt = $pdo->prepare(lst_select_sql() . " WHERE $whereSql ORDER BY l.published_at DESC, l.id DESC LIMIT " . $perPage . ' OFFSET ' . (($page - 1) * $perPage));
     $stmt->execute($params + [':lang' => $lang]);
 
     return ['rows' => lst_hydrate($pdo, $stmt->fetchAll(PDO::FETCH_ASSOC), $lang), 'total' => $total, 'pages' => $pages, 'page' => $page];

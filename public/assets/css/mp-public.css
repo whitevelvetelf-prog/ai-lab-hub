@@ -1189,3 +1189,191 @@ textarea.mp-input {
 .ast-char[hidden] {
     display: none;
 }
+
+/* ---------------------------------------------------------------------------
+   Форма подачі блоками (2026-11-06): розділ → основне → місце → контакти → фото → правила
+   --------------------------------------------------------------------------- */
+.mpf-form {
+    max-width: 100%;
+}
+
+.mpf-block {
+    min-width: 0;
+    margin: 0 0 18px;
+    padding: 18px 18px 6px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: var(--card-bg);
+}
+
+.mpf-block--error {
+    border-color: rgba(252, 165, 165, 0.6);
+}
+
+.mpf-block__title {
+    padding: 0 6px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.mpf-sub {
+    margin: 4px 0 10px;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.mpf-type {
+    margin: 0 0 12px;
+    font-weight: 600;
+}
+
+.mpf-req {
+    color: #fca5a5;
+    font-weight: 700;
+}
+
+.mpf-error {
+    margin: 6px 0 0;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fecaca;
+}
+
+.mp-input[aria-invalid="true"] {
+    border-color: #fca5a5;
+}
+
+.mpd-status {
+    min-height: 1.2em;
+}
+
+@media (max-width: 600px) {
+    .mpf-block {
+        padding: 14px 12px 4px;
+    }
+
+    .mpf-form .mp-inline {
+        flex-wrap: wrap;
+    }
+
+    .mpf-form .mp-input--short {
+        width: auto;
+        flex: 1 1 90px;
+    }
+}
+
+/* ---------------------------------------------------------------------------
+   Блоки-категорії (вакансії, курси, послуги)
+   --------------------------------------------------------------------------- */
+.mpc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 14px;
+    margin: 0 0 24px;
+}
+
+.mpc-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+    padding: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 16px;
+    background: linear-gradient(135deg, #00032c 0%, #2116ad 100%);
+    color: #ffffff;
+    text-decoration: none;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.mpc-tile:hover,
+.mpc-tile:focus-visible {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.mpc-tile__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.mpc-tile__icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.mpc-tile__name {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+
+.mpc-tile__count {
+    margin: 0;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.mpc-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin: 8px 0 12px;
+}
+
+.mpc-head a {
+    color: #bcd0ff;
+    font-weight: 600;
+}
+
+.mpc-head h2 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.mpc-search {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 20px;
+}
+
+.mpc-search .mp-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+@media (max-width: 600px) {
+    .mpc-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .mpc-tile {
+        padding: 12px;
+    }
+
+    .mpc-tile__name {
+        font-size: 0.92rem;
+    }
+}
+
+.mp-visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}

@@ -16,8 +16,11 @@ require_once __DIR__ . '/../app/oauth.php';
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
+// ?next=… — повернення після входу на сторінку, з якої прийшли (лише внутрішні сторінки, app/auth.php).
+auth_remember_next_from_request();
+
 if (auth_check()) {
-    header('Location: account.php');
+    header('Location: ' . auth_after_login_url());
     exit;
 }
 

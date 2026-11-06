@@ -25,10 +25,17 @@ if (!oauth_provider_enabled('google')) {
 
 // state і PKCE-verifier живуть у сесії, а кукі сесії прив'язана до хоста. Якщо вхід почали на іншому
 // хості, ніж redirect_uri (www. проти без www.), колбек не знайде state — тож спершу переходимо на хост колбеку.
+// Виняток: колбек на www-варіанті канонічного хоста — його GET сам отримає 301 на канонічний хост
+// (app/canonical.php) разом із code і state, тож state має жити в сесії канонічного хоста; перехід на www
+// тут дав би нескінченний цикл www ↔ без www.
+auth_remember_next_from_request();
 $callbackParts = parse_url((string) (oauth_config('google')['redirect_uri'] ?? ''));
 $callbackHost = strtolower((string) ($callbackParts['host'] ?? ''));
 $requestHost = strtolower(preg_replace('/:\d+$/', '', (string) ($_SERVER['HTTP_HOST'] ?? '')));
-if ($callbackHost !== '' && $requestHost !== '' && $callbackHost !== $requestHost) {
+$canon = app_canonical_base();
+$callbackRedirectsHere = $canon !== null && $requestHost === $canon['host']
+    && ($callbackHost === 'www.' . $canon['host'] || 'www.' . $callbackHost === $canon['host']);
+if ($callbackHost !== '' && $requestHost !== '' && $callbackHost !== $requestHost && !$callbackRedirectsHere) {
     $port = isset($callbackParts['port']) ? ':' . (int) $callbackParts['port'] : '';
     header('Location: ' . ($callbackParts['scheme'] ?? 'https') . '://' . $callbackHost . $port
         . '/auth-google.php' . ($mode === 'link' ? '?mode=link' : ''));
@@ -40,7 +47,7 @@ if ($mode === 'link' && !auth_check()) {
     $mode = 'login';
 }
 if ($mode === 'login' && auth_check()) {
-    header('Location: account.php');
+    header('Location: ' . auth_after_login_url());
     exit;
 }
 

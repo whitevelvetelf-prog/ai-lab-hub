@@ -239,12 +239,15 @@ function mpb_require_login(): int
     if ($uid !== null) {
         return $uid;
     }
+    // Після входу чи реєстрації — повернення на цю ж сторінку (next, лише внутрішні сторінки зі списку).
+    $next = auth_current_next();
+    header('Cache-Control: no-store');
     mpb_message_page(
         401,
         t('mpb_login_title'),
         '<p class="mp-text">' . mp_e(t('mpb_login_text')) . '</p>'
-        . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="login.php">' . mp_e(t('nav_login')) . '</a>'
-        . '<a class="mp-btn" href="register.php">' . mp_e(t('mp_register')) . '</a></p>'
+        . '<p class="mp-actions"><a class="mp-btn mp-btn--primary" href="' . mp_e(auth_login_url($next)) . '">' . mp_e(t('nav_login')) . '</a>'
+        . '<a class="mp-btn" href="' . mp_e(auth_login_url($next, 'register.php')) . '">' . mp_e(t('mp_register')) . '</a></p>'
     );
 }
 

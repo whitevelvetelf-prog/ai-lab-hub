@@ -25,6 +25,8 @@ function mp_config(): array
             'cover_dir'          => dirname(__DIR__) . '/public/assets/images/marketplace/covers',
             // Публічна частина (marketplace.php, marketplace-offer.php, get.php, пункти меню): вимкнена, доки не ввімкнено вручну.
             'public_enabled'     => false,
+            // Блоки-категорії вакансій/курсів/послуг: показувати й категорії без активних оголошень (як у каталозі — ні).
+            'show_empty_categories' => false,
             // Дошка оголошень (етап 4) — пояснення в config/marketplace.php.
             'photo_dir'          => dirname(__DIR__) . '/storage/marketplace/photos',
             'photo_max_count'    => 8,
