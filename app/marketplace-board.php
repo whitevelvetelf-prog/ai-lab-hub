@@ -674,6 +674,21 @@ function mpb_photo_path(string $name): ?string
 }
 
 /**
+ * Заглушка на місці фото, файла якого немає на диску (рядок у mp_listing_photos є): SVG 16:9 у бренд-кольорах
+ * (#00032c → #2116ad, іконка зображення #5b8cff) — замість зламаної іконки браузера. Віддає public/mp-photo.php.
+ */
+function mpb_photo_placeholder_svg(): string
+{
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="640" height="360" viewBox="0 0 640 360">'
+        . '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">'
+        . '<stop offset="0" stop-color="#00032c"/><stop offset="1" stop-color="#2116ad"/></linearGradient></defs>'
+        . '<rect width="640" height="360" fill="url(#g)"/>'
+        . '<g transform="translate(272 132)" fill="none" stroke="#5b8cff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">'
+        . '<rect x="3" y="3" width="90" height="90" rx="14"/><circle cx="33" cy="33" r="9"/>'
+        . '<path d="M93 63 70 40 18 93"/></g></svg>';
+}
+
+/**
  * Перевірка одного завантаженого фото (без збереження).
  *
  * @return array{tmp:string,mime:string}|string  масив, або ключ помилки (t())
@@ -1347,7 +1362,7 @@ function mpb_toggle_favorite(PDO $pdo, int $userId, int $listingId): ?bool
  */
 function mpb_contacts(PDO $pdo, int $listingId): array
 {
-    $stmt = $pdo->prepare('SELECT contact_name, contact_phone, contact_telegram, contact_email FROM mp_listings WHERE id = :id AND section IN (\'board\', \'asset\')');
+    $stmt = $pdo->prepare('SELECT contact_name, contact_phone, contact_telegram, contact_email FROM mp_listings WHERE id = :id AND (post_form = \'ad\' OR section = \'asset\')');
     $stmt->execute([':id' => $listingId]);
     $r = $stmt->fetch(PDO::FETCH_ASSOC);
     if ($r === false) {

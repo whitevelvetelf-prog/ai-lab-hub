@@ -55,3 +55,6 @@
 
 # Пакети SQL для ручного імпорту в phpMyAdmin (етап 6: дані GeoNames ~9 МБ) — генеруються scripts/geo-import.php.
 /hosting-upload/
+
+# Резервні копії завантажень Marketplace (scripts/backup-uploads.php) — поза Git і поза збіркою для хостингу.
+/backups/

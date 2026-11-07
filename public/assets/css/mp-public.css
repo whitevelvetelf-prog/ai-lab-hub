@@ -1541,3 +1541,9 @@ textarea.mp-input {
     white-space: nowrap;
     border: 0;
 }
+
+/* mp-photo-check.php — адмінська таблиця «Перевірка зображень» (горизонтальна прокрутка лише всередині обгортки). */
+.mp-table-wrap { overflow-x: auto; margin: 16px 0; }
+.mp-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.mp-table th, .mp-table td { padding: 8px 10px; border-bottom: 1px solid var(--card-border); text-align: left; vertical-align: top; }
+.mp-table code { word-break: break-all; }

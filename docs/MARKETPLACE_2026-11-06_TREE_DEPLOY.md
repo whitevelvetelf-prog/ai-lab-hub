@@ -6,6 +6,8 @@
 ## Порядок
 1. Резервна копія БД (phpMyAdmin → Експорт) щонайменше таблиць `mp_categories`, `mp_category_translations`,
    `mp_listing_categories`, `mp_listings`, і коду.
+   **Окремо** — теки завантажень (фото оголошень `marketplace-files/photos/`, обкладинки `public/assets/images/marketplace/covers/`):
+   їх немає в Git і в архіві коду. Файловий менеджер → «Архівувати» → завантажити собі; локально — `php scripts/backup-uploads.php`.
 2. SQL **до коду**, phpMyAdmin → **Імпорт** (не вкладка «SQL»: там PREPARE з кількох рядків не спрацьовує):
    1. `hosting-upload/marketplace-tree/18-marketplace-category-tree.sql` (= `database/migration-2026-11-06-marketplace-category-tree.sql`)
    2. `hosting-upload/marketplace-tree/19-marketplace-ui-strings-tree.sql` (= `database/migration-2026-11-06-marketplace-ui-strings-tree.sql`)
@@ -50,3 +52,6 @@
 3. Оголошення, що було на модерації в дошці, — у CRM «Модерація» з блоком і підкатегорією.
 4. `listings.php?type=job` → 301 на сторінку блока «Вакансії».
 5. `mp-categories.php` (admin) відкривається.
+6. Фото оголошень відкриваються (`/mp-photo.php?f=…` → 200 image/*), «Показати контакти» в оголошенні користувача дає контакти;
+   `mp-photo-check.php` (admin): відсутніх файлів — 0 (виправлення 2026-11-07: фільтр `section='board'` у `mp-photo.php` і
+   `mpb_contacts()` після міграції 18 відсікав усі оголошення).

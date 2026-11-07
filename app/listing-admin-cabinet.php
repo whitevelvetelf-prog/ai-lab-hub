@@ -271,7 +271,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                         <div class="pc-box pc-system">
                             <p><strong>Маркетплейс для відвідувачів: <?= mp_public_enabled() ? 'ПОКАЗАНО' : 'ПРИХОВАНО' ?></strong>
                                 <span class="pc-muted">Перемикач — у розділі CRM. Поки приховано, сторінки вакансій, курсів і послуг бачать лише співробітники.</span></p>
-                            <p class="pc-muted">Розділ: <a href="marketplace.php">Marketplace</a> · <a href="mp-categories.php">категорії</a>
+                            <p class="pc-muted">Розділ: <a href="marketplace.php">Marketplace</a> · <a href="mp-categories.php">категорії</a> · <a href="mp-photo-check.php">перевірка зображень</a>
                                 · безкоштовно до: <strong><?= $settings['free_until'] !== '' ? lst_e(date('d.m.Y', (int) strtotime($settings['free_until']))) : 'не задано' ?></strong>
                                 · строк: <strong><?= $settings['days'] ?> дн.</strong> · мета розгляду: <strong><?= $settings['review_hours'] ?> год</strong></p>
                             <?php if ($overdue > 0): ?><p class="pc-warn-text">Довше за мету розгляду (<?= $settings['review_hours'] ?> год) чекають: <?= $overdue ?>.</p><?php endif; ?>
