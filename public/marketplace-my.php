@@ -67,6 +67,15 @@ $stmt = $pdo->prepare(
 $stmt->execute([':lang' => $lang, ':u' => $userId]);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Фото кожного оголошення — для перегляду в оверлеї (public/assets/js/mp-gallery.js) з мініатюри.
+$photosBy = [];
+if ($rows !== []) {
+    $ids = implode(',', array_map(static fn(array $r): int => (int) $r['id'], $rows));
+    foreach ($pdo->query("SELECT listing_id, file_name, thumb_name FROM mp_listing_photos WHERE listing_id IN ($ids) ORDER BY sort_order, id")->fetchAll(PDO::FETCH_ASSOC) as $ph) {
+        $photosBy[(int) $ph['listing_id']][] = $ph;
+    }
+}
+
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 
 $postingOpen = mpb_posting_open();
@@ -100,7 +109,13 @@ mpb_open(t('mpb_my_title'), true, 'my');
                     $canExtend = $st === 'expired' || $st === 'published';
                     ?>
                     <li class="mp-my-item">
-                        <?php if ($thumb !== null): ?><img class="mp-my-item__thumb" src="<?= mp_e($thumb) ?>" alt="" loading="lazy"><?php else: ?><span class="mp-my-item__thumb mp-my-item__thumb--empty"></span><?php endif; ?>
+                        <?php if ($thumb !== null && !empty($photosBy[$rid])): ?>
+                            <div class="mp-my-item__gallery" data-mp-gallery>
+                                <?php foreach ($photosBy[$rid] as $pi => $ph): ?>
+                                    <a href="<?= mp_e(mpb_photo_url((string) $ph['file_name']) ?? '') ?>" data-mp-photo data-alt="<?= mp_e($r['title'] . ' — ' . sprintf(t('mpb_photo_n'), $pi + 1)) ?>"<?= $pi > 0 ? ' hidden' : '' ?>><?php if ($pi === 0): ?><img class="mp-my-item__thumb" src="<?= mp_e($thumb) ?>" alt="<?= mp_e(sprintf(t('mpb_photo_n'), 1)) ?>" loading="lazy"><?php endif; ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php elseif ($thumb !== null): ?><img class="mp-my-item__thumb" src="<?= mp_e($thumb) ?>" alt="" loading="lazy"><?php else: ?><span class="mp-my-item__thumb mp-my-item__thumb--empty"></span><?php endif; ?>
                         <div class="mp-my-item__body">
                             <h2 class="mp-my-item__title">
                                 <?php if ($live): ?><a href="marketplace-offer.php?id=<?= $rid ?>"><?= mp_e($r['title']) ?></a><?php else: ?><?= mp_e($r['title']) ?><?php endif; ?>
@@ -137,4 +152,5 @@ mpb_open(t('mpb_my_title'), true, 'my');
             </ul>
         <?php endif; ?>
     </div>
+<script src="/assets/js/mp-gallery.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-gallery.js') ?>"></script>
 <?php mpb_close(); ?>

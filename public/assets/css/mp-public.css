@@ -721,6 +721,17 @@ textarea.mp-input {
     margin-top: 10px;
 }
 
+/* Фото, що відкриваються в оверлеї mp-gallery.js */
+[data-mp-gallery] a[data-mp-photo],
+[data-mp-gallery] a[data-mp-gallery-main] {
+    cursor: zoom-in;
+}
+
+[data-mp-gallery] a:focus-visible {
+    outline: 3px solid #5b8cff;
+    outline-offset: 2px;
+}
+
 .mp-gallery__thumbs img {
     display: block;
     height: 64px;
@@ -831,6 +842,20 @@ textarea.mp-input {
     background: rgba(255, 255, 255, 0.06);
 }
 
+/* Мініатюра в кабінеті — кнопка перегляду фото (оверлей mp-gallery.js). */
+.mp-my-item__gallery {
+    flex: none;
+}
+
+.mp-my-item__gallery a {
+    display: block;
+    border-radius: 10px;
+}
+
+.mp-my-item__gallery img {
+    display: block;
+}
+
 .mp-my-item__body {
     min-width: 0;
     flex: 1;
@@ -897,6 +922,10 @@ textarea.mp-input {
     .mp-my-item__thumb {
         width: 100%;
         height: 160px;
+    }
+
+    .mp-my-item__gallery {
+        width: 100%;
     }
 }
 

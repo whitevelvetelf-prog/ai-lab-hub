@@ -149,6 +149,10 @@ try {
     check(!str_contains($r['body'], 'assets/images/logos/'), 'підкатегорія: у картках немає логотипів продуктів');
     $r = http($jarGuest, "$base/marketplace-offer.php?id={$L['live']['id']}");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['live']['file'])), 'сторінка оголошення: головне фото (мініатюри галереї — лише від 2 фото)');
+    $galOk = static fn(string $b, string $file): bool => str_contains($b, 'data-mp-gallery') && str_contains($b, '/assets/js/mp-gallery.js')
+        && preg_match('~<a href="/mp-photo\.php\?f=' . preg_quote($file, '~') . '"[^>]*data-mp-(?:photo|gallery-main)~', $b) === 1
+        && preg_match('~<a[^>]*mp-photo\.php[^>]*target="_blank"~', $b) === 0;
+    check($galOk($r['body'], $L['live']['file']), 'сторінка оголошення: фото відкривається оверлеєм mp-gallery.js, без target=_blank');
 
     echo "Гість — видача файлів\n";
     $r = http($jarGuest, "$base/mp-photo.php?f={$L['live']['thumb']}");
@@ -180,6 +184,7 @@ try {
     http($jarAuthor, "$base/login.php", ['email' => $authorEmail, 'password' => $pass]);
     $r = http($jarAuthor, "$base/marketplace-my.php?tab=active");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['live']['thumb'])), '«Мої оголошення» → «Активні»: мініатюра');
+    check($galOk($r['body'], $L['live']['file']), '«Мої оголошення»: мініатюра відкриває перегляд фото (оверлей)');
     $r = http($jarAuthor, "$base/marketplace-my.php?tab=pending");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['pending']['thumb'])), '«Мої оголошення» → «На модерації»: мініатюра');
     $r = http($jarAuthor, "$base/mp-photo.php?f={$L['pending']['thumb']}");
@@ -189,6 +194,7 @@ try {
     http($jarAdm, "$base/login.php", ['email' => $admEmail, 'password' => $pass]);
     $r = http($jarAdm, "$base/mp-moderation.php?id={$L['pending']['id']}");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['pending']['thumb'])), 'mp-moderation.php: мініатюра pending');
+    check($galOk($r['body'], $L['pending']['file']), 'mp-moderation.php: фото відкривається оверлеєм, без target=_blank');
     $r = http($jarAdm, "$base/mp-photo.php?f={$L['pending']['file']}");
     check($r['code'] === 200, 'admin бачить фото pending: 200');
     $offer = http($jarAdm, "$base/marketplace-offer.php?id={$L['live']['id']}");

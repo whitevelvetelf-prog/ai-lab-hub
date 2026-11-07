@@ -190,9 +190,9 @@ unset($_SESSION['mpb_flash']);
                 </div>
 
                 <?php if ($photos !== []): ?>
-                    <div class="mod-photos">
-                        <?php foreach ($photos as $p): ?>
-                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" target="_blank" rel="noopener"><img src="<?= mp_e(mpb_photo_url($p['thumb_name']) ?? '') ?>" alt=""></a>
+                    <div class="mod-photos" data-mp-gallery>
+                        <?php foreach ($photos as $pi => $p): ?>
+                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" data-mp-photo><img src="<?= mp_e(mpb_photo_url($p['thumb_name']) ?? '') ?>" alt="<?= mp_e('Фото ' . ($pi + 1)) ?>"></a>
                         <?php endforeach; ?>
                     </div>
                 <?php else: ?>
@@ -255,5 +255,6 @@ unset($_SESSION['mpb_flash']);
             </article>
         <?php endforeach; ?>
     </div>
+<script src="/assets/js/mp-gallery.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-gallery.js') ?>"></script>
 </body>
 </html>

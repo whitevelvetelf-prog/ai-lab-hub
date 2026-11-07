@@ -103,12 +103,13 @@ mpb_open((string) $board['title'], !$isLive, 'home');
 
         <?php if ($photos !== []): ?>
             <?php $mainUrl = mpb_photo_url($photos[0]['file_name']); ?>
-            <div class="mp-gallery">
-                <a href="<?= mp_e($mainUrl ?? '') ?>" target="_blank" rel="noopener" id="mpGalleryLink"><img class="mp-gallery__main" id="mpGalleryMain" src="<?= mp_e($mainUrl ?? '') ?>" alt="<?= mp_e($board['title']) ?>"></a>
+            <?php // Перегляд — оверлей public/assets/js/mp-gallery.js; href — запасний варіант без JS (без target=_blank). ?>
+            <div class="mp-gallery" data-mp-gallery>
+                <a href="<?= mp_e($mainUrl ?? '') ?>" id="mpGalleryLink" data-mp-gallery-main data-index="0"><img class="mp-gallery__main" id="mpGalleryMain" src="<?= mp_e($mainUrl ?? '') ?>" alt="<?= mp_e($board['title']) ?>"></a>
                 <?php if (count($photos) > 1): ?>
                     <div class="mp-gallery__thumbs">
                         <?php foreach ($photos as $i => $p): ?>
-                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" target="_blank" rel="noopener" data-full="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>">
+                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" data-mp-photo data-alt="<?= mp_e($board['title'] . ' — ' . sprintf(t('mpb_photo_n'), $i + 1)) ?>">
                                 <img src="<?= mp_e(mpb_photo_url($p['thumb_name']) ?? '') ?>" alt="<?= mp_e(sprintf(t('mpb_photo_n'), $i + 1)) ?>" loading="lazy">
                             </a>
                         <?php endforeach; ?>
@@ -173,14 +174,9 @@ mpb_open((string) $board['title'], !$isLive, 'home');
             </div>
         <?php endif; ?>
     </div>
+    <script src="/assets/js/mp-gallery.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/mp-gallery.js') ?>"></script>
     <script>
     (function () {
-        // Галерея: клік по мініатюрі підміняє головне фото (без JS мініатюри просто відкривають фото).
-        var main = document.getElementById('mpGalleryMain'), link = document.getElementById('mpGalleryLink');
-        document.querySelectorAll('.mp-gallery__thumbs a').forEach(function (a) {
-            a.addEventListener('click', function (e) { e.preventDefault(); main.src = a.dataset.full; link.href = a.dataset.full; });
-        });
-
         // «Показати контакт»: POST на mp-contact.php, контакти виводяться лише після відповіді.
         var form = document.getElementById('mpContactForm'), box = document.getElementById('mpContacts');
         if (!form || !box) { return; }
