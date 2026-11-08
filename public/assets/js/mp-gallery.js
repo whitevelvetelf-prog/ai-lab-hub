@@ -12,6 +12,10 @@
  * (popstate), закриття кнопкою ✕, тапом на фон, Esc чи свайпом униз робить history.back() цього ж запису — без дублів.
  * Прокрутка body блокується (position:fixed) і відновлюється на ту саму позицію; фокус повертається на мініатюру.
  * Перегортання: свайп, стрілки клавіатури, кнопки ‹ ›; масштаб: два пальці, подвійний тап, колесо з Ctrl.
+ * Тап на темне тло навколо фото закриває перегляд (pointer-події — на iOS click по нейтральних елементах ненадійний):
+ *   лише тап (рух < 10 px, < 500 мс), не свайп/масштаб/панорамування; збільшене фото — тап на тло спершу повертає масштаб;
+ *   перші 300 мс після відкриття закриття ігнорується (ghost click); click, що прилітає після закриття, гаситься.
+ *   Тап на фото, ✕-окрім-закриття, стрілки, лічильник, підпис — не закриває.
  * Відсутній файл: mp-photo.php віддає SVG-заглушку; якщо зображення не завантажилось взагалі — заглушка в брендових кольорах.
  */
 (function () {
@@ -31,16 +35,24 @@
         + '.mpg[hidden]{display:none}'
         + '.mpg__bar{position:absolute;top:0;left:0;right:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;'
         + 'padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) 10px max(14px,env(safe-area-inset-left));pointer-events:none}'
-        + '.mpg__count{font:600 15px/1.2 system-ui,-apple-system,sans-serif;padding:6px 12px;border-radius:999px;background:rgba(33,22,173,.85)}'
+        + '.mpg__count{pointer-events:auto;font:600 15px/1.2 system-ui,-apple-system,sans-serif;padding:6px 12px;border-radius:999px;background:rgba(33,22,173,.85)}'
         + '.mpg__count:empty{visibility:hidden}'
         + '.mpg__btn{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;min-width:48px;min-height:48px;margin:0;padding:0;'
         + 'border:2px solid rgba(255,255,255,.85);border-radius:50%;background:#2116ad;color:#fff;font:400 26px/1 system-ui,-apple-system,sans-serif;cursor:pointer;'
         + 'box-shadow:0 2px 10px rgba(0,0,0,.45)}'
         + '.mpg__btn:hover{background:#3326d6}.mpg__btn:focus-visible{outline:3px solid #fff;outline-offset:2px}'
-        + '.mpg__stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;'
+        + '.mpg__stage{position:relative;flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;touch-action:none;cursor:pointer;'
         + 'padding:calc(68px + env(safe-area-inset-top)) 8px calc(16px + env(safe-area-inset-bottom))}'
+        // Мобільний портрет: поля ≥12% з кожного боку — є куди торкнутись, щоб закрити (на високих фото — зверху й знизу).
+        + '@media (max-width:768px) and (orientation:portrait){.mpg__stage{'
+        + 'padding:max(12vh,calc(64px + env(safe-area-inset-top))) max(12vw,env(safe-area-inset-right)) max(12vh,calc(16px + env(safe-area-inset-bottom))) max(12vw,env(safe-area-inset-left))}}'
+        + '@media (min-width:769px),(orientation:landscape){.mpg__stage{padding-left:max(64px,6vw);padding-right:max(64px,6vw)}}'
+        + '.mpg__cap{position:absolute;left:0;right:0;bottom:0;z-index:2;margin:0;padding:8px max(16px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left));'
+        + 'text-align:center;font:400 14px/1.35 system-ui,-apple-system,sans-serif;color:#dfe3ff;cursor:auto}'
+        + '.mpg__cap:empty,.mpg__cap[hidden]{display:none}'
         + '.mpg__img{max-width:100%;max-height:100%;object-fit:contain;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;'
-        + 'transform-origin:center center;will-change:transform;border-radius:6px}'
+        + 'transform-origin:center center;will-change:transform;border-radius:6px;cursor:zoom-in}'
+        + '.mpg.is-zoomed .mpg__img{cursor:grab}'
         + '.mpg__img.is-anim{transition:transform .2s ease,opacity .2s ease}'
         + '.mpg__ph{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:min(92vw,640px);aspect-ratio:16/9;'
         + 'border-radius:12px;background:linear-gradient(135deg,#00032c,#2116ad);color:#fff;font:600 15px/1.3 system-ui,-apple-system,sans-serif}'
@@ -54,7 +66,12 @@
         + 'stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>'
         + '<path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>';
 
-    var ov, stage, img, ph, counter, btnClose, btnPrev, btnNext;
+    var ov, stage, img, ph, counter, cap, btnClose, btnPrev, btnNext;
+    var TAP_MOVE = 10;     // px: більший рух — жест, не тап
+    var TAP_TIME = 500;    // мс: довше — не тап (утримання)
+    var OPEN_GUARD = 300;  // мс після відкриття, коли закриття тапом ігнорується (ghost click)
+    var openedAt = 0;
+    var swallowUntil = 0;  // до цього часу click після закриття гаситься (щоб не влучив у сторінку під оверлеєм)
     var items = [];        // [{src, alt}]
     var idx = 0;
     var gallery = null;    // контейнер, з якого відкрито
@@ -101,10 +118,12 @@
         ov.appendChild(stage);
         ov.appendChild(btnPrev);
         ov.appendChild(btnNext);
+        cap = el('p', 'mpg__cap');
+        ov.appendChild(cap);
         ov.appendChild(bar);
         document.body.appendChild(ov);
 
-        btnClose.addEventListener('click', requestClose);
+        btnClose.addEventListener('click', function () { if (Date.now() - openedAt >= OPEN_GUARD) { requestClose(); } });
         btnPrev.addEventListener('click', function () { go(-1); });
         btnNext.addEventListener('click', function () { go(1); });
         img.addEventListener('error', function () {
@@ -128,7 +147,8 @@
         }
         return Array.prototype.map.call(links, function (a) {
             var im = a.querySelector('img');
-            return { src: a.getAttribute('href'), alt: a.getAttribute('data-alt') || (im ? im.getAttribute('alt') : '') || '', link: a };
+            return { src: a.getAttribute('href'), alt: a.getAttribute('data-alt') || (im ? im.getAttribute('alt') : '') || '',
+                cap: a.getAttribute('data-caption') || '', link: a };
         }).filter(function (it) { return it.src; });
     }
 
@@ -141,6 +161,7 @@
         trigger = from || null;
         idx = Math.max(0, Math.min(index || 0, items.length - 1));
         isOpen = true;
+        openedAt = Date.now();
 
         // Один запис історії: «Назад» закриває перегляд. Та сама адреса — без hash і без прокрутки до якоря.
         try {
@@ -255,6 +276,7 @@
         img.setAttribute('src', it.src);
         var many = items.length > 1;
         counter.textContent = many ? (idx + 1) + ' / ' + items.length : '';
+        cap.textContent = it.cap;
         btnPrev.hidden = !many;
         btnNext.hidden = !many;
         // Попереднє завантаження сусідніх фото.
@@ -289,6 +311,7 @@
     function applyZoom(anim) {
         img.classList.toggle('is-anim', !!anim);
         img.style.transform = 'translate(' + z.x + 'px,' + z.y + 'px) scale(' + z.s + ')';
+        if (ov) { ov.classList.toggle('is-zoomed', z.s > 1); }
     }
 
     function resetZoom(anim) {
@@ -367,7 +390,7 @@
             }
             if (!start) { return; }
             var dx = e.clientX - start.x, dy = e.clientY - start.y;
-            if (Math.abs(dx) > 8 || Math.abs(dy) > 8) { moved = true; }
+            if (Math.hypot(dx, dy) >= TAP_MOVE) { moved = true; }
             if (z.s > 1) {         // панорамування збільшеного фото
                 z.x = start.zx + dx; z.y = start.zy + dy;
                 clampPan();
@@ -391,7 +414,7 @@
                     if (z.s <= 1.05) { resetZoom(true); }
                     // Палець, що лишився, продовжує як панорамування.
                     var k = Object.keys(pts)[0];
-                    start = k ? { x: pts[k].x, y: pts[k].y, zx: z.x, zy: z.y, t: Date.now(), target: null } : null;
+                    start = k ? { x: pts[k].x, y: pts[k].y, zx: z.x, zy: z.y, t: Date.now(), target: null, multi: true } : null;
                 }
                 return;
             }
@@ -403,13 +426,22 @@
             if (moved) {
                 if (z.s > 1) { return; }   // це було панорамування збільшеного фото
                 img.style.opacity = '';
-                if (dy > 90 && Math.abs(dy) > Math.abs(dx)) { requestClose(); return; }
+                if (dy > 90 && Math.abs(dy) > Math.abs(dx)) { swallowUntil = Date.now() + 500; requestClose(); return; }
                 if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) && items.length > 1) { go(dx < 0 ? 1 : -1); return; }
                 resetZoom(true);
                 return;
             }
-            // Тап: на фон — закрити; подвійний тап по фото — масштаб.
-            if (s.target !== img && !(s.target && ph.contains(s.target))) { requestClose(); return; }
+            if (s.multi || Date.now() - s.t > TAP_TIME || Math.hypot(dx, dy) >= TAP_MOVE) { return; }   // не тап
+            // Тап на фон: збільшене фото — повернути масштаб; інакше закрити (крім перших мс після відкриття).
+            var onPhoto = s.target === img || (s.target && ph.contains(s.target));
+            if (!onPhoto) {
+                if (z.s > 1) { resetZoom(true); return; }
+                if (Date.now() - openedAt < OPEN_GUARD || s.t - openedAt < OPEN_GUARD) { return; }
+                swallowUntil = Date.now() + 500;
+                requestClose();
+                return;
+            }
+            // Подвійний тап по фото — масштаб.
             var now = Date.now();
             if (e.pointerType !== 'mouse' && now - lastTap < 300) { toggleZoom(e.clientX, e.clientY); lastTap = 0; } else { lastTap = now; }
         }
@@ -418,6 +450,11 @@
     }
 
     // ---- перехоплення кліків -------------------------------------------------------------------------------------
+
+    // Click, що прилітає слідом за тапом/свайпом, яким закрито перегляд, не повинен натиснути щось на сторінці під ним.
+    document.addEventListener('click', function (e) {
+        if (Date.now() < swallowUntil) { e.preventDefault(); e.stopPropagation(); swallowUntil = 0; }
+    }, true);
 
     document.addEventListener('click', function (e) {
         if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) { return; }
