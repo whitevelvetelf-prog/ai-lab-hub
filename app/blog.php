@@ -149,6 +149,10 @@ const BLOG_ARTICLES = [
         'uk' => 'yoga-vdoma-ua.md',
         'en' => 'yoga-at-home-en.md',
     ],
+    'ai-for-video' => [
+        'uk' => 'ai-dlya-video-ua.md',
+        'en' => 'ai-for-video-en.md',
+    ],
 ];
 
 /**
@@ -197,6 +201,7 @@ const BLOG_ARTICLE_TOPICS = [
     'mobile-security-testing' => ['development-it/testing', 'cybersecurity/appsec', 'development-it/mobile-development'],
     'llm-app-testing' => ['development-it/testing', 'development-it/llmops', 'cybersecurity/appsec'],
     'yoga-at-home' => ['sports/yoga', 'sports/sports-fitness'],
+    'ai-for-video' => ['multimedia/video-generation', 'multimedia/video-editing', 'multimedia/ai-avatars'],
 ];
 
 /**
