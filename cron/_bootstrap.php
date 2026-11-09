@@ -41,7 +41,18 @@ function promo_cron_log(string $job, string $line): void
 }
 
 /** @param callable(PDO):string $fn */
-function promo_cron_run(string $job, int $maxSeconds, callable $fn): int
+/** Чи це MySQL 1615 «Prepared statement needs to be re-prepared». */
+function promo_cron_is_reprepare(Throwable $e): bool
+{
+    return $e instanceof PDOException && ((int) ($e->errorInfo[1] ?? 0) === 1615 || str_contains($e->getMessage(), ' 1615 '));
+}
+
+/**
+ * $retryOnReprepare — для ідемпотентних завдань (promo-daily): якщо MySQL повернув 1615 (на спільному сервері хостингу
+ * кеш визначень таблиць витісняє підготовлені запити), завдання повторюється ОДИН раз на новому з'єднанні з
+ * емульованими prepared statements (PDO::ATTR_EMULATE_PREPARES = true; значення так само екрануються драйвером).
+ */
+function promo_cron_run(string $job, int $maxSeconds, callable $fn, bool $retryOnReprepare = false): int
 {
     @set_time_limit($maxSeconds);
     ignore_user_abort(true);
@@ -88,14 +99,27 @@ function promo_cron_run(string $job, int $maxSeconds, callable $fn): int
     $runId = $record('running', null);
     $started = microtime(true);
     try {
-        $message = $fn($pdo);
+        try {
+            $message = $fn($pdo);
+        } catch (Throwable $first) {
+            if (!$retryOnReprepare || !promo_cron_is_reprepare($first)) {
+                throw $first;
+            }
+            promo_cron_log($job, 'RETRY after 1615 at ' . basename($first->getFile()) . ':' . $first->getLine());
+            /** @var PDO $retryPdo */
+            $retryPdo = require __DIR__ . '/../config/database.php';
+            $retryPdo->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
+            promo_db_utc($retryPdo);
+            $message = $fn($retryPdo) . ' [повтор після 1615 у ' . basename($first->getFile()) . ':' . $first->getLine() . ']';
+        }
         $message .= sprintf(' (%.1f с)', microtime(true) - $started);
         $record('ok', $message, $runId);
         promo_cron_log($job, 'OK ' . $message);
         $code = 0;
     } catch (Throwable $e) {
-        $record('error', $e->getMessage(), $runId);
-        promo_cron_log($job, 'ERROR ' . $e->getMessage());
+        $where = ' @ ' . basename($e->getFile()) . ':' . $e->getLine();
+        $record('error', $e->getMessage() . $where, $runId);
+        promo_cron_log($job, 'ERROR ' . $e->getMessage() . $where);
         $code = 1;
     } finally {
         flock($lock, LOCK_UN);

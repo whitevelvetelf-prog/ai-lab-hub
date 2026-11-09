@@ -32,4 +32,4 @@ exit(promo_cron_run('promo-daily', 1500, static function (PDO $pdo): string {
     return 'stats_rows=' . $reconciled . ' audience_views=' . $audience['page_views']
         . ' completed=' . $m['completed'] . ' events_purged=' . $m['purged']
         . ' links_checked=' . $links['checked'] . ' links_paused=' . $links['paused'] . ' views_daily=' . $statsDays . ' eli_purged=' . $eliPurged;
-}));
+}, true));   // усі кроки ідемпотентні → один повтор при MySQL 1615 (див. cron/_bootstrap.php)
