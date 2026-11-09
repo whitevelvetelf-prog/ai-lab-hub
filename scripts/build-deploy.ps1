@@ -152,6 +152,21 @@ $files.Add('public/favicon.ico')
 
 $files.AddRange([string[]](Get-RelativeFiles -Dir 'content/blog' -Filter '*.md' -Recurse))
 
+# "How we use AI" page (public/ai-statement.php) reads docs/ai_statement_uk.md (single source, outside webroot,
+# docs/.htaccess denies web access). While the file still has [PIDTVERDYTY] markers the page is 404 for the public
+# and has no footer link -> the build PASSES with a WARNING listing the markers.
+$files.Add('docs/ai_statement_uk.md')
+$files.Add('docs/.htaccess')
+$aiStatementPath = Join-Path $root 'docs\ai_statement_uk.md'
+if (Test-Path $aiStatementPath) {
+    $aiText = [System.IO.File]::ReadAllText($aiStatementPath, [System.Text.Encoding]::UTF8)
+    $aiMarker = '[' + [regex]::Unescape('ПІДТВЕРДИТИ')   # "[PIDTVERDYTY" (Ukrainian "CONFIRM")
+    $aiCount = ([regex]::Matches($aiText, [regex]::Escape($aiMarker))).Count
+    if ($aiCount -gt 0) {
+        Write-Warning ("docs/ai_statement_uk.md still has $aiCount confirmation marker(s): the 'How we use AI' page stays 404 for the public and is not linked in the footer until the owner confirms the facts and removes the markers.")
+    }
+}
+
 $files.AddRange([string[]](Get-RelativeFiles -Dir 'public/icons' -Filter '*' -Recurse))
 $files.AddRange([string[]](Get-RelativeFiles -Dir 'public/assets/css' -Filter '*' -Recurse))
 $files.AddRange([string[]](Get-RelativeFiles -Dir 'public/assets/js' -Filter '*' -Recurse))

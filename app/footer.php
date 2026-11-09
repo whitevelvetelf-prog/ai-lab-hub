@@ -16,6 +16,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/translations.php';
 require_once __DIR__ . '/paw-icon.php';
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/ai-statement.php';   // «Як ми використовуємо АІ»: посилання лише без маркерів [ПІДТВЕРДИТИ]
 
 ?>
 <style>
@@ -1446,6 +1447,9 @@ require_once __DIR__ . '/marketplace.php';
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>
             <li><a href="terms.php"><?= htmlspecialchars(t('footer_terms'), ENT_QUOTES) ?></a></li>
             <li><a href="privacy.php"><?= htmlspecialchars(t('footer_privacy'), ENT_QUOTES) ?></a></li>
+            <?php if (ais_is_public()): ?>
+            <li><a href="ai-statement.php"><?= htmlspecialchars(t('ais_title'), ENT_QUOTES) ?></a></li>
+            <?php endif; ?>
             <li><a href="privacy.php#cookies" class="cc-settings-link" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></li>
             <li><a href="advertise.php"><?= htmlspecialchars(t('footer_advertise'), ENT_QUOTES) ?></a></li>
             <li><a href="promo-rules.php"><?= htmlspecialchars(t('footer_promo_rules'), ENT_QUOTES) ?></a></li>

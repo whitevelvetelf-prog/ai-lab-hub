@@ -51,6 +51,17 @@ $stmt = $pdo->prepare(
 $stmt->execute([':f1' => $name, ':f2' => $name]);
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
 if ($row === false) {
+    // Логотип продавця (Хвиля 1, app/mp-seller.php): лише ім'я, записане в mp_sellers.logo. Відкрита сторінка
+    // продавця — усім; прихована (page_public = 0) чи неактивний продавець — лише власнику й employee/admin.
+    try {
+        $lg = $pdo->prepare("SELECT (page_public = 1 AND status = 'active') AS is_live, user_id AS seller_user_id FROM mp_sellers WHERE logo = :f LIMIT 1");
+        $lg->execute([':f' => $name]);
+        $row = $lg->fetch(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        $row = false;   // міграцію Хвилі 1 ще не застосовано
+    }
+}
+if ($row === false) {
     mp_not_found();
 }
 

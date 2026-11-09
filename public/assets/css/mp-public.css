@@ -1576,3 +1576,447 @@ textarea.mp-input {
 .mp-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
 .mp-table th, .mp-table td { padding: 8px 10px; border-bottom: 1px solid var(--card-border); text-align: left; vertical-align: top; }
 .mp-table code { word-break: break-all; }
+
+/* =========================================================================
+   Хвиля 1 (2026-11-09): панель фільтрів, чипи, популярні запити, збережені пошуки, продавець, статистика.
+   Елементи натискання — не менше 44 px; без горизонтального прокручування на 390 px.
+   ========================================================================= */
+.mpf-panel {
+    margin: 0 0 14px;
+}
+
+.mpf-panel > summary {
+    list-style: none;
+}
+
+.mpf-panel > summary::-webkit-details-marker {
+    display: none;
+}
+
+.mpf-panel__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 0 0 12px;
+}
+
+.mpf-panel__toggle::after {
+    content: "▾";
+    font-size: 0.8rem;
+}
+
+.mpf-panel[open] .mpf-panel__toggle::after {
+    content: "▴";
+}
+
+.mpf-group {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.mpf-group > legend {
+    padding: 0;
+}
+
+.mpf-checks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mpf-check,
+.mpf-group .mp-check {
+    min-height: 44px;
+}
+
+.mpf-salary {
+    grid-column: 1 / -1;
+}
+
+.mpf-salary .mp-inline {
+    flex-wrap: wrap;
+}
+
+.mpf-salary .mp-input--num {
+    flex: 1 1 140px;
+    width: auto;
+}
+
+.mpf-block-fields {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px 16px;
+}
+
+.mpf-actions .mp-btn,
+.mpf-form .mp-input,
+.mpt-search .mp-input,
+.mpt-search .mp-btn {
+    min-height: 44px;
+}
+
+.mpf-submit {
+    white-space: normal;
+}
+
+.mpf-form .mpf-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.mpf-chips,
+.mpq-chips,
+.mpj-regions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+}
+
+.mpf-chip,
+.mpq-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    max-width: 100%;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--card-border);
+    background: var(--card-bg);
+    color: #ffffff;
+    font-size: 0.9rem;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+}
+
+.mpf-chip {
+    background: rgba(91, 140, 255, 0.22);
+    border-color: var(--accent);
+}
+
+.mpf-chip:hover,
+.mpq-chip:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.mpf-chip__x {
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
+.mpf-chip--reset {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.4);
+    font-weight: 600;
+}
+
+.mpq-chips__title {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.mpf-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 16px;
+    margin: 0 0 12px;
+}
+
+.mpf-bar .mp-count {
+    margin: 0;
+}
+
+.mpss-save {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+
+.mpss-save__btn {
+    min-height: 44px;
+}
+
+.lst-card__jobline {
+    overflow-wrap: anywhere;
+}
+
+/* Збережені пошуки */
+.mpss-list {
+    display: grid;
+    gap: 14px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.mpss-item {
+    padding: 16px;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    background: var(--card-bg);
+    min-width: 0;
+}
+
+.mpss-item__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 6px 12px;
+}
+
+.mpss-item__title {
+    margin: 0;
+    font-size: 1.05rem;
+    overflow-wrap: anywhere;
+}
+
+.mpss-new {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+}
+
+.mpss-new--yes {
+    padding: 2px 10px;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #2116ad;
+    font-weight: 700;
+}
+
+.mpss-item__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0 8px;
+}
+
+.mpss-item__actions .mp-btn,
+.mpss-rename .mp-btn {
+    min-height: 44px;
+}
+
+.mpss-item__more > summary {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+    color: #bcd0ff;
+}
+
+.mpss-rename {
+    flex-wrap: wrap;
+}
+
+.mpss-rename .mp-input {
+    flex: 1 1 200px;
+    min-height: 44px;
+}
+
+.mp-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: #ffffff;
+    font: inherit;
+    font-size: 0.92rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+.mp-switch[disabled] {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.mp-switch__track {
+    position: relative;
+    flex: none;
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    transition: background 0.15s ease;
+}
+
+.mp-switch__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ffffff;
+    transition: transform 0.15s ease;
+}
+
+.mp-switch[aria-checked="true"] .mp-switch__track {
+    background: #5b8cff;
+}
+
+.mp-switch[aria-checked="true"] .mp-switch__thumb {
+    transform: translateX(20px);
+}
+
+/* Сторінка продавця */
+.mpsl-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px;
+    margin: 0 0 16px;
+}
+
+.mpsl-head__logo {
+    flex: none;
+    width: 96px;
+    height: 96px;
+    border-radius: 18px;
+    object-fit: cover;
+    background: #ffffff;
+}
+
+.mpsl-head__logo--empty {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #2116ad;
+    color: #ffffff;
+    font-size: 2.4rem;
+    font-weight: 800;
+}
+
+.mpsl-head__body {
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.mpsl-head__name {
+    margin: 0 0 6px;
+    overflow-wrap: anywhere;
+}
+
+.mpsl-head__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.92rem;
+}
+
+.mpsl-head__site a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #bcd0ff;
+}
+
+.mpsl-verified {
+    background: #ffffff;
+    color: #2116ad;
+}
+
+.mpsl-bio {
+    max-width: 70ch;
+    overflow-wrap: anywhere;
+}
+
+.mpsl-link .mp-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: normal;
+}
+
+/* Статистика */
+.mpst-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    margin: 0 0 20px;
+}
+
+.mpst-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+}
+
+.mpst-table th,
+.mpst-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--card-border);
+    text-align: left;
+}
+
+.mpst-table .num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.mpst-chart {
+    margin: 0 0 12px;
+    padding: 12px;
+    border-radius: 16px;
+    background: #ffffff;
+}
+
+.mpst-chart svg {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: auto;
+}
+
+.mpst-chart figcaption {
+    color: #55577a;
+}
+
+@media (max-width: 768px) {
+    .mpf-panel:not([open]) {
+        margin-bottom: 6px;
+    }
+
+    .mpf-actions {
+        position: sticky;
+        bottom: 0;
+        padding: 10px 0 4px;
+        background: linear-gradient(180deg, rgba(0, 3, 44, 0) 0%, #0b0f4a 35%);
+    }
+
+    .mpf-actions .mpf-submit {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+}
+
+@media (min-width: 769px) {
+    .mpf-panel > .mpf-panel__toggle {
+        display: none;
+    }
+}
+
+.mpf-form .mpt-focus > summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+}

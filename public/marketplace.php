@@ -23,6 +23,8 @@ require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/mp-search.php';
 require_once __DIR__ . '/../app/mp-geo-form.php';
 require_once __DIR__ . '/../app/mp-legacy-redirect.php';
+require_once __DIR__ . '/../app/mp-popular.php';
+require_once __DIR__ . '/../app/mp-saved.php';
 
 mp_public_require();
 
@@ -63,6 +65,7 @@ if ($isHub) {
         <h1 class="mp-title"><?= mp_e(t('mp_heading')) ?></h1>
         <p class="mp-subtitle"><?= mp_e(t('mpt_home_subtitle')) ?></p>
         <?= mpt_search_form('marketplace.php', '') ?>
+        <?= mpq_chips_html(mpq_chips($pdo, 'marketplace', $lang), static fn(string $q): string => 'marketplace.php?' . http_build_query(['q' => $q])) ?>
         <?= mpt_cta_html($tree) ?>
         <?= mpb_flash_html() ?>
         <h2 class="mp-section-title"><?= mp_e(t('mpt_blocks_title')) ?></h2>
@@ -87,6 +90,10 @@ $filters = mpb_search_filters($pdo, $_GET, $lang, $prefs);
 $page = $filters['page'];
 $result = mpb_search($pdo, $lang, $filters, $page);
 $hasFilters = mpb_search_has_filters($filters);
+if ($filters['q'] !== '' && $result['page'] === 1) {
+    mpq_record($pdo, 'marketplace', $filters['q'], $result['total']);
+}
+$jf = $filters['jf'];
 $place = $filters['geo']['place'];
 $placeLabel = $place !== null ? (mpg_labels($pdo, [$place['id']], $lang)[$place['id']]['label'] ?? '') : '';
 $countries = $geoReady ? mpg_countries($pdo, $lang) : [];
@@ -118,6 +125,19 @@ $pageUrl = static fn(int $p): string => $url(['page' => $p > 1 ? $p : null]);
 
 $priceLabels = ['none' => t('mpb_pt_none'), 'free' => t('mpb_pt_free'), 'fixed' => t('mpb_pt_fixed'), 'negotiable' => t('mpb_pt_negotiable'), 'exchange' => t('mpb_pt_exchange')];
 $sortLabels = ['new' => t('mpb_sort_new'), 'price_asc' => t('mpb_sort_cheap'), 'price_desc' => t('mpb_sort_expensive')];
+if ($filters['section'] === 'job') {
+    $sortLabels += ['salary_desc' => t('mpj_sort_salary_desc'), 'salary_asc' => t('mpj_sort_salary_asc')];
+}
+// Чипи активних фільтрів блока (вакансії / курси / послуги) — кожен прибирає одне значення.
+$chips = [];
+foreach (mpj_chips($jf, $filters['url']) as [$label, $p]) {
+    $chips[] = [$label, $url(array_fill_keys(array_keys(array_diff_key($filters['url'], $p)), null) + $p)];
+}
+if ((int) ($jf['region'] ?? 0) > 0) {
+    $chips[] = [mpj_region_name($pdo, (int) $jf['region'], $lang) ?: t('mpj_region'), $url(['region' => null, 'page' => null])];
+}
+$jobFieldsHtml = in_array($filters['section'], ['job', 'course', 'service'], true) ? mpj_fields_html($jf) : '';
+$currentUrl = $url();
 if ($place !== null) {
     $sortLabels['distance'] = t('mpg_sort_distance');
 }
@@ -134,7 +154,11 @@ mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marke
 
         <?= mpb_flash_html() ?>
 
-        <form class="mp-filters" method="get" action="marketplace.php" role="search">
+        <?= mpq_chips_html(mpq_chips($pdo, 'marketplace', $lang), static fn(string $q): string => 'marketplace.php?' . http_build_query(['q' => $q])) ?>
+        <details class="mpf-panel" data-mpf-panel open>
+        <summary class="mpf-panel__toggle mp-btn"><span><?= mp_e(t('mpj_filters')) ?></span><?php if ($chips !== []): ?> <span class="mp-chip__count"><?= count($chips) ?></span><?php endif; ?></summary>
+        <form class="mp-filters mpf-form" method="get" action="marketplace.php" role="search"
+              data-count-url="mp-count.php" data-count-page="search" data-count-label="<?= mp_e(t('mpj_show_n')) ?>">
             <div class="mp-field mp-field--grow">
                 <label class="mp-label" for="f_q"><?= mp_e(t('mpb_f_search')) ?></label>
                 <input class="mp-input" type="search" id="f_q" name="q" maxlength="100" value="<?= mp_e($filters['q']) ?>" placeholder="<?= mp_e(t('mp_search_placeholder')) ?>">
@@ -204,6 +228,9 @@ mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marke
                     <?php endforeach; ?>
                 </select>
             </div>
+            <?php if ($jobFieldsHtml !== ''): ?>
+                <div class="mpf-block-fields"><?= $jobFieldsHtml ?></div>
+            <?php endif; ?>
             <details class="mp-filters__more"<?= ($filters['price_type'] !== '' || $filters['price_min'] !== null || $filters['price_max'] !== null || $filters['listing_lang'] !== '' || $filters['with_photos'] || $filters['verified']) ? ' open' : '' ?>>
                 <summary><?= mp_e(t('mpg_more_filters')) ?></summary>
                 <div class="mp-filters__grid">
@@ -238,13 +265,16 @@ mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marke
                     </div>
                 </div>
             </details>
-            <div class="mp-actions mp-actions--tight">
-                <button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('mp_search_btn')) ?></button>
+            <div class="mp-actions mp-actions--tight mpf-actions">
+                <button class="mp-btn mp-btn--primary mpf-submit" type="submit" data-mpf-submit><?= mp_e(sprintf(t('mpj_show_n'), $result['total'])) ?></button>
                 <?php if ($hasFilters || $filters['sort'] !== 'new'): ?>
-                    <a class="mp-btn" href="marketplace.php?country="><?= mp_e(t('mp_search_reset')) ?></a>
+                    <a class="mp-btn" href="marketplace.php?country="><?= mp_e(t('mpj_reset_all')) ?></a>
                 <?php endif; ?>
             </div>
         </form>
+        </details>
+        <?= mpj_chips_html($chips, 'marketplace.php?' . http_build_query(array_filter(['q' => $filters['q'], 'section' => $filters['section'], 'country' => '']))) ?>
+        <script src="/assets/js/mp-filters.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-filters.js') ?>" defer></script>
         <?php if ($geoReady): ?>
             <div class="mp-geo-remember">
                 <?php if ($filters['from_prefs'] && $place !== null): ?>
@@ -269,7 +299,13 @@ mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marke
         // Реклама в маркетплейсі — лише коли marketplace_public = 1 і місце ввімкнене (promo_slot
         // інакше порожній; адмін із ?promo_preview=1 бачить блоки завжди). Чітко відмінна від оголошень.
         ?>
-        <p class="mp-count"><?= mp_e(sprintf(t('mpb_found'), $result['total'])) ?></p>
+        <div class="mpf-bar">
+            <p class="mp-count" aria-live="polite"><?= mp_e(sprintf(t('mpb_found'), $result['total'])) ?></p>
+            <?php if ($hasFilters): ?><?= mpss_button_html($currentUrl) ?><?php endif; ?>
+        </div>
+        <?php if (!empty($result['notes']['sal_unavailable'])): ?>
+            <p class="mp-alert"><?= mp_e(t('mpj_salary_no_rate')) ?></p>
+        <?php endif; ?>
 
         <?php if ($result['rows'] === []): ?>
             <p class="mp-empty"><?= mp_e($hasFilters ? t('mp_empty_search') : t('mpb_empty')) ?></p>

@@ -461,6 +461,11 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
         $where[] = 'EXISTS (SELECT 1 FROM mp_listing_categories x WHERE x.listing_id = l.id AND x.category_id = :cat)';
         $params[':cat'] = $cat;
     }
+    // Фільтри блока (вакансії / курси / послуги, область) і «опубліковано після» — app/mp-jobs.php.
+    $notes = [];
+    if (function_exists('mpj_where')) {
+        $where = array_merge($where, mpj_where($pdo, ['section' => $section] + (array) ($f['jf'] ?? []) + ['after' => $f['after'] ?? null], $params, $notes));
+    }
     $pt = (string) ($f['price_type'] ?? '');
     if (in_array($pt, MPB_PRICE_TYPES, true)) {
         $where[] = 'l.price_type = :pt';
@@ -511,7 +516,8 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
     if ($sort === 'distance' && $distSql === null) {
         $sort = 'new';
     }
-    $order = match ($sort) {
+    $jobOrder = function_exists('mpj_order') ? mpj_order($pdo, $sort, (array) ($f['jf'] ?? [])) : null;
+    $order = $jobOrder ?? match ($sort) {
         'price_asc'  => "($eff IS NULL) ASC, $eff ASC, l.published_at DESC, l.id DESC",
         'price_desc' => "($eff IS NULL) ASC, $eff DESC, l.published_at DESC, l.id DESC",
         'distance'   => 'distance_km ASC, l.published_at DESC, l.id DESC',
@@ -559,7 +565,7 @@ function mpb_search(PDO $pdo, string $lang, array $f, int $page): array
     }
     unset($r);
 
-    return ['rows' => $rows, 'total' => $total, 'pages' => $pages, 'page' => $page];
+    return ['rows' => $rows, 'total' => $total, 'pages' => $pages, 'page' => $page, 'notes' => $notes];
 }
 
 /**

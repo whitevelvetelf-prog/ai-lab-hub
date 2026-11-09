@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  *   published + expires_at <= NOW()  →  expired  (запис 'expired' у mp_moderation_log)
  *
- * Також чистить mp_rate_limits (рядки старші за 3 доби) — єдиний DELETE цього скрипта поза статусами.
+ * Також чистить mp_rate_limits (рядки старші за 3 доби), а з Хвилі 1 (2026-11-09) — агрегати популярних запитів
+ * search_query_stats і перегляди mp_listing_views_daily старші за 90 днів. Інших DELETE у скрипті немає.
  *
  * Це лише «прибирання» статусу: публічні сторінки в будь-якому разі перевіряють expires_at > NOW(),
  * тож коректність сайту від cron НЕ залежить.
@@ -21,6 +22,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/marketplace.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/mp-popular.php';
+require_once __DIR__ . '/../app/mp-stats.php';
 
 $isCli = PHP_SAPI === 'cli';
 if (!$isCli) {
@@ -37,4 +40,6 @@ $pdo = require __DIR__ . '/../config/database.php';
 
 $n = mpb_expire_due($pdo);
 $r = mpb_rate_cleanup($pdo);   // лічильники IP-лімітів старші за 3 доби
-echo date('Y-m-d H:i:s') . ' expired: ' . $n . ' rate_limit_rows_deleted: ' . $r . "\n";
+$q = mpq_cleanup($pdo);         // популярні запити старші за 90 днів
+$v = mpst_cleanup($pdo);        // перегляди по днях старші за 90 днів
+echo date('Y-m-d H:i:s') . ' expired: ' . $n . ' rate_limit_rows_deleted: ' . $r . ' query_stats_deleted: ' . $q . ' views_daily_deleted: ' . $v . "\n";

@@ -16,6 +16,8 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/mp-stats.php';
+require_once __DIR__ . '/../app/mp-seller.php';
 
 mp_public_or_staff_require();
 
@@ -52,6 +54,7 @@ if ($live && (string) $row['slug'] !== '' && $slug !== (string) $row['slug'] && 
 
 if ($live) {
     lst_count_view($pdo, $id, $row['seller_user_id'] !== null ? (int) $row['seller_user_id'] : null);
+    mpst_count_view($pdo, $id, $row['seller_user_id'] !== null ? (int) $row['seller_user_id'] : null);   // по днях (статистика автора)
     analytics_log_view($pdo, 'marketplace_listing', $id, (string) $row['section']);
 } elseif ($expired) {
     http_response_code(410);
@@ -123,6 +126,7 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
             <?php endif; ?>
             <?php if ($freeLabel !== ''): ?><p class="mp-hint lst-free-inline"><?= lst_e($freeLabel) ?></p><?php endif; ?>
         </article>
+        <?= $live ? mpsl_link_html($pdo, $row['seller_id'] !== null ? (int) $row['seller_id'] : null) : '' ?>
 
         <?php
         // Реклама — окремим блоком ПІСЛЯ оголошення (під описом і кнопкою «Перейти»), лише на живому оголошенні.
@@ -159,7 +163,7 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
             </details>
         <?php endif; ?>
         <?php if ($isOwner): ?>
-            <p class="mp-actions"><a class="mp-btn" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a> <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('my_title')) ?></a></p>
+            <p class="mp-actions"><a class="mp-btn" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a> <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('my_title')) ?></a> <a class="mp-btn" href="mp-stats.php?id=<?= $id ?>"><?= lst_e(t('mpst_link')) ?></a></p>
         <?php endif; ?>
 
     </div>

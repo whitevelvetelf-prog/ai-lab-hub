@@ -365,10 +365,15 @@ function mpt_search(PDO $pdo, string $lang, array $f, int $page = 1, int $perPag
 {
     $where = [mpt_live_sql()];
     $params = [];
+    $notes = [];
     $section = (string) ($f['section'] ?? '');
     if (in_array($section, MPT_SECTIONS, true)) {
         $where[] = 'l.section = :sec';
         $params[':sec'] = $section;
+    }
+    // Фільтри блока (вакансії / курси / послуги, область) і «опубліковано після» — app/mp-jobs.php.
+    if (function_exists('mpj_where')) {
+        $where = array_merge($where, mpj_where($pdo, ['section' => $section] + (array) ($f['jf'] ?? []) + ['after' => $f['after'] ?? null], $params, $notes));
     }
     foreach (['cat' => 'c1', 'focus' => 'c2'] as $k => $ph) {
         if ((int) ($f[$k] ?? 0) > 0) {
@@ -397,7 +402,11 @@ function mpt_search(PDO $pdo, string $lang, array $f, int $page = 1, int $perPag
             $where[] = "(l.city LIKE :city1 ESCAPE '\\\\' OR JSON_UNQUOTE(JSON_EXTRACT(l.details, '$.city')) LIKE :city2 ESCAPE '\\\\')";
         }
     }
-    $sort = in_array((string) ($f['sort'] ?? ''), MPT_SORTS, true) ? (string) $f['sort'] : 'new';
+    $sort = in_array((string) ($f['sort'] ?? ''), array_merge(MPT_SORTS, ['salary_desc', 'salary_asc']), true) ? (string) $f['sort'] : 'new';
+    $jobOrder = function_exists('mpj_order') ? mpj_order($pdo, $sort, (array) ($f['jf'] ?? [])) : null;
+    if ($jobOrder === null && !in_array($sort, MPT_SORTS, true)) {
+        $sort = 'new';
+    }
     $eff = null;
     if ($sort !== 'new' || ($f['price_min'] ?? null) !== null || ($f['price_max'] ?? null) !== null) {
         $eff = mpt_price_usd_sql($pdo);
@@ -418,7 +427,7 @@ function mpt_search(PDO $pdo, string $lang, array $f, int $page = 1, int $perPag
         $params[':q2'] = $like;
         $params[':q3'] = $like;
     }
-    $order = match ($sort) {
+    $order = $jobOrder ?? match ($sort) {
         'price_asc'  => "($eff IS NULL) ASC, $eff ASC, l.published_at DESC, l.id DESC",
         'price_desc' => "($eff IS NULL) ASC, $eff DESC, l.published_at DESC, l.id DESC",
         default      => 'l.published_at DESC, l.id DESC',
@@ -437,7 +446,7 @@ function mpt_search(PDO $pdo, string $lang, array $f, int $page = 1, int $perPag
     $ids = $pdo->prepare("SELECT l.id $from ORDER BY $order LIMIT $perPage OFFSET " . (($page - 1) * $perPage));
     $ids->execute($params);
 
-    return ['rows' => mpt_rows($pdo, $lang, array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN))), 'total' => $total, 'pages' => $pages, 'page' => $page];
+    return ['rows' => mpt_rows($pdo, $lang, array_map('intval', $ids->fetchAll(PDO::FETCH_COLUMN))), 'total' => $total, 'pages' => $pages, 'page' => $page, 'notes' => $notes];
 }
 
 function mpt_table_exists(PDO $pdo, string $table): bool

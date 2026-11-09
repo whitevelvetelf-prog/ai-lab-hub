@@ -7,10 +7,14 @@ declare(strict_types=1);
  * Підключати після app/marketplace-board.php (він підключає app/mp-geo.php).
  */
 
+require_once __DIR__ . '/mp-jobs.php';
+
 /** Ключі GET розширеного пошуку (усе інше ігнорується). */
 const MPB_SEARCH_KEYS = ['q', 'section', 'cat', 'price_type', 'price_min', 'price_max', 'country', 'place', 'radius', 'format',
-    'listing_lang', 'with_photos', 'verified', 'sort', 'page'];
-const MPB_SEARCH_SORTS = ['new', 'price_asc', 'price_desc', 'distance'];
+    'listing_lang', 'with_photos', 'verified', 'sort', 'page',
+    // Хвиля 1: фільтри блока (app/mp-jobs.php → MPJ_KEYS)
+    'emp', 'sched', 'exp', 'fit', 'wf', 'sal', 'scur', 'sper', 'cf', 'ptype', 'stype', 'region'];
+const MPB_SEARCH_SORTS = ['new', 'price_asc', 'price_desc', 'distance', 'salary_desc', 'salary_asc'];
 
 /**
  * Нормалізовані фільтри пошуку з GET. Некоректні значення відкидаються мовчки (ніби параметра немає).
@@ -95,6 +99,9 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
     $ll = in_array($s('listing_lang', 5), MPG_LISTING_LANGS, true) ? $s('listing_lang', 5) : '';
     $langs = $ll !== '' ? [$ll] : (array_key_exists('listing_lang', $get) ? [] : (array) ($prefs['listing_langs'] ?? []));
     $sort = $sort === 'distance' && $place === null ? 'new' : $sort;
+    // Сортування за зарплатою — лише у вакансіях.
+    $sort = in_array($sort, ['salary_desc', 'salary_asc'], true) && $section !== 'job' ? 'new' : $sort;
+    $jf = mpj_parse($get, $section);
 
     $f = [
         'q' => $s('q'), 'section' => $section, 'cat' => $cat,
@@ -104,7 +111,7 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
         'with_photos' => $s('with_photos', 1) === '1', 'verified' => $s('verified', 1) === '1',
         'geo' => ['format' => $format, 'show_online' => $showOnline, 'country' => $country, 'place' => $place, 'radius_km' => $radiusKm],
         'country' => $country, 'place_id' => $place['id'] ?? 0, 'radius' => $radius, 'format' => $format,
-        'sort' => $sort, 'page' => max(1, min(10000, $int('page') ?: 1)),
+        'sort' => $sort, 'page' => max(1, min(10000, $int('page') ?: 1)), 'jf' => $jf,
         'units' => $units, 'from_prefs' => $fromPrefs,
     ];
     // Канонічні параметри для посилань (пагінація) — лише непорожні.
@@ -115,7 +122,7 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
         'format' => $format !== 'any' ? $format : null, 'listing_lang' => $ll,
         'with_photos' => $f['with_photos'] ? 1 : null, 'verified' => $f['verified'] ? 1 : null,
         'sort' => $sort !== 'new' ? $sort : null,
-    ], static fn($x): bool => $x !== null && $x !== '');
+    ] + mpj_url_params($jf), static fn($x): bool => $x !== null && $x !== '');
 
     return $f;
 }
@@ -125,5 +132,5 @@ function mpb_search_has_filters(array $f): bool
 {
     return $f['q'] !== '' || $f['section'] !== '' || $f['cat'] > 0 || $f['price_type'] !== '' || $f['price_min'] !== null
         || $f['price_max'] !== null || $f['country'] !== '' || $f['format'] !== 'any' || $f['listing_langs'] !== []
-        || $f['with_photos'] || $f['verified'];
+        || $f['with_photos'] || $f['verified'] || mpj_has_filters($f['jf'] ?? []);
 }

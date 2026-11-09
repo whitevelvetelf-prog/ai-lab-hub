@@ -45,6 +45,8 @@ if ($offer === null) {
     mp_not_found();
 }
 analytics_log_view($pdo, 'marketplace_listing', (int) $offer['id'], 'solutions');
+require_once __DIR__ . '/../app/mp-stats.php';
+mpst_count_view($pdo, (int) $offer['id'], null);   // перегляди по днях (статистика для admin)
 
 $cover = mp_cover_url($offer['cover_image'] ?? null);
 $skill = mp_skill_text($offer['skill_level'] ?? null);

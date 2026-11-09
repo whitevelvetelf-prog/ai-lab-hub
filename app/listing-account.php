@@ -61,6 +61,8 @@ function lst_account_render(PDO $pdo, array $user): void
                                 <a class="pc-btn" href="listing-post.php?type=<?= $t ?>">+ <?= lst_e(lst_tr('post_' . $t)) ?></a>
                             <?php endforeach; ?>
                             <?php if ($rows !== []): ?><a class="pc-btn" href="listing-action.php?export=csv"><?= lst_e(lst_tr('my_csv')) ?></a><?php endif; ?>
+                            <a class="pc-btn" href="mp-seller-settings.php"><?= lst_e(t('mpsl_settings_title')) ?></a>
+                            <a class="pc-btn" href="mp-saved.php"><?= lst_e(t('mpss_page_title')) ?></a>
                         </p>
                         <?php $free = lst_free_label($pdo); if ($free !== ''): ?><p class="pc-muted"><?= lst_e($free) ?></p><?php endif; ?>
                         <?php if ($drafts !== []): ?>
@@ -119,6 +121,7 @@ function lst_account_render(PDO $pdo, array $user): void
                                         <td data-label="<?= lst_e(lst_tr('my_col_stats')) ?>"><?= $s['views'] ?> / <?= $s['clicks'] ?></td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_until')) ?>"><?= $status === 'published' ? lst_e(lst_date((string) $r['expires_at'])) : '—' ?></td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_actions')) ?>" class="lst-acc-row-actions">
+                                            <a class="pc-btn pc-btn--small" href="mp-stats.php?id=<?= $id ?>"><?= lst_e(t('mpst_link')) ?></a>
                                             <?php if ($status !== 'archived'): ?><a class="pc-btn pc-btn--small" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a><?php endif; ?>
                                             <?php if ($canExtend): ?>
                                                 <form method="post" action="listing-action.php" class="pc-inline-form"><?= $csrf ?><input type="hidden" name="action" value="extend"><input type="hidden" name="id" value="<?= $id ?>"><button class="pc-btn pc-btn--small" type="submit"><?= lst_e(lst_tr('my_extend')) ?></button></form>

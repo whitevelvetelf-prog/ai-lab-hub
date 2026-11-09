@@ -59,6 +59,16 @@ function mp_config(): array
             'verify_resend_min'  => 2,
             'verify_max_per_day' => 5,
             'report_min_verified_hours' => 24,
+            // Хвиля 1 (2026-11-09) — пояснення в config/marketplace.php.
+            'suitable_for'       => ['students', 'no_experience', 'career_switch', 'junior'],
+            'popular_min_hits'   => 10,
+            'popular_queries_catalog' => false,
+            'saved_search_max'   => 10,
+            'saved_search_email_enabled' => false,
+            'saved_search_secret' => '',
+            'saved_search_mail_batch' => 50,
+            'ip_limit_count'     => 1500,
+            'ip_limit_saved'     => 60,
         ];
         $cfg = $defaults;
         // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.

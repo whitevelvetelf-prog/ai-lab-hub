@@ -1720,7 +1720,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
                                 · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-donations.php"><?= htmlspecialchars(t('account_crm_donations_link'), ENT_QUOTES) ?></a>
-                                · <a href="crm-search.php"><?= htmlspecialchars(t('account_crm_search_link'), ENT_QUOTES) ?></a><?php endif; ?>.
+                                · <a href="crm-search.php"><?= htmlspecialchars(t('account_crm_search_link'), ENT_QUOTES) ?></a>
+                                · <a href="admin-popular-queries.php"><?= htmlspecialchars(t('mpq_admin_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
                             <?php if (auth_role() === 'admin' && promo_is_admin($pdo, (int) $user['id'])) { echo promo_crm_overview_html($pdo); } ?>
                             <?php if (auth_role() === 'admin'):

@@ -12,6 +12,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/mp-stats.php';
 
 mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
@@ -76,6 +77,7 @@ if ($rows !== []) {
     }
 }
 
+$views30 = mpst_views_30($pdo, array_map(static fn(array $r): int => (int) $r['id'], $rows));
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 
 $postingOpen = mpb_posting_open();
@@ -84,6 +86,7 @@ mpb_open(t('mpb_my_title'), true, 'my');
 ?>
     <div class="mp-page">
         <h1 class="mp-title"><?= mp_e(t('mpb_my_title')) ?></h1>
+        <p class="mp-actions mp-actions--tight"><a class="mp-btn" href="mp-seller-settings.php"><?= mp_e(t('mpsl_settings_title')) ?></a> <a class="mp-btn" href="mp-saved.php"><?= mp_e(t('mpss_page_title')) ?></a></p>
         <?= mpb_flash_html() ?>
 
         <?php if (!$postingOpen): ?>
@@ -127,11 +130,13 @@ mpb_open(t('mpb_my_title'), true, 'my');
                                     <span><?= mp_e(t($live ? 'mpb_until' : 'mpb_ended')) ?> <?= mp_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) ?></span>
                                 <?php endif; ?>
                                 <span><?= mp_e(t('mpb_views')) ?>: <?= (int) $r['views_count'] ?></span>
+                                <span><?= mp_e(sprintf(t('mpst_views_30'), (int) ($views30[$rid] ?? 0))) ?></span>
                             </p>
                             <?php if ($st === 'rejected' && !empty($r['reject_reason'])): ?>
                                 <p class="mp-alert mp-alert--error mp-alert--inline"><strong><?= mp_e(t('mpb_reject_reason')) ?>:</strong> <?= mp_e($r['reject_reason']) ?></p>
                             <?php endif; ?>
                             <div class="mp-my-item__actions">
+                                <a class="mp-btn" href="mp-stats.php?id=<?= $rid ?>"><?= mp_e(t('mpst_link')) ?></a>
                                 <?php if ($postingOpen): ?><a class="mp-btn" href="marketplace-post.php?id=<?= $rid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a><?php endif; ?>
                                 <?php if ($canExtend && $postingOpen): ?>
                                     <form method="post" action="marketplace-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form">

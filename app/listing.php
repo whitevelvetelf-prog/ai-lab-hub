@@ -21,6 +21,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/marketplace-email.php';   // підключає marketplace-board.php і marketplace.php
 require_once __DIR__ . '/site-settings.php';
 require_once __DIR__ . '/listing-i18n.php';
+require_once __DIR__ . '/mp-jobs.php';   // фільтри вакансій, позначки «Підходить», зарплата в USD (Хвиля 1)
 
 const LST_TYPES = ['job', 'course', 'service'];
 const LST_TITLE_MAX = 120;
@@ -41,12 +42,14 @@ const LST_CURRENCIES = ['USD', 'EUR', 'UAH', 'GBP', 'PLN'];
 /** Специфічні поля за типами: ключ → допустимі значення (списки) або тип ('int', 'date', 'text:N', 'currency'). */
 const LST_DETAILS = [
     'job' => [
-        'employment' => ['full_time', 'part_time', 'contract', 'internship', 'temporary'],
-        'level' => ['junior', 'middle', 'senior', 'lead', 'any'],
+        // Хвиля 1 (2026-11-09): + side_job (підробіток), schedule (графік), level no_experience, період PROJECT.
+        'employment' => ['full_time', 'part_time', 'contract', 'internship', 'temporary', 'side_job'],
+        'schedule' => ['full_day', 'part_day', 'shift', 'rotation', 'flexible'],
+        'level' => ['no_experience', 'junior', 'middle', 'senior', 'lead', 'any'],
         'salary_min' => 'int',
         'salary_max' => 'int',
         'salary_currency' => 'currency',
-        'salary_period' => ['MONTH', 'YEAR', 'HOUR'],
+        'salary_period' => ['MONTH', 'HOUR', 'PROJECT', 'YEAR'],   // YEAR — лише для давніх оголошень (у формі не пропонується)
         'city' => 'text:120',
         'apply_until' => 'date',
     ],
@@ -242,7 +245,7 @@ function lst_visible_sql(): string
 /** SELECT з текстами поточною мовою (запасний варіант — мова оригіналу). */
 function lst_select_sql(): string
 {
-    return "SELECT l.id, l.section, l.status, l.seller_id, l.company_name, l.country, l.offer_lang, l.is_remote, l.details, l.slug,
+    return "SELECT l.id, l.section, l.status, l.seller_id, l.company_name, l.country, l.offer_lang, l.is_remote, l.work_format, l.details, l.slug,
                    l.delivery_url, l.free_until, l.published_at, l.expires_at, l.created_at, l.updated_at, l.source_lang,
                    l.reject_reason, l.link_check_status, l.link_check_json, l.link_checked_at, l.moderated_at,
                    s.user_id AS seller_user_id,
@@ -269,8 +272,10 @@ function lst_details(array $row): array
 /** Додає 'detail' (масив) і категорії-теги до рядків. */
 function lst_hydrate(PDO $pdo, array $rows, string $lang): array
 {
+    $tags = function_exists('mpj_tags') ? mpj_tags($pdo, array_map(static fn($r) => (int) $r['id'], $rows)) : [];
     foreach ($rows as &$r) {
         $r['detail'] = lst_details($r);
+        $r['fit_tags'] = $tags[(int) $r['id']] ?? [];
     }
     unset($r);
 
@@ -1272,7 +1277,7 @@ function lst_facts(array $row): array
     }
     $price = lst_price_label($row);
     $map = [
-        'job' => ['employment' => 'd_employment', 'level' => 'd_level'],
+        'job' => ['employment' => 'd_employment', 'schedule' => 'd_schedule', 'level' => 'd_level'],
         'course' => ['format' => 'd_format', 'level' => 'd_level', 'duration' => 'd_duration', 'start_date' => 'd_start_date'],
         'service' => ['service_type' => 'd_service_type', 'delivery_time' => 'd_delivery_time'],
     ][$row['section']] ?? [];
@@ -1282,8 +1287,16 @@ function lst_facts(array $row): array
             $f[] = [lst_tr($label), $val];
         }
     }
+    if ($row['section'] === 'job' && function_exists('mpj_work_format_label')) {
+        $f[] = [t('mpj_f_work_format'), mpj_work_format_label($row)];
+    }
     if ($price !== '') {
         $f[] = [lst_tr($row['section'] === 'job' ? 'd_salary' : 'd_price'), $price];
+    } elseif ($row['section'] === 'job') {
+        $f[] = [lst_tr('d_salary'), t('mpj_salary_negotiable')];
+    }
+    if ($row['section'] === 'job' && !empty($row['fit_tags']) && function_exists('mpj_fit_label')) {
+        $f[] = [t('mpj_f_fit'), implode(', ', array_map('mpj_fit_label', $row['fit_tags']))];
     }
     if (!empty($row['offer_lang'])) {
         $f[] = [lst_tr('f_lang'), lst_tr('lang_' . $row['offer_lang'])];
@@ -1311,7 +1324,9 @@ function lst_card_html(array $row): string
         . '<p class="mp-card__tag">' . lst_e(lst_tr('type1_' . $row['section'])) . ' · ' . lst_e((string) $row['company_name']) . '</p>'
         . '<h3 class="mp-card__name"><a href="' . lst_e($url) . '"' . $lang . '>' . lst_e($row['title']) . '</a></h3>'
         . (!empty($row['short_desc']) ? '<p class="mp-card__desc mp-card__info"' . $lang . '>' . lst_e($row['short_desc']) . '</p>' : '')
-        . ($price !== '' ? '<p class="mp-card__price mp-card__info">' . lst_e($price) . '</p>' : '')
+        . ($row['section'] === 'job' && function_exists('mpj_card_line')
+            ? '<p class="mp-card__price mp-card__info lst-card__jobline">' . lst_e(mpj_card_line($row)) . '</p>'
+            : ($price !== '' ? '<p class="mp-card__price mp-card__info">' . lst_e($price) . '</p>' : ''))
         . ($tags !== '' ? '<p class="lst-card__tags">' . $tags . '</p>' : '')
         . '<div class="mp-card__meta mp-card__info">' . implode('', array_map(static fn($m) => '<span>' . lst_e($m) . '</span>', $meta)) . '</div>'
         . '</article>';

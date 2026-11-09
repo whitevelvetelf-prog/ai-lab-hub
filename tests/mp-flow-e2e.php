@@ -200,7 +200,8 @@ try {
         'csrf' => csrf_of($r['body']), 'ft' => $ft[1] ?? '', 'type' => 'job', 'website' => '',
         'title' => $title, 'company_name' => 'E2E Company', 'short_desc' => 'Короткий опис тестової вакансії для перевірки.',
         'full_desc' => str_repeat('Повний опис тестової вакансії з обов’язками й вимогами. ', 3),
-        'url' => 'https://example.com/', 'country' => 'UA', 'offer_lang' => 'uk', 'is_remote' => '1', 'cats' => [$sub], 'focus' => [$focus], 'rules' => '1',
+        'url' => 'https://example.com/', 'country' => 'UA', 'offer_lang' => 'uk', 'wf' => 'online', 'cats' => [$sub], 'focus' => [$focus], 'rules' => '1',
+        'd' => ['employment' => 'full_time', 'schedule' => 'full_day', 'level' => 'junior'], 'fit' => ['students'],   // Хвиля 1: формат роботи, графік, «Підходить»
     ];
     $r = http($jarA, "$base/listing-post.php?type=job", $post);
     check($r['code'] === 303 && str_starts_with($r['loc'], 'listing-post.php?sent='), 'подача → екран «на модерації» (' . ($r['loc'] ?: 'код ' . $r['code']) . ')');
@@ -267,14 +268,14 @@ try {
     check((int) ($t1[1] ?? -1) === $before + 1, "плитка підкатегорії: лічильник {$before} → " . ($t1[1] ?? '?'));
     check(str_contains($hub, htmlspecialchars($title, ENT_QUOTES)), 'вакансія у «Свіжих оголошеннях» блока');
     $cat = http($jarB, "$base/marketplace-category.php?id=$sub")['body'];
-    check(str_contains($cat, htmlspecialchars($title, ENT_QUOTES)) && str_contains($cat, 'name="format"') && str_contains($cat, 'name="city"') && str_contains($cat, 'name="price_min"'), 'сторінка підкатегорії: оголошення є, фільтри формат/місто/ціна');
+    check(str_contains($cat, htmlspecialchars($title, ENT_QUOTES)) && str_contains($cat, 'name="wf"') && str_contains($cat, 'name="city"') && str_contains($cat, 'name="sal"') && str_contains($cat, 'name="emp[]"'), 'сторінка підкатегорії: оголошення є, фільтри вакансій (формат, місто, зарплата, тип зайнятості)');
     $empty = $pdo->query("SELECT c.id FROM mp_categories c WHERE c.section = 'job' AND c.parent_id = $jobBlock AND c.is_active = 1 AND NOT EXISTS (SELECT 1 FROM mp_listing_categories lc JOIN mp_listings l ON l.id = lc.listing_id WHERE lc.category_id = c.id AND l.section = 'job' AND l.status = 'published' AND l.expires_at > NOW()) LIMIT 1")->fetchColumn();
     check($empty === false || !str_contains($hub, 'marketplace-category.php?id=' . (int) $empty . '"'), 'порожні підкатегорії приховані');
     unset($hub0);
 } finally {
     echo "Прибирання тестових записів\n";
     foreach ($created['listings'] as $id) {
-        foreach (['mp_listing_categories', 'mp_listing_translations', 'mp_listing_stats_daily', 'mp_moderation_log', 'mp_listing_places'] as $tbl) {
+        foreach (['mp_listing_categories', 'mp_listing_translations', 'mp_listing_stats_daily', 'mp_moderation_log', 'mp_listing_places', 'mp_listing_tags', 'mp_listing_views_daily'] as $tbl) {
             try {
                 $pdo->prepare("DELETE FROM $tbl WHERE listing_id = :id")->execute([':id' => $id]);
             } catch (Throwable $e) {

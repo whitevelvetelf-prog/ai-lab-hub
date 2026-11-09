@@ -171,3 +171,58 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 Код (без міграцій поводиться як раніше — `mpg_ready()`): `app/mp-geo.php`, `app/mp-geo-form.php`, `app/mp-search.php`, `public/mp-geo-suggest.php`, `public/mp-settings.php`, `public/assets/js/mp-geo.js`, `public/assets/css/mp-geo.css`; змінені `app/marketplace-board.php`, `app/marketplace.php` (`ip_limit_geo_suggest`), `app/mpb-card.php`, `app/mpb-offer.php`, `app/translations.php`, `public/marketplace.php`, `public/marketplace-post.php`, `public/mp-add-offer.php`, `cron/marketplace-daily.php` (перерахунок `price_usd`).
 
 Перевірка після заливки: `php tests/mp-geo-tests.php` — лише локально (тест тимчасово вмикає `marketplace_public` і створює тестові оголошення).
+
+---
+
+## Хвиля 1 (2026-11-09): фільтри вакансій, популярні запити, збережені пошуки, сторінка продавця, статистика, «Як ми використовуємо АІ» — **НЕ залито**
+
+`public_enabled` і `posting_enabled` не змінювались. Перед заливкою — резервна копія бази й коду (крок 1).
+
+### 1. SQL — ДО коду (phpMyAdmin → Імпорт, utf-8), по порядку
+| № | Файл | Що робить |
+|---|---|---|
+| 20 | `database/migration-2026-11-09-marketplace-wave1.sql` | `mp_listings` ADD COLUMN `salary_min_usd`, `salary_max_usd`; `mp_sellers` ADD COLUMN `bio`, `logo`, `page_public`; нові таблиці `mp_listing_tags`, `search_query_stats`, `search_query_overrides`, `mp_saved_searches`, `mp_listing_views_daily` |
+| 21 | `database/migration-2026-11-09-marketplace-ui-strings-wave1.sql` | EN-написи (116 рядків, `INSERT IGNORE` у `ui_translations`) |
+
+Лише `CREATE TABLE IF NOT EXISTS` і `ADD COLUMN` за перевіркою `information_schema`; жодних DROP/DELETE/TRUNCATE, змін типів чи FOREIGN KEY. Повтор безпечний.
+Контроль: `SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ('mp_listing_tags','search_query_stats','search_query_overrides','mp_saved_searches','mp_listing_views_daily');` → 5 рядків; `SHOW COLUMNS FROM mp_sellers LIKE 'page_public';` → 1 рядок.
+Без міграції код не падає: нові блоки просто не показуються (`mpj_ready`, `mpq_ready`, `mpss_ready`, `mpst_ready`, `mpsl_ready`).
+
+### 2. Код (з перезаписом, у корінь проєкту, не в `public/`)
+Нові: `app/mp-jobs.php`, `app/mp-popular.php`, `app/mp-saved.php`, `app/mp-seller.php`, `app/mp-stats.php`, `app/ai-statement.php`,
+`public/mp-count.php`, `public/mp-saved.php`, `public/mp-seller.php`, `public/mp-seller-settings.php`, `public/mp-stats.php`,
+`public/mp-cron-saved-searches.php`, `public/admin-popular-queries.php`, `public/ai-statement.php`, `public/assets/js/mp-filters.js`,
+`docs/ai_statement_uk.md` (лежить поза webroot; `docs/.htaccess` уже забороняє доступ).
+Змінені: `app/footer.php`, `app/listing.php`, `app/listing-i18n.php`, `app/listing-account.php`, `app/marketplace.php`, `app/marketplace-board.php`,
+`app/mp-search.php`, `app/mp-tree.php`, `app/mpb-offer.php`, `app/translations.php`, `cron/marketplace-daily.php`,
+`public/account.php`, `public/assets/css/mp-public.css`, `public/listing.php`, `public/listing-post.php`, `public/marketplace.php`,
+`public/marketplace-category.php`, `public/marketplace-my.php`, `public/marketplace-offer.php`, `public/mp-cron-expire.php`, `public/mp-photo.php`.
+`config/marketplace.php` на сервері **не перезаписувати**: нові ключі мають значення за замовчуванням у `app/marketplace.php → mp_config()`.
+
+### 3. Налаштування (за потреби, у серверному `config/marketplace.php`)
+| Ключ | Типово | Призначення |
+|---|---|---|
+| `suitable_for` | `['students','no_experience','career_switch','junior']` | позначки «Підходить»; вікові значення код відкидає завжди; розширення — лише після юриста |
+| `popular_min_hits` | `10` | поріг автоматичних чипів популярних запитів (за 30 днів) |
+| `popular_queries_catalog` | `false` | чипи на головній каталогу (не вмикати; запис для каталогу не ведеться) |
+| `saved_search_max` | `10` | активних збережених пошуків на користувача |
+| `saved_search_email_enabled` | `false` | листи за збереженими пошуками |
+| `saved_search_secret` | `''` | секрет HMAC для посилань відписки (≥ 16 символів, випадковий; без нього листи не йдуть) |
+| `saved_search_mail_batch` | `50` | листів за один запуск |
+| `ip_limit_count` / `ip_limit_saved` | `1500` / `60` | IP-ліміти на добу: лічильник «Показати N результатів» / збереження пошуків |
+
+### 4. Cron — НЕ вмикати зараз
+- `mp-cron-expire.php` (уже описаний, крок 8) тепер також видаляє `search_query_stats` і `mp_listing_views_daily` старші за 90 днів.
+- Листи за збереженими пошуками (коли вирішите ввімкнути: `saved_search_email_enabled => true`, задати `saved_search_secret`, перевірити доставку пошти, крок 9):
+  `0 9 * * * php /home/<акаунт>/…/www/public/mp-cron-saved-searches.php` (раз на день) або `…/mp-cron-saved-searches.php?token=<cron_token>`.
+  Без цього прапорця скрипт нічого не надсилає (пише `disabled`). Перемикач «Сповіщати поштою» в кабінеті тим часом лише запам'ятовує згоду.
+- `cron/marketplace-daily.php` тепер оновлює також `salary_min_usd/salary_max_usd` за курсом НБУ і місто вакансії з геодовідника. Для вже наявних вакансій
+  до першого запуску колонки порожні — у фільтр за зарплатою вони потраплять після запуску cron або після редагування.
+
+### 5. Перевірка після заливки
+1. `marketplace-category.php?id=<блок «Вакансії»>` — панель фільтрів, «Вакансії за областями» (якщо є вакансії з містом), чипи, «Показати результати: N».
+2. Адреса з фільтрами → у коді сторінки `<meta name="robots" content="noindex, follow">` і canonical без фільтрів.
+3. `ai-statement.php` → **404** (у тексті ще є маркери [ПІДТВЕРДИТИ]); під admin — сторінка з попередженням; у підвалі посилання немає.
+4. `https://<домен>/docs/ai_statement_uk.md` → 403/404.
+5. Кабінет: `mp-saved.php`, `mp-seller-settings.php`, «Статистика» біля оголошень; `admin-popular-queries.php` (лише admin).
+6. Локальні тести: `php tests/mp-wave1-tests.php` (151 перевірка; лише локально — створює й видаляє свої записи за id).

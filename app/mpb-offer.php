@@ -19,8 +19,11 @@ if (!$isLive && !$isOwner && !mpb_is_staff()) {
 }
 // Розділи сторінки для реклами й аналітики: дошка + її категорії (board:<id>).
 $mpSections = array_slice(array_merge(['board'], array_map(static fn($c) => 'board:' . (int) $c['id'], $board['categories'])), 0, 5);
+require_once __DIR__ . '/mp-stats.php';
+require_once __DIR__ . '/mp-seller.php';
 if ($isLive) {
     mpb_count_view($pdo, $bid, $board['seller_user_id'] !== null ? (int) $board['seller_user_id'] : null);
+    mpst_count_view($pdo, $bid, $board['seller_user_id'] !== null ? (int) $board['seller_user_id'] : null);   // по днях (статистика автора)
     analytics_log_view($pdo, 'marketplace_listing', $bid, implode(',', $mpSections));
 }
 
@@ -128,6 +131,7 @@ mpb_open((string) $board['title'], !$isLive, 'home');
             <?php endif; ?>
             <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_views')) ?>:</span> <?= (int) $board['views_count'] ?></p>
         </div>
+        <?= $isLive ? mpsl_link_html($pdo, $board['seller_id'] !== null ? (int) $board['seller_id'] : null) : '' ?>
 
         <?php
         // Реклама — окремим блоком після оголошення (нижче опису й кнопки контактів), лише на живому оголошенні.
@@ -137,7 +141,7 @@ mpb_open((string) $board['title'], !$isLive, 'home');
         ?>
 
         <?php if ($isOwner): ?>
-            <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="marketplace-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="marketplace-my.php"><?= mp_e(t('mpb_my_link')) ?></a></div>
+            <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="marketplace-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="marketplace-my.php"><?= mp_e(t('mpb_my_link')) ?></a> · <a href="mp-stats.php?id=<?= $bid ?>"><?= mp_e(t('mpst_link')) ?></a></div>
         <?php endif; ?>
 
         <?php if ($isLive && !$isOwner): ?>

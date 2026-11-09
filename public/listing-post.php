@@ -77,7 +77,9 @@ $subIds = array_column($subCats, 'id');
 $v = [
     'title' => '', 'company_name' => '', 'short_desc' => '', 'full_desc' => '', 'url' => '', 'country' => '', 'offer_lang' => '',
     'is_remote' => $type !== 'course', 'cats' => [], 'focus' => [], 'd' => [], 'rules' => false,
+    'wf' => '', 'fit' => [],
 ];
+$fitValues = mpj_suitable_values();
 if ($existing !== null) {
     $tx = $pdo->prepare('SELECT title, short_desc, full_desc FROM mp_listing_translations WHERE listing_id = :id AND lang = :lang');
     $tx->execute([':id' => $id, ':lang' => (string) $existing['source_lang']]);
@@ -90,6 +92,8 @@ if ($existing !== null) {
         'offer_lang' => (string) $existing['offer_lang'], 'is_remote' => (int) $existing['is_remote'] === 1,
         'focus' => array_map('intval', $cs->fetchAll(PDO::FETCH_COLUMN)), 'cats' => [],
         'd' => array_map('strval', lst_details($existing)), 'rules' => false,
+        'wf' => in_array((string) ($existing['work_format'] ?? ''), MPJ_WORK_FORMATS, true) ? (string) $existing['work_format'] : ((int) $existing['is_remote'] === 1 ? 'online' : 'offline'),
+        'fit' => mpj_tags($pdo, [$id])[$id] ?? [],
     ];
     $v['cats'] = array_values(array_intersect($v['focus'], $subIds));
     $v['focus'] = array_values(array_intersect($v['focus'], $focusIds));
@@ -118,6 +122,17 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $v['cats'] = array_values(array_intersect(array_unique(array_map('intval', is_array($_POST['cats'] ?? null) ? $_POST['cats'] : [])), $subIds));
     $v['d'] = is_array($_POST['d'] ?? null) ? array_map(static fn($x): string => is_string($x) ? $x : '', $_POST['d']) : [];
     $v['rules'] = ($_POST['rules'] ?? '') === '1';
+    if ($type === 'job') {
+        // Формат роботи (офіс / онлайн / змішано) замість галочки «віддалено»; is_remote — лише «онлайн».
+        $v['wf'] = in_array($str('wf'), MPJ_WORK_FORMATS, true) ? $str('wf') : '';
+        $v['is_remote'] = $v['wf'] === 'online';
+        // «Підходить»: лише значення з config 'suitable_for' (вікові та інші — відкидаються на сервері).
+        $rawFit = is_array($_POST['fit'] ?? null) ? array_filter($_POST['fit'], 'is_string') : [];
+        if (array_diff($rawFit, $fitValues) !== []) {
+            error_log('[listing] rejected suitable_for values from user ' . $userId);
+        }
+        $v['fit'] = array_values(array_intersect($fitValues, $rawFit));
+    }
 
     if (!$isStaff && !lst_form_stamp_ok($str('ft'))) {
         $errors[] = 'err_too_fast';
@@ -156,6 +171,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $errors[] = 'err_focus';
     }
     $details = lst_details_normalize($type, $v['d'], $errors);
+    if ($type === 'job' && $v['wf'] === '') {
+        $errors[] = 'err_work_format';
+    }
     if ($type === 'job' && !$v['is_remote'] && empty($details['city'])) {
         $errors[] = 'err_job_location';
     }
@@ -212,6 +230,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 'company_name' => $v['company_name'], 'url' => $v['url'], 'country' => $v['country'], 'offer_lang' => $v['offer_lang'],
                 'is_remote' => $v['is_remote'], 'details' => $details, 'cats' => $v['cats'], 'focus' => $v['focus'], 'check' => $check,
             ], $existing, $userId, $sellerId, $lang);
+            mpj_after_save($pdo, $savedId, $type, $details, $type === 'job' ? $v['wf'] : '', $v['fit'], $v['country']);
             lst_mail($pdo, $savedId, 'received');
             // Оголошення за запрошенням аутрічу (marketplace-join.php) → лід «Розмістили».
             $joinLead = (int) ($_SESSION['outreach_join_lead'] ?? 0);
@@ -261,7 +280,7 @@ const LP_ERR_FIELD = [
     'err_title' => 'title', 'err_company' => 'company_name', 'err_short' => 'short_desc', 'err_desc' => 'full_desc',
     'err_desc_job' => 'full_desc', 'err_links' => 'full_desc', 'err_url' => 'url', 'err_link_blocked' => 'url',
     'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_subcats' => 'cats', 'err_job_location' => 'city',
-    'err_rules' => 'rules', 'err_number' => 'number', 'err_date' => 'date', 'err_apply_past' => 'date', 'err_salary_range' => 'salary',
+    'err_rules' => 'rules', 'err_work_format' => 'wf', 'err_number' => 'number', 'err_date' => 'date', 'err_apply_past' => 'date', 'err_salary_range' => 'salary',
 ];
 $byField = [];
 $generalErrors = [];
@@ -396,15 +415,31 @@ mpb_open($pageTitle, true, 'post');
                         <?= $fieldErr('offer_lang') ?>
                     </div>
                 </div>
+                <?php if ($type === 'job'): ?>
+                <div class="mp-field">
+                    <label class="mp-label" for="wf"><?= lst_e(t('mpj_f_work_format')) ?> <span class="mpf-req">*</span></label>
+                    <select class="mp-input" id="wf" name="wf" required<?= $invalid('wf') ?>>
+                        <option value=""><?= lst_e(lst_tr('f_any')) ?></option>
+                        <?php foreach (MPJ_WORK_FORMATS as $wfo): ?>
+                            <option value="<?= $wfo ?>"<?= $v['wf'] === $wfo ? ' selected' : '' ?>><?= lst_e(t('mpj_wf_' . $wfo)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <?= $fieldErr('wf') ?>
+                </div>
+                <?php else: ?>
                 <div class="mp-field mp-field--check">
                     <label class="mp-check"><input type="checkbox" name="is_remote" value="1"<?= $v['is_remote'] ? ' checked' : '' ?>> <span><?= lst_e(lst_tr($type === 'job' ? 'f_remote_job' : 'f_remote')) ?></span></label>
                 </div>
+                <?php endif; ?>
 
                 <h3 class="mpf-sub"><?= lst_e(lst_tr('f_details')) ?></h3>
                 <?php if ($type === 'job'): ?>
                     <div class="mp-row">
                         <div class="mp-field"><label class="mp-label" for="d_employment"><?= lst_e(lst_tr('d_employment')) ?></label><?= $select('employment', LST_DETAILS['job']['employment'], $dv('employment')) ?></div>
-                        <div class="mp-field"><label class="mp-label" for="d_level"><?= lst_e(lst_tr('d_level')) ?></label><?= $select('level', LST_DETAILS['job']['level'], $dv('level')) ?></div>
+                        <div class="mp-field"><label class="mp-label" for="d_schedule"><?= lst_e(lst_tr('d_schedule')) ?></label><?= $select('schedule', LST_DETAILS['job']['schedule'], $dv('schedule')) ?></div>
+                    </div>
+                    <div class="mp-row">
+                        <div class="mp-field"><label class="mp-label" for="d_level"><?= lst_e(t('mpj_f_experience')) ?></label><?= $select('level', LST_DETAILS['job']['level'], $dv('level')) ?></div>
                     </div>
                     <div class="mp-field">
                         <span class="mp-label"><?= lst_e(lst_tr('d_salary')) ?></span>
@@ -414,12 +449,25 @@ mpb_open($pageTitle, true, 'post');
                             <?= $currency('salary_currency', $dv('salary_currency') ?: 'USD') ?>
                             <select class="mp-input mp-input--short" name="d[salary_period]" aria-label="<?= lst_e(lst_tr('d_salary_period')) ?>">
                                 <?php foreach (LST_DETAILS['job']['salary_period'] as $p): ?>
+                                    <?php if ($p === 'YEAR' && $dv('salary_period') !== 'YEAR') { continue; } ?>
                                     <option value="<?= $p ?>"<?= ($dv('salary_period') ?: 'MONTH') === $p ? ' selected' : '' ?>><?= lst_e(lst_tr('per', lst_v($p))) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
+                        <p class="mp-hint"><?= lst_e(t('mpj_form_salary_hint')) ?></p>
                         <?= $fieldErr('salary') ?>
                     </div>
+                    <?php if ($fitValues !== []): ?>
+                    <fieldset class="mp-field mpf-group">
+                        <legend class="mp-label"><?= lst_e(t('mpj_f_fit')) ?> (<?= lst_e(t('mpt_optional')) ?>)</legend>
+                        <div class="mp-checks">
+                            <?php foreach ($fitValues as $fv): ?>
+                                <label class="mp-check"><input type="checkbox" name="fit[]" value="<?= lst_e($fv) ?>"<?= in_array($fv, $v['fit'], true) ? ' checked' : '' ?>> <span><?= lst_e(mpj_fit_label($fv)) ?></span></label>
+                            <?php endforeach; ?>
+                        </div>
+                        <p class="mp-hint"><?= lst_e(t('mpj_form_fit_hint')) ?></p>
+                    </fieldset>
+                    <?php endif; ?>
                     <div class="mp-row">
                         <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"<?= $invalid('city') ?>><?= $fieldErr('city') ?></div>
                         <div class="mp-field"><label class="mp-label" for="d_apply_until"><?= lst_e(lst_tr('d_apply_until')) ?></label><input class="mp-input" type="date" id="d_apply_until" name="d[apply_until]" min="<?= date('Y-m-d') ?>" value="<?= lst_e($dv('apply_until')) ?>"<?= $invalid('date') ?>><?= $fieldErr('date') ?></div>
