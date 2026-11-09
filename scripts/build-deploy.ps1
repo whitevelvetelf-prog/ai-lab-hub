@@ -160,7 +160,7 @@ $files.Add('docs/.htaccess')
 $aiStatementPath = Join-Path $root 'docs\ai_statement_uk.md'
 if (Test-Path $aiStatementPath) {
     $aiText = [System.IO.File]::ReadAllText($aiStatementPath, [System.Text.Encoding]::UTF8)
-    $aiMarker = '[' + [regex]::Unescape('ПІДТВЕРДИТИ')   # "[PIDTVERDYTY" (Ukrainian "CONFIRM")
+    $aiMarker = '[' + [regex]::Unescape('\u041F\u0406\u0414\u0422\u0412\u0415\u0420\u0414\u0418\u0422\u0418')   # "[PIDTVERDYTY" (Ukrainian "CONFIRM")
     $aiCount = ([regex]::Matches($aiText, [regex]::Escape($aiMarker))).Count
     if ($aiCount -gt 0) {
         Write-Warning ("docs/ai_statement_uk.md still has $aiCount confirmation marker(s): the 'How we use AI' page stays 404 for the public and is not linked in the footer until the owner confirms the facts and removes the markers.")
