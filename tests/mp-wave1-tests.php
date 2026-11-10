@@ -10,8 +10,8 @@ declare(strict_types=1);
  *   php tests/mp-wave1-tests.php [http://ai-lab-hub.test]
  *
  * Створює власні записи («MPW-TEST …»: користувачі, продавці, оголошення, тексти, позначки, пошуки, агрегати
- * запитів, перегляди, логотип) і наприкінці (finally) видаляє ЛИШЕ їх — за id. Тимчасово переписує
- * docs/ai_statement_uk.md (перевірка «без маркерів») і відновлює. Лог листів storage/marketplace-mail.log обрізається
+ * запитів, перегляди, логотип) і наприкінці (finally) видаляє ЛИШЕ їх — за id. docs/ai_statement_uk.md не змінює
+ * (перевірка «без маркерів» — tests/ai-statement-tests.php на копії). Лог листів storage/marketplace-mail.log обрізається
  * до попереднього розміру. Потрібні міграції 2026-11-09 (№ 20, 21) і свіжий курс у fx_rates. Лише CLI.
  */
 
@@ -68,8 +68,6 @@ if (!mpj_ready($pdo) || !mpq_ready($pdo) || !mpss_ready($pdo) || !mpst_ready($pd
 $ids = ['users' => [], 'sellers' => [], 'listings' => [], 'saved' => [], 'qstats' => [], 'qover' => [], 'verif' => [], 'files' => []];
 $mailLog = __DIR__ . '/../storage/marketplace-mail.log';
 $mailLogSize = is_file($mailLog) ? filesize($mailLog) : 0;
-$aiFile = AIS_FILE;
-$aiOrig = (string) file_get_contents($aiFile);
 $tree = mpt_tree($pdo, 'uk');
 $jobBlock = mpt_block($tree, 'job');
 $courseBlock = mpt_block($tree, 'course');
@@ -507,17 +505,11 @@ try {
     ok(!str_contains($b, 'ai-statement.php'), 'з маркерами — посилання в підвалі немає');
     [$c] = http($base . '/docs/ai_statement_uk.md');
     ok($c === 404 || $c === 403, 'docs/ напряму не віддається (' . $c . ')');
-    file_put_contents($aiFile, (string) preg_replace('/\[ПІДТВЕРДИТИ[^\]]*\]/u', 'підтверджено', $aiOrig));
-    [$c, $b] = http($base . '/ai-statement.php');
-    ok($c === 200 && str_contains($b, 'Як ми використовуємо АІ'), 'без маркерів — 200');
-    [$c, $b] = http($base . '/about.php');
-    ok(str_contains($b, 'href="ai-statement.php"'), 'без маркерів — посилання в підвалі є');
-    file_put_contents($aiFile, $aiOrig);
+    // «без маркерів» — у tests/ai-statement-tests.php на тимчасовій копії (docs/ai_statement_uk.md не чіпаємо)
 } catch (Throwable $e) {
     ok(false, 'виняток: ' . $e->getMessage() . ' @ ' . basename($e->getFile()) . ':' . $e->getLine());
 } finally {
     echo "== Прибирання (лише свої записи, за id)\n";
-    file_put_contents($aiFile, $aiOrig);
     $in = static fn(array $a): string => $a === [] ? '0' : implode(',', array_map('intval', array_unique($a)));
     $L = $in($ids['listings']);
     foreach ([

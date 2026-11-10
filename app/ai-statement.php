@@ -7,11 +7,14 @@ declare(strict_types=1);
  *
  * Єдине джерело тексту — docs/ai_statement_uk.md (як Правила Marketplace: поза webroot, docs/.htaccess забороняє
  * доступ з вебу; рендер — mpb_rules_render() з app/mpb-rules.php). Поки у файлі є маркери «[ПІДТВЕРДИТИ…]»,
- * сторінка публічно віддає 404 (admin бачить її з попередженням), а посилання в підвалі не показується.
+ * сторінка публічно віддає 404 (admin і employee бачать її з попередженням), а посилання в підвалі не показується.
  * Збірка (scripts/build-deploy.ps1) попереджає, якщо маркери лишилися.
  */
 
-const AIS_FILE = __DIR__ . '/../docs/ai_statement_uk.md';
+// Тести (tests/ai-statement-tests.php) підставляють тимчасову копію, визначаючи AIS_FILE до підключення файлу.
+if (!defined('AIS_FILE')) {
+    define('AIS_FILE', __DIR__ . '/../docs/ai_statement_uk.md');
+}
 const AIS_MARKER = '[ПІДТВЕРДИТИ';
 
 /** Кількість маркерів «[ПІДТВЕРДИТИ…]» у файлі (-1 — файлу немає). */
