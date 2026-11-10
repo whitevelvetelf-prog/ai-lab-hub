@@ -299,10 +299,16 @@
         var poster = localPosterUrl || form.elements.poster_data.value || media.getAttribute('data-poster') || '';
         if (val('video_type') === 'youtube') {
             var id = youtubeId(val('youtube_url')) || media.getAttribute('data-youtube');
-            if (id) {
+            var consented = false;
+            try {
+                consented = !!(window.alhConsent && window.alhConsent.get() === 'all');
+            } catch (e) {}
+            // Мініатюра з i.ytimg.com — лише з власним постером або зі згодою на cookie «all».
+            var thumb = poster || (id && consented ? 'https://i.ytimg.com/vi/' + encodeURIComponent(id) + '/hqdefault.jpg' : '');
+            if (thumb) {
                 var img = document.createElement('img');
                 img.alt = '';
-                img.src = poster || ('https://i.ytimg.com/vi/' + encodeURIComponent(id) + '/hqdefault.jpg');
+                img.src = thumb;
                 media.appendChild(img);
             }
             return;

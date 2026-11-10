@@ -288,12 +288,25 @@
         };
     }
 
+    function ytConsented() {
+        try {
+            return !!(window.alhConsent && window.alhConsent.get() === 'all');
+        } catch (e) {
+            return false;
+        }
+    }
+
     function buildYoutube(media, creative, labels) {
-        var poster = el('img');
-        poster.alt = '';
-        poster.loading = 'lazy';
-        poster.src = creative.poster || ('https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg');
-        media.appendChild(poster);
+        // Мініатюра з i.ytimg.com — запит до Google: лише зі згодою на cookie «all» (app/cookie-consent.php);
+        // без неї — темний фон блоку й «▶», плеєр лише після кліку глядача.
+        var posterSrc = creative.poster || (ytConsented() ? 'https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg' : '');
+        if (posterSrc) {
+            var poster = el('img');
+            poster.alt = '';
+            poster.loading = 'lazy';
+            poster.src = posterSrc;
+            media.appendChild(poster);
+        }
 
         var opened = false;
         var play = el('button', 'sponsored-card__play', '▶');
@@ -357,7 +370,7 @@
             return video;
         }
         var src = creative.poster
-            || (creative.type === 'youtube' && creative.youtube ? 'https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg' : '');
+            || (creative.type === 'youtube' && creative.youtube && ytConsented() ? 'https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg' : '');
         if (!src) {
             return null;
         }

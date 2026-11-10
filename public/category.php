@@ -641,7 +641,7 @@ $pageTitle = $category !== false ? localized_name($category) : t('category_not_f
 <?php endif; ?>
     </div>
 
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/assets/js/vendor/lucide-1.71.0.min.js"></script>
     <script>lucide.createIcons();</script>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>

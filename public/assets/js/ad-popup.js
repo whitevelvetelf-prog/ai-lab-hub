@@ -375,7 +375,8 @@
                 }
                 mediaLink.appendChild(video);
             } else {
-                var src = creative.poster || (creative.youtube ? 'https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg' : '');
+                // Мініатюра з i.ytimg.com — теж запит до Google: лише зі згодою «all»; без неї — фон блоку, ▶ і примітка.
+                var src = creative.poster || (creative.youtube && ytConsented() ? 'https://i.ytimg.com/vi/' + encodeURIComponent(creative.youtube) + '/hqdefault.jpg' : '');
                 if (src) {
                     var img = el('img');
                     img.alt = '';

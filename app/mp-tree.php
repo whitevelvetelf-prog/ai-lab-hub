@@ -567,7 +567,7 @@ function mpt_open(string $title, string $description, string $canonical, bool $n
 
 function mpt_close(): void
 {
-    echo '<script src="https://unpkg.com/lucide@latest"></script>' . "\n"
+    echo '<script src="/assets/js/vendor/lucide-1.71.0.min.js"></script>' . "\n"
         . '<script>if (window.lucide) { lucide.createIcons(); }</script>' . "\n";
     mpb_close();
 }
