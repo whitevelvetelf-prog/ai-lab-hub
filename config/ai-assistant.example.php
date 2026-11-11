@@ -43,6 +43,11 @@ $ai_max_retries          = 2;    // повтори основної моделі
 $ai_max_candidates       = 50;   // скільки відібраних продуктів іде в промпт
 $ai_rate_limit_per_minute = 10;  // запитів за хвилину на сеанс
 $ai_cache_ttl_hours      = 24;   // скільки годин зберігати кеш відповідей (0 — без кешу)
+// Добові ліміти звернень до моделі (0 — без ліміту; без ключів у файлі діють ці ж значення). Рахуються лише запити,
+// що справді йдуть до моделі; понад ліміт — запасний режим без АІ. Роботи (User-Agent) моделі не отримують зовсім.
+$ai_daily_limit_ip       = 30;    // гість, з однієї IP-адреси
+$ai_daily_limit_user     = 100;   // залогінений користувач (admin/employee — без особистого ліміту)
+$ai_daily_limit_global   = 1500;  // усього сайту за добу
 
 return [
     'provider'       => $ai_provider,
@@ -63,4 +68,7 @@ return [
     'max_candidates'        => $ai_max_candidates,
     'rate_limit_per_minute' => $ai_rate_limit_per_minute,
     'cache_ttl_hours'       => $ai_cache_ttl_hours,
+    'daily_limit_ip'        => $ai_daily_limit_ip,
+    'daily_limit_user'      => $ai_daily_limit_user,
+    'daily_limit_global'    => $ai_daily_limit_global,
 ];

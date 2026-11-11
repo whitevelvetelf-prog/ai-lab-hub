@@ -82,7 +82,22 @@ $userId = (auth_check() && auth_user_id() !== null) ? (int) auth_user_id() : nul
 
 try {
     $session = $_SESSION;
-    $result = eli_answer($pdo, $message, $lang, $cfg, $session, $sessionHash, $userId, 'eli_http_post');
+    // Добові ліміти (app/eli.php: eli_quota_check) — перевіряються лише перед справжнім зверненням до моделі.
+    $quota = static function () use ($pdo, $cfg, $userId): ?string {
+        $role = auth_role();
+
+        return eli_quota_check($pdo, $cfg, [
+            'bot' => analytics_device_class() === 'bot',
+            'staff' => in_array($role, ['admin', 'employee'], true),
+            'user_id' => $userId,
+            'ip_key' => static function (): string {
+                require_once __DIR__ . '/../app/marketplace-board.php';   // mpb_client_ip / mpb_ip_key (сіль із конфігу)
+
+                return mpb_ip_key(mpb_client_ip());
+            },
+        ]);
+    };
+    $result = eli_answer($pdo, $message, $lang, $cfg, $session, $sessionHash, $userId, 'eli_http_post', null, $quota);
     $_SESSION['eli_hits'] = $session['eli_hits'] ?? [];
 } catch (Throwable $e) {
     error_log('[eli-chat] db error: ' . $e->getMessage());

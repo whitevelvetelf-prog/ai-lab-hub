@@ -93,6 +93,12 @@ function eli_settings(array $ai): array
         'max_candidates' => min(200, max(10, (int) ($ai['max_candidates'] ?? 50))),
         'rate_limit_per_minute' => max(1, (int) ($ai['rate_limit_per_minute'] ?? 10)),
         'cache_ttl_hours' => max(0, (int) ($ai['cache_ttl_hours'] ?? 24)),
+        // Добові ліміти звернень до моделі (eli_quota_check; 0 — без ліміту). Рахуються лише запити, що
+        // справді йдуть до моделі (не кеш і не запасний режим); один запит = одна відповідь Елі разом із
+        // повторами й запасною моделлю всередині eli_call_llm.
+        'daily_limit_ip' => max(0, (int) ($ai['daily_limit_ip'] ?? 30)),          // гість, з однієї IP-адреси
+        'daily_limit_user' => max(0, (int) ($ai['daily_limit_user'] ?? 100)),     // залогінений (не staff)
+        'daily_limit_global' => max(0, (int) ($ai['daily_limit_global'] ?? 1500)), // усього сайту за добу
     ];
 }
 
@@ -934,6 +940,63 @@ function eli_cache_put(PDO $pdo, string $key, array $answer): void
     }
 }
 
+/**
+ * Атомарний добовий лічильник у mp_rate_limits (той самий механізм, що в Marketplace і пошуку; старі рядки
+ * прибирає mpb_rate_cleanup() у mp-cron-expire.php). true — у межах ліміту. Таблиці немає — дозволено.
+ */
+function eli_quota_hit(PDO $pdo, string $keyHash, string $action, int $limit): bool
+{
+    if ($limit <= 0) {
+        return true;
+    }
+    try {
+        $pdo->prepare(
+            'INSERT INTO mp_rate_limits (key_hash, action, window_start, hits) VALUES (:k, :a, CURDATE(), 1)
+             ON DUPLICATE KEY UPDATE hits = hits + 1'
+        )->execute([':k' => $keyHash, ':a' => $action]);
+        $sel = $pdo->prepare('SELECT hits FROM mp_rate_limits WHERE key_hash = :k AND action = :a AND window_start = CURDATE()');
+        $sel->execute([':k' => $keyHash, ':a' => $action]);
+
+        return (int) $sel->fetchColumn() <= $limit;
+    } catch (Throwable $e) {
+        error_log('[eli] quota unavailable: ' . $e->getMessage());
+
+        return true;
+    }
+}
+
+/**
+ * Чи можна зараз звертатися до моделі. null — так (лічильники збільшено); інакше причина для журналу:
+ *   'bot'          — запит робота за User-Agent (лічильники не чіпаються);
+ *   'quota_user'   — залогінений користувач вичерпав daily_limit_user;
+ *   'quota_ip'     — гість вичерпав daily_limit_ip з цієї IP-адреси;
+ *   'quota_global' — сайт вичерпав daily_limit_global.
+ * Співробітники (admin/employee) не мають особистого ліміту, але рахуються в загальному.
+ *
+ * @param array{bot: bool, staff: bool, user_id: ?int, ip_key: callable():string, global_key?: string} $who
+ *        global_key — лише для тестів (окремий лічильник замість спільного 'eli-global')
+ */
+function eli_quota_check(PDO $pdo, array $cfg, array $who): ?string
+{
+    if ($who['bot']) {
+        return 'bot';
+    }
+    if (!$who['staff']) {
+        if ($who['user_id'] !== null) {
+            if (!eli_quota_hit($pdo, hash('sha256', 'eli-user:' . $who['user_id']), 'eli_user', $cfg['daily_limit_user'])) {
+                return 'quota_user';
+            }
+        } elseif ($cfg['daily_limit_ip'] > 0 && !eli_quota_hit($pdo, ($who['ip_key'])(), 'eli_ip', $cfg['daily_limit_ip'])) {
+            return 'quota_ip';
+        }
+    }
+    if (!eli_quota_hit($pdo, $who['global_key'] ?? hash('sha256', 'eli-global'), 'eli_global', $cfg['daily_limit_global'])) {
+        return 'quota_global';
+    }
+
+    return null;
+}
+
 /** Ліміт запитів на сеанс за хвилину (лічильник у $_SESSION). */
 function eli_rate_limited(array &$session, int $perMinute, ?int $now = null): bool
 {
@@ -1127,7 +1190,11 @@ function eli_db_fallback_basic(array $index, array $cand, string $lang): array
  * @param array<string,mixed> $session $_SESSION (ліміт частоти)
  * @return array{response: array<string,mixed>, log: array<string,mixed>}
  */
-function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &$session, string $sessionHash, ?int $userId, callable $transport, ?callable $sleep = null): array
+/**
+ * @param callable|null $quota (): ?string — добові ліміти перед зверненням до моделі (eli_quota_check з даними
+ *                             запиту); null — без лімітів (тести, діагностика)
+ */
+function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &$session, string $sessionHash, ?int $userId, callable $transport, ?callable $sleep = null, ?callable $quota = null): array
 {
     $t0 = microtime(true);
     $log = ['provider' => $cfg['provider'], 'model' => $cfg['model'], 'http_status' => null, 'error_type' => 'none', 'source' => 'ai',
@@ -1182,7 +1249,10 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
     }
     $cand = eli_candidates($index, $message, $cfg['max_candidates'], $extra);
     $answer = null;
-    if ($cfg['api_key'] !== '') {
+    $quotaReason = ($cfg['api_key'] !== '' && $quota !== null) ? $quota() : null;
+    if ($quotaReason !== null) {
+        $log['error_type'] = $quotaReason;   // запасний режим без звернення до моделі
+    } elseif ($cfg['api_key'] !== '') {
         $context = eli_product_context($index, $cand['ids'], $lang);
         $res = eli_call_llm($cfg, eli_system_prompt($context, $lang), eli_system_prompt($context, $lang, true), $message,
             array_fill_keys($cand['ids'], true), $transport, $sleep);
@@ -1216,6 +1286,9 @@ function eli_answer(PDO $pdo, string $message, string $lang, array $cfg, array &
     }
 
     $fb = eli_db_fallback($pdo, $index, $cand, $message, $lang);
+    if (in_array($quotaReason, ['quota_user', 'quota_ip'], true) && $fb['steps'] !== []) {
+        $fb['reply_text'] = t('eli_daily_limit');
+    }
     $log['source'] = 'fallback';
     $log['used_fallback'] = true;
     $ids = $fb['steps'] !== [] ? $fb['steps'][0]['product_ids'] : [];
