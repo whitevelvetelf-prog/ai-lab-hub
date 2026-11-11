@@ -437,6 +437,10 @@ $GLOBALS['TRANSLATIONS'] = [
     'eli_input_placeholder'   => 'Опишіть свою задачу…',
     'eli_input_aria'          => 'Повідомлення',
     'eli_send'                => 'Надіслати',
+    // Підказка під полем вводу (public/eli.php): постачальник — за config/ai-assistant.php → provider.
+    'eli_privacy_hint'        => 'Не вводьте особисті дані. Запити обробляє сервіс Google.',
+    'eli_privacy_hint_claude' => 'Не вводьте особисті дані. Запити обробляє сервіс Anthropic.',
+    'eli_privacy_more'        => 'Докладніше',
     'eli_tech_error'          => 'Перепрошую, зараз виникли технічні труднощі. Спробуйте, будь ласка, ще раз за хвилину.',
     'eli_thinking'            => 'Еля обмірковує відповідь…',
     'eli_step_label'          => 'Крок',

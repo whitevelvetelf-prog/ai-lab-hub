@@ -8,7 +8,7 @@ declare(strict_types=1);
  *   1. Стан індексу й кнопка «Перебудувати пошуковий індекс» — порціями по rebuild_batch продуктів
  *      (POST action=rebuild, JSON), бо на хостингу CLI може бути недоступний.
  *   2. Синоніми (search_synonyms): перегляд груп, нова група, слово в наявну групу. Видалення немає.
- *   3. Запити без результатів (search_log) за останні log_keep_days днів — згруповані, з лічильником.
+ *   3. Запити без результатів (search_log) за останні zero_result_retention_days днів — згруповані, з лічильником.
  * POST — лише з CSRF; форми — PRG, перебудова — JSON.
  */
 
@@ -99,7 +99,7 @@ if ($ready) {
     try {
         $zero = $pdo->query(
             'SELECT LOWER(query) AS q, COUNT(*) AS cnt, MAX(created_at) AS last_at, GROUP_CONCAT(DISTINCT lang) AS langs
-             FROM search_log WHERE created_at >= NOW() - INTERVAL ' . $cfg['log_keep_days'] . ' DAY
+             FROM search_log WHERE created_at >= NOW() - INTERVAL ' . $cfg['zero_result_retention_days'] . ' DAY
              GROUP BY LOWER(query) ORDER BY cnt DESC, last_at DESC LIMIT 300'
         )->fetchAll();
     } catch (PDOException $e) {
@@ -160,7 +160,7 @@ $e = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
         </p>
         <p class="sx-progress" id="sxProgress" aria-live="polite"></p>
 
-        <h2 class="rep__h2">Запити без результатів (<?= (int) $cfg['log_keep_days'] ?> днів)</h2>
+        <h2 class="rep__h2">Запити без результатів (<?= (int) $cfg['zero_result_retention_days'] ?> днів)</h2>
         <p class="rep__sub">Лише запити зі сторінки результатів, що нічого не знайшли; без IP і без користувачів. Видно, чого шукають і чого бракує в каталозі (або якого синоніма).</p>
         <div class="rep-table-wrap">
             <table class="rep-table">

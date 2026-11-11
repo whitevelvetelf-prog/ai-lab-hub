@@ -9,8 +9,8 @@ declare(strict_types=1);
  * (сторінка результатів, catalog) і api-eli-chat.php (запит до Елі, eli).
  *
  * Анонімно, як page_views: session_hash без IP і User-Agent; боти (analytics_device_class)
- * і співробітники (site_stats_skip_view) не пишуться. Пошта, телефони й посилання в тексті
- * маскуються, текст обрізається до 160 символів. Живий пошук шле запит на кожне натискання,
+ * і співробітники (site_stats_skip_view) не пишуться. Пошта, телефони, номери карток, 6+ цифр поспіль
+ * і посилання в тексті маскуються (search_mask_personal), текст обрізається до 160 символів. Живий пошук шле запит на кожне натискання,
  * тож у межах SEARCH_LOG_TYPING_SEC одного сеансу рядок не множиться, а оновлюється до
  * довшого варіанта («chat» → «chatgpt»). Рядки старші за SEARCH_LOG_KEEP_DAYS видаляються
  * самим логером (зрідка, з імовірністю 1/200 на запис).
@@ -19,20 +19,16 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/analytics.php';
+require_once __DIR__ . '/search.php';   // search_mask_personal()
 
 const SEARCH_LOG_MAX_LEN = 160;
 const SEARCH_LOG_TYPING_SEC = 90;
 const SEARCH_LOG_KEEP_DAYS = 180;
 
-/** Маскування персональних даних і обрізання. */
+/** Маскування персональних даних (search_mask_personal() з app/search.php) і обрізання. */
 function search_log_sanitize(string $text): string
 {
-    $t = (string) preg_replace('/\s+/u', ' ', trim($text));
-    $t = (string) preg_replace('~https?://\S+|www\.\S+~iu', '[url]', $t);
-    $t = (string) preg_replace('/[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.\p{L}{2,}/u', '[email]', $t);
-    $t = (string) preg_replace('/\+?\d[\d\s()-]{6,}\d/u', '[phone]', $t);
-
-    return mb_substr($t, 0, SEARCH_LOG_MAX_LEN);
+    return mb_substr(search_mask_personal($text), 0, SEARCH_LOG_MAX_LEN);
 }
 
 /** Нормалізована форма для групування: малі літери, без розділових знаків. */

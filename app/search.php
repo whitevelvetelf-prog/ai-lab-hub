@@ -38,6 +38,25 @@ const SEARCH_TOKEN_MAX = 64;
 const SEARCH_WEIGHTS = ['name' => 10, 'subcategory' => 6, 'category' => 6, 'features' => 3, 'short' => 2, 'full' => 1];
 const SEARCH_EXACT_NAME_BONUS = 1000;
 const SEARCH_NAME_PREFIX_BONUS = 50;
+/** Довжина рядка в журналі запитів без результатів (search_log.query VARCHAR(200)). */
+const SEARCH_ZERO_LOG_MAX_LEN = 200;
+
+/**
+ * Маскування персональних даних у тексті запиту — спільне для журналів search_queries (app/search-log.php)
+ * і search_log (запити без результатів). Порядок важливий: спершу посилання й пошта (в них бувають цифри),
+ * далі схожі на номер картки послідовності (13–19 цифр, можна з пробілами чи дефісами), телефони,
+ * і нарешті будь-які 6+ цифр поспіль. Пробіли згортаються в один.
+ */
+function search_mask_personal(string $text): string
+{
+    $t = (string) preg_replace('/\s+/u', ' ', trim($text));
+    $t = (string) preg_replace('~https?://\S+|www\.\S+~iu', '[url]', $t);
+    $t = (string) preg_replace('/[\p{L}\p{N}._%+-]+@[\p{L}\p{N}.-]+\.\p{L}{2,}/u', '[email]', $t);
+    $t = (string) preg_replace('/(?<!\d)(?:\d[ -]?){12,18}\d(?!\d)/u', '[card]', $t);
+    $t = (string) preg_replace('/\+?\d[\d\s()-]{6,}\d/u', '[phone]', $t);
+
+    return (string) preg_replace('/\d{6,}/u', '[number]', $t);
+}
 
 /**
  * Розкладка ЙЦУКЕН (укр.) <-> QWERTY за фізичним положенням клавіш: «Тщешщт» → «notion».
@@ -69,7 +88,7 @@ function like_escape(string $value): string
     return addcslashes($value, '%_\\');
 }
 
-/** @return array{broad_share: float, broad_top: int, broad_always: array<string, true>, per_page: int, suggest_limit: int, sync_budget: int, sync_check_seconds: int, rebuild_batch: int, ip_limit_per_day: int, log_keep_days: int} */
+/** @return array{broad_share: float, broad_top: int, broad_always: array<string, true>, per_page: int, suggest_limit: int, sync_budget: int, sync_check_seconds: int, rebuild_batch: int, ip_limit_per_day: int, zero_result_retention_days: int} */
 function search_config(): array
 {
     static $cfg = null;
@@ -86,7 +105,8 @@ function search_config(): array
             'sync_check_seconds' => max(0, (int) ($raw['sync_check_seconds'] ?? 60)),
             'rebuild_batch' => max(1, (int) ($raw['rebuild_batch'] ?? 200)),
             'ip_limit_per_day' => max(1, (int) ($raw['ip_limit_per_day'] ?? 3000)),
-            'log_keep_days' => max(1, (int) ($raw['log_keep_days'] ?? 90)),
+            // Запити без результатів (search_log): скільки днів зберігати. Колишній ключ log_keep_days — запасний варіант.
+            'zero_result_retention_days' => max(1, (int) ($raw['zero_result_retention_days'] ?? $raw['log_keep_days'] ?? 30)),
         ];
     }
 
@@ -912,10 +932,14 @@ function search_rate_ok(PDO $pdo): bool
     }
 }
 
-/** Журнал запитів без результатів (без IP і без користувача); рядки старші за log_keep_days прибираються. */
+/**
+ * Журнал запитів без результатів (без IP і без користувача). Текст маскується search_mask_personal()
+ * і обрізається до SEARCH_ZERO_LOG_MAX_LEN; рядки старші за zero_result_retention_days прибирає
+ * search_log_zero_cleanup() (public/mp-cron-expire.php) і зрідка сам логер.
+ */
 function search_log_zero(PDO $pdo, string $query, string $lang): void
 {
-    $q = mb_substr(trim((string) preg_replace('/\s+/u', ' ', $query)), 0, 200);
+    $q = mb_substr(search_mask_personal($query), 0, SEARCH_ZERO_LOG_MAX_LEN);
     if ($q === '' || search_query_tokens($q) === []) {
         return;
     }
@@ -923,9 +947,24 @@ function search_log_zero(PDO $pdo, string $query, string $lang): void
         $pdo->prepare('INSERT INTO search_log (query, lang, results_count, created_at) VALUES (:q, :l, 0, NOW())')
             ->execute([':q' => $q, ':l' => substr(preg_replace('/[^a-z-]/', '', strtolower($lang)) ?: 'uk', 0, 5)]);
         if (random_int(1, 100) === 1) {
-            $pdo->exec('DELETE FROM search_log WHERE created_at < NOW() - INTERVAL ' . search_config()['log_keep_days'] . ' DAY');
+            search_log_zero_cleanup($pdo);
         }
     } catch (Throwable $e) {
         error_log('[search] log: ' . $e->getMessage());
+    }
+}
+
+/** Видаляє з search_log рядки старші за zero_result_retention_days. Повертає кількість видалених рядків. */
+function search_log_zero_cleanup(PDO $pdo): int
+{
+    try {
+        $st = $pdo->prepare('DELETE FROM search_log WHERE created_at < NOW() - INTERVAL ' . search_config()['zero_result_retention_days'] . ' DAY');
+        $st->execute();
+
+        return $st->rowCount();
+    } catch (Throwable $e) {
+        error_log('[search] log cleanup: ' . $e->getMessage());
+
+        return 0;
     }
 }

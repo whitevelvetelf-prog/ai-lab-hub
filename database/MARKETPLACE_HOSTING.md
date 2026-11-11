@@ -213,6 +213,7 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 
 ### 4. Cron — НЕ вмикати зараз
 - `mp-cron-expire.php` (уже описаний, крок 8) тепер також видаляє `search_query_stats` і `mp_listing_views_daily` старші за 90 днів. **Налаштовано на проді 2026-11-09:** `15 * * * *` → `/home/gu621051/ailabhub-directory.com/www/public/mp-cron-expire.php` (тестовий запуск — «Виконано», 0,24 с).
+- З 2026-11-11 (код ще НЕ на проді) `mp-cron-expire.php` також видаляє запити каталогу без результатів `search_log` старші за `zero_result_retention_days` з `config/search.php` (30 днів; у виводі — `zero_search_deleted`). Нові записи `search_log` маскуються (пошта, телефони, номери карток, 6+ цифр, посилання) і обрізаються до 200 символів. Після заливки перший запуск cron видалить рядки `search_log` старші за 30 днів.
 - Листи за збереженими пошуками (коли вирішите ввімкнути: `saved_search_email_enabled => true`, задати `saved_search_secret`, перевірити доставку пошти, крок 9):
   `0 9 * * * php /home/<акаунт>/…/www/public/mp-cron-saved-searches.php` (раз на день) або `…/mp-cron-saved-searches.php?token=<cron_token>`.
   Без цього прапорця скрипт нічого не надсилає (пише `disabled`). Перемикач «Сповіщати поштою» в кабінеті тим часом лише запам'ятовує згоду.

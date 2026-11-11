@@ -16,6 +16,7 @@ require_once __DIR__ . '/../app/subcategory-note.php';
 require_once __DIR__ . '/../app/paw-icon.php';
 require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/blog.php';
+require_once __DIR__ . '/../app/product-translation.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -79,10 +80,10 @@ if ($product !== false) {
     $plans = $planStmt->fetchAll();
 }
 
-/** Переклад поля картки продукту поточною мовою (кеш у product_translations). */
+/** Переклад поля картки продукту поточною мовою (кеш у product_translations; ліміт повторного перекладу — app/product-translation.php). */
 function localized_product_field(PDO $pdo, array $product, string $field): string
 {
-    return localized_field($pdo, 'product_translations', 'product_id', $product, $field);
+    return product_localized_field($pdo, $product, $field);
 }
 
 /** Переклад поля тарифного плану поточною мовою (кеш у pricing_plan_translations). */

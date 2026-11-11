@@ -21,6 +21,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/search.php';
+require_once __DIR__ . '/../app/product-translation.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -403,6 +404,7 @@ $errors = [];
 $similar = [];
 $noticeDuplicate = false;
 $saved = false;
+$translationNote = '';
 
 /** Значення форми: на GET — з БД, на POST — із запиту. */
 $old = [
@@ -659,8 +661,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             }
 
+            // Змінений текст → старі переклади цих полів недійсні (app/product-translation.php).
+            $changedText = product_text_changes($dbRow, $old);
+            product_translations_invalidate($pdo, (int) $productId, $changedText);
+
             $pdo->commit();
             $saved = true;
+            if ($changedText !== []) {
+                // Переклад змінених полів одразу (один запит на мову), якщо продукт не перекладали за останні 5 хв.
+                $retranslated = product_retranslate($pdo, (int) $productId, $changedText);
+                $translationNote = $retranslated > 0
+                    ? 'Переклад змінених полів оновлено автоматично: ' . implode(', ', $changedText) . '.'
+                    : 'Старий переклад змінених полів скинуто (' . implode(', ', $changedText) . '); новий з’явиться автоматично протягом '
+                      . (int) ceil(PRODUCT_RETRANSLATE_COOLDOWN / 60) . ' хв, до того показується текст мовою оригіналу.';
+            }
             search_index_product($pdo, (int) $productId);   // пошуковий індекс — одразу (помилки лише в журнал)
 
             // Перечитуємо продукт, щоб форма показала збережений стан.
@@ -1156,6 +1170,7 @@ $isArchived = (int) $dbRow['is_archived'] === 1;
         <?php if ($saved): ?>
             <div class="notice notice--success">
                 <p class="notice__title">Продукт оновлено ✓</p>
+                <?php if ($translationNote !== ''): ?><p style="margin:0 0 6px;"><?= e($translationNote) ?></p><?php endif; ?>
                 <p style="margin:0;">
                     <a href="crm-list.php<?= $isArchived ? '?view=archived' : '' ?>">← до списку продуктів</a>
                     · <a href="product.php?id=<?= (int) $productId ?>" target="_blank" rel="noopener">відкрити картку</a>

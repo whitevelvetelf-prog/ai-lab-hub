@@ -12,7 +12,9 @@ declare(strict_types=1);
  * Відповідь: {ok, mode: ai|fallback|limited, reply_text, steps:[{step_title, product_ids}],
  * products:[картки], links?:[{title, href}]}. Запасний режим — звичайна
  * відповідь; повідомлення про «технічні труднощі» — лише коли недоступна база.
- * Текст запиту ніде не зберігається й не логується.
+ * Текст запиту не пишеться в технічний журнал eli_api_log і в кеш eli_cache (там лише хеш);
+ * для аналітики пошуку він записується в search_queries (app/search-log.php, source = eli)
+ * з маскуванням посилань, пошти й телефонів, до 160 символів, без IP і без користувача.
  */
 
 require_once __DIR__ . '/../app/auth.php';

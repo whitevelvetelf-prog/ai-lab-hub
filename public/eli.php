@@ -22,6 +22,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/ai-statement.php';
+
+// Підказка під полем вводу: хто обробляє запити (активний провайдер Елі) і посилання на «Як ми використовуємо АІ»
+// лише коли та сторінка публічна (без маркерів [ПІДТВЕРДИТИ]).
+$eliAiCfgPath = __DIR__ . '/../config/ai-assistant.php';
+$eliProvider = strtolower(trim((string) ((is_file($eliAiCfgPath) ? (array) (require $eliAiCfgPath) : [])['provider'] ?? 'gemini')));
+$eliPrivacyHint = t($eliProvider === 'claude' ? 'eli_privacy_hint_claude' : 'eli_privacy_hint');
+$eliPrivacyLink = ais_is_public();
 
 ?>
 <!DOCTYPE html>
@@ -422,7 +430,35 @@ require_once __DIR__ . '/../app/translations.php';
         .composer {
             margin-top: 20px;
             display: flex;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 8px 12px;
+        }
+
+        /* Підказка під полем: один рядок дрібним шрифтом; текст обрізається «…», посилання лишається видимим. */
+        .composer__hint {
+            flex: 0 0 100%;
+            display: flex;
+            gap: 6px;
+            min-width: 0;
+            margin: 0;
+            padding: 0 18px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .composer__hint-text {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .composer__hint a {
+            flex-shrink: 0;
+            color: #ffffff;
+            text-decoration: underline;
+            text-underline-offset: 2px;
         }
 
         .composer__input {
@@ -569,6 +605,20 @@ require_once __DIR__ . '/../app/translations.php';
                 min-width: 0;
             }
 
+            /* Один рядок цілком від 375 px (iPhone SE/mini і ширші): 10 px і поле «залазить» у відступ панелі;
+               вужчі екрани — текст обрізається «…», «Докладніше» лишається видимим. */
+            .composer__hint {
+                padding: 0;
+                margin: 0 -6px;
+                font-size: 0.625rem;
+            }
+
+            /* Більша зона натискання посилання без зміни висоти рядка. */
+            .composer__hint a {
+                padding: 12px 0;
+                margin: -12px 0;
+            }
+
             .composer__btn {
                 flex-shrink: 0;
             }
@@ -645,6 +695,7 @@ require_once __DIR__ . '/../app/translations.php';
                    value="<?= htmlspecialchars(mb_substr(trim((string) preg_replace('/\s+/u', ' ', is_string($_GET['q'] ?? null) ? $_GET['q'] : '')), 0, 100), ENT_QUOTES) ?>"
                    placeholder="<?= htmlspecialchars(t('eli_input_placeholder'), ENT_QUOTES) ?>" aria-label="<?= htmlspecialchars(t('eli_input_aria'), ENT_QUOTES) ?>">
             <button class="composer__btn" type="submit"><?= htmlspecialchars(t('eli_send'), ENT_QUOTES) ?></button>
+            <p class="composer__hint" id="eliPrivacyHint"><span class="composer__hint-text"><?= htmlspecialchars($eliPrivacyHint, ENT_QUOTES) ?></span><?php if ($eliPrivacyLink): ?><a href="ai-statement.php"><?= htmlspecialchars(t('eli_privacy_more'), ENT_QUOTES) ?></a><?php endif; ?></p>
         </form>
     </div>
 
