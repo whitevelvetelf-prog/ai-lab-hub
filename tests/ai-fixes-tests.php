@@ -39,7 +39,7 @@ function ok(bool $cond, string $name): void
     }
     echo ($cond ? '  OK   ' : '  FAIL ') . $name . "\n";
 }
-function http(string $url, ?int $uid = null, ?string $lang = null, ?array $post = null): array
+function http(string $url, ?int $uid = null, ?string $lang = null, ?array $post = null, ?string $jar = null): array
 {
     $ch = curl_init($url);
     $h = [];
@@ -51,6 +51,10 @@ function http(string $url, ?int $uid = null, ?string $lang = null, ?array $post 
     }
     $opt = [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 60, CURLOPT_HTTPHEADER => $h,
         CURLOPT_USERAGENT => 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Safari/604.1'];
+    if ($jar !== null) {
+        $opt[CURLOPT_COOKIEJAR] = $jar;    // сесія CRM (CSRF-токен) між запитами
+        $opt[CURLOPT_COOKIEFILE] = $jar;
+    }
     if ($post !== null) {
         $opt[CURLOPT_POST] = true;
         $opt[CURLOPT_POSTFIELDS] = http_build_query($post);
@@ -189,13 +193,29 @@ try {
     ok(str_contains(card_text($html, 'Old short PT'), 'Old short PT (manual)'), 'до редагування: картка EN — наявний переклад «Old short PT (manual)»');
 
     // Відтворення старої поведінки: що показала б сторінка, якби переклади не скидались — перевіримо після POST.
-    $form = static fn(string $short): array => [
-        'action' => 'force', 'name' => 'PT-TEST Product', 'official_url' => 'https://pt-test.example.invalid',
+    // CSRF: токен береться зі сторінки форми в тій самій сесії (cookie jar).
+    $jar = $tmp . DIRECTORY_SEPARATOR . 'cookies.txt';
+    $editUrl = $base . '/crm-edit-product.php?id=' . $pid;
+    [, $page] = http($editUrl, $ids['user'], null, null, $jar);
+    $csrf = preg_match('~name="csrf" value="([0-9a-f]{64})"~', $page, $m) ? $m[1] : '';
+    ok($csrf !== '', 'форма CRM містить CSRF-токен');
+    $short0 = static fn(): string => (string) $pdo->query('SELECT short_description FROM products WHERE id = ' . $pid)->fetchColumn();
+    $form = static fn(string $short, ?string $token = null): array => [
+        'csrf' => $token ?? $csrf, 'action' => 'force', 'name' => 'PT-TEST Product', 'official_url' => 'https://pt-test.example.invalid',
         'short_description' => $short, 'full_description' => 'Повний опис ПТ', 'main_features' => 'Функція ПТ',
         'target_audience' => 'Аудиторія ПТ', 'categories' => [$catId], 'subcategories' => [$ids['sub']],
         'partnership_status' => 'found', 'skill_level' => 'none',
     ];
-    [$code, $body] = http($base . '/crm-edit-product.php?id=' . $pid, $ids['user'], null, $form('Новий короткий опис ПТ'));
+    foreach (['без токена' => '', 'з чужим токеном' => str_repeat('a', 64)] as $label => $bad) {
+        $p = $form('Зловмисний опис ПТ', $bad);
+        if ($bad === '') {
+            unset($p['csrf']);
+        }
+        [$code, $body] = http($editUrl, $ids['user'], null, $p, $jar);
+        ok($code === 200 && str_contains($body, 'Сесія застаріла') && !str_contains($body, 'Продукт оновлено') && $short0() === 'Старий короткий опис ПТ' && calls($callsFile) === 0,
+            "POST $label: не збережено, показано помилку, API не викликано");
+    }
+    [$code, $body] = http($editUrl, $ids['user'], null, $form('Новий короткий опис ПТ'), $jar);
     ok($code === 200 && str_contains($body, 'Продукт оновлено'), "POST у CRM: збережено (HTTP $code)");
     ok(str_contains($body, 'Переклад змінених полів оновлено автоматично: short_description'), 'CRM показує примітку про оновлений переклад');
     ok(calls($callsFile) === 1, 'одне звернення до API (одна мова, лише змінене поле); є: ' . calls($callsFile));
@@ -211,7 +231,7 @@ try {
     ok(!str_contains($html, 'Old short PT'), 'старого EN-тексту в списку немає');
 
     // Друге редагування в межах 5 хв: переклад скидається, але API не викликається.
-    [$code, $body] = http($base . '/crm-edit-product.php?id=' . $pid, $ids['user'], null, $form('Третій короткий опис ПТ'));
+    [$code, $body] = http($editUrl, $ids['user'], null, $form('Третій короткий опис ПТ'), $jar);
     ok($code === 200 && str_contains($body, 'новий з’явиться автоматично протягом 5 хв'), 'друге збереження в межах 5 хв: примітка про відкладений переклад');
     ok(calls($callsFile) === 1, 'друге збереження: нових звернень до API немає (є ' . calls($callsFile) . ')');
     $t = tr($pdo, $pid, 'short_description');
@@ -237,7 +257,7 @@ try {
 
     // Збереження без зміни тексту — переклади не чіпаються.
     $before = $pdo->query("SELECT COUNT(*) FROM product_translations WHERE product_id = $pid")->fetchColumn();
-    http($base . '/crm-edit-product.php?id=' . $pid, $ids['user'], null, $form('Третій короткий опис ПТ'));
+    http($editUrl, $ids['user'], null, $form('Третій короткий опис ПТ'), $jar);
     ok($pdo->query("SELECT COUNT(*) FROM product_translations WHERE product_id = $pid")->fetchColumn() === $before && calls($callsFile) === 2, 'збереження без зміни тексту: переклади й API без змін');
     ok(product_text_changes(['short_description' => 'a', 'full_description' => null], ['short_description' => 'a ', 'full_description' => '']) === [], 'product_text_changes: NULL = порожнє, пробіли не зміна');
 

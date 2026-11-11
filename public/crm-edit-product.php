@@ -406,6 +406,12 @@ $noticeDuplicate = false;
 $saved = false;
 $translationNote = '';
 
+// CSRF: токен сесії в прихованому полі форми; без нього POST нічого не зберігає (як у crm-search.php).
+if (empty($_SESSION['crm_product_csrf']) || !is_string($_SESSION['crm_product_csrf'])) {
+    $_SESSION['crm_product_csrf'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['crm_product_csrf'];
+
 /** Значення форми: на GET — з БД, на POST — із запиту. */
 $old = [
     'name' => (string) $dbRow['name'],
@@ -436,6 +442,10 @@ $plans = array_map(static function (array $p): array {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $forceSave = ($_POST['action'] ?? '') === 'force';
+    if (!is_string($_POST['csrf'] ?? null) || !hash_equals($csrf, (string) $_POST['csrf'])) {
+        // Помилка вже в $errors — блок збереження нижче не виконується; введені значення лишаються у формі.
+        $errors[] = 'Сесія застаріла або запит надіслано не з цієї форми. Перевірте поля й натисніть «Зберегти» ще раз.';
+    }
 
     $old['name'] = trim((string) ($_POST['name'] ?? ''));
     $old['logo_url'] = trim((string) ($_POST['logo_url'] ?? ''));
@@ -1208,6 +1218,7 @@ $isArchived = (int) $dbRow['is_archived'] === 1;
 
         <form class="form" method="post" action="crm-edit-product.php?id=<?= (int) $productId ?>" enctype="multipart/form-data" novalidate>
             <input type="hidden" name="id" value="<?= (int) $productId ?>">
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
 
             <div class="field autofill" id="autofill-box">
                 <label class="field__label" for="autofill_url">Перезаповнити з посилання</label>
