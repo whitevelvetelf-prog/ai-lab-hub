@@ -261,6 +261,27 @@ try {
     ok($pdo->query("SELECT COUNT(*) FROM product_translations WHERE product_id = $pid")->fetchColumn() === $before && calls($callsFile) === 2, 'збереження без зміни тексту: переклади й API без змін');
     ok(product_text_changes(['short_description' => 'a', 'full_description' => null], ['short_description' => 'a ', 'full_description' => '']) === [], 'product_text_changes: NULL = порожнє, пробіли не зміна');
 
+    echo "== 2b. CSRF у формі додавання продукту
+";
+    $addUrl = $base . '/crm-add-product.php';
+    [, $page] = http($addUrl, $ids['user'], null, null, $jar);
+    $csrfAdd = preg_match('~name="csrf" value="([0-9a-f]{64})"~', $page, $m) ? $m[1] : '';
+    ok($csrfAdd !== '' && $csrfAdd === $csrf, 'форма додавання містить CSRF-токен (той самий токен сесії)');
+    $addName = 'PT-TEST Add ' . bin2hex(random_bytes(3));
+    $addForm = static fn(?string $token): array => array_filter([
+        'csrf' => $token, 'action' => 'force', 'name' => $addName, 'official_url' => 'https://pt-add.example.invalid',
+        'short_description' => 'Тестовий продукт ПТ', 'categories' => [$catId], 'subcategories' => [$ids['sub']],
+        'partnership_status' => 'found', 'skill_level' => 'none',
+    ], static fn($v): bool => $v !== null);
+    $countAdd = static fn(): int => (int) $pdo->query('SELECT COUNT(*) FROM products WHERE name = ' . $pdo->quote($addName))->fetchColumn();
+    foreach (['без токена' => null, 'з чужим токеном' => str_repeat('b', 64)] as $label => $bad) {
+        [$code, $body] = http($addUrl, $ids['user'], null, $addForm($bad), $jar);
+        ok($code === 200 && str_contains($body, 'Сесія застаріла') && $countAdd() === 0, "додавання $label: продукт не створено, показано помилку");
+    }
+    [$code, $body] = http($addUrl, $ids['user'], null, $addForm($csrfAdd), $jar);
+    $ids['added'] = (int) $pdo->query('SELECT COALESCE(MAX(id), 0) FROM products WHERE name = ' . $pdo->quote($addName))->fetchColumn();
+    ok($code === 200 && $countAdd() === 1 && !str_contains($body, 'Сесія застаріла'), 'додавання з токеном: продукт створено (id ' . $ids['added'] . ')');
+
     // ------------------------------------------------------------------ 3
     echo "== 3. Підказка під полем Елі\n";
     $orig = (string) file_get_contents(__DIR__ . '/../docs/ai_statement_uk.md');
@@ -287,8 +308,7 @@ try {
     if ($ids['log'] !== []) {
         $pdo->exec('DELETE FROM search_log WHERE id IN (' . implode(',', array_map('intval', $ids['log'])) . ')');
     }
-    if ($ids['product'] > 0) {
-        $p = (int) $ids['product'];
+    foreach (array_filter([(int) ($ids['product'] ?? 0), (int) ($ids['added'] ?? 0)]) as $p) {
         $pdo->exec("DELETE FROM search_index WHERE product_id = $p");
         $pdo->exec("DELETE FROM product_categories WHERE product_id = $p");
         $pdo->exec("DELETE FROM product_subcategories WHERE product_id = $p");
@@ -306,7 +326,7 @@ try {
         @unlink($f);
     }
     @rmdir($tmp);
-    $left = (int) $pdo->query("SELECT (SELECT COUNT(*) FROM products WHERE name = 'PT-TEST Product') + (SELECT COUNT(*) FROM subcategories WHERE name = 'PT-TEST підкатегорія')
+    $left = (int) $pdo->query("SELECT (SELECT COUNT(*) FROM products WHERE name = 'PT-TEST Product' OR name LIKE 'PT-TEST Add %') + (SELECT COUNT(*) FROM subcategories WHERE name = 'PT-TEST підкатегорія')
                                  + (SELECT COUNT(*) FROM search_log WHERE query LIKE 'zzpt-%') + (SELECT COUNT(*) FROM users WHERE name = 'PT-TEST admin')")->fetchColumn();
     ok($left === 0, 'тестових записів не лишилося');
 }

@@ -387,6 +387,12 @@ $similar = [];
 $noticeDuplicate = false;
 $savedProductId = null;
 
+// CSRF: той самий токен сесії, що й у crm-edit-product.php; без нього POST нічого не створює.
+if (empty($_SESSION['crm_product_csrf']) || !is_string($_SESSION['crm_product_csrf'])) {
+    $_SESSION['crm_product_csrf'] = bin2hex(random_bytes(32));
+}
+$csrf = $_SESSION['crm_product_csrf'];
+
 $old = [
     'name' => '',
     'logo_url' => '',
@@ -412,6 +418,10 @@ $plans = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $forceSave = ($_POST['action'] ?? '') === 'force';
+    if (!is_string($_POST['csrf'] ?? null) || !hash_equals($csrf, (string) $_POST['csrf'])) {
+        // Помилка вже в $errors — блок збереження нижче не виконується; введені значення лишаються у формі.
+        $errors[] = 'Сесія застаріла або запит надіслано не з цієї форми. Перевірте поля й натисніть «Зберегти» ще раз.';
+    }
 
     $old['name'] = trim((string) ($_POST['name'] ?? ''));
     $old['logo_url'] = trim((string) ($_POST['logo_url'] ?? ''));
@@ -1259,6 +1269,7 @@ $displayPlans = $plans !== []
         <?php endif; ?>
 
         <form class="form" method="post" action="crm-add-product.php" enctype="multipart/form-data" novalidate>
+            <input type="hidden" name="csrf" value="<?= e($csrf) ?>">
             <div class="field autofill" id="autofill-box">
                 <label class="field__label" for="autofill_url">Автозаповнити з посилання</label>
                 <div class="autofill__row">
