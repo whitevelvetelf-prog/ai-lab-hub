@@ -53,9 +53,10 @@ if (isset($_POST['message'])) {
         $message = (string) $body['message'];
     }
 }
-// Биті UTF-8 байти відкидаємо, щоб json_encode запиту до API не падав.
+// Текст не в UTF-8 (напр. кирилиця в cp1251 від консольного клієнта) — до моделі не надсилаємо: вона отримала б
+// «кашу» й попросила б уточнити, а звернення пішло б у денний ліміт. Браузер завжди шле UTF-8.
 if (!mb_check_encoding($message, 'UTF-8')) {
-    $message = (string) mb_convert_encoding($message, 'UTF-8', 'UTF-8');
+    eli_respond(['ok' => true, 'mode' => 'hint', 'reply_text' => t('eli_bad_encoding'), 'steps' => [], 'products' => []]);
 }
 $message = trim($message);
 if ($message === '') {

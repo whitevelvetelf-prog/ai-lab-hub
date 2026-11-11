@@ -131,6 +131,17 @@ try {
     }
     ok($calls === 3, 'усі ліміти 0 — три звернення без обмежень');
 
+    echo "== Слова з самих цифр (раніше TypeError → «технічні труднощі»)\n";
+    $cfg = array_merge($base, ['daily_limit_ip' => 0, 'daily_limit_user' => 0, 'daily_limit_global' => 0]);
+    $err = '';
+    try {
+        $rn = $ask($cfg, [], 'монтаж відео 2025 для 123456 ' . $run);
+    } catch (Throwable $e) {
+        $err = get_class($e) . ': ' . $e->getMessage();
+    }
+    ok($err === '' && ($rn[0] ?? '') === 'ai', 'запит «монтаж відео 2025 …» обробляється без винятку' . ($err !== '' ? " ($err)" : ''));
+    ok(eli_keywords('відео 2025') === array_values(array_filter(eli_keywords('відео 2025'), 'is_string')) && in_array('2025', eli_keywords('відео 2025'), true), 'eli_keywords повертає рядки, зокрема «2025»');
+
     echo "== Роботи\n";
     $cfg = array_merge($base, ['daily_limit_ip' => 5, 'daily_limit_global' => 100]);
     $calls = 0;
@@ -153,6 +164,17 @@ try {
     $lastLog = static fn(): array => $pdo->query('SELECT source, error_type FROM eli_api_log ORDER BY id DESC LIMIT 1')->fetch(PDO::FETCH_ASSOC) ?: [];
     $j = $post('curl/8.0');
     ok(($j['mode'] ?? '') === 'fallback' && ($lastLog()['error_type'] ?? '') === 'bot', 'робот (curl): fallback, журнал error_type=bot');
+
+    // Кирилиця в cp1251 (як від curl у Windows-консолі) — не UTF-8: підказка, до моделі й у журнал нічого.
+    $logBefore = (int) $pdo->query('SELECT COALESCE(MAX(id), 0) FROM eli_api_log')->fetchColumn();
+    $ch = curl_init($apache . '/api-eli-chat.php');
+    curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_POST => true, CURLOPT_TIMEOUT => 30,
+        CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0 Safari/537.36',
+        CURLOPT_POSTFIELDS => 'message=' . rawurlencode((string) mb_convert_encoding('потрібно змонтувати відео', 'Windows-1251', 'UTF-8'))]);
+    $j = json_decode((string) curl_exec($ch), true) ?: [];
+    curl_close($ch);
+    ok(($j['mode'] ?? '') === 'hint' && ($j['reply_text'] ?? '') === t('eli_bad_encoding'), 'запит у cp1251: підказка «Не вдалося прочитати текст запиту…»');
+    ok((int) $pdo->query('SELECT COALESCE(MAX(id), 0) FROM eli_api_log')->fetchColumn() === $logBefore, 'запит у cp1251: до моделі не йшов (нового рядка в eli_api_log немає)');
 
     // Вичерпаний ліміт IP для 127.0.0.1 / ::1 → гість-браузер отримує запасний режим, модель не викликається.
     $live = eli_settings((array) (require __DIR__ . '/../config/ai-assistant.php'));

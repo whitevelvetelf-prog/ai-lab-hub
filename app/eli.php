@@ -160,7 +160,8 @@ function eli_keywords(string $text): array
         }
     }
 
-    return array_keys($out);
+    // array_keys() робить ключ із самих цифр («2025») числом — повертаємо рядки (strict_types).
+    return array_map('strval', array_keys($out));
 }
 
 // ---------------------------------------------------------------------------
