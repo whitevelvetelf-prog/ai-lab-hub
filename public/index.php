@@ -52,6 +52,7 @@ $categoryIcons = [
     'entertainment'         => 'party-popper',
     'esoterics'             => 'sparkles',
     'ukrainian-apps'        => 'flag',
+    'travel-tourism'        => 'plane',
 ];
 
 ?>

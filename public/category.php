@@ -76,6 +76,7 @@ $categoryIcons = [
     'entertainment'         => 'party-popper',
     'esoterics'             => 'sparkles',
     'ukrainian-apps'        => 'flag',
+    'travel-tourism'        => 'plane',
 ];
 
 $subcategoryIcons = [
@@ -240,6 +241,14 @@ $subcategoryIcons = [
     'ua-charity'             => 'hand-heart',
     'ua-business'            => 'briefcase-business',
     'ua-booking'             => 'calendar-check',
+    // Подорожі та туризм
+    'hotel-booking'          => 'hotel',
+    'vacation-rentals'       => 'bed-double',
+    'hotel-loyalty'          => 'key-round',
+    'flights'                => 'plane-takeoff',
+    'ground-transport'       => 'train-front',
+    'tours-activities'       => 'ticket',
+    'trip-planners'          => 'map-pinned',
     // Розробка та IT: LLM-інструменти
     'local-llm'          => 'cpu',
     'llm-inference'      => 'server',
