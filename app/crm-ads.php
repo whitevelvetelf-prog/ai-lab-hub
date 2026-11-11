@@ -26,6 +26,31 @@ function crm_ads_require_admin(): void
     }
 }
 
+// --- CSRF (crm-add-campaign.php, crm-edit-campaign.php): токен сесії в прихованому полі кожної форми ---
+
+const CRM_ADS_CSRF_ERROR = 'Сесія застаріла або запит надіслано не з цієї форми. Перевірте поля й надішліть форму ще раз.';
+
+function crm_ads_csrf_token(): string
+{
+    if (empty($_SESSION['crm_ads_csrf']) || !is_string($_SESSION['crm_ads_csrf'])) {
+        $_SESSION['crm_ads_csrf'] = bin2hex(random_bytes(32));
+    }
+
+    return $_SESSION['crm_ads_csrf'];
+}
+
+function crm_ads_csrf_field(): string
+{
+    return '<input type="hidden" name="csrf" value="' . crm_ads_e(crm_ads_csrf_token()) . '">';
+}
+
+function crm_ads_csrf_ok(): bool
+{
+    $sent = $_POST['csrf'] ?? null;
+
+    return is_string($sent) && $sent !== '' && hash_equals(crm_ads_csrf_token(), $sent);
+}
+
 /** Коректна дата Y-m-d або null. */
 function crm_ads_parse_date(string $value): ?string
 {

@@ -49,6 +49,16 @@ $adValues = ['zone_id' => $zones[0]['id'] ?? '', 'scope' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
+    if (!crm_ads_csrf_ok()) {
+        // Помилку показуємо біля форми, з якої прийшов запит; жодна дія не виконується.
+        if ($action === 'save_campaign') {
+            $campaignValues = $_POST;
+            $campaignErrors[] = CRM_ADS_CSRF_ERROR;
+        } else {
+            $adErrors[] = CRM_ADS_CSRF_ERROR;
+        }
+        $action = '';
+    }
 
     if ($action === 'save_campaign') {
         $campaignValues = $_POST;
@@ -246,7 +256,7 @@ $flashAdAdded = isset($_GET['ad_added']);
             </div>
         <?php endif; ?>
 
-        <form class="form" method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>">
+        <form class="form" method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>"><?= crm_ads_csrf_field() ?>
             <input type="hidden" name="action" value="save_campaign">
             <?php crm_ads_campaign_fields($campaignValues, true); ?>
 
@@ -301,7 +311,7 @@ $flashAdAdded = isset($_GET['ad_added']);
                                 <td class="table__num"><?= number_format((int) $ad['impressions'], 0, '', ' ') ?></td>
                                 <td class="table__num"><?= number_format((int) $ad['clicks'], 0, '', ' ') ?></td>
                                 <td class="table__nowrap">
-                                    <form method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>" style="margin:0;" data-confirm="<?= $ad['status'] === 'active' ? 'Вимкнути цей банер?' : 'Увімкнути цей банер?' ?>">
+                                    <form method="post" action="crm-edit-campaign.php?id=<?= $campaignId ?>" style="margin:0;" data-confirm="<?= $ad['status'] === 'active' ? 'Вимкнути цей банер?' : 'Увімкнути цей банер?' ?>"><?= crm_ads_csrf_field() ?>
                                         <input type="hidden" name="action" value="toggle_ad">
                                         <input type="hidden" name="ad_id" value="<?= (int) $ad['id'] ?>">
                                         <button type="submit" class="btn btn--ghost btn--sm"><?= $ad['status'] === 'active' ? 'Вимкнути' : 'Увімкнути' ?></button>
@@ -330,7 +340,7 @@ $flashAdAdded = isset($_GET['ad_added']);
         <?php if ($zones === []): ?>
             <div class="notice"><p>Немає жодної зони показу (таблиця ad_zones порожня) — спершу застосуйте database/increment_latest.sql.</p></div>
         <?php else: ?>
-        <form class="form" method="post" enctype="multipart/form-data" action="crm-edit-campaign.php?id=<?= $campaignId ?>">
+        <form class="form" method="post" enctype="multipart/form-data" action="crm-edit-campaign.php?id=<?= $campaignId ?>"><?= crm_ads_csrf_field() ?>
             <input type="hidden" name="action" value="add_ad">
 
             <div class="field">

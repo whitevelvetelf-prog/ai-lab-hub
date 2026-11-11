@@ -25,6 +25,9 @@ $values = ['campaign_type' => 'paid', 'start_date' => date('Y-m-d')];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $values = $_POST;
     [$errors, $data] = crm_ads_parse_campaign($_POST, false);
+    if (!crm_ads_csrf_ok()) {
+        $errors = [CRM_ADS_CSRF_ERROR];   // нічого не створюється, введені значення лишаються у формі
+    }
 
     if ($errors === []) {
         try {
@@ -90,6 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form class="form" method="post" action="crm-add-campaign.php">
+            <?= crm_ads_csrf_field() ?>
             <?php crm_ads_campaign_fields($values, false); ?>
 
             <div class="form-actions">
