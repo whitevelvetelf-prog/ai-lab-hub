@@ -13,13 +13,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 
 $adId = (int) ($_POST['ad_id'] ?? 0);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $adId > 0 && !promo_is_bot()) {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $adId > 0 && !promo_is_bot() && csrf_same_origin()) {
     try {
         $stmt = $pdo->prepare(
             "INSERT INTO ad_zone_stats_daily (ad_id, stat_date, impressions)

@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/promo.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -21,7 +22,7 @@ $reason = is_string($_POST['reason'] ?? null) ? $_POST['reason'] : '';
 $data = promo_token_read(is_string($_POST['t'] ?? null) ? $_POST['t'] : '');
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' && $data !== null && $data['own'] && !$data['preview']
-    && in_array($reason, PROMO_REPORT_REASONS, true) && !promo_is_bot()) {
+    && in_array($reason, PROMO_REPORT_REASONS, true) && !promo_is_bot() && csrf_same_origin()) {
     try {
         /** @var PDO $pdo */
         $pdo = require __DIR__ . '/../config/database.php';

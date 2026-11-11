@@ -10,6 +10,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/oauth.php';
 
@@ -57,6 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = t('err_password_mismatch');
     }
 
+    if (!csrf_ok()) {
+        $errors[] = t('csrf_expired');
+    }
     if ($errors === []) {
         $check = $pdo->prepare('SELECT id FROM users WHERE email = :email');
         $check->execute([':email' => $old['email']]);
@@ -332,6 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="post" action="register.php" novalidate>
+                <?= csrf_field() ?>
                 <div class="field">
                     <label class="field__label" for="name"><?= htmlspecialchars(t('field_name'), ENT_QUOTES) ?></label>
                     <input class="input" type="text" id="name" name="name" value="<?= e($old['name']) ?>" required autofocus>

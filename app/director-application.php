@@ -19,6 +19,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/csrf.php';
 require_once __DIR__ . '/translations.php';
 
 /** @var PDO $pdo */
@@ -80,6 +81,9 @@ if (
         $errors[] = t('apply_director_err_email_match');
     }
 
+    if (!csrf_ok()) {
+        $errors[] = t('csrf_expired');
+    }
     if ($errors === []) {
         $dup = $pdo->prepare(
             "SELECT id FROM admin_requests
@@ -421,6 +425,7 @@ $heading   = $positionKey === 'ceo' ? t('apply_ceo_heading') : t('apply_exec_hea
                 <?php endif; ?>
 
                 <form method="post" action="<?= e($selfUrl) ?>" novalidate>
+                    <?= csrf_field() ?>
                     <input type="hidden" name="action" value="submit_director_request">
                     <div class="field">
                         <label class="field__label" for="first_name"><?= htmlspecialchars(t('apply_director_first_name'), ENT_QUOTES) ?></label>

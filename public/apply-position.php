@@ -21,6 +21,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/translations.php';
 
 /** @var PDO $pdo */
@@ -62,6 +63,9 @@ if (!$invalid && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors[] = t('apply_director_err_too_long');
     }
 
+    if (!csrf_ok()) {
+        $errors[] = t('csrf_expired');
+    }
     if ($errors === []) {
         $userCheck = $pdo->prepare('SELECT id FROM users WHERE email = :email');
         $userCheck->execute([':email' => $old['email']]);
@@ -326,6 +330,7 @@ if (!$invalid && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 <?php endif; ?>
 
                 <form method="post" action="apply-position.php" novalidate>
+                    <?= csrf_field() ?>
                     <input type="hidden" name="token" value="<?= e($token) ?>">
                     <div class="form-row">
                         <div class="field">

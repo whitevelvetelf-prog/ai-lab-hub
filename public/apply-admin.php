@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/translations.php';
 
 /** @var PDO $pdo */
@@ -35,7 +36,8 @@ function e(mixed $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_admin_request' && $user['role'] !== 'admin') {
+$csrfError = $_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok();   // заявка не подається; сторінка пояснює чому
+if (!$csrfError && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'submit_admin_request' && $user['role'] !== 'admin') {
     $existing = $pdo->prepare(
         "SELECT id FROM admin_requests WHERE user_id = :uid AND status IN ('pending', 'approved') LIMIT 1"
     );
@@ -305,7 +307,9 @@ if ($user['role'] !== 'admin') {
                 </div>
             <?php else: ?>
                 <p class="account-panel__text"><?= htmlspecialchars(t('apply_admin_confirm_text'), ENT_QUOTES) ?></p>
+                <?php if ($csrfError): ?><div class="notice notice--error"><?= e(t('csrf_expired')) ?></div><?php endif; ?>
                 <form method="post" action="apply-admin.php">
+                    <?= csrf_field() ?>
                     <input type="hidden" name="action" value="submit_admin_request">
                     <div class="btn-row">
                         <button type="submit" class="btn btn--primary"><?= htmlspecialchars(t('apply_admin_submit'), ENT_QUOTES) ?></button>

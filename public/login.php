@@ -7,6 +7,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/oauth.php';
 
@@ -35,7 +36,10 @@ if (isset($_SESSION['oauth_error'])) {
     unset($_SESSION['oauth_error']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
+    $old['email'] = trim((string) ($_POST['email'] ?? ''));
+    $error = t('csrf_expired');   // форма не з цієї сесії / сторінки — вхід не виконується
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
 
@@ -299,6 +303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php endif; ?>
 
             <form method="post" action="login.php" novalidate>
+                <?= csrf_field() ?>
                 <div class="field">
                     <label class="field__label" for="email">Email</label>
                     <input class="input" type="email" id="email" name="email" value="<?= e($old['email']) ?>" required autofocus>

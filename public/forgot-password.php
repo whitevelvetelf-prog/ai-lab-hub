@@ -12,6 +12,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/mailer.php';
 
@@ -33,8 +34,11 @@ const RATE_LIMIT_WINDOW_MINUTES = 15;
 const RATE_LIMIT_MAX_REQUESTS = 3;
 
 $submitted = false;
+$csrfError = false;
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && !csrf_ok()) {
+    $csrfError = true;   // лист не надсилається; форма показується знову з поясненням
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $submitted = true;
     $email = trim((string) ($_POST['email'] ?? ''));
 
@@ -294,8 +298,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php else: ?>
                 <p class="auth-card__sub"><?= htmlspecialchars(t('forgot_subtitle'), ENT_QUOTES) ?></p>
+                <?php if ($csrfError): ?><div class="notice notice--error"><?= e(t('csrf_expired')) ?></div><?php endif; ?>
 
                 <form method="post" action="forgot-password.php" novalidate>
+                    <?= csrf_field() ?>
                     <div class="field">
                         <label class="field__label" for="email">Email</label>
                         <input class="input" type="email" id="email" name="email" required autofocus>

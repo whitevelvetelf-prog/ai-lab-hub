@@ -19,13 +19,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/ad-popup.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 const PROMO_EVENT_BATCH_MAX = 20;
 
 http_response_code(204);
 header('Cache-Control: no-store');
 
-if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || promo_is_bot()) {
+if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST' || promo_is_bot() || !csrf_same_origin()) {
     exit;
 }
 

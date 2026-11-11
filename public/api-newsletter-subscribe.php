@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/translations.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -34,6 +35,9 @@ function newsletter_respond(array $payload, int $status = 200): void
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     newsletter_respond(['ok' => false, 'error' => 'method_not_allowed'], 405);
+}
+if (!csrf_same_origin()) {
+    newsletter_respond(['ok' => false, 'error' => 'cross_site'], 403);
 }
 
 // email: з form-urlencoded або з JSON-тіла.

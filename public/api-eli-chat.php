@@ -22,6 +22,7 @@ require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/analytics.php';
 require_once __DIR__ . '/../app/eli.php';
 require_once __DIR__ . '/../app/search-log.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -41,6 +42,9 @@ function eli_tech_error(): void
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     eli_respond(['ok' => false, 'mode' => 'error', 'reply_text' => '', 'steps' => [], 'products' => []], 405);
+}
+if (!csrf_same_origin()) {   // POST зі сторінки іншого сайту
+    eli_respond(['ok' => false, 'mode' => 'error', 'reply_text' => '', 'steps' => [], 'products' => []], 403);
 }
 
 // --- Вхідне повідомлення ---------------------------------------------------

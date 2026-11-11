@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/../app/auth.php';
+require_once __DIR__ . '/../app/csrf.php';   // csrf_same_origin(): запит лише з нашого сайту
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -30,6 +31,9 @@ function saved_respond(array $payload, int $status = 200): void
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     saved_respond(['ok' => false, 'error' => 'method_not_allowed'], 405);
+}
+if (!csrf_same_origin()) {
+    saved_respond(['ok' => false, 'error' => 'cross_site'], 403);
 }
 
 // auth_current_user() (а не лише auth_user_id()) — звіряє, що акаунт із
