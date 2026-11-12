@@ -88,7 +88,7 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
         return null; // сторінка «без реклами» (блок H)
     }
 
-    $sql = "SELECT a.id, a.image_url, a.target_url, a.headline, a.subtext, a.category_id, a.subcategory_id
+    $sql = "SELECT a.id, a.campaign_id, a.image_url, a.target_url, a.headline, a.subtext, a.category_id, a.subcategory_id
             FROM ads a
             JOIN ad_campaigns c ON c.id = a.campaign_id
             WHERE a.zone_id = :zone
@@ -115,7 +115,9 @@ function getAdForZone(int $zoneId, ?int $categoryId = null, ?int $subcategoryId 
             $params[':sub'] = $subcategoryId;
         }
         $stmt->execute($params);
-        $rows = $stmt->fetchAll();
+        // Аудиторія кампанії й реклама реєстрації лише гостям (app/promo-internal.php).
+        $rows = array_values(array_filter($stmt->fetchAll(), static fn(array $r): bool
+            => promo_viewer_allowed($pdo, (int) $r['campaign_id'], null, null, (string) $r['target_url'])));
         if ($rows !== []) {
             // Найточніший збіг (категорія + підкатегорія) має пріоритет; серед рівних — випадковий (без RAND() у SQL).
             $score = static fn(array $r): int => ($r['category_id'] !== null ? 1 : 0) + ($r['subcategory_id'] !== null ? 1 : 0);

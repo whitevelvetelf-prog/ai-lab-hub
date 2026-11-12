@@ -31,6 +31,12 @@ declare(strict_types=1);
  *   пропонує Web Risk API. Умови й ціни слід перевірити на сайті Google
  *   (cloud.google.com/web-risk) перед вибором провайдера.
  * Без ключа перевірка має статус skipped, а модератор бачить попередження.
+ *
+ * Внутрішні адреси (власна реклама з відносною адресою /register.php?ref=…, посилання на наш домен —
+ * app/promo-internal.php) перевіряються БЕЗ HTTP-запиту за переліком config/promo-internal.php:
+ * link_check_status = 'internal', прапорців немає, у лічильник «PROMO_LINK_FAIL_LIMIT перевірок поспіль»
+ * не входять (link_fail_streak = 0). Некоректна внутрішня адреса — прапорець internal_path (статус flagged),
+ * теж без лічильника: це помилка адреси, а не недоступність сторінки.
  */
 
 require_once __DIR__ . '/promo.php';
@@ -360,7 +366,7 @@ final class PromoLinkChecker
                 $r['error'] = true;
                 $r['blocked'] = $hop['blocked'];
                 $r['notes'][] = $hop['error'];
-                $r['flags'][] = $hop['blocked'] ? 'ssrf_blocked' : 'fetch_error';
+                $r['flags'][] = $hop['flag'] ?? ($hop['blocked'] ? 'ssrf_blocked' : 'fetch_error');
                 break;
             }
             $r['http_status'] = $hop['status'];
@@ -431,12 +437,16 @@ final class PromoLinkChecker
     /**
      * Один запит без автоматичних редиректів, з перевіркою адрес до й після з'єднання.
      *
-     * @return array{status:int,location:?string,host:string,error:?string,blocked:bool}
+     * @return array{status:int,location:?string,host:string,error:?string,blocked:bool,flag?:?string}
      */
     private function fetch(string $url): array
     {
-        $fail = static fn(string $msg, bool $blocked = false, string $host = ''): array => ['status' => 0, 'location' => null, 'host' => $host, 'error' => $msg, 'blocked' => $blocked];
+        $fail = static fn(string $msg, bool $blocked = false, string $host = '', ?string $flag = null): array => ['status' => 0, 'location' => null, 'host' => $host, 'error' => $msg, 'blocked' => $blocked, 'flag' => $flag];
 
+        // Відносна адреса у зовнішній кампанії: не SSRF, а неповна адреса — окреме повідомлення (лічиться як і раніше).
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return $fail('Відносна адреса ' . mb_substr($url, 0, 200) . ': вкажіть повну адресу https://…', true, '', 'relative_url');
+        }
         $p = parse_url($url);
         $scheme = strtolower((string) ($p['scheme'] ?? ''));
         $host = isset($p['host']) ? strtolower(trim((string) $p['host'], '[]')) : '';
@@ -582,17 +592,24 @@ function promo_link_checker(PDO $pdo): PromoLinkChecker
  */
 function promo_linkcheck_creative(PDO $pdo, int $creativeId, bool $setBaseline): array
 {
-    $st = $pdo->prepare('SELECT id, destination_url, link_final_host, link_fail_streak FROM ad_creatives WHERE id = :id');
+    $st = $pdo->prepare('SELECT cr.id, cr.destination_url, cr.link_final_host, cr.link_fail_streak, c.campaign_type
+                         FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id WHERE cr.id = :id');
     $st->execute([':id' => $creativeId]);
     $cr = $st->fetch();
     if ($cr === false || trim((string) $cr['destination_url']) === '') {
         return ['status' => 'skipped', 'flags' => [], 'notes' => ['Адреси переходу немає'], 'check_id' => null];
     }
 
-    $r = promo_link_checker($pdo)->check((string) $cr['destination_url'], $setBaseline ? null : ($cr['link_final_host'] ?: null));
-    $r['status'] = $r['flags'] === [] ? 'ok' : 'flagged';
-    $failed = $r['error'] || in_array('non_2xx', $r['flags'], true);
-    $streak = $failed ? (int) $cr['link_fail_streak'] + 1 : 0;
+    $url = trim((string) $cr['destination_url']);
+    if (promo_is_internal_target((string) $cr['campaign_type'], $url)) {
+        $r = promo_linkcheck_internal($url);
+        $streak = 0;   // внутрішня адреса не лічиться в «перевірки поспіль»
+    } else {
+        $r = promo_link_checker($pdo)->check($url, $setBaseline ? null : ($cr['link_final_host'] ?: null));
+        $r['status'] = $r['flags'] === [] ? 'ok' : 'flagged';
+        $failed = $r['error'] || in_array('non_2xx', $r['flags'], true);
+        $streak = $failed ? (int) $cr['link_fail_streak'] + 1 : 0;
+    }
 
     $pdo->prepare(
         'INSERT INTO ad_link_checks (creative_id, checked_at, url, final_url, final_host, http_status, redirect_count,
@@ -616,6 +633,22 @@ function promo_linkcheck_creative(PDO $pdo, int $creativeId, bool $setBaseline):
     return $r;
 }
 
+/**
+ * Результат перевірки внутрішньої адреси (без HTTP-запиту) у форматі PromoLinkChecker::check + status.
+ * status: 'internal' — дозволена сторінка сайту; 'flagged' — некоректна адреса (прапорець internal_path).
+ */
+function promo_linkcheck_internal(string $url): array
+{
+    $ic = promo_internal_url_check($url);
+
+    return [
+        'url' => $url, 'final_url' => $ic['ok'] ? $url : null, 'final_host' => null, 'http_status' => null, 'redirect_count' => 0,
+        'response_ms' => 0, 'safe_browsing_status' => 'skipped', 'flags' => $ic['ok'] ? [] : ['internal_path'],
+        'notes' => [$ic['ok'] ? 'Внутрішня сторінка сайту (' . $ic['path'] . ') — перевірено без HTTP-запиту за переліком config/promo-internal.php.' : (string) $ic['error']],
+        'error' => false, 'blocked' => !$ic['ok'], 'internal' => true, 'status' => $ic['ok'] ? 'internal' : 'flagged',
+    ];
+}
+
 /** Остання перевірка креативу або null. */
 function promo_last_link_check(PDO $pdo, int $creativeId): ?array
 {
@@ -635,6 +668,8 @@ const PROMO_LINK_FLAG_LABELS = [
     'non_2xx' => 'відповідь не 2xx',
     'fetch_error' => 'сторінка не відкривається',
     'ssrf_blocked' => 'адреса веде у внутрішню мережу / заборонена',
+    'relative_url' => 'відносна адреса: вкажіть повну адресу https://…',
+    'internal_path' => 'внутрішня адреса некоректна або сторінки немає в дозволеному переліку',
     'too_many_redirects' => 'забагато переадресацій',
     'host_differs' => 'кінцевий домен відрізняється від заявленого',
     'final_host_changed' => 'кінцевий домен змінився після схвалення',

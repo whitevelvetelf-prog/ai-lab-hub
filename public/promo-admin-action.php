@@ -70,7 +70,7 @@ switch ($action) {
     case 'link_recheck':
         $r = promo_linkcheck_creative($pdo, (int) $str('creative_id'), true);
         promo_log_event($pdo, 'link_check', (int) $str('creative_id'), null, ($r['status'] ?? '') . ': ' . implode(', ', $r['flags'] ?? []), $adminId);
-        $back('moderation', true, ['Посилання перевірено: ' . (($r['status'] ?? '') === 'ok' ? 'без прапорців.' : 'є прапорці — див. картку креативу.')]);
+        $back('moderation', true, ['Посилання перевірено: ' . (($r['status'] ?? '') === 'internal' ? 'внутрішня сторінка сайту, без прапорців. Щоб повернути кампанію в показ — «Схвалити».' : (($r['status'] ?? '') === 'ok' ? 'без прапорців.' : 'є прапорці — див. картку креативу.'))]);
 
     case 'blocklist_add':
         [$ok, $msg] = promo_admin_blocklist_add($pdo, $adminId, $str('domain'), $str('reason'));

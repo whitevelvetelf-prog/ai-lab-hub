@@ -615,7 +615,12 @@ function promo_save_campaign(PDO $pdo, int $userId, array $in, array $files, boo
         }
     }
     $destination = trim((string) ($in['destination_url'] ?? ''));
-    if ($destination !== '' && ($e = promo_url_error($destination)) !== null) {
+    if ($destination !== '' && $house && !promo_url_is_absolute_http($destination)) {
+        // Власна реклама: сторінка сайту з переліку config/promo-internal.php, без HTTP-запиту (app/promo-internal.php).
+        if (!promo_internal_url_check($destination)['ok']) {
+            $errors[] = 'err_url_internal';
+        }
+    } elseif ($destination !== '' && ($e = promo_url_error($destination)) !== null) {
         $errors[] = $e;
     }
     // image — оголошення-зображення (ad_creatives.creative_type = 'image'): картинка в полі постера, без відео.

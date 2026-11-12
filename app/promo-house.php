@@ -13,6 +13,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/promo-admin.php';
+require_once __DIR__ . '/acquisition.php';   // acq_signups_count()
 
 /** Мінімум показів кожного варіанта, після якого адміну показується порівняння CTR. */
 const PROMO_HOUSE_AB_MIN = 100;
@@ -20,7 +21,6 @@ const PROMO_HOUSE_AB_MIN = 100;
 const PROMO_HOUSE_RULES = [
     'hide_if_campaign' => 'Не показувати користувачам, які вже створили рекламну кампанію',
     'hide_if_listing' => 'Не показувати користувачам, які вже публікували оголошення',
-    'guests_only' => 'Лише гостям (не показувати користувачам, які увійшли)',
     'site_only' => 'Лише на сторінках сайту й блогу (не всередині маркетплейсу)',
     'requires_marketplace' => 'Лише коли маркетплейс відкрито (marketplace_public = 1)',
     'exclude_advertise' => 'Не показувати на advertise.php і в кабінеті рекламодавця',
@@ -79,7 +79,7 @@ function promo_house_rules_json(array $in): string
  * переходу з варіанта (acquisition_ref = ref_code).
  *
  * @param list<array> $creatives
- * @return array<int,array{impressions:int,clicks:int,campaigns:int,listings:int}>
+ * @return array<int,array{impressions:int,clicks:int,campaigns:int,listings:int,signups:int}>
  */
 function promo_house_variant_stats(PDO $pdo, array $creatives): array
 {
@@ -99,7 +99,8 @@ function promo_house_variant_stats(PDO $pdo, array $creatives): array
             $q->execute([':r' => $cr['ref_code']]);
             $lists = (int) $q->fetchColumn();
         }
-        $out[$id] = ['impressions' => $imp, 'clicks' => $clk, 'campaigns' => $camps, 'listings' => $lists];
+        $out[$id] = ['impressions' => $imp, 'clicks' => $clk, 'campaigns' => $camps, 'listings' => $lists,
+            'signups' => !empty($cr['ref_code']) ? acq_signups_count($pdo, (string) $cr['ref_code']) : 0];
     }
 
     return $out;
@@ -137,6 +138,9 @@ function promo_house_save_campaign(PDO $pdo, int $adminId, array $in): array
     }
     $name = mb_substr(trim(strip_tags((string) ($in['name'] ?? ''))), 0, 120);
     $flags = array_map(static fn($v) => !empty($v), (array) ($in['rules'] ?? []));
+    $audience = is_string($in['audience'] ?? null) && isset(PROMO_AUDIENCES[$in['audience']]) ? (string) $in['audience'] : 'all';
+    // «Лише гостям» дублюється в house_rules.guests_only — працює й до міграції ad_campaign_audience.
+    $flags['guests_only'] = $audience === 'guests';
     $places = array_values(array_intersect(PROMO_PLACEMENTS, (array) ($in['placements'] ?? [])));
     if (!empty($flags['site_only'])) {
         $places = array_values(array_filter($places, static fn($p) => !promo_placement_is_marketplace($pdo, $p)));
@@ -161,24 +165,33 @@ function promo_house_save_campaign(PDO $pdo, int $adminId, array $in): array
 
         return [false, 'Не вдалося зберегти.'];
     }
-    promo_log_event($pdo, 'house_campaign_saved', null, $id, 'місця: ' . implode(', ', $places), $adminId);
+    $audOk = promo_audience_set($pdo, $id, $audience);
+    promo_log_event($pdo, 'house_campaign_saved', null, $id, 'місця: ' . implode(', ', $places) . '; аудиторія: ' . $audience, $adminId);
 
-    return [true, 'Власну кампанію #' . $id . ' збережено.'];
+    return [true, 'Власну кампанію #' . $id . ' збережено.' . (!$audOk && $audience === 'logged_in'
+        ? ' Аудиторію «лише тим, хто увійшов» не збережено: застосуйте міграцію 2026-11-12-ad-audience.sql.' : '')];
 }
 
-/** Адреса переходу власної реклами: відносна (/…) або https; ref_code додається, якщо його немає. */
-function promo_house_url(string $url, string $ref): ?string
+/**
+ * Адреса переходу власної реклами: внутрішня сторінка з переліку config/promo-internal.php (/…) або зовнішня https;
+ * ref_code додається, якщо його немає. null — адреса недозволена ($error — чому).
+ */
+function promo_house_url(string $url, string $ref, ?string &$error = null): ?string
 {
     $url = trim($url);
-    $ok = preg_match('#^/(?!/)[A-Za-z0-9._~/?=&%-]*$#', $url) === 1 || (filter_var($url, FILTER_VALIDATE_URL) !== false && str_starts_with($url, 'https://'));
-    if (!$ok) {
-        return null;
-    }
-    if ($ref !== '' && !preg_match('~[?&]ref=~', $url)) {
+    if ($ref !== '' && !preg_match('~[?&]ref=~', $url) && !str_contains($url, '#')) {
         $url .= (str_contains($url, '?') ? '&' : '?') . 'ref=' . $ref;
     }
+    if (promo_url_is_absolute_http($url) && !promo_is_own_host((string) parse_url($url, PHP_URL_HOST))) {
+        $ok = filter_var($url, FILTER_VALIDATE_URL) !== false && str_starts_with($url, 'https://') && !preg_match('/[\s@\\\\]/', $url);
+        $error = $ok ? null : 'Зовнішня адреса — лише повна https://… без логіна в адресі.';
+    } else {
+        $ic = promo_internal_url_check($url);
+        $error = $ic['error'];
+        $ok = $ic['ok'];
+    }
 
-    return mb_substr($url, 0, 500);
+    return $ok ? mb_substr($url, 0, 500) : null;
 }
 
 /** Зберегти тексти варіанта (картки). @return array{0:bool,1:string} */
@@ -207,9 +220,10 @@ function promo_house_save_variant(PDO $pdo, int $adminId, array $in): array
             return [false, 'Код ref ' . $ref . ' уже використано іншим варіантом.'];
         }
     }
-    $url = promo_house_url($t('destination_url', 480), $ref);
+    $urlError = null;
+    $url = promo_house_url($t('destination_url', 480), $ref, $urlError);
     if ($url === null) {
-        return [false, 'Адреса переходу — відносна (/advertise.php) або https://.'];
+        return [false, 'Адреса переходу: ' . ($urlError ?? 'внутрішня (/advertise.php) або https://.')];
     }
     $pdo->prepare(
         "UPDATE ad_creatives SET title = :t, title_en = :te, description = :d, description_en = :de, description_fallback = :f, description_fallback_en = :fe,
@@ -367,20 +381,30 @@ function promo_house_admin_html(PDO $pdo, string $csrf, callable $badge): string
             $h .= '<label class="pc-check"><input type="checkbox" name="placements[]" value="' . $e($k) . '"' . (in_array($k, $places, true) ? ' checked' : '') . '> <span>'
                 . $e($p['title_uk']) . ' <small class="pc-muted">' . $e(['catalog' => 'Каталог', 'blog' => 'Блог', 'marketplace' => 'Маркетплейс'][$p['group_key']] ?? '') . '</small></span></label>';
         }
-        $h .= '</fieldset><fieldset class="pc-field"><legend>Умови показу</legend>';
+        $aud = promo_campaign_audience($pdo, $cid);
+        if ($aud === 'all' && !empty($flags['guests_only'])) {
+            $aud = 'guests';
+        }
+        $h .= '</fieldset><label class="pc-field"><span>Аудиторія</span><select name="audience">';
+        foreach (PROMO_AUDIENCES as $k => $label) {
+            $h .= '<option value="' . $k . '"' . ($aud === $k ? ' selected' : '') . '>' . $e($label) . '</option>';
+        }
+        $h .= '</select></label><p class="pc-muted">Реклама з посиланням на /register.php тим, хто увійшов, не показується за будь-якої аудиторії.</p>'
+            . '<fieldset class="pc-field"><legend>Умови показу</legend>';
         foreach (PROMO_HOUSE_RULES as $k => $label) {
             $h .= '<label class="pc-check"><input type="checkbox" name="rules[' . $k . ']" value="1"' . (!empty($flags[$k]) ? ' checked' : '') . '> <span>' . $e($label) . '</span></label>';
         }
         $h .= '</fieldset><button type="submit" class="pc-btn pc-btn--primary">Зберегти кампанію</button></form></details>';
 
         // Варіанти
-        $h .= '<div class="pc-table-wrap"><table class="pc-table"><thead><tr><th>Варіант</th><th>Покази</th><th>Кліки</th><th>CTR</th><th>Кампаній створено</th><th>Оголошень створено</th><th>Дії</th></tr></thead><tbody>';
+        $h .= '<div class="pc-table-wrap"><table class="pc-table"><thead><tr><th>Варіант</th><th>Покази</th><th>Кліки</th><th>CTR</th><th>Реєстрацій</th><th>Кампаній створено</th><th>Оголошень створено</th><th>Дії</th></tr></thead><tbody>';
         foreach ($creatives as $cr) {
             $s = $stats[(int) $cr['id']];
             $hv = 'hv-' . (int) $cr['id'];
             $h .= '<tr><td data-label="Варіант"><strong>' . $e($cr['ref_code'] ?: '#' . $cr['id']) . '</strong><span class="pc-muted">' . $e($cr['title']) . '</span></td>'
                 . '<td data-label="Покази">' . $s['impressions'] . '</td><td data-label="Кліки">' . $s['clicks'] . '</td>'
                 . '<td data-label="CTR">' . $e(promo_ctr($s['clicks'], $s['impressions'])) . '</td>'
+                . '<td data-label="Реєстрацій">' . $s['signups'] . '</td>'
                 . '<td data-label="Кампаній">' . $s['campaigns'] . '</td><td data-label="Оголошень">' . $s['listings'] . '</td>'
                 . '<td data-label="Дії"><a class="pc-btn pc-btn--small pc-btn--primary" href="#' . $hv . '" data-pc-house-open="' . $hv . '">Редагувати текст і кнопку</a></td></tr>';
         }

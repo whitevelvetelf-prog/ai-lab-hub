@@ -362,6 +362,9 @@ function social_resolve_login(PDO $pdo, string $provider, array $profile): array
         $newId = (int) $pdo->lastInsertId();
         social_link($pdo, $newId, $provider, $profile['id'], $profile['email']);
         $pdo->commit();
+        if (function_exists('acq_signup_record')) {
+            acq_signup_record($pdo, $newId);   // реєстрація з реклами ?ref=house-… (app/acquisition.php)
+        }
     } catch (PDOException $ex) {
         $pdo->rollBack();
         if ($ex->getCode() === '23000') {

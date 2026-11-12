@@ -27,6 +27,7 @@ require_once __DIR__ . '/promo-exclusions.php';
 require_once __DIR__ . '/promo-placements.php';
 require_once __DIR__ . '/promo-select.php';
 require_once __DIR__ . '/promo-quiet.php';
+require_once __DIR__ . '/promo-internal.php';
 
 /** Валюта прайсу, балансів і списань (з 2026-10-17; раніше UAH). Суми — центи. */
 const PROMO_CURRENCY = 'USD';

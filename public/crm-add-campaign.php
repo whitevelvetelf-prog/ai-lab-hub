@@ -49,7 +49,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':end_date'        => $data['end_date'],
                 ':notes'           => $data['notes'],
             ]);
-            header('Location: crm-edit-campaign.php?id=' . (int) $pdo->lastInsertId() . '&created=1');
+            $newCampaignId = (int) $pdo->lastInsertId();
+            promo_audience_set($pdo, $newCampaignId, $data['audience']);
+            header('Location: crm-edit-campaign.php?id=' . $newCampaignId . '&created=1');
             exit;
         } catch (Throwable $ex) {
             error_log('[crm-ads] ' . $ex->getMessage());

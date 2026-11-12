@@ -45,6 +45,7 @@ foreach ($pdo->query('SELECT id, category_id, name FROM subcategories ORDER BY i
 $campaignErrors = [];
 $adErrors = [];
 $campaignValues = $campaign;
+$campaignValues['audience'] = promo_campaign_audience($pdo, (int) $campaign['id']);
 $adValues = ['zone_id' => $zones[0]['id'] ?? '', 'scope' => ''];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -86,6 +87,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':notes'           => $data['notes'],
                     ':id'              => $campaignId,
                 ]);
+                promo_audience_set($pdo, $campaignId, $data['audience']);
                 header('Location: crm-edit-campaign.php?id=' . $campaignId . '&saved=1');
                 exit;
             } catch (Throwable $ex) {

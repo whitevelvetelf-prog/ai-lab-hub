@@ -175,6 +175,7 @@ function promo_admin_targets_text(PDO $pdo, int $campaignId): array
  * Схвалити або відхилити креатив. Повертає повідомлення.
  *
  * Креатив, адреса якого має прапорці перевірки (link_check_status='flagged') або
+ * (крім 'ok' і 'internal' — внутрішня сторінка сайту, app/promo-internal.php)
  * ще не перевірялась, схвалюється лише з явним підтвердженням адміна й причиною
  * ($confirmFlagged + $overrideReason) — рішення пишеться в promo_event_log.
  */
@@ -197,7 +198,7 @@ function promo_admin_moderate(PDO $pdo, int $adminId, int $creativeId, bool $app
     if ($approve && promo_category_blocked_everywhere($pdo, $row['advertiser_category'])) {
         return [false, 'Категорія реклами «' . promo_advertiser_category_label($row['advertiser_category']) . '» заборонена правилами всюди — креатив треба відхилити.'];
     }
-    if ($approve && $row['link_check_status'] !== 'ok') {
+    if ($approve && !in_array($row['link_check_status'], ['ok', 'internal'], true)) {
         if (!$confirmFlagged || $overrideReason === '') {
             return [false, $row['link_check_status'] === 'flagged'
                 ? 'Перевірка посилання має прапорці: схвалити можна лише з підтвердженням і причиною.'

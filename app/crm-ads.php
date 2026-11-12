@@ -8,6 +8,8 @@ declare(strict_types=1);
  * ads, ad_zones (database/increment_latest.sql).
  */
 
+require_once __DIR__ . '/promo-internal.php';   // аудиторія кампанії (ad_campaign_audience)
+
 const CRM_ADS_UPLOAD_DIR = __DIR__ . '/../public/assets/images/ads/uploads';
 const CRM_ADS_UPLOAD_URL = '/assets/images/ads/uploads/';
 
@@ -129,8 +131,10 @@ function crm_ads_parse_campaign(array $in, bool $withStatus): array
     }
 
     $notes = trim((string) ($in['notes'] ?? ''));
+    $audience = is_string($in['audience'] ?? null) && isset(PROMO_AUDIENCES[$in['audience']]) ? (string) $in['audience'] : 'all';
 
     return [$errors, [
+        'audience'        => $audience,
         'campaign_type'   => $type,
         'advertiser_name' => $advertiser,
         'contact_email'   => $email !== '' ? $email : null,
@@ -275,6 +279,16 @@ function crm_ads_campaign_fields(array $v, bool $withStatus): void
             </select>
         </div>
         <?php endif; ?>
+
+        <div class="field">
+            <label class="field__label" for="audience">Аудиторія</label>
+            <select class="select" id="audience" name="audience">
+                <?php foreach (PROMO_AUDIENCES as $k => $label): ?>
+                <option value="<?= $k ?>"<?= ($v['audience'] ?? 'all') === $k ? ' selected' : '' ?>><?= crm_ads_e($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <p class="field__hint">Реклама з посиланням на реєстрацію (/register.php) тим, хто вже увійшов, не показується за будь-якої аудиторії.</p>
+        </div>
 
         <div class="field">
             <label class="field__label" for="notes">Нотатки</label>

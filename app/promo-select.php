@@ -456,8 +456,13 @@ function promo_pick_set(PDO $pdo, string $placement, array $categoryIds, array $
     $paid = [];
     $house = [];
     $houseOk = [];
+    $loggedIn = promo_viewer_logged_in();
     foreach ($rows as $r) {
         if (isset($exclude[$r['id']])) {
+            continue;
+        }
+        // Аудиторія кампанії (ad_campaign_audience) і реклама реєстрації — лише гостям (app/promo-internal.php).
+        if (!promo_viewer_allowed($pdo, (int) $r['campaign_id'], (int) $r['id'], $loggedIn)) {
             continue;
         }
         $limit = $r['internal'] ? $houseCap : $cap;

@@ -21,7 +21,13 @@ $pdo = require __DIR__ . '/../config/database.php';
 auth_remember_next_from_request();
 
 if (auth_check()) {
-    header('Location: ' . auth_after_login_url());
+    // Старе посилання чи закладка на реєстрацію (зокрема з реклами ?ref=house-…): не мовчазний редирект,
+    // а коротке повідомлення в кабінеті.
+    $dest = auth_after_login_url();
+    if (str_starts_with($dest, 'account.php')) {
+        $_SESSION['account_flash'] = t('register_already_logged_in');
+    }
+    header('Location: ' . $dest);
     exit;
 }
 
@@ -82,7 +88,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ':role' => 'user',
             ]);
 
-            auth_login(['id' => (int) $pdo->lastInsertId(), 'role' => 'user']);
+            $newUserId = (int) $pdo->lastInsertId();
+            acq_signup_record($pdo, $newUserId);   // реєстрація з реклами ?ref=house-… → ad_house_signups
+            auth_login(['id' => $newUserId, 'role' => 'user']);
 
             header('Location: ' . auth_after_login_url());
             exit;

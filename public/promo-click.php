@@ -40,12 +40,13 @@ $stmt = $pdo->prepare('SELECT destination_url FROM ad_creatives WHERE id = :id A
 $stmt->execute([':id' => $data['c'], ':c' => $data['k']]);
 $target = str_replace(["\r", "\n"], '', (string) ($stmt->fetchColumn() ?: ''));
 
-// Власна реклама сайту може вести на свою сторінку відносною адресою (/advertise.php?ref=house-A1).
+// Власна реклама сайту може вести на свою сторінку відносною адресою (/advertise.php?ref=house-A1) —
+// лише на сторінку з переліку config/promo-internal.php (app/promo-internal.php).
 $internal = false;
-if (preg_match('#^/(?!/)[A-Za-z0-9._~/?=&%-]*$#', $target) === 1) {
+if (!promo_url_is_absolute_http($target)) {
     $st = $pdo->prepare("SELECT campaign_type FROM ad_campaigns WHERE id = :c");
     $st->execute([':c' => $data['k']]);
-    $internal = $st->fetchColumn() === 'internal';
+    $internal = $st->fetchColumn() === 'internal' && promo_internal_url_check($target)['ok'];
 }
 if ($target === '' || (!$internal && !preg_match('~^https://[^\s/?#]+~i', $target))) {
     header('Location: /index.php', true, 302);

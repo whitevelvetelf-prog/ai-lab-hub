@@ -305,11 +305,11 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <p><strong>Обрано місця в маркетплейсі.</strong> Перевірте, що креатив не маскується під оголошення: немає псевдо-ціни чи псевдо-контактів, він не виглядає як вакансія, курс, послуга чи оголошення користувача, позначку «Реклама» не приховано (правила реклами, розділ 2). Якщо маскується — відхиліть із цією причиною.</p>
                                 </div>
                                 <?php endif; ?>
-                                <?php $lc = promo_last_link_check($pdo, (int) $q['id']); $lcFlagged = $q['link_check_status'] !== 'ok'; ?>
+                                <?php $lc = promo_last_link_check($pdo, (int) $q['id']); $lcInternal = $q['link_check_status'] === 'internal'; $lcFlagged = !in_array($q['link_check_status'], ['ok', 'internal'], true); ?>
                                 <div class="pc-box <?= $lcFlagged ? 'pc-box--warn' : '' ?> pc-linkcheck">
                                     <p><strong>Перевірка посилання:</strong>
                                         <?php if ($lc === null): ?>ще не виконувалась
-                                        <?php else: ?><?= $q['link_check_status'] === 'ok' ? 'без прапорців' : '<strong class="pc-warn-text">є прапорці</strong>' ?>
+                                        <?php else: ?><?= $lcInternal ? 'внутрішня сторінка сайту (без HTTP-запиту), без прапорців' : ($q['link_check_status'] === 'ok' ? 'без прапорців' : '<strong class="pc-warn-text">є прапорці</strong>') ?>
                                         <span class="pc-muted"><?= pc_e(promo_local_time($lc['checked_at'])) ?> (Київ)</span><?php endif; ?></p>
                                     <?php if (!empty($q['recheck_reason'])): ?>
                                     <p class="pc-warn-text">Повторна модерація: <?= pc_e($q['recheck_reason']) ?></p>
@@ -324,8 +324,8 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                         <?php if ($lc['notes']): ?><dt>Деталі</dt><dd><?= nl2br(pc_e($lc['notes'])) ?></dd><?php endif; ?>
                                     </dl>
                                     <?php endif; ?>
-                                    <?php if ($sbOff): ?>
-                                    <p class="pc-warn-text">Автоматичної перевірки на шкідливі сторінки немає (Safe Browsing / Web Risk не налаштовано в config/promo.php) — перевірте сторінку вручну.</p>
+                                    <?php if ($sbOff && !$lcInternal): ?>
+                                    <p class="pc-warn-text"><strong>Автоматичної перевірки на шкідливі сторінки немає, потрібна ручна перевірка</strong> (Safe Browsing / Web Risk не налаштовано в config/promo.php — див. docs/PROMO_OPERATIONS.md).</p>
                                     <?php endif; ?>
                                     <form method="post" action="promo-admin-action.php" class="pc-inline-form">
                                         <?= $csrf ?>
@@ -787,6 +787,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <p>Провайдер Safe Browsing: <strong><?= pc_e($sbProvider->name()) ?></strong>.
                                 <?php if ($sbOff): ?><span class="pc-warn-text">Автоматичної перевірки на шкідливі сторінки немає — ключ вписується в config/promo.php (див. docs/PROMO_OPERATIONS.md).</span><?php endif; ?></p>
                             <p class="pc-muted">Адреса перевіряється при надсиланні на модерацію й при кожній зміні; повторно — активні креативи щодоби, решта щотижня (cron). Автопауза з поверненням на модерацію: зміна кінцевого домену, Safe Browsing/Web Risk «flagged», домен у чорному списку, <?= PROMO_LINK_FAIL_LIMIT ?> помилки поспіль.</p>
+                            <p class="pc-muted">Внутрішні адреси (власна реклама з адресою /сторінка.php, посилання на ailabhub-directory.com) перевіряються без HTTP-запиту за переліком дозволених сторінок у config/promo-internal.php: статус «внутрішня сторінка», без прапорців і без лічильника помилок. Зовнішні адреси — лише повні https://…</p>
 
                             <h3 class="pc-h3">Чорний список доменів</h3>
                             <form method="post" action="promo-admin-action.php" class="pc-filter">
