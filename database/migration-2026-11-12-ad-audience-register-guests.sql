@@ -10,13 +10,13 @@
 INSERT INTO ad_campaign_audience (campaign_id, audience)
 SELECT DISTINCT cr.campaign_id, 'guests'
 FROM ad_creatives cr
-WHERE cr.destination_url LIKE '/register.php%'
+WHERE cr.campaign_id IS NOT NULL AND (cr.destination_url LIKE '/register.php%'
    OR cr.destination_url LIKE 'https://ailabhub-directory.com/register.php%'
-   OR cr.destination_url LIKE 'https://www.ailabhub-directory.com/register.php%'
+   OR cr.destination_url LIKE 'https://www.ailabhub-directory.com/register.php%')
 UNION
 SELECT DISTINCT a.campaign_id, 'guests'
 FROM ads a
-WHERE a.target_url LIKE '/register.php%'
+WHERE a.campaign_id IS NOT NULL AND (a.target_url LIKE '/register.php%'
    OR a.target_url LIKE 'https://ailabhub-directory.com/register.php%'
-   OR a.target_url LIKE 'https://www.ailabhub-directory.com/register.php%'
+   OR a.target_url LIKE 'https://www.ailabhub-directory.com/register.php%')
 ON DUPLICATE KEY UPDATE audience = 'guests';
