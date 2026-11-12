@@ -1717,7 +1717,8 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 <?php $crmPending = lst_admin_pending_counts($pdo); ?>
                                 <a class="crm-mod-link" href="account.php?ladm_tab=mod#acc-listings-admin">Модерація оголошень (<?= (int) $crmPending['total'] ?>)</a><br>
                                 <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
-                                · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
+                                · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>
+                                · <a href="crm-catalog-fill.php"><?= htmlspecialchars(t('account_crm_fill_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>
                                 · <a href="crm-ads-list.php"><?= htmlspecialchars(t('account_crm_ads_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-donations.php"><?= htmlspecialchars(t('account_crm_donations_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-search.php"><?= htmlspecialchars(t('account_crm_search_link'), ENT_QUOTES) ?></a>

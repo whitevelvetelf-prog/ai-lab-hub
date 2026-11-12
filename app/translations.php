@@ -561,6 +561,7 @@ $GLOBALS['TRANSLATIONS'] = [
     'account_crm_access_prefix'  => 'Доступ до CRM:',
     'account_crm_list_link'      => 'список продуктів',
     'account_crm_add_link'       => 'додати новий AI-продукт',
+    'account_crm_fill_link'      => 'наповнення каталогу',
     'account_crm_ads_link'       => 'реклама',
     'account_crm_donations_link' => 'донати',
     'account_crm_search_link' => 'Пошук: індекс, синоніми, запити без результатів',
