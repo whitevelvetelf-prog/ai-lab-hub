@@ -28,8 +28,6 @@ INSERT IGNORE INTO ui_translations (key_name, lang, translated_text, source) VAL
 ('donate_intro', 'en', 'AI LAB HUB is an independent catalog of AI tools. If you find it useful, you can support the project with a voluntary contribution: it helps us grow and expand the catalog.', 'manual'),
 ('donate_thanks', 'en', 'Thank you for any support!', 'manual'),
 ('donate_soon', 'en', 'Ways to support the project will appear here soon. Thank you for stopping by!', 'manual'),
-('donate_ua_title', 'en', 'Donations from Ukraine', 'manual'),
-('donate_intl_title', 'en', 'International transfers', 'manual'),
 ('donate_jar_btn', 'en', 'Open the donation jar', 'manual'),
 ('donate_qr_hint', 'en', 'Or scan the QR code with your phone camera', 'manual'),
 ('donate_card', 'en', 'Card number', 'manual'),
