@@ -100,13 +100,18 @@ if (is_file($root . '/config/database.php')) {
 
 function render_donate(): string
 {
-    $cmd = escapeshellarg(PHP_BINARY) . ' -r ' . escapeshellarg(
-        '$_SERVER["REQUEST_METHOD"]="GET";$_SERVER["HTTP_HOST"]="ai-lab-hub.test";$_SERVER["REQUEST_URI"]="/donate.php";'
-        . '$_SERVER["SCRIPT_NAME"]="/donate.php";chdir(' . var_export(dirname(__DIR__) . '/public', true) . ');'
-        . 'include "donate.php";'
-    );
+    // Окремий процес: свіжий кеш site_settings і сесія. Раннер — тимчасовий файл
+    // (escapeshellarg на Windows прибирає подвійні лапки з коду для php -r).
+    static $runner = null;
+    if ($runner === null) {
+        $runner = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'donate-render-' . getmypid() . '.php';
+        file_put_contents($runner, '<?php $_SERVER["REQUEST_METHOD"] = "GET"; $_SERVER["HTTP_HOST"] = "ai-lab-hub.test";'
+            . ' $_SERVER["REQUEST_URI"] = "/donate.php"; $_SERVER["SCRIPT_NAME"] = "/donate.php";'
+            . ' chdir(' . var_export(dirname(__DIR__) . '/public', true) . '); include "donate.php";');
+        register_shutdown_function(static fn() => @unlink($runner));
+    }
 
-    return (string) shell_exec($cmd);   // окремий процес: свіжий кеш site_settings і сесія
+    return (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($runner) . ' 2>&1');
 }
 
 if ($pdo === null) {
