@@ -191,25 +191,35 @@ if (in_array('--no-build', $argv, true) || PHP_OS_FAMILY !== 'Windows') {
             check(false, 'архів зібрано: ' . trim(substr($out, 0, 400)));
         }
     } else {
-        $za = new ZipArchive();
-        $za->open($zip);
+        // Розпакувати (tar є у Windows 10+; розширення zip у PHP може не бути) і перевірити вміст.
+        $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'donate-test-' . getmypid();
+        @mkdir($dir);
+        $tar = (getenv('SystemRoot') ?: 'C:\Windows') . '\System32\tar.exe';   // не GNU tar із Git (не розуміє «C:»)
+        shell_exec(escapeshellarg($tar) . ' -xf ' . escapeshellarg($zip) . ' -C ' . escapeshellarg($dir) . ' 2>&1');
         $cfgEntries = [];
         $leak = [];
-        for ($i = 0; $i < $za->numFiles; $i++) {
-            $n = (string) $za->getNameIndex($i);
+        $count = 0;
+        $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS));
+        foreach ($it as $fi) {
+            $n = str_replace(DIRECTORY_SEPARATOR, '/', substr($fi->getPathname(), strlen($dir) + 1));
+            $count++;
             if (str_starts_with($n, 'config/') && $n !== 'config/languages.php') {
                 $cfgEntries[] = $n;
             }
             if (preg_match('/\.(php|sql|md|js)$/', $n)) {
-                $c = (string) $za->getFromIndex($i);
+                $c = (string) file_get_contents($fi->getPathname());
                 if (preg_match('#https://(send\.)?monobank\.ua/jar/[A-Za-z0-9]{6,}#', $c)
                     || preg_match("/(INSERT|REPLACE|UPDATE)[^;]*site_settings[^;]*'donate_/is", $c)) {
                     $leak[] = $n;
                 }
             }
         }
-        $za->close();
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST) as $fi) {
+            $fi->isDir() ? @rmdir($fi->getPathname()) : @unlink($fi->getPathname());
+        }
+        @rmdir($dir);
         @unlink($zip);
+        check($count > 100, "архів розпаковано ({$count} файлів)");
         check(str_contains($out, 'Done:'), 'архів зібрано');
         check($cfgEntries === [], 'в архіві немає config/, крім languages.php' . ($cfgEntries ? ': ' . implode(', ', $cfgEntries) : ''));
         check($leak === [], 'в архіві немає посилання на банку й SQL, що пише donate_*' . ($leak ? ': ' . implode(', ', $leak) : ''));
