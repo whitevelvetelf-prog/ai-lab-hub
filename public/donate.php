@@ -200,6 +200,12 @@ $v = static fn(string $f): int => (int) @filemtime(__DIR__ . '/assets/' . $f);
             color: var(--text-muted);
         }
 
+        .donate-card__note {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
         .donate-legal {
             margin-top: 28px;
             font-size: 0.9rem;
@@ -223,8 +229,8 @@ $v = static fn(string $f): int => (int) @filemtime(__DIR__ . '/assets/' . $f);
         <p class="stub__text donate-extra"><?= $e($extraText) ?></p>
         <?php endif; ?>
 
-        <section class="donate-card" aria-labelledby="donate-ua">
-            <h2 class="donate-card__title" id="donate-ua"><?= $e(t('donate_ua_title')) ?></h2>
+        <section class="donate-card" aria-labelledby="donate-jar-title">
+            <h2 class="donate-card__title" id="donate-jar-title"><?= $e(t('donate_jar_title')) ?></h2>
             <div class="donate-jar">
                 <a class="donate-btn" href="<?= $e($jarUrl) ?>" target="_blank" rel="noopener noreferrer" data-donate-jar><?= $e(t('donate_jar_btn')) ?></a>
                 <?php if ($showQr): ?>
@@ -234,6 +240,7 @@ $v = static fn(string $f): int => (int) @filemtime(__DIR__ . '/assets/' . $f);
                 </div>
                 <?php endif; ?>
             </div>
+            <p class="donate-card__note"><?= $e(t('donate_jar_note')) ?></p>
         </section>
 
         <p class="stub__text" style="margin-top: 24px;"><?= $e(t('donate_thanks')) ?></p>
