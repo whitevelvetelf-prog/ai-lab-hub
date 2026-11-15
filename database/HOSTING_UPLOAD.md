@@ -51,6 +51,8 @@ WHERE c.name = 'Мультимедіа' AND s.name = 'Генерація зоб�
 5. **Код:** розпакувати `code/deploy-mp.zip` у корінь сайту з перезаписом. `config/database.php` в архіві немає — конфіги на сервері лишаться; `config/marketplace.php` в архіві немає під цією назвою (лише як `config/marketplace.dist.php`, шаблон) — не заливати, доки не готові до Marketplace (окремо, `database/MARKETPLACE_HOSTING.md`). Після цього відкрити сайт з Ctrl+F5 (сервіс-воркер може віддавати стару копію).
 
 ## 3. Перевірка після заливки
+Після будь-якої заливки відкрийте `/donate.php`: має бути кнопка банки monobank (або `php scripts/check-donate-live.php https://<домен>`). Повний чекліст — `database/MARKETPLACE_HOSTING.md`, розділ «Чекліст після БУДЬ-ЯКОГО релізу».
+
 Нових продуктів без підкатегорії має бути **0**:
 ```sql
 SELECT p.id, p.name FROM products p

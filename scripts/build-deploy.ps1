@@ -261,6 +261,33 @@ if ($IncludeMarketplace) {
 
 $files = $files | Select-Object -Unique | Sort-Object
 
+# Donations guard: settings live ONLY in the site_settings table (entered in Cabinet -> Donations), never in a release.
+#  * no config/ file except config/languages.php (e.g. a config/donate.php must never ship);
+#  * no shipped file may contain a real monobank jar link or write donate_* keys / wipe site_settings via SQL.
+# A release therefore can never overwrite or blank the donation link.
+$donateProblems = @()
+foreach ($rel in $files) {
+    if ($rel -match '^config/' -and $rel -ne 'config/languages.php' -and -not ($IncludeMarketplace -and $rel -eq 'config/marketplace.php')) {
+        $donateProblems += "config file in archive: $rel"
+        continue
+    }
+    if ($rel -notmatch '\.(php|sql|md|js|json|html)$') { continue }
+    $full = Join-Path $root ($rel -replace '/', '\')
+    if (-not (Test-Path $full)) { continue }
+    $text = [System.IO.File]::ReadAllText($full, [System.Text.Encoding]::UTF8)
+    if ($text -match 'https://(send\.)?monobank\.ua/jar/[A-Za-z0-9]{6,}') {
+        $donateProblems += "real monobank jar link in: $rel"
+    }
+    if ($rel -match '\.sql$' -and ($text -match "(?is)(INSERT|REPLACE|UPDATE)[^;]*site_settings[^;]*'donate_" -or $text -match '(?is)(DROP\s+TABLE|TRUNCATE|DELETE\s+FROM|REPLACE\s+INTO)[^;]*site_settings')) {
+        $donateProblems += "SQL may overwrite donation settings: $rel"
+    }
+}
+if ($donateProblems.Count -gt 0) {
+    Write-Host "STOPPED: donation settings guard - archive NOT built:" -ForegroundColor Red
+    $donateProblems | ForEach-Object { Write-Host "  $_" -ForegroundColor Red }
+    exit 1
+}
+
 # Make sure every listed file exists.
 $missing = @()
 foreach ($rel in $files) {

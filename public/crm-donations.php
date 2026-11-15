@@ -122,6 +122,7 @@ $csrf = donate_csrf_token();
     <main class="rep">
         <a class="rep__back" href="account.php#acc-crm">← Кабінет</a>
         <h1 class="rep__title">Донати</h1>
+        <?= donate_status_warning_html($pdo) ?>
         <p class="rep__sub">Донати надходять через банку, картку чи IBAN повз сайт, тому кожен запис вносимо тут вручну. Якщо вказати e-mail зареєстрованого користувача, запис побачить лише він у кабінеті («Мої підтримки проєкту»). Номери карток і реквізити не вносимо.</p>
 
         <?php if (!$tableOk): ?>

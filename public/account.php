@@ -1724,6 +1724,18 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 · <a href="crm-search.php"><?= htmlspecialchars(t('account_crm_search_link'), ENT_QUOTES) ?></a>
                                 · <a href="admin-popular-queries.php"><?= htmlspecialchars(t('mpq_admin_link'), ENT_QUOTES) ?></a><?php endif; ?>.
                             </div>
+                            <?php if (auth_role() === 'admin'):
+                                require_once __DIR__ . '/../app/donations.php';
+                                $dnState = donate_status($pdo); ?>
+                            <div class="site-health" id="site-health">
+                                <p><strong>Стан сайту</strong></p>
+                                <ul class="section__hint" style="margin:4px 0 10px;padding-left:18px;">
+                                    <li>Донати: <?= $dnState['configured'] ? 'налаштовано' : '<strong>не налаштовано</strong>' ?>
+                                        · <a href="account.php#acc-donate">Кабінет → Донати</a></li>
+                                </ul>
+                                <?= donate_status_warning_html($pdo) ?>
+                            </div>
+                            <?php endif; ?>
                             <?php if (auth_role() === 'admin' && promo_is_admin($pdo, (int) $user['id'])) { echo promo_crm_overview_html($pdo); } ?>
                             <?php if (auth_role() === 'admin'):
                                 require_once __DIR__ . '/../app/marketplace.php';

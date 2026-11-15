@@ -5,7 +5,9 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — розділ-акордеон «Донати» в кабінеті (лише role='admin').
  * Форма відправляється на public/donations-admin-action.php.
- * Значення реквізитів живуть лише в БД (site_settings), не в коді.
+ * Публікується лише посилання на банку monobank; номер картки й інші реквізити
+ * форма не містить і не перезаписує (рішення власниці, 2026-11-15).
+ * Значення живуть лише в БД (site_settings), не в коді.
  */
 
 require_once __DIR__ . '/donations.php';
@@ -43,7 +45,7 @@ function donations_admin_render(PDO $pdo, array $user): void
     ?>
             <div class="accordion" id="acc-donate">
                 <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-donate-panel">
-                    <span class="accordion__title">Донати<?= $cfg['donate_enabled'] === '1' ? '' : ' · сторінку вимкнено' ?></span>
+                    <span class="accordion__title">Донати<?= donate_status($pdo)['configured'] ? '' : ' · ⚠ не налаштовано' ?></span>
                     <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
                 </button>
                 <div class="accordion__panel" id="acc-donate-panel">
@@ -56,32 +58,20 @@ function donations_admin_render(PDO $pdo, array $user): void
                             <?php foreach ($flash['msgs'] as $m): ?><p><?= $e($m) ?></p><?php endforeach; ?>
                         </div>
                         <?php endif; ?>
-                        <p class="dn-muted">Усі поля необов'язкові: на сторінці <a href="donate.php" target="_blank" rel="noopener">donate.php</a> показуються лише заповнені. Поки сторінку вимкнено, кнопка «Підтримати проєкт» у підвалі веде на неї, але там лише нейтральний текст «Скоро».</p>
+                        <?= $tableOk ? donate_status_warning_html($pdo) : '' ?>
+                        <p class="dn-muted">Кнопка на сторінці <a href="donate.php" target="_blank" rel="noopener">donate.php</a> з'являється, коли сторінку ввімкнено й вставлено посилання на банку. Інакше пункт «Підтримати проєкт» у підвалі веде на сторінку з нейтральним текстом «Скоро».</p>
                         <p class="dn-muted">Облік отриманих донатів (історія для користувачів у кабінеті): <a href="crm-donations.php">CRM → Донати</a>.</p>
 
                         <form method="post" action="donations-admin-action.php" class="dn-form" autocomplete="off">
                             <input type="hidden" name="csrf" value="<?= $e(donate_csrf_token()) ?>">
                             <label class="dn-check"><input type="checkbox" name="donate_enabled" value="1"<?= $cfg['donate_enabled'] === '1' ? ' checked' : '' ?>> <strong><?= $e($labels['donate_enabled']) ?></strong></label>
 
-                            <h3 class="dn-h3">Для донатів з України</h3>
-                            <?= $field('donate_jar_url', 'лише https://', 'https://') ?>
+                            <h3 class="dn-h3">Посилання на банку</h3>
+                            <?= $field('donate_jar_url', 'лише https:// на send.monobank.ua або monobank.ua', 'https://send.monobank.ua/jar/…') ?>
                             <label class="dn-check"><input type="checkbox" name="donate_show_qr" value="1"<?= $cfg['donate_show_qr'] === '1' ? ' checked' : '' ?>> <?= $e($labels['donate_show_qr']) ?></label>
-                            <div class="dn-grid">
-                                <?= $field('donate_card_number', 'перевіряється алгоритмом Луна') ?>
-                                <?= $field('donate_card_holder', 'показується й для IBAN') ?>
-                            </div>
-                            <?= $field('donate_iban_uah', 'UA + 27 цифр', 'UA…') ?>
-
-                            <h3 class="dn-h3">Для міжнародних переказів</h3>
-                            <div class="dn-grid">
-                                <?= $field('donate_iban_usd') ?>
-                                <?= $field('donate_iban_eur') ?>
-                                <?= $field('donate_swift', '8 або 11 символів') ?>
-                                <?= $field('donate_bank_name') ?>
-                            </div>
+                            <p class="dn-muted">Номер картки, IBAN та інші реквізити на сайті не публікуються — лише це посилання.</p>
 
                             <h3 class="dn-h3">Тексти</h3>
-                            <?= $field('donate_purpose', 'порожньо — «' . DONATE_DEFAULT_PURPOSE . '»', DONATE_DEFAULT_PURPOSE) ?>
                             <?= $field('donate_text_uk', 'показується під вступом українською', '', true) ?>
                             <?= $field('donate_text_en', 'показується під вступом англійською', '', true) ?>
 

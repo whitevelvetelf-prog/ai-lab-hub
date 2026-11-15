@@ -3,90 +3,52 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — донати: реквізити зберігаються в site_settings (ключі donate_*),
- * їх вводить адмін у кабінеті (розділ «Донати»). Жодних реальних реквізитів у
- * коді, git чи SQL — лише структура.
+ * AI LAB HUB — донати.
+ *
+ * Публікується ЛИШЕ посилання на банку monobank (рішення власниці, 2026-11-15):
+ * номер картки, IBAN, ПІБ тощо на сайті не показуються й формою не редагуються.
+ *
+ * Значення живуть в одному місці — таблиці site_settings (ключі donate_*), яку
+ * не чіпають ні релізи (scripts/build-deploy.ps1 не містить config/ і жодних
+ * значень), ні SQL-міграції (лише INSERT IGNORE для відсутніх ключів). Вводить
+ * їх адмін у кабінеті (розділ «Донати»). Жодних реальних значень у коді, git чи SQL.
  *
  * Сторінка — public/donate.php, адмінка — app/donations-admin.php,
- * обробник форми — public/donations-admin-action.php.
+ * обробник форми — public/donations-admin-action.php,
+ * перевірка «наживо» — scripts/check-donate-live.php.
  */
 
 require_once __DIR__ . '/site-settings.php';
 
-/** Поля реквізитів (ключ site_settings → правило). Усі необов'язкові. */
+/**
+ * Поля, які редагує форма й читає сторінка (ключ site_settings → правило).
+ * Інші старі ключі donate_* (картка, IBAN, ПІБ…) у БД не зачіпаються: форма їх
+ * не перезаписує, сторінка не показує.
+ */
 const DONATE_FIELDS = [
-    'donate_enabled'      => 'flag',
-    'donate_jar_url'      => 'url',
-    'donate_card_number'  => 'card',
-    'donate_card_holder'  => 'text:100',
-    'donate_iban_uah'     => 'iban_ua',
-    'donate_iban_usd'     => 'iban',
-    'donate_iban_eur'     => 'iban',
-    'donate_swift'        => 'swift',
-    'donate_bank_name'    => 'text:150',
-    'donate_purpose'      => 'text:200',
-    'donate_text_uk'      => 'longtext:2000',
-    'donate_text_en'      => 'longtext:2000',
-    'donate_show_qr'      => 'flag',
+    'donate_enabled'  => 'flag',
+    'donate_jar_url'  => 'jar',
+    'donate_show_qr'  => 'flag',
+    'donate_text_uk'  => 'longtext:2000',
+    'donate_text_en'  => 'longtext:2000',
 ];
 
-const DONATE_DEFAULT_PURPOSE = 'Добровільний внесок на розвиток AI LAB HUB';
+/** Дозволені хости посилання на банку. */
+const DONATE_JAR_HOSTS = ['send.monobank.ua', 'monobank.ua'];
 
-/** Лише цифри. */
-function donate_digits(string $s): string
+/** Чи це коректне посилання на банку monobank (https, хост зі списку, без логіна/пробілів/лапок). */
+function donate_jar_url_ok(string $url): bool
 {
-    return preg_replace('/\D+/', '', $s) ?? '';
-}
-
-/** Перевірка номера картки за алгоритмом Луна. */
-function donate_luhn_ok(string $digits): bool
-{
-    if (!preg_match('/^\d{13,19}$/', $digits)) {
+    if ($url === '' || mb_strlen($url) > 500 || preg_match('/[\s<>"\'\\\\]/', $url)) {
         return false;
     }
-    $sum = 0;
-    $double = false;
-    for ($i = strlen($digits) - 1; $i >= 0; $i--) {
-        $d = (int) $digits[$i];
-        if ($double) {
-            $d *= 2;
-            if ($d > 9) {
-                $d -= 9;
-            }
-        }
-        $sum += $d;
-        $double = !$double;
+    $p = parse_url($url);
+    if (!is_array($p) || strtolower((string) ($p['scheme'] ?? '')) !== 'https'
+        || isset($p['user']) || isset($p['pass']) || isset($p['port'])) {
+        return false;
     }
 
-    return $sum % 10 === 0;
-}
-
-/** IBAN без пробілів, великими літерами. */
-function donate_iban_normalize(string $s): string
-{
-    return strtoupper(preg_replace('/[\s-]+/', '', $s) ?? '');
-}
-
-/** Контрольна сума IBAN (ISO 13616, mod 97). */
-function donate_iban_checksum_ok(string $iban): bool
-{
-    $moved = substr($iban, 4) . substr($iban, 0, 4);
-    $numeric = '';
-    foreach (str_split($moved) as $ch) {
-        $numeric .= ctype_alpha($ch) ? (string) (ord($ch) - 55) : $ch;
-    }
-    $rest = 0;
-    foreach (str_split($numeric, 7) as $chunk) {
-        $rest = (int) ($rest . $chunk) % 97;
-    }
-
-    return $rest === 1;
-}
-
-/** Групи по 4 символи для показу (довгі IBAN переносяться по пробілах). */
-function donate_group4(string $s): string
-{
-    return trim(chunk_split($s, 4, ' '));
+    return in_array(strtolower((string) ($p['host'] ?? '')), DONATE_JAR_HOSTS, true);
 }
 
 /**
@@ -116,69 +78,21 @@ function donate_validate(array $in): array
             $errors[] = "{$label}: текст містить некоректні символи (кодування). Введіть його ще раз.";
             continue;
         }
-        switch ($type) {
-            case 'url':
-                $p = parse_url($raw);
-                if (mb_strlen($raw) > 500 || !is_array($p) || strtolower((string) ($p['scheme'] ?? '')) !== 'https'
-                    || empty($p['host']) || isset($p['user']) || preg_match('/[\s<>"\']/', $raw)) {
-                    $errors[] = "{$label}: потрібна повна адреса, що починається з https://";
-                    continue 2;
-                }
-                $values[$key] = $raw;
-                break;
-            case 'card':
-                $digits = donate_digits($raw);
-                if (!donate_luhn_ok($digits)) {
-                    $errors[] = "{$label}: номер не пройшов перевірку (13–19 цифр, алгоритм Луна). Перевірте, чи немає помилки.";
-                    continue 2;
-                }
-                $values[$key] = donate_group4($digits);
-                break;
-            case 'iban_ua':
-                $iban = donate_iban_normalize($raw);
-                if (!preg_match('/^UA\d{27}$/', $iban)) {
-                    $errors[] = "{$label}: український IBAN — це UA і ще 27 цифр (29 символів).";
-                    continue 2;
-                }
-                if (!donate_iban_checksum_ok($iban)) {
-                    $errors[] = "{$label}: не збігається контрольна сума IBAN — ймовірно, помилка в цифрах.";
-                    continue 2;
-                }
-                $values[$key] = $iban;
-                break;
-            case 'iban':
-                $iban = donate_iban_normalize($raw);
-                if (!preg_match('/^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/', $iban)) {
-                    $errors[] = "{$label}: IBAN — 2 літери країни, 2 цифри й до 30 символів рахунку (15–34 символи).";
-                    continue 2;
-                }
-                if (!donate_iban_checksum_ok($iban)) {
-                    $errors[] = "{$label}: не збігається контрольна сума IBAN — ймовірно, помилка в символах.";
-                    continue 2;
-                }
-                $values[$key] = $iban;
-                break;
-            case 'swift':
-                $swift = strtoupper(preg_replace('/\s+/', '', $raw) ?? '');
-                if (!preg_match('/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/', $swift)) {
-                    $errors[] = "{$label}: 8 або 11 символів (напр. ABCDUAUKXXX).";
-                    continue 2;
-                }
-                $values[$key] = $swift;
-                break;
-            case 'text':
-            case 'longtext':
-                $txt = strip_tags($raw);
-                if ($type === 'text') {
-                    $txt = trim(preg_replace('/\s+/u', ' ', $txt) ?? '');
-                }
-                if (mb_strlen($txt) > (int) $max) {
-                    $errors[] = "{$label}: не довше {$max} символів.";
-                    continue 2;
-                }
-                $values[$key] = $txt;
-                break;
+        if ($type === 'jar') {
+            if (!donate_jar_url_ok($raw)) {
+                $errors[] = "{$label}: потрібна повна адреса https:// на send.monobank.ua або monobank.ua.";
+                continue;
+            }
+            $values[$key] = $raw;
+            continue;
         }
+        // longtext
+        $txt = strip_tags($raw);
+        if (mb_strlen($txt) > (int) $max) {
+            $errors[] = "{$label}: не довше {$max} символів.";
+            continue;
+        }
+        $values[$key] = $txt;
     }
 
     return [$values, $errors];
@@ -189,18 +103,10 @@ function donate_field_labels(): array
 {
     return [
         'donate_enabled' => 'Увімкнути сторінку донатів',
-        'donate_jar_url' => 'Посилання на банку / збір',
-        'donate_card_number' => 'Номер картки',
-        'donate_card_holder' => 'ПІБ отримувача',
-        'donate_iban_uah' => 'IBAN UAH',
-        'donate_iban_usd' => 'IBAN USD',
-        'donate_iban_eur' => 'IBAN EUR',
-        'donate_swift' => 'SWIFT / BIC',
-        'donate_bank_name' => 'Назва банку',
-        'donate_purpose' => 'Призначення платежу',
+        'donate_jar_url' => 'Посилання на банку monobank',
+        'donate_show_qr' => 'Показувати QR-код для посилання',
         'donate_text_uk' => 'Додатковий текст (UA)',
         'donate_text_en' => 'Додатковий текст (EN)',
-        'donate_show_qr' => 'Показувати QR-код для посилання',
     ];
 }
 
@@ -214,6 +120,50 @@ function donate_config(PDO $pdo): array
     }
 
     return $out;
+}
+
+/**
+ * Стан налаштування без значень: для сторінки «Стан сайту» в CRM і перевірок.
+ *
+ * @return array{configured:bool,enabled:bool,jar:string} jar: 'є' | 'порожнє' | 'відсутнє' | 'некоректне'
+ */
+function donate_status(PDO $pdo): array
+{
+    $all = site_settings($pdo);
+    $enabled = ($all['donate_enabled'] ?? '') === '1';
+    if (!array_key_exists('donate_jar_url', $all)) {
+        $jar = 'відсутнє';
+    } elseif (trim($all['donate_jar_url']) === '') {
+        $jar = 'порожнє';
+    } elseif (!donate_jar_url_ok(trim($all['donate_jar_url']))) {
+        $jar = 'некоректне';
+    } else {
+        $jar = 'є';
+    }
+
+    return ['configured' => $enabled && $jar === 'є', 'enabled' => $enabled, 'jar' => $jar];
+}
+
+/** HTML-попередження для адмінки, якщо донати не налаштовані ('' — усе гаразд). */
+function donate_status_warning_html(PDO $pdo): string
+{
+    $s = donate_status($pdo);
+    if ($s['configured']) {
+        return '';
+    }
+    $why = [];
+    if (!$s['enabled']) {
+        $why[] = 'сторінку вимкнено';
+    }
+    if ($s['jar'] !== 'є') {
+        $why[] = 'посилання на банку: ' . $s['jar'];
+    }
+
+    return '<p class="dn-warn" role="alert" style="margin:0 0 12px;padding:10px 14px;border-radius:10px;'
+        . 'background:rgba(251,191,36,.16);border:1px solid rgba(251,191,36,.6);color:#fff;">'
+        . '⚠ <strong>Донати не налаштовано</strong> (' . htmlspecialchars(implode(', ', $why), ENT_QUOTES)
+        . '): на <a href="donate.php" style="color:#ffe08a">donate.php</a> відвідувачі бачать «Скоро». '
+        . 'Вставте посилання в <a href="account.php#acc-donate" style="color:#ffe08a">Кабінет → Донати</a>.</p>';
 }
 
 /** Актуальна роль admin за БД. */
