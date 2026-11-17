@@ -235,3 +235,25 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 5. Кабінет: `mp-saved.php`, `mp-seller-settings.php`, «Статистика» біля оголошень; `admin-popular-queries.php` (лише admin).
 6. Донати: відкрити `/donate.php` — кнопка банки на місці (`php scripts/check-donate-live.php`).
 7. Локальні тести: `php tests/mp-wave1-tests.php` (151 перевірка; лише локально — створює й видаляє свої записи за id).
+
+## Правила Marketplace і юридичні механізми (2026-11-17) — **НЕ залито**
+
+### 1. SQL — ДО коду
+`database/marketplace_legal_migration.sql` (phpMyAdmin → «Імпорт» або вкладка SQL). Ідемпотентна: можна виконати повторно.
+Якщо `information_schema … DATABASE()` на проді знову нічого не бачить, файл сам підставляє `gu621051_ailabhublive`.
+Контроль: `SHOW TABLES LIKE 'mp_complaints';` → 1 рядок; `SHOW COLUMNS FROM users LIKE 'blocked_at';` → 1 рядок.
+
+### 2. Код
+Окремими файлами або архівом (лише файли, без записів тек) — у корінь проєкту `www/`. Обов'язково разом із
+`docs/marketplace_rules_uk.md` і **новим** `docs/marketplace_rules_en.md` (їх читає `marketplace-rules.php`).
+Серверний `config/marketplace.php` НЕ перезаписувати: строки беруться з констант MP_* — якщо їх у серверному файлі немає,
+діють значення з `app/mp-legal-config.php` (ті самі, що в git). Змінити строк → додати константу в серверний файл.
+
+### 3. Cron
+Нічого нового: нагадування «строк закінчується за 7 днів» робить наявний `mp-cron-expire.php` (`15 * * * *`), листи йдуть
+через чергу `mail_queue` (наявний `promo-mail.php`, `*/5`).
+
+### 4. Перевірка
+`/marketplace-rules.php` (UA і EN, якорі `#section-7`), форма подачі (галочка згоди, «Створено з AI», умови використання),
+«Поскаржитися» на сторінці оголошення (гість — з email), `mp-moderation.php`, `mp-legal-admin.php` (скарги, оскарження,
+користувачі), `robots.txt`. Локально: `php tests/mp-legal-e2e.php`.
