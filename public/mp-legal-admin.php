@@ -10,6 +10,9 @@ declare(strict_types=1);
  *   resolved_removed — зняти оголошення ('removed', автор отримує повідомлення з коментарем);
  *   resolved_kept — залишити (приховане відновлюється).
  * Дані заявника бачить лише модератор; автору показується тільки суть претензії (app/mp-legal-ui.php).
+ *
+ * Вкладка «Оскарження» (п. 7.5): відкриті й розглянуті; «Відновити оголошення» (→ published) або «Залишити рішення»
+ * (коментар обов'язковий); «Внести оскарження з листа» на MP_ABUSE_EMAIL — № оголошення + текст.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -22,7 +25,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 mp_require_staff();
 $actorId = (int) auth_user_id();
 
-$tabs = ['complaints'];
+$tabs = ['complaints', 'appeals'];
 $tab = in_array($_GET['tab'] ?? '', $tabs, true) ? (string) $_GET['tab'] : 'complaints';
 $cstatus = in_array($_GET['status'] ?? '', MPL_COMPLAINT_STATUSES, true) ? (string) $_GET['status'] : '';
 $back = 'mp-legal-admin.php?tab=' . $tab . ($cstatus !== '' ? '&status=' . $cstatus : '');
@@ -39,6 +42,13 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $cid = (int) ($_POST['complaint_id'] ?? 0);
         $ok = mpl_complaint_action($pdo, $cid, $action, $note, $actorId);
         mpb_flash($ok ? 'ok' : 'error', mpl_tr($ok ? 'a_c_done' : 'a_c_failed', $cid));
+    } elseif ($action === 'appeal_restore' || $action === 'appeal_uphold') {
+        $aid = (int) ($_POST['appeal_id'] ?? 0);
+        $ok = mpl_appeal_resolve($pdo, $aid, $action === 'appeal_restore', $note, $actorId);
+        mpb_flash($ok ? 'ok' : 'error', $ok ? mpl_tr('a_ap_done', $aid) : mpl_tr('a_ap_failed'));
+    } elseif ($action === 'appeal_add') {
+        $res = mpl_appeal_create($pdo, (int) ($_POST['listing_id'] ?? 0), 0, is_string($_POST['text'] ?? null) ? (string) $_POST['text'] : '', 'email', $actorId);
+        mpb_flash($res === 'ok' ? 'ok' : 'error', mpl_tr($res === 'ok' ? 'a_ap_added' : 'a_ap_add_failed'));
     }
     mpb_redirect($back);
 }
@@ -69,6 +79,17 @@ if ($ready) {
     );
     $st->execute($cstatus !== '' ? [':s' => $cstatus] : []);
     $complaints = $st->fetchAll(PDO::FETCH_ASSOC);
+}
+$appeals = [];
+$openAppeals = 0;
+if ($ready) {
+    $openAppeals = (int) $pdo->query("SELECT COUNT(*) FROM mp_appeals WHERE status = 'open'")->fetchColumn();
+    if ($tab === 'appeals') {
+        $appeals = $pdo->query(
+            "SELECT a.*, u.email AS user_email FROM mp_appeals a LEFT JOIN users u ON u.id = a.user_id
+             ORDER BY (a.status = 'open') DESC, a.id DESC LIMIT 200"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -106,6 +127,7 @@ if ($ready) {
 
         <div class="lg-tabs">
             <a class="btn btn--sm <?= $tab === 'complaints' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-legal-admin.php?tab=complaints"><?= mp_e(mpl_tr('a_tab_complaints')) ?> (<?= (int) ($counts['new'] ?? 0) + (int) ($counts['in_review'] ?? 0) ?>)</a>
+            <a class="btn btn--sm <?= $tab === 'appeals' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-legal-admin.php?tab=appeals"><?= mp_e(mpl_tr('a_tab_appeals')) ?> (<?= $openAppeals ?>)</a>
         </div>
 
         <?php if (!$ready): ?>
@@ -162,6 +184,39 @@ if ($ready) {
                             <?php if ($b !== null && (string) $b['status'] === 'published'): ?><button class="btn btn--ghost btn--sm" type="submit" name="action" value="hide"><?= mp_e(mpl_tr('a_c_hide')) ?></button><?php endif; ?>
                             <button class="btn btn--primary btn--sm" type="submit" name="action" value="resolved_removed"><?= mp_e(mpl_tr('a_c_remove')) ?></button>
                             <button class="btn btn--ghost btn--sm" type="submit" name="action" value="resolved_kept"><?= mp_e(mpl_tr('a_c_keep')) ?></button>
+                        </form>
+                    <?php endif; ?>
+                </article>
+            <?php endforeach; ?>
+        <?php elseif ($tab === 'appeals'): ?>
+            <details class="lg-card">
+                <summary><strong><?= mp_e(mpl_tr('a_ap_add')) ?></strong> (<?= mp_e(MP_ABUSE_EMAIL) ?>)</summary>
+                <form method="post" action="<?= mp_e($back) ?>" class="lg-actions">
+                    <?= mp_csrf_field() ?><input type="hidden" name="action" value="appeal_add">
+                    <input class="input" type="number" name="listing_id" min="1" required placeholder="<?= mp_e(mpl_tr('a_ap_listing_id')) ?>" aria-label="<?= mp_e(mpl_tr('a_ap_listing_id')) ?>">
+                    <textarea class="textarea" name="text" rows="3" maxlength="3000" required placeholder="<?= mp_e(mpl_tr('a_ap_text')) ?>"></textarea>
+                    <button class="btn btn--primary btn--sm" type="submit"><?= mp_e(mpl_tr('a_ap_add_btn')) ?></button>
+                </form>
+            </details>
+            <?php if ($appeals === []): ?><p class="empty-state"><?= mp_e(mpl_tr('a_empty')) ?></p><?php endif; ?>
+            <?php foreach ($appeals as $a): ?>
+                <?php $aid = (int) $a['id']; $b = mpl_listing_brief($pdo, (int) $a['listing_id']); ?>
+                <article class="lg-card" id="a<?= $aid ?>">
+                    <h2>№<?= $aid ?> · <?= mp_e(mpl_tr('a_ap_status_' . $a['status'])) ?></h2>
+                    <div class="lg-meta">
+                        <span><?= mp_e(mpl_tr('a_c_listing')) ?>: <?php if ($b !== null): ?><a href="<?= mp_e(mpl_listing_url($b)) ?>" target="_blank" rel="noopener"><?= mp_e($b['title'] ?? '#' . $a['listing_id']) ?></a> (<?= mp_e(mpl_status_label((string) $b['status'])) ?>) · <a href="mp-moderation.php?id=<?= (int) $a['listing_id'] ?>">#<?= (int) $a['listing_id'] ?></a><?php else: ?>#<?= (int) $a['listing_id'] ?><?php endif; ?></span>
+                        <span><?= mp_e(mpl_tr('a_ap_decision')) ?>: <?= mp_e(mpl_status_label((string) $a['decision_status'])) ?><?= $b !== null ? ' — ' . mp_e(mpl_reason_text($b['reject_code'], $b['reject_reason'])) : '' ?></span>
+                        <span>№<?= (int) $a['user_id'] ?> <?= mp_e((string) $a['user_email']) ?> · <?= mp_e(mpl_tr('a_ap_source_' . ($a['source'] === 'email' ? 'email' : 'cabinet'))) ?></span>
+                        <span><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $a['created_at']))) ?></span>
+                    </div>
+                    <p class="lg-text"><?= mp_e((string) $a['text']) ?></p>
+                    <?php if (!empty($a['admin_comment'])): ?><p class="table__muted"><?= mp_e((string) $a['admin_comment']) ?></p><?php endif; ?>
+                    <?php if ((string) $a['status'] === 'open'): ?>
+                        <form method="post" action="<?= mp_e($back) ?>" class="lg-actions">
+                            <?= mp_csrf_field() ?><input type="hidden" name="appeal_id" value="<?= $aid ?>">
+                            <textarea class="textarea" name="note" rows="2" maxlength="1000" placeholder="<?= mp_e(mpl_tr('a_ap_comment_ph')) ?>"></textarea>
+                            <button class="btn btn--primary btn--sm" type="submit" name="action" value="appeal_restore"><?= mp_e(mpl_tr('a_ap_restore')) ?></button>
+                            <button class="btn btn--ghost btn--sm" type="submit" name="action" value="appeal_uphold"><?= mp_e(mpl_tr('a_ap_uphold')) ?></button>
                         </form>
                     <?php endif; ?>
                 </article>
