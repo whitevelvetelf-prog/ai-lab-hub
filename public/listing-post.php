@@ -34,6 +34,7 @@ if ($user === null) {
     exit;
 }
 mpv_require_verified($pdo, $userId);
+mpl_require_can_post($pdo, $userId);   // попередження/заборона подачі/блокування (п. 7.3–7.4): зрозуміле повідомлення з посиланням на п. 7.5
 
 $cfg = mp_config();
 $lang = current_lang();

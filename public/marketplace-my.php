@@ -44,6 +44,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         mp_not_found();
     }
     if ($action === 'extend') {
+        if (mpl_posting_block($pdo, $userId) !== null) {
+            mpb_flash('error', mpl_tr('ban_title'));
+            mpb_redirect('marketplace-my.php?tab=' . $tab);
+        }
         $res = mpb_extend($pdo, $own, $userId);
         mpb_flash($res === 'ok' ? 'ok' : 'error', t($res === 'ok' ? 'mpb_extended' : $res));
     } elseif ($action === 'archive') {
@@ -113,6 +117,10 @@ mpb_open(t('mpb_my_title'), true, 'my');
 
         <?php if (!$postingOpen): ?>
             <div class="mp-alert mp-alert--error"><?= mp_e(t('mpb_posting_closed')) ?></div>
+        <?php endif; ?>
+        <?php $block = mpl_posting_block($pdo, $userId); ?>
+        <?php if ($block !== null): ?>
+            <div class="mp-alert mp-alert--error"><?= mpl_posting_block_html($block) /* екрановано всередині */ ?></div>
         <?php endif; ?>
 
         <?= mpl_cabinet_html($pdo, $userId) ?>

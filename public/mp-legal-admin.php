@@ -13,6 +13,9 @@ declare(strict_types=1);
  *
  * Вкладка «Оскарження» (п. 7.5): відкриті й розглянуті; «Відновити оголошення» (→ published) або «Залишити рішення»
  * (коментар обов'язковий); «Внести оскарження з листа» на MP_ABUSE_EMAIL — № оголошення + текст.
+ *
+ * Вкладка «Користувачі» (п. 7.3–7.4, 10.5): пошук за email або №; картка — попередження, заборона подачі на N днів
+ * (0 — безстроково), блокування акаунта, зняття обмежень; журнал mp_user_sanctions. Співробітників не обмежуємо.
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -25,7 +28,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 mp_require_staff();
 $actorId = (int) auth_user_id();
 
-$tabs = ['complaints', 'appeals'];
+$tabs = ['complaints', 'appeals', 'users'];
 $tab = in_array($_GET['tab'] ?? '', $tabs, true) ? (string) $_GET['tab'] : 'complaints';
 $cstatus = in_array($_GET['status'] ?? '', MPL_COMPLAINT_STATUSES, true) ? (string) $_GET['status'] : '';
 $back = 'mp-legal-admin.php?tab=' . $tab . ($cstatus !== '' ? '&status=' . $cstatus : '');
@@ -49,6 +52,16 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     } elseif ($action === 'appeal_add') {
         $res = mpl_appeal_create($pdo, (int) ($_POST['listing_id'] ?? 0), 0, is_string($_POST['text'] ?? null) ? (string) $_POST['text'] : '', 'email', $actorId);
         mpb_flash($res === 'ok' ? 'ok' : 'error', mpl_tr($res === 'ok' ? 'a_ap_added' : 'a_ap_add_failed'));
+    }
+    if (in_array($action, ['warn', 'ban', 'block', 'unblock'], true)) {
+        $uid = (int) ($_POST['user_id'] ?? 0);
+        $role = $pdo->prepare('SELECT role FROM users WHERE id = :u');
+        $role->execute([':u' => $uid]);
+        $r = $role->fetchColumn();
+        $ok = $r !== false && !in_array((string) $r, ['employee', 'admin'], true)
+            && mpl_sanction($pdo, $uid, $action, max(0, min(3650, (int) ($_POST['days'] ?? 0))), $note, $actorId);
+        mpb_flash($ok ? 'ok' : 'error', $ok ? mpl_tr('a_u_done', $uid) : mpl_tr($r !== false && in_array((string) $r, ['employee', 'admin'], true) ? 'a_u_staff' : 'a_u_failed'));
+        mpb_redirect('mp-legal-admin.php?tab=users&q=' . $uid);
     }
     mpb_redirect($back);
 }
@@ -128,6 +141,7 @@ if ($ready) {
         <div class="lg-tabs">
             <a class="btn btn--sm <?= $tab === 'complaints' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-legal-admin.php?tab=complaints"><?= mp_e(mpl_tr('a_tab_complaints')) ?> (<?= (int) ($counts['new'] ?? 0) + (int) ($counts['in_review'] ?? 0) ?>)</a>
             <a class="btn btn--sm <?= $tab === 'appeals' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-legal-admin.php?tab=appeals"><?= mp_e(mpl_tr('a_tab_appeals')) ?> (<?= $openAppeals ?>)</a>
+            <a class="btn btn--sm <?= $tab === 'users' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-legal-admin.php?tab=users"><?= mp_e(mpl_tr('a_tab_users')) ?></a>
         </div>
 
         <?php if (!$ready): ?>
@@ -188,6 +202,65 @@ if ($ready) {
                     <?php endif; ?>
                 </article>
             <?php endforeach; ?>
+        <?php elseif ($tab === 'users'): ?>
+            <?php
+            $q = trim(is_string($_GET['q'] ?? null) ? (string) $_GET['q'] : '');
+            $u = null;
+            if ($q !== '') {
+                $us = $pdo->prepare('SELECT id, name, email, role, created_at, warnings_count, posting_banned_until, blocked_at FROM users WHERE ' . (ctype_digit($q) ? 'id = :q' : 'email = :q') . ' LIMIT 1');
+                $us->execute([':q' => ctype_digit($q) ? (int) $q : mb_strtolower($q)]);
+                $u = $us->fetch(PDO::FETCH_ASSOC) ?: null;
+            }
+            ?>
+            <form method="get" action="mp-legal-admin.php" class="lg-actions">
+                <input type="hidden" name="tab" value="users">
+                <input class="input" type="text" name="q" value="<?= mp_e($q) ?>" placeholder="<?= mp_e(mpl_tr('a_u_search')) ?>" aria-label="<?= mp_e(mpl_tr('a_u_search')) ?>">
+                <button class="btn btn--primary btn--sm" type="submit"><?= mp_e(mpl_tr('a_u_find')) ?></button>
+            </form>
+            <?php if ($q !== '' && $u === null): ?><p class="empty-state"><?= mp_e(mpl_tr('a_u_notfound')) ?></p><?php endif; ?>
+            <?php if ($u !== null): ?>
+                <?php
+                $uidCard = (int) $u['id'];
+                $lc = $pdo->prepare('SELECT l.status, COUNT(*) FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id WHERE s.user_id = :u AND ' . mpl_target_sql() . ' GROUP BY l.status');
+                $lc->execute([':u' => $uidCard]);
+                $byStatus = $lc->fetchAll(PDO::FETCH_KEY_PAIR);
+                $hist = $pdo->prepare('SELECT action, days, note, actor_id, created_at FROM mp_user_sanctions WHERE user_id = :u ORDER BY id DESC LIMIT 30');
+                $hist->execute([':u' => $uidCard]);
+                $hist = $hist->fetchAll(PDO::FETCH_ASSOC);
+                $isStaffCard = in_array((string) $u['role'], ['employee', 'admin'], true);
+                ?>
+                <article class="lg-card">
+                    <h2>№<?= $uidCard ?> · <?= mp_e((string) $u['name']) ?> · <?= mp_e((string) $u['email']) ?> <span class="badge"><?= mp_e((string) $u['role']) ?></span></h2>
+                    <div class="lg-meta">
+                        <span><?= mp_e(mpl_tr('a_u_warnings')) ?>: <strong><?= (int) $u['warnings_count'] ?></strong></span>
+                        <span><?= mp_e(mpl_tr('a_u_banned_until')) ?>: <strong><?= $u['posting_banned_until'] !== null ? mp_e(str_starts_with((string) $u['posting_banned_until'], '9999') ? mpl_tr('forever') : date('d.m.Y H:i', (int) strtotime((string) $u['posting_banned_until']))) : mp_e(mpl_tr('a_u_none')) ?></strong></span>
+                        <span><?= mp_e(mpl_tr('a_u_blocked')) ?>: <strong><?= $u['blocked_at'] !== null ? mp_e(date('d.m.Y H:i', (int) strtotime((string) $u['blocked_at']))) : mp_e(mpl_tr('a_u_none')) ?></strong></span>
+                        <span><?= mp_e(mpl_tr('a_u_listings')) ?>: <?php foreach ($byStatus as $bs => $bn): ?><?= mp_e(mpl_status_label((string) $bs)) ?> — <?= (int) $bn ?>; <?php endforeach; ?><?= $byStatus === [] ? '0' : '' ?></span>
+                    </div>
+                    <?php if ($isStaffCard): ?>
+                        <p class="table__muted"><?= mp_e(mpl_tr('a_u_staff')) ?></p>
+                    <?php else: ?>
+                        <form method="post" action="mp-legal-admin.php?tab=users&amp;q=<?= $uidCard ?>" class="lg-actions">
+                            <?= mp_csrf_field() ?><input type="hidden" name="user_id" value="<?= $uidCard ?>">
+                            <input class="input" type="text" name="note" maxlength="1000" placeholder="<?= mp_e(mpl_tr('a_u_note_ph')) ?>" aria-label="<?= mp_e(mpl_tr('a_u_note_ph')) ?>">
+                            <button class="btn btn--ghost btn--sm" type="submit" name="action" value="warn"><?= mp_e(mpl_tr('a_u_warn')) ?></button>
+                            <input class="input" type="number" name="days" min="0" max="3650" value="30" style="width:7em" aria-label="<?= mp_e(mpl_tr('a_u_ban')) ?>" title="<?= mp_e(mpl_tr('a_u_ban')) ?>">
+                            <button class="btn btn--ghost btn--sm" type="submit" name="action" value="ban"><?= mp_e(mpl_tr('a_u_ban_btn')) ?></button>
+                            <button class="btn btn--primary btn--sm" type="submit" name="action" value="block"><?= mp_e(mpl_tr('a_u_block')) ?></button>
+                            <?php if ($u['blocked_at'] !== null || $u['posting_banned_until'] !== null): ?>
+                                <button class="btn btn--ghost btn--sm" type="submit" name="action" value="unblock"><?= mp_e(mpl_tr('a_u_unblock')) ?></button>
+                            <?php endif; ?>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($hist !== []): ?>
+                        <details><summary class="table__muted"><?= mp_e(mpl_tr('a_u_history')) ?> (<?= count($hist) ?>)</summary>
+                            <?php foreach ($hist as $hs): ?>
+                                <div class="table__muted"><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $hs['created_at']))) ?> · <?= mp_e((string) $hs['action']) ?><?= $hs['days'] !== null ? ' ' . (int) $hs['days'] : '' ?><?= $hs['note'] ? ' — ' . mp_e((string) $hs['note']) : '' ?> · №<?= (int) $hs['actor_id'] ?></div>
+                            <?php endforeach; ?>
+                        </details>
+                    <?php endif; ?>
+                </article>
+            <?php endif; ?>
         <?php elseif ($tab === 'appeals'): ?>
             <details class="lg-card">
                 <summary><strong><?= mp_e(mpl_tr('a_ap_add')) ?></strong> (<?= mp_e(MP_ABUSE_EMAIL) ?>)</summary>
