@@ -923,10 +923,10 @@ function ast_save(PDO $pdo, array $d, ?array $existing, int $userId, int $seller
         if ($existing === null) {
             $pdo->prepare(
                 "INSERT INTO mp_listings (section, seller_id, status, pricing_model, price_type, delivery_type, source_lang, is_remote,
-                     license, slug, contact_email, contact_telegram, rules_accepted_at, created_by)
-                 VALUES ('asset', :sid, 'pending', 'free', 'none', 'file', :lang, 1, :lic, :slug, :ce, :ct, NOW(), :u)"
+                     license, slug, contact_email, contact_telegram, rules_accepted_at, rules_version, created_by)
+                 VALUES ('asset', :sid, 'pending', 'free', 'none', 'file', :lang, 1, :lic, :slug, :ce, :ct, NOW(), :rv, :u)"
             )->execute([':sid' => $sellerId, ':lang' => $lang, ':lic' => $d['license'], ':slug' => mb_substr(lst_slug_safe($d['title']), 0, 140),
-                ':ce' => $d['contact_email'] ?: null, ':ct' => $d['contact_telegram'] ?: null, ':u' => $userId]);
+                ':ce' => $d['contact_email'] ?: null, ':ct' => $d['contact_telegram'] ?: null, ':rv' => MP_RULES_VERSION, ':u' => $userId]);
             $id = (int) $pdo->lastInsertId();
             $textLang = $lang;
             mp_log($pdo, $id, $userId, 'created', 'актив на модерації');
@@ -935,10 +935,10 @@ function ast_save(PDO $pdo, array $d, ?array $existing, int $userId, int $seller
             $id = (int) $existing['id'];
             $textLang = (string) $existing['source_lang'];
             $pdo->prepare("UPDATE mp_listings SET status = 'pending', license = :lic, slug = :slug, contact_email = :ce, contact_telegram = :ct,
-                               rules_accepted_at = NOW(), reject_reason = NULL
+                               rules_accepted_at = NOW(), rules_version = :rv, reject_reason = NULL
                            WHERE id = :id AND section = 'asset'")
                 ->execute([':lic' => $d['license'], ':slug' => mb_substr(lst_slug_safe($d['title']), 0, 140),
-                    ':ce' => $d['contact_email'] ?: null, ':ct' => $d['contact_telegram'] ?: null, ':id' => $id]);
+                    ':ce' => $d['contact_email'] ?: null, ':ct' => $d['contact_telegram'] ?: null, ':rv' => MP_RULES_VERSION, ':id' => $id]);
             mp_log($pdo, $id, $userId, 'edited', 'актив після редагування — на модерації (було: ' . $existing['status'] . ')');
         }
         $pdo->prepare(
