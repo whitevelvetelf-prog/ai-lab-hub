@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: переводить оголошення з терміном, що минув, у status='expired'.
  *
- *   published + expires_at <= NOW()  →  expired  (запис 'expired' у mp_moderation_log)
+ *   published + expires_at <= NOW()  →  expired  (запис 'expired' у mp_moderation_log; строк — MP_LISTING_LIFETIME_DAYS, п. 7.6)
+ *   за 7 днів до кінця строку — повідомлення автору в кабінеті й листом (mpl_expiry_notices, app/mp-legal.php)
  *
  * Також чистить mp_rate_limits (рядки старші за 3 доби), а з Хвилі 1 (2026-11-09) — агрегати популярних запитів
  * search_query_stats і перегляди mp_listing_views_daily старші за 90 днів, а з 2026-11-11 — запити каталогу
@@ -41,8 +42,9 @@ if (!$isCli) {
 $pdo = require __DIR__ . '/../config/database.php';
 
 $n = mpb_expire_due($pdo);
+$e = mpl_expiry_notices($pdo);  // нагадування «строк закінчується за 7 днів» (п. 7.6) — кабінет + лист
 $r = mpb_rate_cleanup($pdo);   // лічильники IP-лімітів старші за 3 доби
 $q = mpq_cleanup($pdo);         // популярні запити старші за 90 днів
 $v = mpst_cleanup($pdo);        // перегляди по днях старші за 90 днів
 $z = search_log_zero_cleanup($pdo); // запити каталогу без результатів старші за zero_result_retention_days (30)
-echo date('Y-m-d H:i:s') . ' expired: ' . $n . ' rate_limit_rows_deleted: ' . $r . ' query_stats_deleted: ' . $q . ' views_daily_deleted: ' . $v . ' zero_search_deleted: ' . $z . "\n";
+echo date('Y-m-d H:i:s') . ' expired: ' . $n . ' expiry_notices: ' . $e . ' rate_limit_rows_deleted: ' . $r . ' query_stats_deleted: ' . $q . ' views_daily_deleted: ' . $v . ' zero_search_deleted: ' . $z . "\n";
