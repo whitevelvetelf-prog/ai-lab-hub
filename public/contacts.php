@@ -9,13 +9,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 
+$en = current_lang() === 'en';
+$tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $enText : $uk, ENT_QUOTES);
+
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= $en ? 'en' : 'uk' ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Контакти</title>
+    <title>AI LAB HUB — <?= $tx('Контакти', 'Contacts') ?></title>
     <style>
         *,
         *::before,
@@ -144,38 +147,38 @@ require_once __DIR__ . '/../app/translations.php';
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
-        <h1 class="stub__title">Контакти</h1>
-        <p class="stub__text">Оберіть, куди написати — і ми відповімо.</p>
+        <h1 class="stub__title"><?= $tx('Контакти', 'Contacts') ?></h1>
+        <p class="stub__text"><?= $tx('Оберіть, куди написати — і ми відповімо.', 'Choose where to write — and we will get back to you.') ?></p>
 
         <div class="contact-grid">
             <section class="contact-card">
-                <h2 class="contact-card__title">Для користувачів</h2>
+                <h2 class="contact-card__title"><?= $tx('Для користувачів', 'For users') ?></h2>
                 <p class="contact-card__text">
-                    Питання щодо роботи платформи, пропозиції, повідомлення про проблему.
+                    <?= $tx('Питання щодо роботи платформи, пропозиції, повідомлення про проблему.', 'Questions about the platform, suggestions, reporting a problem.') ?>
                 </p>
                 <a class="contact-card__mail" href="mailto:hello.ailabhub.directory@gmail.com">hello.ailabhub.directory@gmail.com</a>
             </section>
 
             <section class="contact-card">
-                <h2 class="contact-card__title">Для партнерів</h2>
+                <h2 class="contact-card__title"><?= $tx('Для партнерів', 'For partners') ?></h2>
                 <p class="contact-card__text">
-                    Співпраця, розміщення AI-продукту, партнерські програми.
+                    <?= $tx('Співпраця, розміщення AI-продукту, партнерські програми.', 'Cooperation, listing an AI product, partner programs.') ?>
                 </p>
                 <a class="contact-card__mail" href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@gmail.com</a>
             </section>
 
             <section class="contact-card">
-                <h2 class="contact-card__title">Скарги та оскарження</h2>
+                <h2 class="contact-card__title"><?= $tx('Скарги та оскарження', 'Complaints and appeals') ?></h2>
                 <p class="contact-card__text">
-                    Скарги на оголошення, заяви правовласників, оскарження рішень модерації.
+                    <?= $tx('Скарги на оголошення, заяви правовласників, оскарження рішень модерації.', 'Complaints about listings, rights-holder notices, appeals against moderation decisions.') ?>
                 </p>
                 <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@gmail.com</a>
             </section>
 
             <section class="contact-card">
-                <h2 class="contact-card__title">Реклама</h2>
+                <h2 class="contact-card__title"><?= $tx('Реклама', 'Advertising') ?></h2>
                 <p class="contact-card__text">
-                    Розміщення реклами на сайті, питання щодо рекламних кампаній.
+                    <?= $tx('Розміщення реклами на сайті, питання щодо рекламних кампаній.', 'Advertising on the site, questions about ad campaigns.') ?>
                 </p>
                 <a class="contact-card__mail" href="mailto:admin.ailabhub.directory@gmail.com">admin.ailabhub.directory@gmail.com</a>
             </section>
