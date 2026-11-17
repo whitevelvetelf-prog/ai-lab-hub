@@ -95,7 +95,13 @@ require_once __DIR__ . '/../app/translations.php';
             margin-top: 32px;
             display: grid;
             gap: 20px;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+        }
+
+        @media (max-width: 900px) {
+            .contact-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 620px) {
@@ -162,6 +168,14 @@ require_once __DIR__ . '/../app/translations.php';
                     Співпраця, розміщення AI-продукту, партнерські програми.
                 </p>
                 <a class="contact-card__mail" href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@gmail.com</a>
+            </section>
+
+            <section class="contact-card">
+                <h2 class="contact-card__title">Скарги та оскарження</h2>
+                <p class="contact-card__text">
+                    Скарги на оголошення, заяви правовласників, оскарження рішень модерації.
+                </p>
+                <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@gmail.com</a>
             </section>
         </div>
     </main>
