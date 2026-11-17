@@ -995,6 +995,7 @@ function mpl_watermarked_path(string $srcPath, string $name): ?string
     imagealphablending($center, false);
     imagesavealpha($center, true);
     imagefill($center, 0, 0, imagecolorallocatealpha($center, 0, 0, 0, 127));
+    imagestring($center, $font, 5, 4, $text, imagecolorallocatealpha($center, 0, 3, 44, 108));       // тінь #00032c — видно на світлому
     imagestring($center, $font, 4, 3, $text, imagecolorallocatealpha($center, 255, 255, 255, 100));
     imagecopyresampled($img, $center, (int) (($w - $cw) / 2), (int) (($h - $ch) / 2), 0, 0, $cw, $ch, $tw, $th);
 

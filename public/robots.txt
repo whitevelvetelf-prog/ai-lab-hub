@@ -5,8 +5,8 @@ Disallow: /asset-preview.php
 Disallow: /asset-download.php
 Disallow: /asset-original.php
 
-# Цифрові матеріали маркетплейсу: прохання до відомих ШІ-краулерів не збирати сторінки з роботами авторів.
-# Це добровільний сигнал — не всі краулери його поважають.
+# Marketplace (п. 9.4 Правил): прохання до відомих AI-краулерів не збирати оголошення, фото й цифрові матеріали
+# авторів. Звичайним пошуковикам (група «*» вище) доступ не закрито. Це добровільний сигнал — не всі краулери його поважають.
 User-agent: GPTBot
 User-agent: ChatGPT-User
 User-agent: OAI-SearchBot
@@ -28,5 +28,12 @@ Disallow: /asset.php
 Disallow: /asset-preview.php
 Disallow: /asset-download.php
 Disallow: /asset-original.php
+Disallow: /marketplace
+Disallow: /offer.php
+Disallow: /listing.php
+Disallow: /listings.php
+Disallow: /mp-photo.php
+Disallow: /mp-seller.php
+Disallow: /mp-complaint.php
 
 Sitemap: https://ailabhub-directory.com/sitemap.xml

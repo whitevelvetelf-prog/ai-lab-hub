@@ -12,7 +12,10 @@ declare(strict_types=1);
  *   - при public_enabled = false — лише employee/admin (як marketplace-offer.php), решта → 404;
  *   - Content-Type за розширенням (вміст перекодований GD), nosniff; ETag/Last-Modified → 304;
  *   - запис у БД є, а файла на диску немає → нейтральна SVG-заглушка (бренд-кольори, іконка зображення) замість
- *     зламаної іконки; заголовок X-MP-Photo-Missing: 1, без кешу (щоб файл, повернутий з резервної копії, з'явився одразу).
+ *     зламаної іконки; заголовок X-MP-Photo-Missing: 1, без кешу (щоб файл, повернутий з резервної копії, з'явився одразу);
+ *   - водяний знак (п. 9.3 Правил): відвідувачам повнорозмірне фото віддається зменшеною копією (≤1200 px) з напівпрозорим
+ *     знаком AI LAB HUB (app/mp-legal.php, кеш у photo_dir/wm/); збережений файл бачать лише власник і employee/admin.
+ *     Мініатюри й логотипи продавців — без знака. Заборони правого кліку немає (вона не захищає).
  * Тільки GET/HEAD. Оголошення користувачів — post_form = 'ad' (з 2026-11-06 розділу 'board' немає).
  */
 
@@ -50,6 +53,7 @@ $stmt = $pdo->prepare(
 );
 $stmt->execute([':f1' => $name, ':f2' => $name]);
 $row = $stmt->fetch(PDO::FETCH_ASSOC);
+$isListingPhoto = $row !== false;
 if ($row === false) {
     // Логотип продавця (Хвиля 1, app/mp-seller.php): лише ім'я, записане в mp_sellers.logo. Відкрита сторінка
     // продавця — усім; прихована (page_public = 0) чи неактивний продавець — лише власнику й employee/admin.
@@ -66,12 +70,11 @@ if ($row === false) {
 }
 
 $isLive = (int) $row['is_live'] === 1;
-if (!$isLive) {
-    $viewerId = auth_user_id();
-    $isOwner = $viewerId !== null && $row['seller_user_id'] !== null && (int) $row['seller_user_id'] === $viewerId;
-    if (!$isOwner && !mpb_is_staff()) {
-        mp_not_found();
-    }
+$viewerId = auth_user_id();
+$isOwner = $viewerId !== null && $row['seller_user_id'] !== null && (int) $row['seller_user_id'] === $viewerId;
+$privileged = $isOwner || mpb_is_staff();
+if (!$isLive && !$privileged) {
+    mp_not_found();
 }
 session_write_close();   // не тримати блокування сесії, поки віддаються кілька фото сторінки паралельно
 
@@ -90,6 +93,17 @@ if ($path === null) {
         echo $svg;
     }
     exit;
+}
+
+// Повнорозмірне фото оголошення для відвідувача — копія зі знаком (якщо GD не впорався — без знака, запис у журнал).
+if ($isListingPhoto && !$privileged && !str_contains($name, '_t.')) {
+    $wm = mpl_watermarked_path($path, $name);
+    if ($wm !== null) {
+        $path = $wm;
+        $name = basename($wm);
+    } else {
+        error_log('[marketplace] watermark failed for ' . $name);
+    }
 }
 
 $type = match (strtolower(pathinfo($name, PATHINFO_EXTENSION))) {
