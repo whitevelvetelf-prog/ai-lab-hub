@@ -95,13 +95,7 @@ require_once __DIR__ . '/../app/translations.php';
             margin-top: 32px;
             display: grid;
             gap: 20px;
-            grid-template-columns: repeat(3, 1fr);
-        }
-
-        @media (max-width: 900px) {
-            .contact-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            grid-template-columns: repeat(2, 1fr);
         }
 
         @media (max-width: 620px) {
@@ -176,6 +170,14 @@ require_once __DIR__ . '/../app/translations.php';
                     Скарги на оголошення, заяви правовласників, оскарження рішень модерації.
                 </p>
                 <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@gmail.com</a>
+            </section>
+
+            <section class="contact-card">
+                <h2 class="contact-card__title">Реклама</h2>
+                <p class="contact-card__text">
+                    Розміщення реклами на сайті, питання щодо рекламних кампаній.
+                </p>
+                <a class="contact-card__mail" href="mailto:admin.ailabhub.directory@gmail.com">admin.ailabhub.directory@gmail.com</a>
             </section>
         </div>
     </main>
