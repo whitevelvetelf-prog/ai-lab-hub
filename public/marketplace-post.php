@@ -571,7 +571,7 @@ mpb_open($pageTitle, true, 'post');
             <div class="mp-field">
                 <label class="mp-check mp-check--block">
                     <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?>>
-                    <span><?= mp_e(mpb_rules_checkbox_text($lang)) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= mp_e(t('mpb_f_rules_link')) ?></a> <span class="mpf-req">*</span></span>
+                    <span><?= mp_e(mpl_tr('consent_label')) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= mp_e(mpl_tr('rules_link')) ?></a> <span class="mpf-req">*</span></span>
                 </label>
                 <?= $fieldErr('rules') ?>
             </div>

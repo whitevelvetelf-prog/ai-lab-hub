@@ -197,6 +197,7 @@ $entryNames = @{}
 if ($IncludeMarketplace) {
     $files += @($marketplaceFiles | Where-Object { $_ -notmatch '^config/' })
     $files += 'docs/marketplace_rules_uk.md'
+    $files += 'docs/marketplace_rules_en.md'
     $files += 'docs/.htaccess'
     $files += 'config/marketplace.php'
     $entryNames['config/marketplace.php'] = 'config/marketplace.dist.php'
@@ -226,7 +227,7 @@ if ($IncludeMarketplace) {
         } else {
             $problems += "'posting_enabled' not found (or not true/false) in $ConfigFile (ships as config/marketplace.dist.php)"
         }
-        if ($cfgText -notmatch "'rules_version'\s*=>\s*'\d{4}-\d{2}-\d{2}'") {
+        if ($cfgText -notmatch "'rules_version'\s*=>\s*'\d{4}-\d{2}-\d{2}'" -and $cfgText -notmatch "define\('MP_RULES_VERSION',\s*'\d{4}-\d{2}-\d{2}'\)") {
             $rulesIssues += "'rules_version' in $ConfigFile is empty or not YYYY-MM-DD"
         }
     }
@@ -237,7 +238,8 @@ if ($IncludeMarketplace) {
     } else {
         $rulesText = [System.IO.File]::ReadAllText($rulesPath, [System.Text.Encoding]::UTF8)
         # [text](url) is a normal markdown link, not a placeholder: only brackets NOT followed by "(" count as markers.
-        $markers = @([regex]::Matches($rulesText, '\[[^\]\r\n]*\](?!\()') | ForEach-Object { $_.Value } | Select-Object -Unique)
+        # [MP_XXX] are not markers either: marketplace-rules.php substitutes them from the MP_* constants (config/marketplace.php).
+        $markers = @([regex]::Matches($rulesText, '\[(?!MP_[A-Z_]+\])[^\]\r\n]*\](?!\()') | ForEach-Object { $_.Value } | Select-Object -Unique)
         if ($markers.Count -gt 0) { $rulesIssues += ("$RulesFile still has $($markers.Count) [placeholder] marker(s): " + ($markers -join ' ')) }
         if ($rulesText -match $draftWord) { $rulesIssues += "$RulesFile still contains the word $draftWord (draft notice)" }
         if ($rulesText -match $editionRx) { $rulesIssues += "$RulesFile still has the line 'Edition from: [date]' (date placeholder)" }

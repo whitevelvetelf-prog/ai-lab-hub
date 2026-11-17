@@ -16,6 +16,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/translations.php';
 require_once __DIR__ . '/paw-icon.php';
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/mp-legal-i18n.php';   // «Правила Marketplace» у підвалі
 require_once __DIR__ . '/ai-statement.php';   // «Як ми використовуємо АІ»: посилання лише без маркерів [ПІДТВЕРДИТИ]
 
 ?>
@@ -1442,6 +1443,7 @@ require_once __DIR__ . '/ai-statement.php';   // «Як ми використо�
             <li><a href="blog.php"><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a></li>
             <?php if (mp_public_nav_visible()): ?>
             <li><a href="marketplace.php"><?= htmlspecialchars(t('footer_marketplace'), ENT_QUOTES) ?></a></li>
+            <li><a href="marketplace-rules.php"><?= htmlspecialchars(mpl_tr('rules_link'), ENT_QUOTES) ?></a></li>
             <?php endif; ?>
             <li><a href="about.php"><?= htmlspecialchars(t('footer_about'), ENT_QUOTES) ?></a></li>
             <li><a href="contacts.php"><?= htmlspecialchars(t('footer_contacts'), ENT_QUOTES) ?></a></li>

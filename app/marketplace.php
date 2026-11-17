@@ -150,7 +150,8 @@ function mp_posting_enabled(): bool
  */
 function mp_rules_link_visible(): bool
 {
-    return mp_posting_enabled() || auth_has_role('employee', 'admin');
+    // З 2026-11-17 Правила Marketplace остаточні й стосуються і перегляду (п. 1.5) — посилання видно завжди.
+    return true;
 }
 
 /** CRM Marketplace — лише employee та admin (роль перевіряється в БД на кожному запиті); решту відправляє в кабінет. */

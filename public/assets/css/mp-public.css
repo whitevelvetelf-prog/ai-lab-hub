@@ -945,9 +945,115 @@ textarea.mp-input {
     overflow-wrap: anywhere;
 }
 
-.mp-rules ul {
+.mp-rules ul,
+.mp-rules ol {
     margin: 0 0 14px;
     padding-left: 22px;
+}
+
+/* Якорі розділів (#section-7, #section-7-5): не ховатися під закріпленою шапкою; підсвітка цілі посилання */
+.mp-rules [id] {
+    scroll-margin-top: 90px;
+}
+
+.mp-rules p:target,
+.mp-rules h2:target {
+    border-radius: 8px;
+    background: rgba(33, 22, 173, 0.35);
+}
+
+.mp-rules a {
+    color: #fff;
+    text-decoration: underline;
+}
+
+.mp-rules__table {
+    margin: 0 0 16px;
+    overflow-x: auto;
+}
+
+.mp-rules__table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.mp-rules__table th,
+.mp-rules__table td {
+    padding: 8px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: left;
+    vertical-align: top;
+    overflow-wrap: anywhere;
+}
+
+.mp-rules__table th {
+    background: rgba(33, 22, 173, 0.45);
+}
+
+.mp-rules-toc {
+    margin: 0 0 20px;
+}
+
+.mp-rules-toc ol {
+    margin: 8px 0 0;
+    padding-left: 22px;
+    columns: 2 260px;
+}
+
+.mp-rules-toc a {
+    color: #fff;
+}
+
+/* Позначка «Створено з AI» (п. 4.5) і умови використання (п. 9.5) */
+.mpl-ai-badge {
+    display: inline-block;
+    margin: 0 0 12px;
+    padding: 3px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 999px;
+    background: linear-gradient(135deg, #00032c, #2116ad);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.mpl-box {
+    margin: 10px 0;
+    padding: 12px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.mpl-box .mp-form {
+    margin-top: 8px;
+}
+
+.mpl-notes {
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+}
+
+.mpl-notes li {
+    margin: 0 0 6px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.mpl-notes li.is-new {
+    border-left: 3px solid #fff;
+}
+
+.mpl-notes time {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.mpl-cr-fields[hidden] {
+    display: none;
 }
 
 .mp-rules li {

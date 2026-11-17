@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/mp-legal-i18n.php';
+
 /**
  * AI LAB HUB — єдина навігація розділу Marketplace (вкладки + кнопка «Подати оголошення»).
  *
@@ -27,7 +29,7 @@ function mp_section_nav(string $active): string
         $tabs['favorites'] = ['marketplace-favorites.php', t('mpb_fav_title')];
     }
     if (mp_rules_link_visible()) {
-        $tabs['rules'] = ['marketplace-rules.php', t('mp_nav_rules')];
+        $tabs['rules'] = ['marketplace-rules.php', mpl_tr('rules_link')];
     }
 
     $html = '<nav class="mp-section-nav" aria-label="' . mp_e(t('mp_nav_label')) . '"><div class="mp-section-nav__tabs">';
