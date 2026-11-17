@@ -603,7 +603,7 @@ function mp_coming_soon(): never
     http_response_code(200);
     header('Content-Type: text/html; charset=utf-8');
     $h = static fn(string $k): string => htmlspecialchars(t($k), ENT_QUOTES);
-    $mail = 'partners@ailabhub-directory.com';
+    $mail = 'partners.ailabhub.directory@gmail.com';
     $lang = htmlspecialchars(current_lang(), ENT_QUOTES);
     ?>
 <!DOCTYPE html>

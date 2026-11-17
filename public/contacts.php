@@ -161,7 +161,7 @@ require_once __DIR__ . '/../app/translations.php';
                 <p class="contact-card__text">
                     Співпраця, розміщення AI-продукту, партнерські програми.
                 </p>
-                <a class="contact-card__mail" href="mailto:partners@ailabhub-directory.com">partners@ailabhub-directory.com</a>
+                <a class="contact-card__mail" href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@gmail.com</a>
             </section>
         </div>
     </main>

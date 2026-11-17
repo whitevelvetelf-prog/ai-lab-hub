@@ -21,7 +21,7 @@ require_once __DIR__ . '/mailer.php';
 const PROMO_MAIL_MAX_ATTEMPTS = 5;
 /** Пауза перед повторною спробою (хв) за номером невдалої спроби. */
 const PROMO_MAIL_BACKOFF_MIN = [1 => 5, 2 => 15, 3 => 60, 4 => 240];
-const PROMO_MAIL_CONTACT = 'partners@ailabhub-directory.com';
+const PROMO_MAIL_CONTACT = 'partners.ailabhub.directory@gmail.com';
 
 /** @return array{transport:string,host:string,port:int,encryption:string,username:string,password:string,from_email:string,from_name:string,reply_to:string,admin_emails:list<string>} */
 function promo_mail_config(): array

@@ -18,7 +18,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/promo-advertiser.php';
 
-const ADV_CONTACT = 'partners@ailabhub-directory.com';
+const ADV_CONTACT = 'partners.ailabhub.directory@gmail.com';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';

@@ -202,4 +202,4 @@
 | Загальні питання | hello.ailabhub.directory@gmail.com |
 | Скарги, правовласники, оскарження | [MP_ABUSE_EMAIL] |
 | Реклама | admin@ailabhub-directory.com |
-| Партнерство | partners@ailabhub-directory.com |
+| Партнерство | partners.ailabhub.directory@gmail.com |

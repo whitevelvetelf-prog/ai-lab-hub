@@ -40,7 +40,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
         $state = 'expired';
     }
 }
-$contact = 'partners@ailabhub-directory.com';
+$contact = 'partners.ailabhub.directory@gmail.com';
 ?>
 <!DOCTYPE html>
 <html lang="<?= $en ? 'en' : 'uk' ?>">

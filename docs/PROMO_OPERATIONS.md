@@ -47,7 +47,7 @@ adm.tools → хостинг-акаунт → **«Планувальник за�
 1. adm.tools → **Пошта** → домен `ailabhub-directory.com` → створіть (або використайте
    наявну) скриньку `hello@ailabhub-directory.com`, задайте пароль.
 2. Там само подивіться параметри SMTP (сервер, порт 465/SSL або 587/TLS).
-3. Відповіді на листи йдуть на `partners@ailabhub-directory.com` — переконайтеся,
+3. Відповіді на листи йдуть на `partners.ailabhub.directory@gmail.com` — переконайтеся,
    що ця скринька (чи переадресація) існує.
 
 ### 2.2. config/mail.php

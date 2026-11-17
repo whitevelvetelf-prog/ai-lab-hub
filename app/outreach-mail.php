@@ -40,7 +40,7 @@ const OMAIL_TZ = 'Europe/Kyiv';
 function omail_settings(PDO $pdo): array
 {
     $keys = ['enabled' => '0', 'sender_name' => '', 'sender_role' => '', 'legal_address' => '', 'unsubscribe_email' => '',
-        'reply_to' => 'partners@ailabhub-directory.com', 'from_email' => 'partners@ailabhub-directory.com', 'rules_ack' => '',
+        'reply_to' => 'partners.ailabhub.directory@gmail.com', 'from_email' => 'partners@ailabhub-directory.com', 'rules_ack' => '',
         'daily_cap' => '10', 'rampup' => '10,15,20,30,40', 'ramp_start' => '', 'pause_min' => '3', 'pause_max' => '9',
         'window_start' => '9', 'window_end' => '18', 'followup_days' => '7', 'paraphrase' => '0', 'next_send_at' => ''];
     $out = [];

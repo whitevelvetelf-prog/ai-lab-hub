@@ -61,7 +61,7 @@ lst_open($en ? 'Free listing for AI companies' : 'Безкоштовне роз�
             <?php endif; ?>
         </section>
         <?= lst_rules_html() ?>
-        <p class="mp-note"><a href="marketplace-rules.php"><?= lst_e(lst_tr('f_rules_link')) ?></a> · <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a> · <?= $tx('Питання:', 'Questions:') ?> <a href="mailto:partners@ailabhub-directory.com">partners@ailabhub-directory.com</a></p>
+        <p class="mp-note"><a href="marketplace-rules.php"><?= lst_e(lst_tr('f_rules_link')) ?></a> · <a href="terms.php"><?= lst_e(lst_tr('terms_link')) ?></a> · <?= $tx('Питання:', 'Questions:') ?> <a href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@gmail.com</a></p>
         <p class="mp-note"><?= lst_e(lst_tr('disclaimer')) ?></p>
     </div>
 <?php mpb_close(); ?>

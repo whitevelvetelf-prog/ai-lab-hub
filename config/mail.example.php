@@ -31,6 +31,6 @@ return [
     'password'     => '',
     'from_email'   => 'hello@ailabhub-directory.com',
     'from_name'    => 'AI LAB HUB',
-    'reply_to'     => 'partners@ailabhub-directory.com',
+    'reply_to'     => 'partners.ailabhub.directory@gmail.com',
     'admin_emails' => [],
 ];
