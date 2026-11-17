@@ -5,7 +5,9 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: мої оголошення (кабінет автора; будь-який залогінений користувач).
  *
- * Вкладки: На модерації / Активні / Завершені / Відхилені. Дії (POST + CSRF): «Продовжити» (+30 днів), «Архівувати».
+ * Вкладки: На модерації / Активні / Потребують уваги (на доопрацюванні, приховані, зняті) / Завершені / Відхилені.
+ * Статус і причина рішення (пункт Правил + пояснення) — біля кожного оголошення (п. 7.3).
+ * Дії (POST + CSRF): «Продовжити» (+MP_LISTING_LIFETIME_DAYS днів, без повторної модерації), «Архівувати».
  * Дії застосовуються лише до власних оголошень (mpb_own_listing перевіряє власника).
  */
 
@@ -26,6 +28,7 @@ $lang = current_lang();
 $tabs = [
     'pending'  => ["l.status IN ('pending', 'draft')", 'mpb_tab_pending'],
     'active'   => ["l.status = 'published' AND l.expires_at > NOW()", 'mpb_tab_active'],
+    'attention' => ["l.status IN ('needs_changes', 'hidden', 'removed')", 'mpl:my_attention_tab'],
     'finished' => ["(l.status IN ('expired', 'archived') OR (l.status = 'published' AND l.expires_at <= NOW()))", 'mpb_tab_finished'],
     'rejected' => ["l.status = 'rejected'", 'mpb_tab_rejected'],
 ];
@@ -79,6 +82,17 @@ if ($rows !== []) {
 
 $views30 = mpst_views_30($pdo, array_map(static fn(array $r): int => (int) $r['id'], $rows));
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
+// Код і причина рішення (міграція 2026-11-17) — окремим запитом, щоб до міграції сторінка працювала.
+$decisions = [];
+if ($rows !== []) {
+    try {
+        $ids = implode(',', array_map(static fn(array $r): int => (int) $r['id'], $rows));
+        foreach ($pdo->query("SELECT id, reject_code FROM mp_listings WHERE id IN ($ids)")->fetchAll(PDO::FETCH_KEY_PAIR) as $did => $dcode) {
+            $decisions[(int) $did] = $dcode;
+        }
+    } catch (Throwable) {
+    }
+}
 
 $postingOpen = mpb_posting_open();
 
@@ -95,7 +109,7 @@ mpb_open(t('mpb_my_title'), true, 'my');
 
         <nav class="mp-tabs" aria-label="<?= mp_e(t('mpb_my_title')) ?>">
             <?php foreach ($tabs as $key => [, $labelKey]): ?>
-                <a class="mp-tab<?= $key === $tab ? ' is-active' : '' ?>" href="marketplace-my.php?tab=<?= mp_e($key) ?>"><?= mp_e(t($labelKey)) ?> <span class="mp-chip__count"><?= (int) $counts[$key] ?></span></a>
+                <a class="mp-tab<?= $key === $tab ? ' is-active' : '' ?>" href="marketplace-my.php?tab=<?= mp_e($key) ?>"><?= mp_e(str_starts_with($labelKey, 'mpl:') ? mpl_tr(substr($labelKey, 4)) : t($labelKey)) ?> <span class="mp-chip__count"><?= (int) $counts[$key] ?></span></a>
             <?php endforeach; ?>
         </nav>
 
@@ -124,7 +138,7 @@ mpb_open(t('mpb_my_title'), true, 'my');
                                 <?php if ($live): ?><a href="marketplace-offer.php?id=<?= $rid ?>"><?= mp_e($r['title']) ?></a><?php else: ?><?= mp_e($r['title']) ?><?php endif; ?>
                             </h2>
                             <p class="mp-my-item__meta">
-                                <span class="mp-status mp-status--<?= mp_e($st) ?>"><?= mp_e(t($statusKey[$st] ?? 'mpb_st_pending')) ?></span>
+                                <span class="mp-status mp-status--<?= mp_e($st) ?>"><?= mp_e(isset($statusKey[$st]) ? t($statusKey[$st]) : mpl_status_label($st)) ?></span>
                                 <span><?= mp_e(mpb_price_label($r) ?: t('mpb_pt_none')) ?></span>
                                 <?php if ($r['expires_at'] !== null && in_array($st, ['published', 'expired'], true)): ?>
                                     <span><?= mp_e(t($live ? 'mpb_until' : 'mpb_ended')) ?> <?= mp_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) ?></span>
@@ -132,19 +146,20 @@ mpb_open(t('mpb_my_title'), true, 'my');
                                 <span><?= mp_e(t('mpb_views')) ?>: <?= (int) $r['views_count'] ?></span>
                                 <span><?= mp_e(sprintf(t('mpst_views_30'), (int) ($views30[$rid] ?? 0))) ?></span>
                             </p>
-                            <?php if ($st === 'rejected' && !empty($r['reject_reason'])): ?>
-                                <p class="mp-alert mp-alert--error mp-alert--inline"><strong><?= mp_e(t('mpb_reject_reason')) ?>:</strong> <?= mp_e($r['reject_reason']) ?></p>
+                            <?php $why = mpl_reason_text($decisions[$rid] ?? null, $r['reject_reason'] ?? null); ?>
+                            <?php if (in_array($st, ['rejected', 'needs_changes', 'hidden', 'removed'], true) && $why !== ''): ?>
+                                <p class="mp-alert mp-alert--error mp-alert--inline"><strong><?= mp_e(mpl_tr('my_reason')) ?>:</strong> <?= mp_e($why) ?></p>
                             <?php endif; ?>
                             <div class="mp-my-item__actions">
                                 <a class="mp-btn" href="mp-stats.php?id=<?= $rid ?>"><?= mp_e(t('mpst_link')) ?></a>
-                                <?php if ($postingOpen): ?><a class="mp-btn" href="marketplace-post.php?id=<?= $rid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a><?php endif; ?>
+                                <?php if ($postingOpen && !in_array($st, ['hidden', 'removed'], true)): ?><a class="mp-btn" href="marketplace-post.php?id=<?= $rid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a><?php endif; ?>
                                 <?php if ($canExtend && $postingOpen): ?>
                                     <form method="post" action="marketplace-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form">
                                         <?= mp_csrf_field() ?><input type="hidden" name="action" value="extend"><input type="hidden" name="id" value="<?= $rid ?>">
                                         <button class="mp-btn" type="submit"><?= mp_e(t('mpb_extend_btn')) ?></button>
                                     </form>
                                 <?php endif; ?>
-                                <?php if ($st !== 'archived'): ?>
+                                <?php if (!in_array($st, ['archived', 'removed'], true)): ?>
                                     <form method="post" action="marketplace-my.php?tab=<?= mp_e($tab) ?>" class="mp-inline-form" data-confirm="">
                                         <?= mp_csrf_field() ?><input type="hidden" name="action" value="archive"><input type="hidden" name="id" value="<?= $rid ?>">
                                         <button class="mp-btn" type="submit"><?= mp_e(t('mpb_archive_btn')) ?></button>

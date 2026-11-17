@@ -1171,6 +1171,10 @@ function mpb_extend(PDO $pdo, array $own, int $userId): string
         return 'mpb_err_extend_status';
     }
     mpt_cache_reset();
+    try {
+        $pdo->prepare('UPDATE mp_listings SET expiry_notified_at = NULL WHERE id = :id')->execute([':id' => $id]);
+    } catch (Throwable) {
+    }
     mp_log($pdo, $id, $userId, 'extended', '+' . $ttl . ' днів');
 
     return 'ok';
@@ -1180,7 +1184,7 @@ function mpb_archive(PDO $pdo, array $own, int $userId): bool
 {
     $stmt = $pdo->prepare(
         "UPDATE mp_listings SET status = 'archived'
-         WHERE id = :id AND post_form = 'ad' AND status IN ('pending', 'published', 'expired', 'rejected')"
+         WHERE id = :id AND post_form = 'ad' AND status IN ('pending', 'published', 'expired', 'rejected', 'needs_changes', 'hidden')"
     );
     $stmt->execute([':id' => (int) $own['id']]);
     if ($stmt->rowCount() === 0) {

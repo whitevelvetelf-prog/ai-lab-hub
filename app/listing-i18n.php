@@ -32,6 +32,9 @@ const LST_I18N = [
     'st_rejected' => ['Відхилено', 'Rejected'],
     'st_expired' => ['Термін минув', 'Expired'],
     'st_archived' => ['Знято', 'Removed'],
+    'st_needs_changes' => ['Повернуто на доопрацювання', 'Returned for changes'],
+    'st_hidden' => ['Тимчасово приховано (розгляд скарги)', 'Temporarily hidden (complaint under review)'],
+    'st_removed' => ['Знято адміністрацією', 'Removed by moderators'],
 
     // Безкоштовне розміщення
     'free_until' => ['Безкоштовне розміщення до %s', 'Free listing until %s'],

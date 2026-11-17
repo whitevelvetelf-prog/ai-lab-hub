@@ -3,20 +3,23 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — CRM Marketplace: модерація оголошень дошки (лише employee / admin).
+ * AI LAB HUB — CRM Marketplace: модерація оголошень (лише employee / admin). Розділ 7 Правил Marketplace.
  *
- * Вкладки: «Черга» (status='pending': нові й відредаговані оголошення, а також повернуті через скарги) і
- * «Зі скаргами» (живі/на модерації оголошення, на які є скарги після останньої модерації).
- * ?id=N — перегляд одного оголошення будь-якого статусу (з mp-list.php).
- * Дії (POST + CSRF, усе пишеться в mp_moderation_log):
- *   approve — pending → published, published_at = зараз, expires_at = +30 днів, moderated_by/at;
- *   reject  — обов'язкова причина, статус rejected (причину бачить автор);
- *   dismiss — скарги розглянуто, оголошення лишається (скидає лічильник скарг).
+ * Оголошення користувачів (post_form='ad') і компаній (вакансії/курси/послуги, post_form='').
+ * Вкладки: «Черга» (status='pending'), «Старі скарги» (mp_reports до 2026-11-17; нові скарги — mp-legal-admin.php),
+ * «Рішення (30 днів)» (needs_changes / rejected / hidden / removed). ?id=N — одне оголошення будь-якого статусу.
+ * Дії (POST + CSRF, усе пишеться в mp_moderation_log, автор отримує повідомлення — app/mp-legal.php):
+ *   approve        — pending → published (строк MP_LISTING_LIFETIME_DAYS);
+ *   needs_changes / reject / remove — обов'язкові пункт Правил і пояснення (автор бачить обидва);
+ *   move           — перенести оголошення користувача в іншу категорію (п. 4.2);
+ *   hide           — приховати на час розгляду (hidden); restore — відновити публікацію;
+ *   dismiss        — старі скарги безпідставні, оголошення лишається.
  */
 
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
+require_once __DIR__ . '/../app/listing.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -24,7 +27,8 @@ $pdo = require __DIR__ . '/../config/database.php';
 mp_require_staff();
 $actorId = (int) auth_user_id();
 
-$tab = ($_GET['tab'] ?? '') === 'reports' ? 'reports' : 'queue';
+$tabs = ['queue', 'reports', 'decided'];
+$tab = in_array($_GET['tab'] ?? '', $tabs, true) ? (string) $_GET['tab'] : 'queue';
 $onlyId = (int) ($_GET['id'] ?? 0);
 $back = $onlyId > 0 ? 'mp-moderation.php?id=' . $onlyId : 'mp-moderation.php?tab=' . $tab;
 
@@ -36,23 +40,43 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     }
     $id = (int) ($_POST['id'] ?? 0);
     $action = (string) ($_POST['action'] ?? '');
-    if ($action === 'approve') {
-        $ok = mpb_approve($pdo, $id, $actorId);
-        mpb_flash($ok ? 'ok' : 'error', 'Оголошення №' . $id . ': ' . ($ok ? 'схвалено й опубліковано.' : 'не схвалено (статус уже змінився).'));
-    } elseif ($action === 'reject') {
-        $reason = is_string($_POST['reason'] ?? null) ? trim((string) $_POST['reason']) : '';
-        if ($reason === '') {
-            mpb_flash('error', "Вкажіть причину відхилення — вона обов'язкова.");
-        } else {
-            $ok = mpb_reject($pdo, $id, $actorId, $reason);
-            mpb_flash($ok ? 'ok' : 'error', 'Оголошення №' . $id . ': ' . ($ok ? 'відхилено, причину збережено.' : 'не відхилено (статус уже змінився).'));
+    $brief = mpl_listing_brief($pdo, $id);
+    $isAd = $brief !== null && (string) $brief['post_form'] === 'ad';
+    $code = is_string($_POST['code'] ?? null) && in_array($_POST['code'], MPL_RULE_POINTS, true) ? (string) $_POST['code'] : null;
+    $reason = is_string($_POST['reason'] ?? null) ? trim((string) $_POST['reason']) : '';
+    $ok = false;
+    if ($brief === null) {
+        $ok = false;
+    } elseif ($action === 'approve') {
+        $ok = $isAd ? mpb_approve($pdo, $id, $actorId) : lst_approve($pdo, $id, $actorId);
+    } elseif ($action === 'decision' || $action === 'reject') {
+        // 'reject' — коротка форма з черги кабінету (account.php), теж із пунктом Правил.
+        $decision = $action === 'reject' ? 'reject' : (string) ($_POST['decision'] ?? '');
+        if ($code === null || $reason === '') {
+            mpb_flash('error', mpl_tr('a_err_reason'));
+            mpb_redirect($back);
         }
+        if ($decision === 'needs_changes') {
+            $ok = mpl_set_status($pdo, $id, 'needs_changes', $actorId, ['pending', 'published'], $code, $reason);
+        } elseif ($decision === 'reject') {
+            $ok = mpl_set_status($pdo, $id, 'rejected', $actorId, ['pending', 'published', 'needs_changes'], $code, $reason);
+            if ($ok && !$isAd) {
+                lst_mail($pdo, $id, 'rejected', ['reason' => mpl_reason_text($code, $reason, 'uk')]);   // лист, як і раніше для компаній
+            }
+        } elseif ($decision === 'remove') {
+            $ok = mpl_set_status($pdo, $id, 'removed', $actorId, ['pending', 'published', 'needs_changes', 'hidden', 'expired'], $code, $reason);
+        }
+    } elseif ($action === 'move' && $isAd) {
+        $ok = mpl_move_category($pdo, $id, (int) ($_POST['category_id'] ?? 0), $actorId);
+    } elseif ($action === 'hide') {
+        $ok = mpl_set_status($pdo, $id, 'hidden', $actorId, ['published', 'pending'], $code, $reason !== '' ? $reason : null);
+    } elseif ($action === 'restore') {
+        $ok = mpl_set_status($pdo, $id, 'published', $actorId, ['hidden', 'removed', 'rejected', 'needs_changes'], null, $reason !== '' ? $reason : null, 'restored');
     } elseif ($action === 'dismiss') {
         $ok = mpb_dismiss_reports($pdo, $id, $actorId);
-        mpb_flash($ok ? 'ok' : 'error', 'Оголошення №' . $id . ': ' . ($ok ? 'скарги розглянуто, оголошення залишено.' : 'не виконано (статус уже змінився).'));
     }
-    // Дія з єдиної черги кабінету (account.php → «Маркетплейс: оголошення» → «Модерація») — повертаємося туди
-    // з тим самим повідомленням у форматі вкладки.
+    mpb_flash($ok ? 'ok' : 'error', mpl_tr($ok ? 'a_done' : 'a_failed', $id));
+    // Дія з єдиної черги кабінету (account.php → «Маркетплейс: оголошення» → «Модерація») — повертаємося туди.
     if (($_POST['return'] ?? '') === 'account') {
         $msgs = (array) ($_SESSION['mpb_flash'] ?? []);
         unset($_SESSION['mpb_flash']);
@@ -65,20 +89,34 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
 // --- Вибірка -------------------------------------------------------------------------
 $reportsSql = mpb_reports_sql();
+$target = mpl_target_sql();
 if ($onlyId > 0) {
     $whereSql = 'l.id = :one';
     $params = [':one' => $onlyId];
 } elseif ($tab === 'reports') {
     $whereSql = "l.status IN ('published', 'pending') AND $reportsSql > 0";
     $params = [];
+} elseif ($tab === 'decided') {
+    $whereSql = "l.status IN ('needs_changes', 'rejected', 'hidden', 'removed') AND COALESCE(l.status_changed_at, l.moderated_at, l.updated_at) > NOW() - INTERVAL 30 DAY";
+    $params = [];
 } else {
     $whereSql = "l.status = 'pending'";
     $params = [];
 }
+$hasLegal = true;
+try {
+    $pdo->query('SELECT reject_code, status_changed_at FROM mp_listings LIMIT 0');
+} catch (Throwable) {
+    $hasLegal = false;   // міграцію ще не застосовано
+    if ($tab === 'decided') {
+        $whereSql = "l.status IN ('rejected') AND COALESCE(l.moderated_at, l.updated_at) > NOW() - INTERVAL 30 DAY";
+    }
+}
+$legalCols = $hasLegal ? 'l.reject_code, l.status_changed_at,' : 'NULL AS reject_code, NULL AS status_changed_at,';
 $stmt = $pdo->prepare(
-    "SELECT l.id, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city, l.source_lang,
-            l.created_at, l.updated_at, l.moderated_at, l.expires_at, l.reject_reason, l.created_by,
-            s.display_name AS seller_name, u.name AS author_name, u.email AS author_email,
+    "SELECT l.id, l.status, l.section, l.post_form, l.slug, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city, l.source_lang,
+            l.created_at, l.updated_at, l.moderated_at, l.expires_at, l.reject_reason, $legalCols l.created_by, l.company_name,
+            s.display_name AS seller_name, s.user_id AS owner_id, u.name AS author_name, u.email AS author_email,
             $reportsSql AS reports_count,
             COALESCE(NULLIF(tu.title, ''), ts.title) AS title,
             COALESCE(NULLIF(tu.short_desc, ''), ts.short_desc) AS short_desc,
@@ -89,35 +127,35 @@ $stmt = $pdo->prepare(
               WHERE lc.listing_id = l.id) AS categories_list
      FROM mp_listings l
      LEFT JOIN mp_sellers s ON s.id = l.seller_id
-     LEFT JOIN users u ON u.id = l.created_by
+     LEFT JOIN users u ON u.id = s.user_id
      LEFT JOIN mp_listing_translations tu ON tu.listing_id = l.id AND tu.lang = 'uk'
      LEFT JOIN mp_listing_translations ts ON ts.listing_id = l.id AND ts.lang = l.source_lang
-     WHERE l.post_form = 'ad' AND $whereSql
+     WHERE $target AND $whereSql
      ORDER BY l.updated_at ASC, l.id ASC
      LIMIT 100"
 );
 $stmt->execute($params);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-$queueCount = (int) $pdo->query("SELECT COUNT(*) FROM mp_listings WHERE post_form = 'ad' AND status = 'pending'")->fetchColumn();
-$reportsCount = (int) $pdo->query(
-    "SELECT COUNT(*) FROM mp_listings l WHERE l.post_form = 'ad' AND l.status IN ('published', 'pending') AND $reportsSql > 0"
-)->fetchColumn();
-$statusLabels = mp_status_labels();
+$queueCount = (int) $pdo->query("SELECT COUNT(*) FROM mp_listings l WHERE $target AND l.status = 'pending'")->fetchColumn();
+$reportsCount = (int) $pdo->query("SELECT COUNT(*) FROM mp_listings l WHERE $target AND l.status IN ('published', 'pending') AND $reportsSql > 0")->fetchColumn();
+$moveCats = mpb_categories($pdo, 'uk');
 $reasonLabels = ['fraud' => 'Шахрайство', 'prohibited' => 'Заборонений товар чи послуга', 'spam' => 'Спам', 'wrong_category' => 'Неправильна категорія', 'other' => 'Інше'];
 $flash = '';
 foreach ((array) ($_SESSION['mpb_flash'] ?? []) as $item) {
     $flash .= '<div class="notice notice--' . ($item['type'] === 'error' ? 'error' : 'success') . '"><p>' . mp_e($item['text']) . '</p></div>';
 }
 unset($_SESSION['mpb_flash']);
+
+$ruleSelect = static fn(): string => mpl_rule_select_html('select');
 ?>
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="<?= mp_e(mpl_lang()) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex, nofollow">
-    <title>AI LAB HUB — Marketplace: модерація</title>
+    <title>AI LAB HUB — <?= mp_e(mpl_tr('a_title_mod')) ?></title>
     <link rel="stylesheet" href="/assets/css/crm-ads.css">
     <link rel="stylesheet" href="/assets/css/mp-crm.css">
     <?php include __DIR__ . '/../app/header.php'; ?>
@@ -133,7 +171,9 @@ unset($_SESSION['mpb_flash']);
         .mod-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; margin-top: 14px; }
         .mod-actions form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-start; }
         .mod-actions textarea { min-width: 280px; }
+        .mod-actions fieldset { border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 8px 10px; display: flex; flex-wrap: wrap; gap: 8px; }
         .mod-tabs { display: flex; gap: 8px; margin: 0 0 20px; flex-wrap: wrap; }
+        @media (max-width: 600px) { .mod-actions textarea, .mod-actions select { min-width: 0; width: 100%; } }
     </style>
 </head>
 <body>
@@ -142,116 +182,148 @@ unset($_SESSION['mpb_flash']);
     </header>
 
     <div class="page page--wide">
-        <a class="back-link" href="mp-list.php">← До списку пропозицій</a>
-        <h1 class="page__title">Marketplace — модерація оголошень</h1>
-        <p class="page__subtitle">Оголошення користувачів: нові, відредаговані та зі скаргами. Схвалення дає 30 днів на дошці.</p>
+        <a class="back-link" href="mp-list.php"><?= mp_e(mpl_tr('a_back')) ?></a>
+        <h1 class="page__title"><?= mp_e(mpl_tr('a_title_mod')) ?></h1>
+        <p class="page__subtitle"><?= mp_e(mpl_tr('a_sub_mod', (int) MP_LISTING_LIFETIME_DAYS)) ?> · <a href="mp-legal-admin.php"><?= mp_e(mpl_tr('a_legal_link')) ?></a> · <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= mp_e(mpl_tr('rules_link')) ?></a></p>
 
         <?= $flash ?>
 
         <?php if ($onlyId === 0): ?>
         <div class="mod-tabs">
-            <a class="btn btn--sm <?= $tab === 'queue' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-moderation.php">Черга (<?= $queueCount ?>)</a>
-            <a class="btn btn--sm <?= $tab === 'reports' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-moderation.php?tab=reports">Зі скаргами (<?= $reportsCount ?>)</a>
+            <a class="btn btn--sm <?= $tab === 'queue' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-moderation.php"><?= mp_e(mpl_tr('a_tab_queue')) ?> (<?= $queueCount ?>)</a>
+            <a class="btn btn--sm <?= $tab === 'reports' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-moderation.php?tab=reports"><?= mp_e(mpl_tr('a_tab_reports')) ?> (<?= $reportsCount ?>)</a>
+            <a class="btn btn--sm <?= $tab === 'decided' ? 'btn--primary' : 'btn--ghost' ?>" href="mp-moderation.php?tab=decided"><?= mp_e(mpl_tr('a_tab_decided')) ?></a>
         </div>
         <?php else: ?>
-            <p><a class="btn btn--ghost btn--sm" href="mp-moderation.php">Уся черга</a></p>
+            <p><a class="btn btn--ghost btn--sm" href="mp-moderation.php"><?= mp_e(mpl_tr('a_tab_queue')) ?></a></p>
         <?php endif; ?>
 
         <?php if ($rows === []): ?>
-            <p class="empty-state"><?= $onlyId > 0 ? 'Оголошення не знайдено (або воно не з дошки оголошень).' : ($tab === 'reports' ? 'Оголошень зі скаргами немає.' : 'Черга порожня.') ?></p>
+            <p class="empty-state"><?= mp_e(mpl_tr($tab === 'queue' && $onlyId === 0 ? 'a_empty_queue' : 'a_empty')) ?></p>
         <?php endif; ?>
 
         <?php foreach ($rows as $r): ?>
             <?php
             $rid = (int) $r['id'];
             $st = (string) $r['status'];
-            $photos = mpb_photos($pdo, $rid);
-            $contacts = mpb_contacts($pdo, $rid);
+            $isAd = (string) $r['post_form'] === 'ad';
+            $photos = $isAd ? mpb_photos($pdo, $rid) : [];
+            $contacts = $isAd ? mpb_contacts($pdo, $rid) : [];
             $reports = $pdo->prepare('SELECT reporter_id, reason, note, created_at FROM mp_reports WHERE listing_id = :l ORDER BY id DESC LIMIT 50');
             $reports->execute([':l' => $rid]);
             $reports = $reports->fetchAll(PDO::FETCH_ASSOC);
-            $log = $pdo->prepare('SELECT action, note, created_at, actor_id FROM mp_moderation_log WHERE listing_id = :l ORDER BY id DESC LIMIT 6');
+            $log = $pdo->prepare('SELECT action, note, created_at, actor_id FROM mp_moderation_log WHERE listing_id = :l ORDER BY id DESC LIMIT 8');
             $log->execute([':l' => $rid]);
             $log = $log->fetchAll(PDO::FETCH_ASSOC);
             $loc = mpb_location_label(['city' => $r['city'], 'is_remote' => $r['is_remote']]);
+            $reasonShown = mpl_reason_text($r['reject_code'], $r['reject_reason']);
             ?>
             <article class="mod-card" id="l<?= $rid ?>">
-                <h2><?= mp_e($r['title'] ?? '(без назви)') ?> <span class="table__id">#<?= $rid ?></span>
-                    <span class="badge badge--<?= mp_e($st) ?>"><?= mp_e($statusLabels[$st] ?? $st) ?></span></h2>
+                <h2><?= mp_e($r['title'] ?? '—') ?> <span class="table__id">#<?= $rid ?></span>
+                    <span class="badge badge--<?= mp_e($st) ?>"><?= mp_e(mpl_status_label($st)) ?></span></h2>
                 <div class="mod-meta">
-                    <span>Ціна: <strong><?= mp_e(mpb_price_label($r) ?: t('mpb_pt_none')) ?></strong></span>
-                    <?php if ($loc !== ''): ?><span>Місце: <?= mp_e($loc) ?></span><?php endif; ?>
-                    <span>Категорії: <?= mp_e($r['categories_list'] ?? '—') ?></span>
-                    <span>Автор: <?= mp_e($r['author_name'] ?? '—') ?> <?= $r['author_email'] ? '(' . mp_e($r['author_email']) . ')' : '' ?> · продавець: <?= mp_e($r['seller_name'] ?? '—') ?></span>
-                    <span>Мова оригіналу: <?= mp_e($r['source_lang']) ?></span>
-                    <span>Створено: <?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $r['created_at']))) ?></span>
-                    <span>Оновлено: <?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $r['updated_at']))) ?></span>
-                    <?php if ($r['expires_at'] !== null): ?><span>Діє до: <?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $r['expires_at']))) ?></span><?php endif; ?>
+                    <span><?= mp_e(mpl_tr($isAd ? 'a_kind_ad' : 'a_kind_lst')) ?> · <?= mp_e((string) $r['section']) ?><?= !$isAd && !empty($r['company_name']) ? ' · ' . mp_e($r['company_name']) : '' ?></span>
+                    <span><a href="<?= mp_e(mpl_listing_url($r)) ?>" target="_blank" rel="noopener"><?= mp_e(mpl_tr('a_open')) ?></a></span>
+                    <?php if ($isAd): ?><span><?= mp_e(mpb_price_label($r) ?: t('mpb_pt_none')) ?></span><?php endif; ?>
+                    <?php if ($loc !== ''): ?><span><?= mp_e($loc) ?></span><?php endif; ?>
+                    <span><?= mp_e($r['categories_list'] ?? '—') ?></span>
+                    <span><?= mp_e($r['author_name'] ?? '—') ?> <?= $r['author_email'] ? '(' . mp_e($r['author_email']) . ')' : '' ?>
+                        <?php if ($r['owner_id'] !== null): ?> · <a href="mp-legal-admin.php?tab=users&amp;q=<?= (int) $r['owner_id'] ?>"><?= mp_e(mpl_tr('a_author_card')) ?></a><?php endif; ?></span>
+                    <span><?= mp_e($r['source_lang']) ?></span>
+                    <span><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $r['updated_at']))) ?></span>
+                    <?php if ($r['expires_at'] !== null): ?><span>→ <?= mp_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) ?></span><?php endif; ?>
                 </div>
 
                 <?php if ($photos !== []): ?>
                     <div class="mod-photos" data-mp-gallery>
                         <?php foreach ($photos as $pi => $p): ?>
-                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" data-mp-photo><img src="<?= mp_e(mpb_photo_url($p['thumb_name']) ?? '') ?>" alt="<?= mp_e('Фото ' . ($pi + 1)) ?>"></a>
+                            <a href="<?= mp_e(mpb_photo_url($p['file_name']) ?? '') ?>" data-mp-photo><img src="<?= mp_e(mpb_photo_url($p['thumb_name']) ?? '') ?>" alt="<?= mp_e('#' . ($pi + 1)) ?>"></a>
                         <?php endforeach; ?>
                     </div>
-                <?php else: ?>
-                    <p class="table__muted">Без фото.</p>
                 <?php endif; ?>
 
                 <p class="mod-text"><strong><?= mp_e($r['short_desc'] ?? '') ?></strong></p>
                 <?php if (!empty($r['full_desc'])): ?><p class="mod-text"><?= mp_e($r['full_desc']) ?></p><?php endif; ?>
 
+                <?php if ($contacts !== []): ?>
                 <div class="mod-box">
-                    <strong>Контакти (бачать лише модератори до кліку користувача):</strong>
-                    <?php if ($contacts === []): ?> —
-                    <?php else: foreach ($contacts as $c): ?>
-                        <div><?= mp_e($c['label']) ?>: <?= mp_e($c['value']) ?></div>
-                    <?php endforeach; endif; ?>
+                    <?php foreach ($contacts as $c): ?><div><?= mp_e($c['label']) ?>: <?= mp_e($c['value']) ?></div><?php endforeach; ?>
                 </div>
+                <?php endif; ?>
 
-                <?php if ($st === 'rejected' && !empty($r['reject_reason'])): ?>
-                    <div class="mod-box mod-box--warn"><strong>Причина відхилення:</strong> <?= mp_e($r['reject_reason']) ?></div>
+                <?php if ($reasonShown !== '' && in_array($st, ['rejected', 'needs_changes', 'hidden', 'removed'], true)): ?>
+                    <div class="mod-box mod-box--warn"><strong><?= mp_e(mpl_tr('my_reason')) ?>:</strong> <?= mp_e($reasonShown) ?></div>
                 <?php endif; ?>
 
                 <?php if ($reports !== []): ?>
                     <div class="mod-box mod-box--warn">
-                        <strong>Скарги (після останньої модерації: <?= (int) $r['reports_count'] ?>, усього: <?= count($reports) ?>):</strong>
+                        <strong><?= mp_e(mpl_tr('a_tab_reports')) ?> (<?= (int) $r['reports_count'] ?> / <?= count($reports) ?>):</strong>
                         <?php foreach ($reports as $rp): ?>
-                            <div>• <?= mp_e($reasonLabels[$rp['reason']] ?? $rp['reason']) ?> — користувач №<?= (int) $rp['reporter_id'] ?>, <?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $rp['created_at']))) ?><?= $rp['note'] ? ': «' . mp_e($rp['note']) . '»' : '' ?></div>
+                            <div>• <?= mp_e($reasonLabels[$rp['reason']] ?? $rp['reason']) ?> — №<?= (int) $rp['reporter_id'] ?>, <?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $rp['created_at']))) ?><?= $rp['note'] ? ': «' . mp_e($rp['note']) . '»' : '' ?></div>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 
                 <?php if ($log !== []): ?>
-                    <details><summary class="table__muted">Журнал модерації (останні <?= count($log) ?>)</summary>
+                    <details><summary class="table__muted">mp_moderation_log (<?= count($log) ?>)</summary>
                         <?php foreach ($log as $lg): ?>
-                            <div class="table__muted"><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $lg['created_at']))) ?> · <?= mp_e($lg['action']) ?><?= $lg['note'] ? ' — ' . mp_e($lg['note']) : '' ?> · <?= $lg['actor_id'] ? 'користувач №' . (int) $lg['actor_id'] : 'система' ?></div>
+                            <div class="table__muted"><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $lg['created_at']))) ?> · <?= mp_e($lg['action']) ?><?= $lg['note'] ? ' — ' . mp_e($lg['note']) : '' ?> · <?= $lg['actor_id'] ? '№' . (int) $lg['actor_id'] : 'cron' ?></div>
                         <?php endforeach; ?>
                     </details>
                 <?php endif; ?>
 
-                <?php if (in_array($st, ['pending', 'published'], true)): ?>
                 <div class="mod-actions">
                     <?php if ($st === 'pending'): ?>
-                        <form method="post" action="<?= mp_e($back) ?>" data-confirm="Схвалити й опублікувати оголошення #<?= $rid ?>?">
+                        <form method="post" action="<?= mp_e($back) ?>">
                             <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="approve">
-                            <button class="btn btn--primary btn--sm" type="submit">Схвалити</button>
+                            <button class="btn btn--primary btn--sm" type="submit"><?= mp_e(mpl_tr('a_approve')) ?></button>
                         </form>
                     <?php endif; ?>
-                    <?php if ((int) $r['reports_count'] > 0): ?>
-                        <form method="post" action="<?= mp_e($back) ?>" data-confirm="Визнати скарги безпідставними й залишити оголошення #<?= $rid ?>?">
+                    <?php if (in_array($st, ['pending', 'published', 'needs_changes', 'hidden', 'expired'], true)): ?>
+                        <form method="post" action="<?= mp_e($back) ?>">
+                            <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="decision">
+                            <fieldset>
+                                <legend><?= mp_e(mpl_tr('a_decision')) ?></legend>
+                                <select class="select" name="decision" aria-label="<?= mp_e(mpl_tr('a_decision')) ?>">
+                                    <?php if (in_array($st, ['pending', 'published'], true)): ?><option value="needs_changes"><?= mp_e(mpl_tr('a_dec_needs_changes')) ?></option><?php endif; ?>
+                                    <?php if (in_array($st, ['pending', 'published', 'needs_changes'], true)): ?><option value="reject"><?= mp_e(mpl_tr('a_dec_reject')) ?></option><?php endif; ?>
+                                    <option value="remove"><?= mp_e(mpl_tr('a_dec_remove')) ?></option>
+                                </select>
+                                <?= $ruleSelect() ?>
+                                <textarea class="textarea" name="reason" rows="2" maxlength="500" required placeholder="<?= mp_e(mpl_tr('a_reason_ph')) ?>"></textarea>
+                                <button class="btn btn--ghost btn--sm" type="submit"><?= mp_e(mpl_tr('a_apply')) ?></button>
+                            </fieldset>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($isAd && $moveCats !== [] && !in_array($st, ['removed', 'archived'], true)): ?>
+                        <form method="post" action="<?= mp_e($back) ?>">
+                            <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="move">
+                            <select class="select" name="category_id" aria-label="<?= mp_e(mpl_tr('a_move')) ?>" required>
+                                <option value=""><?= mp_e(mpl_tr('a_move')) ?></option>
+                                <?php foreach ($moveCats as $mc): ?><option value="<?= (int) $mc['id'] ?>"><?= mp_e($mc['name']) ?></option><?php endforeach; ?>
+                            </select>
+                            <button class="btn btn--ghost btn--sm" type="submit"><?= mp_e(mpl_tr('a_move_btn')) ?></button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ($st === 'published'): ?>
+                        <form method="post" action="<?= mp_e($back) ?>">
+                            <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="hide">
+                            <button class="btn btn--ghost btn--sm" type="submit"><?= mp_e(mpl_tr('a_hide')) ?></button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if (in_array($st, ['hidden', 'removed', 'rejected', 'needs_changes'], true)): ?>
+                        <form method="post" action="<?= mp_e($back) ?>">
+                            <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="restore">
+                            <button class="btn btn--ghost btn--sm" type="submit"><?= mp_e(mpl_tr('a_restore')) ?></button>
+                        </form>
+                    <?php endif; ?>
+                    <?php if ((int) $r['reports_count'] > 0 && in_array($st, ['pending', 'published'], true)): ?>
+                        <form method="post" action="<?= mp_e($back) ?>">
                             <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="dismiss">
-                            <button class="btn btn--ghost btn--sm" type="submit">Скарги безпідставні — залишити</button>
+                            <button class="btn btn--ghost btn--sm" type="submit"><?= mp_e(mpl_tr('a_c_keep')) ?></button>
                         </form>
                     <?php endif; ?>
-                    <form method="post" action="<?= mp_e($back) ?>" data-confirm="Відхилити оголошення #<?= $rid ?>? Автор побачить причину.">
-                        <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $rid ?>"><input type="hidden" name="action" value="reject">
-                        <textarea class="textarea" name="reason" rows="2" maxlength="500" required placeholder="Причина відхилення (обов'язково; її побачить автор)"></textarea>
-                        <button class="btn btn--ghost btn--sm" type="submit">Відхилити</button>
-                    </form>
                 </div>
-                <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </div>

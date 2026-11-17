@@ -34,6 +34,10 @@ $isFav = $viewerId !== null && $isLive && mpb_is_favorite($pdo, $viewerId, $bid)
 $others = $isLive && $board['seller_id'] !== null ? mpb_seller_other($pdo, (int) $board['seller_id'], $bid, $lang) : [];
 $priceText = mpb_price_label($board);   // '' — ціну не вказано
 $board += mpl_listing_extras($pdo, $bid);   // AI-медіа (п. 4.5), умови використання (п. 9.5)
+if (!$isLive) {
+    $own = mpl_listing_brief($pdo, $bid);   // код пункту Правил для причини рішення
+    $board['reject_code'] = $own['reject_code'] ?? null;
+}
 $usageText = mpl_usage_text($board);
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
@@ -46,9 +50,10 @@ mpb_open((string) $board['title'], !$isLive, 'home');
         <?= mpb_flash_html() ?>
 
         <?php if (!$isLive): ?>
-            <div class="mp-alert mp-alert--error"><?= mp_e(t('mpb_preview_banner')) ?> <strong><?= mp_e(t($statusKey[$board['status']] ?? 'mpb_st_pending')) ?></strong>
-                <?php if ((string) $board['status'] === 'rejected' && !empty($board['reject_reason'])): ?>
-                    — <?= mp_e($board['reject_reason']) ?>
+            <div class="mp-alert mp-alert--error"><?= mp_e(t('mpb_preview_banner')) ?> <strong><?= mp_e(isset($statusKey[$board['status']]) ? t($statusKey[$board['status']]) : mpl_status_label((string) $board['status'])) ?></strong>
+                <?php $why = mpl_reason_text($board['reject_code'] ?? null, $board['reject_reason'] ?? null); ?>
+                <?php if (in_array((string) $board['status'], ['rejected', 'needs_changes', 'hidden', 'removed'], true) && $why !== ''): ?>
+                    — <?= mp_e($why) ?>
                 <?php endif; ?>
             </div>
         <?php endif; ?>

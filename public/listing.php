@@ -85,7 +85,7 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
         <?= mpb_flash_html() ?>
         <?php if (!$live && !$expired): ?>
             <div class="mp-alert"><?= lst_e(lst_tr('preview_notice', lst_tr('st_' . $row['status']))) ?></div>
-            <?php if ((string) $row['status'] === 'rejected' && !empty($row['reject_reason'])): ?>
+            <?php if (in_array((string) $row['status'], ['rejected', 'needs_changes', 'hidden', 'removed'], true) && !empty($row['reject_reason'])): ?>
                 <div class="mp-alert mp-alert--error"><strong><?= lst_e(lst_tr('reject_reason')) ?>:</strong> <?= lst_e($row['reject_reason']) ?></div>
             <?php endif; ?>
         <?php elseif ($expired): ?>

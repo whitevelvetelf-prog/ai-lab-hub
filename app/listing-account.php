@@ -24,7 +24,7 @@ function lst_account_board_rows(PDO $pdo, int $userId): array
          FROM mp_listings l JOIN mp_sellers s ON s.id = l.seller_id
          LEFT JOIN mp_listing_translations t ON t.listing_id = l.id AND t.lang = l.source_lang
          WHERE s.user_id = :u AND l.post_form = 'ad'
-         ORDER BY FIELD(l.status, 'pending', 'published', 'rejected', 'expired', 'draft', 'archived'), l.id DESC LIMIT 100"
+         ORDER BY FIELD(l.status, 'pending', 'needs_changes', 'hidden', 'published', 'rejected', 'removed', 'expired', 'draft', 'archived'), l.id DESC LIMIT 100"
     );
     $st->execute([':u' => $userId]);
 
@@ -85,7 +85,7 @@ function lst_account_render(PDO $pdo, array $user): void
                                         $bst = (string) $b['status'] === 'published' && (int) $b['elapsed'] === 1 ? 'expired' : (string) $b['status']; ?>
                                         <tr>
                                             <td data-label="<?= lst_e(mpf_tr('draft_board')) ?>"><a href="marketplace-offer.php?id=<?= $bid ?>"><?= lst_e($b['title'] ?? '#' . $bid) ?></a>
-                                                <?php if ($bst === 'rejected' && !empty($b['reject_reason'])): ?><br><span class="pc-warn-text"><?= lst_e($b['reject_reason']) ?></span><?php endif; ?></td>
+                                                <?php if (in_array($bst, ['rejected', 'needs_changes', 'hidden', 'removed'], true) && !empty($b['reject_reason'])): ?><br><span class="pc-warn-text"><?= lst_e($b['reject_reason']) ?></span><?php endif; ?></td>
                                             <td data-label="<?= lst_e(lst_tr('my_col_status')) ?>"><span class="pc-badge pc-badge--<?= lst_e($bst) ?>"><?= lst_e(lst_tr('st_' . $bst)) ?></span></td>
                                             <td data-label="<?= lst_e(lst_tr('my_col_actions')) ?>"><?php if ($bst !== 'archived'): ?><a class="pc-btn pc-btn--small" href="marketplace-post.php?id=<?= $bid ?>"><?= lst_e(lst_tr('my_edit')) ?></a><?php endif; ?>
                                                 <a class="pc-btn pc-btn--small" href="marketplace-my.php"><?= lst_e(lst_tr('my_view')) ?></a></td>
@@ -115,14 +115,14 @@ function lst_account_render(PDO $pdo, array $user): void
                                         <td data-label="<?= lst_e(lst_tr('my_col_listing')) ?>">
                                             <a href="<?= lst_e(lst_url($r)) ?>"><?= lst_e($r['title'] ?? '#' . $id) ?></a><br>
                                             <span class="pc-muted"><?= lst_e(lst_tr('type1_' . $r['section'])) ?> · <?= lst_e($r['company_name']) ?></span>
-                                            <?php if ($status === 'rejected' && !empty($r['reject_reason'])): ?><br><span class="pc-warn-text"><?= lst_e($r['reject_reason']) ?></span><?php endif; ?>
+                                            <?php if (in_array($status, ['rejected', 'needs_changes', 'hidden', 'removed'], true) && !empty($r['reject_reason'])): ?><br><span class="pc-warn-text"><?= lst_e($r['reject_reason']) ?></span><?php endif; ?>
                                         </td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_status')) ?>"><span class="pc-badge pc-badge--<?= lst_e($status) ?>"><?= lst_e(lst_tr('st_' . $status)) ?></span></td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_stats')) ?>"><?= $s['views'] ?> / <?= $s['clicks'] ?></td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_until')) ?>"><?= $status === 'published' ? lst_e(lst_date((string) $r['expires_at'])) : '—' ?></td>
                                         <td data-label="<?= lst_e(lst_tr('my_col_actions')) ?>" class="lst-acc-row-actions">
                                             <a class="pc-btn pc-btn--small" href="mp-stats.php?id=<?= $id ?>"><?= lst_e(t('mpst_link')) ?></a>
-                                            <?php if ($status !== 'archived'): ?><a class="pc-btn pc-btn--small" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a><?php endif; ?>
+                                            <?php if (!in_array($status, ['archived', 'hidden', 'removed'], true)): ?><a class="pc-btn pc-btn--small" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a><?php endif; ?>
                                             <?php if ($canExtend): ?>
                                                 <form method="post" action="listing-action.php" class="pc-inline-form"><?= $csrf ?><input type="hidden" name="action" value="extend"><input type="hidden" name="id" value="<?= $id ?>"><button class="pc-btn pc-btn--small" type="submit"><?= lst_e(lst_tr('my_extend')) ?></button></form>
                                             <?php endif; ?>

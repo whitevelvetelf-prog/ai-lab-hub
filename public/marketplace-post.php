@@ -74,6 +74,13 @@ if ($id > 0) {
     if ($existing === null) {
         mp_not_found();
     }
+    // Приховане на час розгляду скарги чи зняте адміністрацією — не редагується (лише оскарження, п. 7.5).
+    if (in_array((string) $existing['status'], ['hidden', 'removed'], true)) {
+        mpb_message_page(403, mpl_status_label((string) $existing['status']), '<p class="mp-text">'
+            . mp_e(mpl_reason_text($existing['reject_code'] ?? null, $existing['reject_reason'] ?? null)) . '</p><p class="mp-text">'
+            . sprintf(mp_e(mpl_tr('ban_appeal')), '<a href="marketplace-rules.php#section-7-5">' . mp_e(mpl_tr('ban_appeal_link')) . '</a>', '<a href="mailto:' . mp_e(MP_ABUSE_EMAIL) . '">' . mp_e(MP_ABUSE_EMAIL) . '</a>')
+            . '</p><p class="mp-actions"><a class="mp-btn" href="marketplace-my.php?tab=attention">' . mp_e(t('mpb_my_title')) . '</a></p>', null);
+    }
 }
 
 // --- Блок дерева категорій ------------------------------------------------------

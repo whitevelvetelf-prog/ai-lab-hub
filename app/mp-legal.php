@@ -51,6 +51,17 @@ function mpl_status_label(string $status): string
     return isset(MPL_I18N['st_' . $status]) ? mpl_tr('st_' . $status) : $status;
 }
 
+/** <select name="code"> пунктів Правил для форм рішень модерації (обов'язковий). */
+function mpl_rule_select_html(string $class = 'select'): string
+{
+    $h = '<select class="' . mp_e($class) . '" name="code" required aria-label="' . mp_e(mpl_tr('a_rule_point')) . '"><option value="">' . mp_e(mpl_tr('a_rule_pick')) . '</option>';
+    foreach (MPL_RULE_POINTS as $pt) {
+        $h .= '<option value="' . mp_e($pt) . '">' . mp_e(mpl_tr('pt_' . $pt)) . '</option>';
+    }
+
+    return $h . '</select>';
+}
+
 function mpl_rule_label(?string $code): string
 {
     return $code !== null && isset(MPL_I18N['pt_' . $code]) ? mpl_tr('pt_' . $code) : '';

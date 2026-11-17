@@ -471,7 +471,8 @@ function lst_admin_gen_card(array $r, string $csrf, int $reviewHours, ?array $ca
             . '<button class="pc-btn pc-btn--primary" type="submit" name="action" value="approve">Схвалити</button></form>'
             . '<form method="post" action="mp-moderation.php" class="pc-inline-form lst-reject">' . $csrf
             . '<input type="hidden" name="id" value="' . $id . '"><input type="hidden" name="return" value="account">'
-            . '<input class="pc-input" type="text" name="reason" maxlength="500" required placeholder="Причина відхилення (обов\'язково)" aria-label="Причина відхилення">'
+            . mpl_rule_select_html('pc-input')
+            . '<input class="pc-input" type="text" name="reason" maxlength="500" required placeholder="' . lst_e(mpl_tr('a_reason_ph')) . '" aria-label="' . lst_e(mpl_tr('my_reason')) . '">'
             . '<button class="pc-btn pc-btn--danger" type="submit" name="action" value="reject">Відхилити</button></form>'
             . '<a class="pc-btn pc-btn--small" href="mp-moderation.php?id=' . $id . '" target="_blank" rel="noopener">Повний перегляд (фото, контакти)</a>';
     } else {
