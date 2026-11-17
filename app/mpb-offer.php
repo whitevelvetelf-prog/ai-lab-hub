@@ -200,6 +200,7 @@ mpb_open((string) $board['title'], !$isLive, 'home');
                         li.appendChild(v); ul.appendChild(li);
                     });
                     box.appendChild(ul);
+                    if (j.note) { var n = document.createElement('p'); n.className = 'mp-note'; n.textContent = j.note; box.appendChild(n); }
                 })
                 .catch(function () { say(form.dataset.error); });
         });

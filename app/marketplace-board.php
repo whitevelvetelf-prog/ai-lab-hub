@@ -1398,7 +1398,8 @@ function mpb_contacts(PDO $pdo, int $listingId): array
 
 /**
  * Розкриття контактів. Гість сюди не доходить (перевіряє mp-contact.php).
- * Власник і employee/admin бачать без обліку; решта — з лімітом за добу.
+ * Власник і employee/admin бачать без обліку; решта — з лімітом MP_CONTACT_VIEWS_PER_DAY за добу (п. 12.3 Правил).
+ * Контакти віддаються лише живого оголошення: видалене автором чи зняте — не показується нікому, крім власника й staff.
  * Повторний показ того самого оголошення тому ж користувачу за добу ліміт не з'їдає.
  *
  * @return array{status:string,contacts:list<array<string,mixed>>}  status: ok | notfound | limit | rate
@@ -1439,7 +1440,14 @@ function mpb_reveal(PDO $pdo, int $listingId, int $userId): array
             if (!mpb_ip_hit($pdo, 'reveal', (int) mp_config()['ip_limit_reveal'])) {
                 return ['status' => 'rate', 'contacts' => []];
             }
-            $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id) VALUES (:l, :u)')->execute([':l' => $listingId, ':u' => $userId]);
+            // Облік (п. 12.3): хто, коли, з якого IP (хеш — IP у відкритому вигляді не зберігається).
+            try {
+                $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id, ip_hash) VALUES (:l, :u, :ip)')
+                    ->execute([':l' => $listingId, ':u' => $userId, ':ip' => mpb_ip_key(mpb_client_ip())]);
+            } catch (PDOException) {
+                // міграцію 2026-11-17 ще не застосовано — без колонки ip_hash
+                $pdo->prepare('INSERT INTO mp_contact_reveals (listing_id, user_id) VALUES (:l, :u)')->execute([':l' => $listingId, ':u' => $userId]);
+            }
         }
     } finally {
         mpb_unlock($pdo, $lock);

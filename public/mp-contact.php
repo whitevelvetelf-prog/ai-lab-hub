@@ -5,9 +5,9 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: показати контакти оголошення (POST + CSRF).
  *
- * Контактів немає в HTML marketplace-offer.php до кліку. Гість → 401 з пропозицією увійти. Залогований без
- * підтвердженого email (крім employee/admin) → 403 verify. Далі — до reveals_per_day (30) розкриттів
- * за добу (журнал mp_contact_reveals), решта → 429.
+ * Контактів немає в HTML marketplace-offer.php до кліку (скрейпери їх не бачать). Гість → 401 з пропозицією увійти.
+ * Залогований без підтвердженого email (крім employee/admin) → 403 verify; заблокований акаунт → 403.
+ * Далі — до MP_CONTACT_VIEWS_PER_DAY (50) розкриттів за добу (п. 12.3; журнал mp_contact_reveals з хешем IP), решта → 429.
  * Відповідь: JSON (fetch із marketplace-offer.php, заголовок Accept: application/json) або проста HTML-сторінка
  * (форма без JS).
  */
@@ -57,6 +57,9 @@ $pdo = require __DIR__ . '/../config/database.php';
 if (!mpv_is_verified($pdo, (int) auth_user_id())) {
     $fail(403, 'verify', t('mpv_contact_block'), false, true);
 }
+if (mpl_is_blocked($pdo, (int) auth_user_id())) {
+    $fail(403, 'blocked', mpl_tr('blocked_action'));
+}
 
 $res = mpb_reveal($pdo, $id, (int) auth_user_id());
 if ($res['status'] === 'notfound') {
@@ -66,12 +69,12 @@ if ($res['status'] === 'rate') {
     $fail(429, 'rate', t('mpb_rate_limited'));
 }
 if ($res['status'] === 'limit') {
-    $fail(429, 'limit', sprintf(t('mpb_contact_limit'), (int) mp_config()['reveals_per_day']));
+    $fail(429, 'limit', mpl_tr('contacts_limit', (int) MP_CONTACT_VIEWS_PER_DAY));
 }
 
 if ($json) {
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['ok' => true, 'contacts' => $res['contacts']], JSON_UNESCAPED_UNICODE);
+    echo json_encode(['ok' => true, 'contacts' => $res['contacts'], 'note' => mpl_tr('contacts_note')], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -82,5 +85,5 @@ foreach ($res['contacts'] as $c) {
         : '<span class="mp-contact">' . mp_e($c['value']) . '</span>';
     $html .= '<li><span class="mp-contact-list__label">' . mp_e($c['label']) . '</span> ' . $val . '</li>';
 }
-$html .= '</ul><p class="mp-note">' . mp_e(t('mpb_disclaimer')) . '</p>';
+$html .= '</ul><p class="mp-note">' . mp_e(mpl_tr('contacts_note')) . '</p><p class="mp-note">' . mp_e(t('mpb_disclaimer')) . '</p>';
 mpb_message_page(200, t('mpb_contact_title'), $html, $back);

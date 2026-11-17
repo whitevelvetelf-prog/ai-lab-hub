@@ -82,6 +82,13 @@ if ($rows !== []) {
 }
 
 $views30 = mpst_views_30($pdo, array_map(static fn(array $r): int => (int) $r['id'], $rows));
+$reveals = [];
+if ($rows !== []) {
+    $ids = implode(',', array_map(static fn(array $r): int => (int) $r['id'], $rows));
+    foreach ($pdo->query("SELECT listing_id, COUNT(*) FROM mp_contact_reveals WHERE listing_id IN ($ids) GROUP BY listing_id")->fetchAll(PDO::FETCH_KEY_PAIR) as $lid => $n) {
+        $reveals[(int) $lid] = (int) $n;
+    }
+}
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 // Код і причина рішення (міграція 2026-11-17) — окремим запитом, щоб до міграції сторінка працювала.
 $decisions = [];
@@ -148,6 +155,7 @@ mpb_open(t('mpb_my_title'), true, 'my');
                                 <?php endif; ?>
                                 <span><?= mp_e(t('mpb_views')) ?>: <?= (int) $r['views_count'] ?></span>
                                 <span><?= mp_e(sprintf(t('mpst_views_30'), (int) ($views30[$rid] ?? 0))) ?></span>
+                                <span><?= mp_e(mpl_tr('my_contact_views', (int) ($reveals[$rid] ?? 0))) ?></span>
                             </p>
                             <?php $why = mpl_reason_text($decisions[$rid] ?? null, $r['reject_reason'] ?? null); ?>
                             <?php if (in_array($st, ['rejected', 'needs_changes', 'hidden', 'removed'], true) && $why !== ''): ?>
