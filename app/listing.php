@@ -121,7 +121,8 @@ function lst_settings(PDO $pdo): array
 
     return [
         'free_until' => $free,
-        'days' => max(1, min(365, (int) site_setting($pdo, 'marketplace_listing_days', '60'))),
+        // Строк публікації — з Правил (п. 7.6, MP_LISTING_LIFETIME_DAYS), а не з налаштування сайту: числа в Правилах і в коді однакові.
+        'days' => max(1, (int) MP_LISTING_LIFETIME_DAYS),
         'review_hours' => max(1, min(720, (int) site_setting($pdo, 'marketplace_review_hours', '48'))),
     ];
 }

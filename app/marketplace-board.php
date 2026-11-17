@@ -21,6 +21,7 @@ require_once __DIR__ . '/marketplace.php';
 require_once __DIR__ . '/mp-section-nav.php';
 require_once __DIR__ . '/mp-geo.php';   // етап 6: географія, пошук за місцем, ціна в USD
 require_once __DIR__ . '/mp-tree.php';  // дерево категорій і лічильники (кеш скидається після змін статусу)
+require_once __DIR__ . '/mp-legal.php'; // Правила Marketplace: статуси, повідомлення, скарги, оскарження, санкції
 
 const MPB_PRICE_TYPES = ['none', 'free', 'fixed', 'negotiable', 'exchange'];   // 'none' — ціну не вказано
 const MPB_CURRENCIES = ['UAH' => '₴', 'USD' => '$', 'EUR' => '€'];

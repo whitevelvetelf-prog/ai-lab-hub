@@ -7,6 +7,22 @@ declare(strict_types=1);
  * Значення за замовчуванням дублюються в app/marketplace.php → mp_config(),
  * тож файл можна не розгортати; тут їх змінюють.
  */
+
+// --- Правила Marketplace і юридичні механізми (2026-11-17) ---
+// Ці числа підставляються в текст Правил (marketplace-rules.php), тож строки в Правилах і в коді завжди однакові.
+// Ті самі значення за замовчуванням є в app/mp-legal.php (на проді цей файл серверний і може їх не містити).
+// Пункти Правил — у коментарях. Змінюєте строк → оновіть MP_RULES_VERSION (п. 13.3: про суттєві зміни — за 7 днів).
+defined('MP_RULES_VERSION') || define('MP_RULES_VERSION', '2026-11-17');                       // 1.5, 13.3 — дата редакції
+defined('MP_ABUSE_EMAIL') || define('MP_ABUSE_EMAIL', 'abuse@ailabhub-directory.com');         // 7.5, 10.1, 11.1
+defined('MP_MODERATION_DAYS') || define('MP_MODERATION_DAYS', 3);                              // 7.1 — робочих днів
+defined('MP_APPEAL_WINDOW_DAYS') || define('MP_APPEAL_WINDOW_DAYS', 14);                       // 7.5 — днів на оскарження
+defined('MP_APPEAL_ANSWER_DAYS') || define('MP_APPEAL_ANSWER_DAYS', 10);                       // 7.5 — робочих днів на відповідь
+defined('MP_IP_REVIEW_DAYS') || define('MP_IP_REVIEW_DAYS', 3);                                // 10.2 — розгляд заяви правовласника
+defined('MP_COUNTER_NOTICE_DAYS') || define('MP_COUNTER_NOTICE_DAYS', 10);                     // 10.3 — строк на заперечення
+defined('MP_LISTING_LIFETIME_DAYS') || define('MP_LISTING_LIFETIME_DAYS', 90);                 // 7.6 — строк публікації
+defined('MP_RULES_CHANGE_NOTICE_DAYS') || define('MP_RULES_CHANGE_NOTICE_DAYS', 7);            // 13.3
+defined('MP_CONTACT_VIEWS_PER_DAY') || define('MP_CONTACT_VIEWS_PER_DAY', 50);                 // 12.3 — переглядів контактів на акаунт за добу
+
 return [
     // Ліміт розміру завантажуваного файлу пропозиції (байти). За замовчуванням 10 МБ.
     // Реальний ліміт ще обмежують upload_max_filesize / post_max_size у php.ini.
@@ -40,15 +56,15 @@ return [
     'photo_max_side'   => 1600,              // довша сторона збереженого фото, px
     'photo_thumb_side' => 400,               // довша сторона мініатюри, px
 
-    // Термін життя оголошення (днів) — від схвалення й від кнопки «Продовжити».
-    'listing_ttl_days' => 30,
+    // Термін життя оголошення (днів) — від схвалення й від кнопки «Продовжити». Значення береться з MP_LISTING_LIFETIME_DAYS.
+    'listing_ttl_days' => MP_LISTING_LIFETIME_DAYS,
 
     // Захист від спаму (не стосується employee/admin).
     'max_active_per_user'  => 5,    // pending + published
     'max_new_per_day'      => 10,   // нових оголошень за 24 год
     'max_links_in_desc'    => 2,    // посилань в описах
     'stop_words'           => [],   // напр. ['казино', 'ставки'] — без урахування регістру
-    'reveals_per_day'      => 30,   // розкриттів контактів на користувача за 24 год
+    'reveals_per_day'      => MP_CONTACT_VIEWS_PER_DAY,   // розкриттів контактів на користувача за 24 год (п. 12.3)
     'reports_threshold'    => 3,    // унікальних скарг → оголошення повертається в pending
 
     // Cron для mp-cron-expire.php: з CLI працює завжди; через HTTP лише якщо тут непорожній ключ
@@ -71,7 +87,7 @@ return [
     // --- Правила розміщення оголошень ---
     // Дата редакції Правил (YYYY-MM-DD): показується на mp-rules.php. Оновлюйте при кожній зміні
     // docs/marketplace_rules_uk.md. Лише показ — у БД (rules_accepted_at) версія не записується.
-    'rules_version'       => '2026-09-21',
+    'rules_version'       => MP_RULES_VERSION,
 
     // --- IP-ліміти (другий шар захисту; основні ліміти — на акаунт) ---
     // Сіль для хешування IP (IP у відкритому вигляді не зберігається). ЗАДАЙТЕ на сервері довгий випадковий рядок.

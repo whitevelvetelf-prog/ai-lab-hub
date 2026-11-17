@@ -79,10 +79,19 @@ function mp_config(): array
                 $cfg = array_merge($cfg, $custom);
             }
         }
+        // Строки з Правил Marketplace — єдине джерело: константи MP_* (config/marketplace.php, запасні — app/mp-legal-config.php).
+        // Старі ключі масиву лишаються для сумісності, але їхні значення завжди беруться з констант.
+        require_once __DIR__ . '/mp-legal-config.php';
+        $cfg['rules_version'] = MP_RULES_VERSION;
+        $cfg['listing_ttl_days'] = MP_LISTING_LIFETIME_DAYS;
+        $cfg['reveals_per_day'] = MP_CONTACT_VIEWS_PER_DAY;
     }
 
     return $cfg;
 }
+
+// Константи MP_* (строки з Правил) потрібні й без явного виклику mp_config() — завантажуємо одразу при підключенні.
+mp_config();
 
 /** Екранування для HTML. */
 function mp_e(mixed $value): string
@@ -507,6 +516,10 @@ function mp_log(PDO $pdo, int $listingId, ?int $actorId, string $action, ?string
 {
     $stmt = $pdo->prepare('INSERT INTO mp_moderation_log (listing_id, actor_id, action, note) VALUES (:l, :a, :act, :n)');
     $stmt->execute([':l' => $listingId, ':a' => $actorId, ':act' => mb_substr($action, 0, 30), ':n' => $note !== null ? mb_substr($note, 0, 500) : null]);
+    // Рішення модерації → дата рішення й повідомлення автору (app/mp-legal.php; безпечно, винятків не кидає).
+    if (function_exists('mpl_on_log')) {
+        mpl_on_log($pdo, $listingId, $actorId, $action, $note);
+    }
 }
 
 /** «Працівник №N» / ім'я — для колонки «Хто додав» (users без FK: користувача може не бути). */
