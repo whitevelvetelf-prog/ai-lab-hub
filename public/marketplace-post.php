@@ -125,6 +125,8 @@ $v = [
     'is_remote' => true, 'city' => '',
     'contact_name' => (string) $user['name'], 'contact_phone' => '', 'contact_telegram' => '', 'contact_email' => '',
     'rules' => false,
+    // Правила Marketplace: п. 4.5 (AI-медіа) і п. 9.5 (умови використання цифрового продукту).
+    'ai_media' => false, 'usage' => '', 'usage_note' => '',
 ];
 $photos = [];
 if ($existing !== null) {
@@ -143,6 +145,8 @@ if ($existing !== null) {
         'contact_name' => (string) ($existing['contact_name'] ?? ''), 'contact_phone' => (string) ($existing['contact_phone'] ?? ''),
         'contact_telegram' => (string) ($existing['contact_telegram'] ?? ''), 'contact_email' => (string) ($existing['contact_email'] ?? ''),
         'rules' => false,   // згоду підтверджують при кожному збереженні
+        'ai_media' => (int) ($existing['ai_generated_media'] ?? 0) === 1,
+        'usage' => (string) ($existing['usage_terms'] ?? ''), 'usage_note' => (string) ($existing['usage_terms_note'] ?? ''),
     ];
     $photos = mpb_photos($pdo, $id);
 }
@@ -179,6 +183,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $v[$k] = mb_substr($str($k), 0, 300);
         }
         $v['rules'] = ($_POST['rules'] ?? '') === '1';
+        $v['ai_media'] = ($_POST['ai_media'] ?? '') === '1';
+        $v['usage'] = in_array($str('usage_terms'), MPL_USAGE_TERMS, true) ? $str('usage_terms') : '';
+        $v['usage_note'] = mb_substr($str('usage_terms_note'), 0, 200);
+        if ($v['usage'] === 'other' && $v['usage_note'] === '') {
+            $errors[] = 'mpl:usage_err_other';
+        }
 
         // Назва й описи
         $titleLen = mb_strlen($v['title']);
@@ -341,6 +351,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     // Курс береться до транзакції (може звернутися до НБУ); немає курсу → NULL.
                     'geo' => $geoReady ? $geo + ['price_usd' => mpg_price_usd($pdo, $priceAmount, $currency)] : null,
                 ], $existing, $userId, $sellerId, $lang, $created, $deleteIds, $photoOrder);
+                mpl_save_listing_extras($pdo, $savedId, $v['ai_media'], $v['usage'], $v['usage_note']);
 
                 if ($existing === null) {
                     mpd_delete($pdo, $userId, 'board');   // чернетку подано — більше не потрібна
@@ -376,12 +387,14 @@ $errField = [
     'mpb_err_phone' => 'contacts', 'mpb_err_telegram' => 'contacts', 'mpb_err_email' => 'contacts', 'mpb_err_rules' => 'rules',
     'mpb_err_photo_count' => 'photos', 'mpb_err_photo_size' => 'photos', 'mpb_err_photo_type' => 'photos',
     'mpb_err_photo_upload' => 'photos', 'mpb_err_photo_process' => 'photos', 'mpb_err_duplicate' => 'title',
+    'mpl:usage_err_other' => 'usage',
 ];
 $byField = [];
 $generalErrors = [];
 foreach ($errors as $err) {
     $k = is_array($err) ? (string) $err[0] : (string) $err;
-    $msg = is_array($err) ? sprintf(t($err[0]), ...array_slice($err, 1)) : t($err);
+    $msg = str_starts_with($k, 'mpl:') ? mpl_tr(substr($k, 4))   // рядки Правил — app/mp-legal-i18n.php
+        : (is_array($err) ? sprintf(t($err[0]), ...array_slice($err, 1)) : t($err));
     if (isset($errField[$k])) {
         $byField[$errField[$k]][] = $msg;
     } else {
@@ -402,8 +415,9 @@ mpb_open($pageTitle, true, 'post');
         <h1 class="mp-title"><?= mp_e($pageTitle) ?></h1>
         <p class="mp-subtitle"><?= mp_e(t($isStaff ? 'mpb_post_note_staff' : 'mpb_post_note')) ?></p>
 
-        <?php if ($existing !== null && (string) $existing['status'] === 'rejected' && !empty($existing['reject_reason'])): ?>
-            <div class="mp-alert mp-alert--error"><strong><?= mp_e(t('mpb_reject_reason')) ?>:</strong> <?= mp_e($existing['reject_reason']) ?></div>
+        <?php if ($existing !== null && in_array((string) $existing['status'], ['rejected', 'needs_changes'], true) && (!empty($existing['reject_reason']) || !empty($existing['reject_code']))): ?>
+            <div class="mp-alert mp-alert--error"><strong><?= mp_e(mpl_status_label((string) $existing['status'])) ?>.</strong>
+                <?= mp_e(mpl_reason_text($existing['reject_code'] ?? null, $existing['reject_reason'] ?? null)) ?></div>
         <?php endif; ?>
 
         <?php if ($errors !== []): ?>
@@ -494,6 +508,32 @@ mpb_open($pageTitle, true, 'post');
                         </select>
                     </div>
                     <?= $fieldErr('price') ?>
+                </div>
+            </div>
+
+            <div class="mp-field">
+                <label class="mp-check mp-check--block">
+                    <input type="checkbox" name="ai_media" value="1"<?= $v['ai_media'] ? ' checked' : '' ?>>
+                    <span><?= mp_e(mpl_tr('ai_media_label')) ?></span>
+                </label>
+                <p class="mp-hint"><?= mp_e(mpl_tr('ai_media_hint')) ?></p>
+            </div>
+
+            <div class="mp-row">
+                <div class="mp-field">
+                    <label class="mp-label" for="usage_terms"><?= mp_e(mpl_tr('usage_label')) ?></label>
+                    <select class="mp-input" id="usage_terms" name="usage_terms"<?= $invalid('usage') ?>>
+                        <option value=""><?= mp_e(mpl_tr('usage_none')) ?></option>
+                        <?php foreach (MPL_USAGE_TERMS as $ut): ?>
+                            <option value="<?= mp_e($ut) ?>"<?= $v['usage'] === $ut ? ' selected' : '' ?>><?= mp_e(mpl_tr('usage_' . $ut)) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <p class="mp-hint"><?= mp_e(mpl_tr('usage_hint')) ?></p>
+                </div>
+                <div class="mp-field" id="usageNoteBox">
+                    <label class="mp-label" for="usage_terms_note"><?= mp_e(mpl_tr('usage_other')) ?></label>
+                    <input class="mp-input" type="text" id="usage_terms_note" name="usage_terms_note" maxlength="200" placeholder="<?= mp_e(mpl_tr('usage_other_ph')) ?>" value="<?= mp_e($v['usage_note']) ?>">
+                    <?= $fieldErr('usage') ?>
                 </div>
             </div>
 
@@ -591,6 +631,23 @@ mpb_open($pageTitle, true, 'post');
         function sync() { box.style.display = type.value === 'fixed' ? '' : 'none'; }
         type.addEventListener('change', sync);
         sync();
+        // Умови використання: поле «Інше» — лише коли вибрано «Інше».
+        var usage = document.getElementById('usage_terms'), note = document.getElementById('usageNoteBox');
+        function syncUsage() { note.style.display = usage.value === 'other' ? '' : 'none'; }
+        usage.addEventListener('change', syncUsage);
+        syncUsage();
+        // Згода з Правилами (п. 1.5): перевірка й на клієнті (форма novalidate — підказки біля полів дає сервер).
+        var form = document.querySelector('form.mpf-form'), rules = form && form.querySelector('input[name="rules"]');
+        if (form && rules) {
+            form.addEventListener('submit', function (e) {
+                if (rules.checked) { return; }
+                e.preventDefault();
+                rules.setCustomValidity(<?= json_encode(mpl_tr('consent_err'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
+                rules.reportValidity();
+                rules.focus();
+            });
+            rules.addEventListener('change', function () { rules.setCustomValidity(''); });
+        }
     })();
     </script>
 <?php mpb_close(); ?>

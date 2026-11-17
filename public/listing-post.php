@@ -78,6 +78,7 @@ $v = [
     'title' => '', 'company_name' => '', 'short_desc' => '', 'full_desc' => '', 'url' => '', 'country' => '', 'offer_lang' => '',
     'is_remote' => $type !== 'course', 'cats' => [], 'focus' => [], 'd' => [], 'rules' => false,
     'wf' => '', 'fit' => [],
+    'ai_media' => false,   // п. 4.5 Правил: AI-медіа, що можуть сприйматися як реальні
 ];
 $fitValues = mpj_suitable_values();
 if ($existing !== null) {
@@ -92,6 +93,7 @@ if ($existing !== null) {
         'offer_lang' => (string) $existing['offer_lang'], 'is_remote' => (int) $existing['is_remote'] === 1,
         'focus' => array_map('intval', $cs->fetchAll(PDO::FETCH_COLUMN)), 'cats' => [],
         'd' => array_map('strval', lst_details($existing)), 'rules' => false,
+        'ai_media' => (int) ($existing['ai_generated_media'] ?? 0) === 1,
         'wf' => in_array((string) ($existing['work_format'] ?? ''), MPJ_WORK_FORMATS, true) ? (string) $existing['work_format'] : ((int) $existing['is_remote'] === 1 ? 'online' : 'offline'),
         'fit' => mpj_tags($pdo, [$id])[$id] ?? [],
     ];
@@ -122,6 +124,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $v['cats'] = array_values(array_intersect(array_unique(array_map('intval', is_array($_POST['cats'] ?? null) ? $_POST['cats'] : [])), $subIds));
     $v['d'] = is_array($_POST['d'] ?? null) ? array_map(static fn($x): string => is_string($x) ? $x : '', $_POST['d']) : [];
     $v['rules'] = ($_POST['rules'] ?? '') === '1';
+    $v['ai_media'] = ($_POST['ai_media'] ?? '') === '1';
     if ($type === 'job') {
         // Формат роботи (офіс / онлайн / змішано) замість галочки «віддалено»; is_remote — лише «онлайн».
         $v['wf'] = in_array($str('wf'), MPJ_WORK_FORMATS, true) ? $str('wf') : '';
@@ -177,6 +180,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     if ($type === 'job' && !$v['is_remote'] && empty($details['city'])) {
         $errors[] = 'err_job_location';
     }
+    // Курс офлайн чи змішаний — місто обов'язкове (п. 6.5 Правил).
+    if ($type === 'course' && in_array((string) ($details['format'] ?? ''), ['offline', 'hybrid'], true) && empty($details['city'])) {
+        $errors[] = 'err_course_location';
+    }
     if (!$v['rules']) {
         $errors[] = 'err_rules';
     }
@@ -231,6 +238,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                 'is_remote' => $v['is_remote'], 'details' => $details, 'cats' => $v['cats'], 'focus' => $v['focus'], 'check' => $check,
             ], $existing, $userId, $sellerId, $lang);
             mpj_after_save($pdo, $savedId, $type, $details, $type === 'job' ? $v['wf'] : '', $v['fit'], $v['country']);
+            mpl_save_listing_extras($pdo, $savedId, $v['ai_media']);
             lst_mail($pdo, $savedId, 'received');
             // Оголошення за запрошенням аутрічу (marketplace-join.php) → лід «Розмістили».
             $joinLead = (int) ($_SESSION['outreach_join_lead'] ?? 0);
@@ -279,7 +287,7 @@ $currency = static function (string $name, string $current): string {
 const LP_ERR_FIELD = [
     'err_title' => 'title', 'err_company' => 'company_name', 'err_short' => 'short_desc', 'err_desc' => 'full_desc',
     'err_desc_job' => 'full_desc', 'err_links' => 'full_desc', 'err_url' => 'url', 'err_link_blocked' => 'url',
-    'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_subcats' => 'cats', 'err_job_location' => 'city',
+    'err_country' => 'country', 'err_lang' => 'offer_lang', 'err_focus' => 'focus', 'err_subcats' => 'cats', 'err_job_location' => 'city', 'err_course_location' => 'city',
     'err_rules' => 'rules', 'err_work_format' => 'wf', 'err_number' => 'number', 'err_date' => 'date', 'err_apply_past' => 'date', 'err_salary_range' => 'salary',
 ];
 $byField = [];
@@ -487,7 +495,7 @@ mpb_open($pageTitle, true, 'post');
                         <div class="mp-inline"><input class="mp-input mp-input--num" type="text" inputmode="numeric" id="d_price" name="d[price]" maxlength="9" value="<?= lst_e($dv('price')) ?>"<?= $invalid('number') ?>><?= $currency('currency', $dv('currency') ?: 'USD') ?></div>
                         <?= $fieldErr('number') ?>
                     </div>
-                    <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"></div>
+                    <div class="mp-field"><label class="mp-label" for="d_city"><?= lst_e(lst_tr('d_city')) ?></label><input class="mp-input" type="text" id="d_city" name="d[city]" maxlength="120" value="<?= lst_e($dv('city')) ?>"<?= $invalid('city') ?>><p class="mp-hint"><?= lst_e(lst_tr('d_city_course_hint')) ?></p><?= $fieldErr('city') ?></div>
                 <?php else: ?>
                     <div class="mp-row">
                         <div class="mp-field"><label class="mp-label" for="d_service_type"><?= lst_e(lst_tr('d_service_type')) ?></label><?= $select('service_type', LST_DETAILS['service']['service_type'], $dv('service_type')) ?></div>
@@ -519,6 +527,13 @@ mpb_open($pageTitle, true, 'post');
                 <?= lst_rules_html() ?>
                 <div class="mp-field">
                     <label class="mp-check mp-check--block">
+                        <input type="checkbox" name="ai_media" value="1"<?= $v['ai_media'] ? ' checked' : '' ?>>
+                        <span><?= lst_e(mpl_tr('ai_media_label')) ?></span>
+                    </label>
+                    <p class="mp-hint"><?= lst_e(mpl_tr('ai_media_hint')) ?></p>
+                </div>
+                <div class="mp-field">
+                    <label class="mp-check mp-check--block">
                         <input type="checkbox" name="rules" value="1" required<?= $v['rules'] ? ' checked' : '' ?><?= $invalid('rules') ?>>
                         <span><?= lst_e(lst_tr('f_rules')) ?> <a href="marketplace-rules.php" target="_blank" rel="noopener"><?= lst_e(lst_tr('f_rules_link')) ?></a> <span class="mpf-req">*</span></span>
                     </label>
@@ -533,6 +548,21 @@ mpb_open($pageTitle, true, 'post');
         </form>
     </div>
     <script src="/assets/js/mp-draft.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-draft.js') ?>" defer></script>
+    <script>
+    (function () {
+        // Згода з Правилами (п. 1.5): перевірка й на клієнті (форма novalidate; сервер перевіряє завжди).
+        var form = document.querySelector('form.mpf-form'), rules = form && form.querySelector('input[name="rules"]');
+        if (!form || !rules) { return; }
+        form.addEventListener('submit', function (e) {
+            if (rules.checked) { return; }
+            e.preventDefault();
+            rules.setCustomValidity(<?= json_encode(mpl_tr('consent_err'), JSON_UNESCAPED_UNICODE | JSON_HEX_TAG) ?>);
+            rules.reportValidity();
+            rules.focus();
+        });
+        rules.addEventListener('change', function () { rules.setCustomValidity(''); });
+    })();
+    </script>
     <?php if ($type === 'course'): ?>
     <script>
     (function () {

@@ -63,6 +63,7 @@ if ($live) {
 $ld = lst_jsonld($row);
 $type = (string) $row['section'];
 $facts = lst_facts($row);
+$row += mpl_listing_extras($pdo, $id);   // AI-медіа (п. 4.5)
 $autoText = (int) $row['text_is_auto'] === 1;
 $textLangAttr = (string) $row['text_lang'] !== $lang ? ' lang="' . lst_e($row['text_lang']) . '"' : '';
 $freeLabel = $live && !empty($row['free_until']) && (string) $row['free_until'] >= date('Y-m-d') ? lst_tr('free_until', lst_date((string) $row['free_until'])) : '';
@@ -94,6 +95,7 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
         <article class="mp-panel lst-item">
             <p class="mp-card__tag"><?= lst_e(lst_tr('type1_' . $type)) ?> · <?= lst_e($row['company_name']) ?></p>
             <h1 class="mp-title"<?= $textLangAttr ?>><?= lst_e($row['title']) ?></h1>
+            <?= mpl_ai_badge_html($row) ?>
             <?php if (!empty($row['short_desc'])): ?><p class="mp-offer__lead"<?= $textLangAttr ?>><?= lst_e($row['short_desc']) ?></p><?php endif; ?>
             <?php if (!empty($row['categories'])): ?>
                 <p class="lst-card__tags"><?php foreach ($row['categories'] as $c): ?><span class="mp-badge"><?= lst_e($c['name']) ?></span> <?php endforeach; ?></p>

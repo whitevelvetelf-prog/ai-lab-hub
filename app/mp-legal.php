@@ -182,6 +182,56 @@ function mpl_set_status(PDO $pdo, int $id, string $to, int $actorId, array $from
     return true;
 }
 
+/**
+ * Поля Правил в оголошенні: AI-медіа (п. 4.5) і умови використання (п. 9.5). Окремим запитом після збереження:
+ * поки міграцію не застосовано, подача не ламається (помилка лише в журналі).
+ */
+function mpl_save_listing_extras(PDO $pdo, int $id, bool $aiMedia, string $usage = '', string $usageNote = ''): void
+{
+    $usage = in_array($usage, MPL_USAGE_TERMS, true) ? $usage : null;
+    $note = $usage === 'other' ? mb_substr(trim($usageNote), 0, 200) : '';
+    try {
+        $pdo->prepare('UPDATE mp_listings SET ai_generated_media = :a, usage_terms = :u, usage_terms_note = :n WHERE id = :id')
+            ->execute([':a' => $aiMedia ? 1 : 0, ':u' => $usage, ':n' => $note !== '' ? $note : null, ':id' => $id]);
+    } catch (Throwable $e) {
+        error_log('[mp-legal] listing extras: ' . $e->getMessage());
+    }
+}
+
+/** Поля Правил оголошення (до міграції — значення за замовчуванням). @return array{ai_generated_media:int,usage_terms:?string,usage_terms_note:?string} */
+function mpl_listing_extras(PDO $pdo, int $id): array
+{
+    try {
+        $st = $pdo->prepare('SELECT ai_generated_media, usage_terms, usage_terms_note FROM mp_listings WHERE id = :id');
+        $st->execute([':id' => $id]);
+        $r = $st->fetch(PDO::FETCH_ASSOC);
+        if ($r !== false) {
+            return ['ai_generated_media' => (int) $r['ai_generated_media'], 'usage_terms' => $r['usage_terms'], 'usage_terms_note' => $r['usage_terms_note']];
+        }
+    } catch (Throwable) {
+    }
+
+    return ['ai_generated_media' => 0, 'usage_terms' => null, 'usage_terms_note' => null];
+}
+
+/** Текст умов використання для показу або ''. */
+function mpl_usage_text(array $row): string
+{
+    $u = (string) ($row['usage_terms'] ?? '');
+    if (!in_array($u, MPL_USAGE_TERMS, true)) {
+        return '';
+    }
+
+    return $u === 'other' ? trim((string) ($row['usage_terms_note'] ?? '')) : mpl_tr('usage_' . $u);
+}
+
+/** Мітка «Створено з AI» (п. 4.5) або ''. */
+function mpl_ai_badge_html(array $row): string
+{
+    return (int) ($row['ai_generated_media'] ?? 0) === 1
+        ? '<p><span class="mpl-ai-badge" title="' . mp_e(mpl_tr('ai_badge_title')) . '">' . mp_e(mpl_tr('ai_badge')) . '</span></p>' : '';
+}
+
 /** Перенесення в іншу категорію (п. 4.2, 7.3): замінює набір категорій; блок дерева — за батьком нової категорії. */
 function mpl_move_category(PDO $pdo, int $id, int $categoryId, int $actorId): bool
 {

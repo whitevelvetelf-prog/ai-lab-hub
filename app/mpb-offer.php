@@ -33,6 +33,8 @@ $langNames = active_languages();
 $isFav = $viewerId !== null && $isLive && mpb_is_favorite($pdo, $viewerId, $bid);
 $others = $isLive && $board['seller_id'] !== null ? mpb_seller_other($pdo, (int) $board['seller_id'], $bid, $lang) : [];
 $priceText = mpb_price_label($board);   // '' — ціну не вказано
+$board += mpl_listing_extras($pdo, $bid);   // AI-медіа (п. 4.5), умови використання (п. 9.5)
+$usageText = mpl_usage_text($board);
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
 
@@ -52,6 +54,7 @@ mpb_open((string) $board['title'], !$isLive, 'home');
         <?php endif; ?>
 
         <h1 class="mp-title"><?= mp_e($board['title']) ?></h1>
+        <?= mpl_ai_badge_html($board) ?>
         <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
 
         <?php if ($fallbackLang !== null): ?>
@@ -73,6 +76,9 @@ mpb_open((string) $board['title'], !$isLive, 'home');
             <?php endif; ?>
             <?php if ($priceText !== ''): ?>
                 <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpb_f_price_range')) ?>:</span> <?= mp_e($priceText) ?></p>
+            <?php endif; ?>
+            <?php if ($usageText !== ''): ?>
+                <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(mpl_tr('usage_view')) ?>:</span> <?= mp_e($usageText) ?></p>
             <?php endif; ?>
             <?php if (isset($board['work_format'])): // етап 6: «Де надається» з довідника, мовою інтерфейсу ?>
                 <p class="mp-info__row"><span class="mp-info__label"><?= mp_e(t('mpg_where_title')) ?>:</span> <?= mp_e(mpg_coverage_text($pdo, $board, $lang)) ?></p>
