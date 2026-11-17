@@ -16,7 +16,7 @@ require_once __DIR__ . '/../app/asset.php';
 $pdo = require __DIR__ . '/../config/database.php';
 $lang = current_lang() === 'en' ? 'en' : 'uk';
 $s = ast_settings($pdo);
-$contact = 'admin@ailabhub-directory.com';
+$contact = 'admin.ailabhub.directory@gmail.com';
 
 $doc = [
     'uk' => [

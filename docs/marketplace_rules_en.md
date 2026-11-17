@@ -201,5 +201,5 @@ Version of [MP_RULES_VERSION]
 | --- | --- |
 | General questions | hello.ailabhub.directory@gmail.com |
 | Complaints, rights holders, appeals | [MP_ABUSE_EMAIL] |
-| Advertising | admin@ailabhub-directory.com |
+| Advertising | admin.ailabhub.directory@gmail.com |
 | Partnerships | partners.ailabhub.directory@gmail.com |
