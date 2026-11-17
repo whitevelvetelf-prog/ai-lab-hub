@@ -11,7 +11,7 @@ declare(strict_types=1);
  */
 
 defined('MP_RULES_VERSION') || define('MP_RULES_VERSION', '2026-11-17');
-defined('MP_ABUSE_EMAIL') || define('MP_ABUSE_EMAIL', 'abuse@ailabhub-directory.com');
+defined('MP_ABUSE_EMAIL') || define('MP_ABUSE_EMAIL', 'abuse.ailabhub.directory@gmail.com');
 defined('MP_MODERATION_DAYS') || define('MP_MODERATION_DAYS', 3);
 defined('MP_APPEAL_WINDOW_DAYS') || define('MP_APPEAL_WINDOW_DAYS', 14);
 defined('MP_APPEAL_ANSWER_DAYS') || define('MP_APPEAL_ANSWER_DAYS', 10);

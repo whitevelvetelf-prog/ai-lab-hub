@@ -13,7 +13,7 @@ declare(strict_types=1);
 // Ті самі значення за замовчуванням є в app/mp-legal.php (на проді цей файл серверний і може їх не містити).
 // Пункти Правил — у коментарях. Змінюєте строк → оновіть MP_RULES_VERSION (п. 13.3: про суттєві зміни — за 7 днів).
 defined('MP_RULES_VERSION') || define('MP_RULES_VERSION', '2026-11-17');                       // 1.5, 13.3 — дата редакції
-defined('MP_ABUSE_EMAIL') || define('MP_ABUSE_EMAIL', 'abuse@ailabhub-directory.com');         // 7.5, 10.1, 11.1
+defined('MP_ABUSE_EMAIL') || define('MP_ABUSE_EMAIL', 'abuse.ailabhub.directory@gmail.com');         // 7.5, 10.1, 11.1
 defined('MP_MODERATION_DAYS') || define('MP_MODERATION_DAYS', 3);                              // 7.1 — робочих днів
 defined('MP_APPEAL_WINDOW_DAYS') || define('MP_APPEAL_WINDOW_DAYS', 14);                       // 7.5 — днів на оскарження
 defined('MP_APPEAL_ANSWER_DAYS') || define('MP_APPEAL_ANSWER_DAYS', 10);                       // 7.5 — робочих днів на відповідь
