@@ -70,7 +70,7 @@ function mpb_rules_inline(string $text, string $lang = 'uk'): string
         }
         $safe = htmlspecialchars($part, ENT_QUOTES);
         $safe = preg_replace('/\[[^\]\n]*\]/u', '<mark class="mp-ph">$0</mark>', $safe) ?? $safe;
-        $safe = preg_replace('/\b([a-z0-9._-]+@ailabhub-directory\.com)\b/', '<a href="mailto:$1">$1</a>', $safe) ?? $safe;   // уже екрановано
+        $safe = preg_replace('/\b([a-z0-9._-]+@ailabhub-directory\.com|hello\.ailabhub\.directory@gmail\.com)\b/', '<a href="mailto:$1">$1</a>', $safe) ?? $safe;   // уже екрановано
         $html .= preg_replace('/\*\*(?=\S)(.+?)(?<=\S)\*\*/u', '<strong>$1</strong>', $safe) ?? $safe;
     }
 

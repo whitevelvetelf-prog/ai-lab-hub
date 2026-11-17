@@ -199,7 +199,7 @@ Version of [MP_RULES_VERSION]
 
 | Topic | Contact |
 | --- | --- |
-| General questions | hello@ailabhub-directory.com |
+| General questions | hello.ailabhub.directory@gmail.com |
 | Complaints, rights holders, appeals | [MP_ABUSE_EMAIL] |
 | Advertising | admin@ailabhub-directory.com |
 | Partnerships | partners@ailabhub-directory.com |

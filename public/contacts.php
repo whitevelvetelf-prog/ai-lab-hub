@@ -153,7 +153,7 @@ require_once __DIR__ . '/../app/translations.php';
                 <p class="contact-card__text">
                     Питання щодо роботи платформи, пропозиції, повідомлення про проблему.
                 </p>
-                <a class="contact-card__mail" href="mailto:hello@ailabhub-directory.com">hello@ailabhub-directory.com</a>
+                <a class="contact-card__mail" href="mailto:hello.ailabhub.directory@gmail.com">hello.ailabhub.directory@gmail.com</a>
             </section>
 
             <section class="contact-card">
