@@ -15,6 +15,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/marketplace-board.php';
 require_once __DIR__ . '/../app/mp-stats.php';
+require_once __DIR__ . '/../app/mp-legal-ui.php';   // повідомлення, скарги правовласників, оскарження (Правила, п. 7.5, 10.3)
 
 mp_public_or_staff_require();   // при public_enabled=false — лише employee/admin (публіка: 404)
 
@@ -106,6 +107,8 @@ mpb_open(t('mpb_my_title'), true, 'my');
         <?php if (!$postingOpen): ?>
             <div class="mp-alert mp-alert--error"><?= mp_e(t('mpb_posting_closed')) ?></div>
         <?php endif; ?>
+
+        <?= mpl_cabinet_html($pdo, $userId) ?>
 
         <nav class="mp-tabs" aria-label="<?= mp_e(t('mpb_my_title')) ?>">
             <?php foreach ($tabs as $key => [, $labelKey]): ?>

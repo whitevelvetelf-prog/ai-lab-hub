@@ -295,7 +295,7 @@ function lst_admin_render(PDO $pdo, array $user): void
                                 <p>Окремі черги:
                                     <a href="account.php?ladm_tab=assets#acc-listings-admin" data-pc-tab="assets">Цифрові матеріали — <?= $pc['assets'] ?></a>
                                     · <a href="account.php?ladm_tab=asset_susp#acc-listings-admin" data-pc-tab="asset_susp">Підозріла активність (7 дн.) — <?= $suspCount ?></a>
-                                    · <a href="mp-moderation.php?tab=reports">Скарги на дошці</a></p>
+                                    · <a href="mp-legal-admin.php"><?= lst_e(mpl_tr('a_legal_link')) ?></a> · <a href="mp-moderation.php?tab=reports"><?= lst_e(mpl_tr('a_tab_reports')) ?></a></p>
                                 <form method="get" action="account.php" class="pc-inline-form">
                                     <input type="hidden" name="ladm_tab" value="mod">
                                     <label>Блок <select class="pc-input" name="ladm_qtype"><option value="">Усі блоки</option>

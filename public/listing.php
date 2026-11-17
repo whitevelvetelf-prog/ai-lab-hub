@@ -15,6 +15,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/translations.php';
 require_once __DIR__ . '/../app/listing.php';
+require_once __DIR__ . '/../app/mp-legal-ui.php';
 require_once __DIR__ . '/../app/promo.php';
 require_once __DIR__ . '/../app/mp-stats.php';
 require_once __DIR__ . '/../app/mp-seller.php';
@@ -137,32 +138,11 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
         }
         ?>
 
-        <?php if ($live && !$isOwner): ?>
-            <details class="mp-report"<?= is_array($reportMsg) ? ' open' : '' ?>>
-                <summary><?= mp_e(t('mpb_report_btn')) ?></summary>
-                <?php if (is_array($reportMsg)): ?>
-                    <p class="mp-alert<?= ($reportMsg['ok'] ?? false) ? '' : ' mp-alert--error' ?>" role="status"><?= lst_e($reportMsg['text'] ?? '') ?></p>
-                <?php endif; ?>
-                <?php if ($uid === null): ?>
-                    <p class="mp-text"><?= mp_e(t('mpb_report_login')) ?> <a href="login.php"><?= mp_e(t('nav_login')) ?></a></p>
-                <?php else: ?>
-                    <form method="post" action="listing-report.php" class="mp-form">
-                        <?= mp_csrf_field() ?>
-                        <input type="hidden" name="id" value="<?= $id ?>">
-                        <div class="mp-field">
-                            <label class="mp-label" for="r_reason"><?= mp_e(t('mpb_report_reason')) ?></label>
-                            <select class="mp-input" id="r_reason" name="reason" required>
-                                <?php foreach (MPB_REPORT_REASONS as $rr): ?><option value="<?= $rr ?>"><?= mp_e(t('mpb_reason_' . $rr)) ?></option><?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mp-field">
-                            <label class="mp-label" for="r_note"><?= mp_e(t('mpb_report_note')) ?></label>
-                            <textarea class="mp-input" id="r_note" name="note" rows="3" maxlength="500"></textarea>
-                        </div>
-                        <button class="mp-btn" type="submit"><?= mp_e(t('mpb_report_send')) ?></button>
-                    </form>
-                <?php endif; ?>
-            </details>
+        <?php if ($live && !$isOwner): // скарга (розділи 10–11 Правил): зареєстровані й гості з email ?>
+            <?php if (is_array($reportMsg)): ?>
+                <p class="mp-alert<?= ($reportMsg['ok'] ?? false) ? '' : ' mp-alert--error' ?>" role="status"><?= lst_e($reportMsg['text'] ?? '') ?></p>
+            <?php endif; ?>
+            <?= mpl_complaint_form_html($id, $uid) ?>
         <?php endif; ?>
         <?php if ($isOwner): ?>
             <p class="mp-actions"><a class="mp-btn" href="listing-post.php?id=<?= $id ?>"><?= lst_e(lst_tr('my_edit')) ?></a> <a class="mp-btn" href="account.php#acc-listings"><?= lst_e(lst_tr('my_title')) ?></a> <a class="mp-btn" href="mp-stats.php?id=<?= $id ?>"><?= lst_e(t('mpst_link')) ?></a></p>

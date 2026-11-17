@@ -21,6 +21,7 @@ if (!$isLive && !$isOwner && !mpb_is_staff()) {
 $mpSections = array_slice(array_merge(['board'], array_map(static fn($c) => 'board:' . (int) $c['id'], $board['categories'])), 0, 5);
 require_once __DIR__ . '/mp-stats.php';
 require_once __DIR__ . '/mp-seller.php';
+require_once __DIR__ . '/mp-legal-ui.php';
 if ($isLive) {
     mpb_count_view($pdo, $bid, $board['seller_user_id'] !== null ? (int) $board['seller_user_id'] : null);
     mpst_count_view($pdo, $bid, $board['seller_user_id'] !== null ? (int) $board['seller_user_id'] : null);   // по днях (статистика автора)
@@ -155,28 +156,8 @@ mpb_open((string) $board['title'], !$isLive, 'home');
             <div class="mp-alert mp-alert--ok"><?= mp_e(t('mpb_own_note')) ?> <a href="marketplace-post.php?id=<?= $bid ?>"><?= mp_e(t('mpb_edit_btn')) ?></a> · <a href="marketplace-my.php"><?= mp_e(t('mpb_my_link')) ?></a> · <a href="mp-stats.php?id=<?= $bid ?>"><?= mp_e(t('mpst_link')) ?></a></div>
         <?php endif; ?>
 
-        <?php if ($isLive && !$isOwner): ?>
-            <details class="mp-report">
-                <summary><?= mp_e(t('mpb_report_btn')) ?></summary>
-                <?php if ($viewerId !== null): ?>
-                    <form method="post" action="mp-report.php" class="mp-form">
-                        <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
-                        <div class="mp-field">
-                            <label class="mp-label" for="rp_reason"><?= mp_e(t('mpb_report_reason')) ?></label>
-                            <select class="mp-input" id="rp_reason" name="reason" required>
-                                <?php foreach ($reasons as $k => $label): ?><option value="<?= mp_e($k) ?>"><?= mp_e($label) ?></option><?php endforeach; ?>
-                            </select>
-                        </div>
-                        <div class="mp-field">
-                            <label class="mp-label" for="rp_note"><?= mp_e(t('mpb_report_note')) ?></label>
-                            <textarea class="mp-input" id="rp_note" name="note" rows="3" maxlength="500"></textarea>
-                        </div>
-                        <button class="mp-btn" type="submit"><?= mp_e(t('mpb_report_send')) ?></button>
-                    </form>
-                <?php else: ?>
-                    <p class="mp-text"><?= mp_e(t('mpb_report_login')) ?> <a href="login.php"><?= mp_e(t('nav_login')) ?></a></p>
-                <?php endif; ?>
-            </details>
+        <?php if ($isLive && !$isOwner): // скарга (розділи 10–11 Правил): зареєстровані й гості з email ?>
+            <?= mpl_complaint_form_html($bid, $viewerId) ?>
         <?php endif; ?>
 
 
