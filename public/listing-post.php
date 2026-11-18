@@ -88,6 +88,14 @@ $v = [
     'ai_media' => false,   // п. 4.5 Правил: AI-медіа, що можуть сприйматися як реальні
 ];
 $fitValues = mpj_suitable_values();
+// Внутрішні повідомлення (2026-11-18): у компаній контакти — посилання «Перейти», тож вибір один: дозволити повідомлення
+// (contact_mode 'both') чи ні ('contacts_only'). Поле — лише коли функцію ввімкнено.
+$msgOn = false;
+if (mp_config()['messaging_enabled'] === true) {
+    require_once __DIR__ . '/../app/mp-messages.php';
+    $msgOn = msg_enabled($pdo);
+}
+$v['allow_messages'] = $existing === null || (string) ($existing['contact_mode'] ?? 'both') !== 'contacts_only';
 if ($existing !== null) {
     $tx = $pdo->prepare('SELECT title, short_desc, full_desc FROM mp_listing_translations WHERE listing_id = :id AND lang = :lang');
     $tx->execute([':id' => $id, ':lang' => (string) $existing['source_lang']]);
@@ -132,6 +140,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $v['d'] = is_array($_POST['d'] ?? null) ? array_map(static fn($x): string => is_string($x) ? $x : '', $_POST['d']) : [];
     $v['rules'] = ($_POST['rules'] ?? '') === '1';
     $v['ai_media'] = ($_POST['ai_media'] ?? '') === '1';
+    $v['allow_messages'] = ($_POST['allow_messages'] ?? '') === '1';
     if ($type === 'job') {
         // Формат роботи (офіс / онлайн / змішано) замість галочки «віддалено»; is_remote — лише «онлайн».
         $v['wf'] = in_array($str('wf'), MPJ_WORK_FORMATS, true) ? $str('wf') : '';
@@ -246,6 +255,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             ], $existing, $userId, $sellerId, $lang);
             mpj_after_save($pdo, $savedId, $type, $details, $type === 'job' ? $v['wf'] : '', $v['fit'], $v['country']);
             mpl_save_listing_extras($pdo, $savedId, $v['ai_media']);
+            if ($msgOn) {
+                msg_save_contact_mode($pdo, $savedId, $v['allow_messages'] ? 'both' : 'contacts_only');
+            }
             lst_mail($pdo, $savedId, 'received');
             // Оголошення за запрошенням аутрічу (marketplace-join.php) → лід «Розмістили».
             $joinLead = (int) ($_SESSION['outreach_join_lead'] ?? 0);
@@ -526,6 +538,12 @@ mpb_open($pageTitle, true, 'post');
                     <p class="mp-hint"><?= lst_e(lst_tr('f_domain_hint', $emailDomain)) ?></p>
                     <?= $fieldErr('url') ?>
                 </div>
+                <?php if ($msgOn): ?>
+                <div class="mp-field">
+                    <label class="mp-check"><input type="checkbox" name="allow_messages" value="1"<?= $v['allow_messages'] ? ' checked' : '' ?>> <span><?= lst_e(t('msg_allow_messages')) ?></span></label>
+                    <p class="mp-hint"><?= lst_e(t('msg_allow_messages_hint')) ?></p>
+                </div>
+                <?php endif; ?>
             </fieldset>
 
             <?php // Правила й відправлення ?>

@@ -27,6 +27,14 @@ function mp_section_nav(string $active): string
     if (auth_check()) {
         $tabs['my'] = ['marketplace-my.php', t('mpb_my_link')];
         $tabs['favorites'] = ['marketplace-favorites.php', t('mpb_fav_title')];
+        // «Повідомлення» з лічильником непрочитаних — лише коли функцію ввімкнено (config messaging_enabled + public_enabled).
+        if (mp_config()['messaging_enabled'] === true) {
+            require_once __DIR__ . '/mp-messages.php';
+            if (msg_enabled()) {
+                $n = msg_unread_total(translation_pdo(), (int) auth_user_id());
+                $tabs['messages'] = ['mp-messages.php', t('msg_title') . ($n > 0 ? ' (' . ($n > 99 ? '99+' : $n) . ')' : '')];
+            }
+        }
     }
     if (mp_rules_link_visible()) {
         $tabs['rules'] = ['marketplace-rules.php', mpl_tr('rules_link')];

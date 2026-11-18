@@ -115,6 +115,7 @@ $blocks = [
         <div class="mp-offer__actions">
             <a class="mp-btn mp-btn--primary mp-btn--lg" href="get.php?id=<?= (int) $offer['id'] ?>" rel="nofollow"><?= mp_e(t('mp_get')) ?></a>
             <span class="mp-badge"><?= mp_e(t('price_free')) ?></span>
+            <?= mp_write_button_html($pdo, (int) $offer['id']) ?>
             <?php if ($offer['delivery_type'] === 'file'): ?>
                 <p class="mp-offer__hint"><?= mp_e(t('mp_get_hint_file')) ?></p>
             <?php endif; ?>

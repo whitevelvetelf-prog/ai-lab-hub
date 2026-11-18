@@ -1716,6 +1716,15 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                             <div class="staff-note">
                                 <?php $crmPending = lst_admin_pending_counts($pdo); ?>
                                 <a class="crm-mod-link" href="account.php?ladm_tab=mod#acc-listings-admin">Модерація оголошень (<?= (int) $crmPending['total'] ?>)</a><br>
+                                <?php
+                                // Внутрішні повідомлення Marketplace (2026-11-18): скринька платформи й скарги — лише коли функцію ввімкнено.
+                                if (mp_config()['messaging_enabled'] === true) {
+                                    require_once __DIR__ . '/../app/mp-messages.php';
+                                    if (msg_enabled($pdo)): ?>
+                                <a class="crm-mod-link" href="mp-inbox-admin.php"><?= htmlspecialchars(t('msg_platform_inbox'), ENT_QUOTES) ?> (<?= msg_platform_unread($pdo) ?>)</a>
+                                · <a class="crm-mod-link" href="mp-message-reports.php"><?= htmlspecialchars(t('msg_reports_title'), ENT_QUOTES) ?> (<?= msg_reports_new($pdo) ?>)</a><br>
+                                <?php endif;
+                                } ?>
                                 <?= htmlspecialchars(t('account_crm_access_prefix'), ENT_QUOTES) ?> <a href="crm-list.php"><?= htmlspecialchars(t('account_crm_list_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-add-product.php"><?= htmlspecialchars(t('account_crm_add_link'), ENT_QUOTES) ?></a>
                                 · <a href="crm-catalog-fill.php"><?= htmlspecialchars(t('account_crm_fill_link'), ENT_QUOTES) ?></a><?php if (auth_role() === 'admin'): ?>

@@ -65,6 +65,13 @@ mpt_open($title, $desc, 'mp-seller.php?id=' . $id, $total === 0, 'home');
             <p class="mp-text mp-text--pre mpsl-bio"><?= mp_e($bio) ?></p>
         <?php endif; ?>
         <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpsl_no_contacts_note')) ?></p>
+        <?php
+        // «Написати автору» (внутрішні повідомлення, якщо ввімкнено): не для власної сторінки і не для staff на сторінці платформи.
+        $viewer = auth_user_id();
+        $ownPage = $seller['user_id'] !== null ? $viewer !== null && (int) $seller['user_id'] === $viewer : mp_is_staff();
+        $msgBtn = $total > 0 && !$ownPage ? mp_write_button_html($pdo, 0, $id) : '';
+        ?>
+        <?php if ($msgBtn !== ''): ?><p class="mp-actions"><?= $msgBtn ?></p><?php endif; ?>
 
         <?php if ($groups === []): ?>
             <p class="mp-empty"><?= mp_e(t('mpsl_empty')) ?></p>

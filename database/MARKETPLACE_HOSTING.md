@@ -257,3 +257,9 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 `/marketplace-rules.php` (UA і EN, якорі `#section-7`), форма подачі (галочка згоди, «Створено з AI», умови використання),
 «Поскаржитися» на сторінці оголошення (гість — з email), `mp-moderation.php`, `mp-legal-admin.php` (скарги, оскарження,
 користувачі), `robots.txt`. Локально: `php tests/mp-legal-e2e.php`.
+
+## Внутрішні повідомлення (2026-11-18) — **НЕ залито**, вимкнено (`messaging_enabled => false`)
+SQL (до коду): № 22 `database/migration-2026-11-18-marketplace-messaging.sql`, № 23 `database/migration-2026-11-18-marketplace-ui-strings-messaging.sql` (копії — `hosting-upload/marketplace-messaging/`). Лише CREATE TABLE IF NOT EXISTS, ADD COLUMN `mp_listings.contact_mode` за перевіркою, INSERT IGNORE.
+Код: нові `app/mp-messages.php`, `public/mp-messages.php`, `mp-thread.php`, `mp-messages-poll.php`, `mp-notify-settings.php`, `mp-inbox-admin.php`, `mp-message-reports.php`, `mp-cron-messages.php`, `assets/css/mp-messages.css`, `assets/js/mp-thread.js`; змінені `app/auth.php`, `app/marketplace.php`, `app/mp-section-nav.php`, `app/mpb-offer.php`, `app/promo-quiet.php`, `app/site-header.php`, `app/translations.php`, `public/account.php`, `public/assets/css/site-nav.css`, `public/listing.php`, `public/listing-post.php`, `public/marketplace-offer.php`, `public/marketplace-post.php`, `public/mp-contact.php`, `public/mp-moderation.php`, `public/mp-seller.php`.
+Вмикання (серверний `config/marketplace.php`): `messaging_enabled => true` (працює лише з public_enabled); листи — `messaging_email_enabled => true` + `messaging_secret` (16+ випадкових символів). Cron раз на добу: `php …/public/mp-cron-messages.php` (строк зберігання 365 днів).
+Тест локально: `php tests/mp-messages-e2e.php` (79 перевірок).

@@ -61,6 +61,11 @@ if (mpl_is_blocked($pdo, (int) auth_user_id())) {
     $fail(403, 'blocked', mpl_tr('blocked_action'));
 }
 
+// Оголошення «лише повідомлення» (contact_mode = messages_only при ввімкнених повідомленнях): контакти не видаються.
+if (!mp_contacts_visible($pdo, $id) && !mpb_is_staff()) {
+    $fail(404, 'notfound', t('mpb_contact_notfound'));
+}
+
 $res = mpb_reveal($pdo, $id, (int) auth_user_id());
 if ($res['status'] === 'notfound') {
     $fail(404, 'notfound', t('mpb_contact_notfound'));

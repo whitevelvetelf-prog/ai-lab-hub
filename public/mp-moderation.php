@@ -230,6 +230,9 @@ $ruleSelect = static fn(): string => mpl_rule_select_html('select');
                     <span><?= mp_e($r['author_name'] ?? '—') ?> <?= $r['author_email'] ? '(' . mp_e($r['author_email']) . ')' : '' ?>
                         <?php if ($r['owner_id'] !== null): ?> · <a href="mp-legal-admin.php?tab=users&amp;q=<?= (int) $r['owner_id'] ?>"><?= mp_e(mpl_tr('a_author_card')) ?></a><?php endif; ?></span>
                     <span><?= mp_e($r['source_lang']) ?></span>
+                    <?php if (mp_config()['messaging_enabled'] === true): // режим звʼязку (внутрішні повідомлення) ?>
+                        <span><?= mp_e(t('msg_mode_title')) ?>: <?= mp_e(t('msg_mode_' . mp_contact_mode_of($pdo, $rid))) ?></span>
+                    <?php endif; ?>
                     <span><?= mp_e(date('d.m.Y H:i', (int) strtotime((string) $r['updated_at']))) ?></span>
                     <?php if ($r['expires_at'] !== null): ?><span>→ <?= mp_e(date('d.m.Y', (int) strtotime((string) $r['expires_at']))) ?></span><?php endif; ?>
                 </div>

@@ -69,6 +69,27 @@ function mp_config(): array
             'saved_search_mail_batch' => 50,
             'ip_limit_count'     => 1500,
             'ip_limit_saved'     => 60,
+            // Внутрішні повідомлення (2026-11-18) — пояснення в config/marketplace.php.
+            'messaging_enabled'  => false,
+            'messaging_email_enabled' => false,
+            'messaging_secret'   => '',
+            'messages_retention_days' => 365,
+            'msg_max_len'        => 2000,
+            'msg_per_hour'       => 30,
+            'msg_new_conv_per_day' => 10,
+            'msg_new_conv_per_day_young' => 3,
+            'msg_young_days'     => 7,
+            'msg_young_max_links' => 2,
+            'msg_repeat_max'     => 3,
+            'msg_stop_phrases'   => [],
+            'msg_readonly_after_days' => 14,
+            'msg_poll_seconds'   => 20,
+            'msg_suspicious_targets' => 5,
+            'msg_suspicious_hours' => 24,
+            'msg_email_min_minutes' => 30,
+            'msg_email_max_per_day' => 5,
+            'ip_limit_msg'       => 400,
+            'ip_limit_poll'      => 20000,
         ];
         $cfg = $defaults;
         // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.
@@ -1006,4 +1027,40 @@ function mp_register_claim(PDO $pdo, int $listingId, ?int $userId): bool
     }
 
     return true;
+}
+
+// --- Внутрішні повідомлення (2026-11-18) ---------------------------------------------------
+
+/**
+ * Кнопка «Написати автору» для сторінок оголошень і продавця. Порожньо, якщо функцію вимкнено (бібліотека
+ * app/mp-messages.php тоді навіть не підключається), оголошення лише з контактами, власне чи вже не живе.
+ * $listingId > 0 — конкретне оголошення; $sellerId > 0 — сторінка продавця (вибір оголошення на mp-thread.php).
+ */
+function mp_write_button_html(PDO $pdo, int $listingId, int $sellerId = 0): string
+{
+    if (mp_config()['messaging_enabled'] !== true) {
+        return '';
+    }
+    require_once __DIR__ . '/mp-messages.php';
+
+    return msg_write_button_html($pdo, $listingId, $sellerId);
+}
+
+/** Чи показувати «Показати контакт» (false — оголошення «лише повідомлення» при ввімкнених повідомленнях). */
+function mp_contacts_visible(PDO $pdo, int $listingId): bool
+{
+    if (mp_config()['messaging_enabled'] !== true) {
+        return true;
+    }
+    require_once __DIR__ . '/mp-messages.php';
+
+    return msg_show_contacts($pdo, $listingId);
+}
+
+/** Режим звʼязку оголошення для CRM (без міграції — 'both'). */
+function mp_contact_mode_of(PDO $pdo, int $listingId): string
+{
+    require_once __DIR__ . '/mp-messages.php';
+
+    return msg_contact_mode($pdo, $listingId);
 }

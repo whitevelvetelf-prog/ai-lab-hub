@@ -24,6 +24,8 @@ const PROMO_QUIET_DEFAULT_MINUTES = 10;
 const PROMO_AUTH_PAGES = [
     'login.php', 'register.php', 'logout.php', 'forgot-password.php', 'login-via-token.php',
     'auth-*.php', 'mp-verify.php', 'mp-verify-email.php',
+    // Приватні сторінки повідомлень Marketplace (2026-11-18): без реклами.
+    'mp-messages.php', 'mp-thread.php', 'mp-notify-settings.php', 'mp-inbox-admin.php', 'mp-message-reports.php',
 ];
 
 /** Сторінка автентифікації (за замовчуванням — поточний скрипт). */

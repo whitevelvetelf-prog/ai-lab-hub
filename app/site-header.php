@@ -30,7 +30,18 @@ require_once __DIR__ . '/marketplace.php';
         <a class="site-nav__link" href="marketplace.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?></a>
         <?php endif; ?>
         <?php if (auth_check()): ?>
+        <?php
+        // Значок непрочитаних повідомлень Marketplace (лише коли функцію ввімкнено; інакше бібліотека не підключається).
+        $msgBadge = '';
+        if (mp_config()['messaging_enabled'] === true) {
+            require_once __DIR__ . '/mp-messages.php';
+            $msgBadge = msg_header_badge_html();
+        }
+        ?>
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
+        <?php if ($msgBadge !== ''): ?>
+        <a class="site-nav__link site-nav__link--msg" href="mp-messages.php"><?= htmlspecialchars(t('msg_title'), ENT_QUOTES) ?><?= $msgBadge ?></a>
+        <?php endif; ?>
         <?php if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'account.php'): // навігація кабінету: «Блог» для всіх залогінених ролей ?>
         <a class="site-nav__link" href="blog.php" data-nav-blog><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a>
         <?php endif; ?>

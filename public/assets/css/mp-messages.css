@@ -1,0 +1,112 @@
+/* AI LAB HUB — Marketplace: внутрішні повідомлення (mp-messages.php, mp-thread.php, mp-notify-settings.php, mp-inbox-admin.php,
+   mp-message-reports.php). Доповнює mp-public.css (той самий фон #00032c → #2116ad, білий текст).
+   iPhone/Safari: без горизонтального прокручування, поле вводу 16px (без автомасштабу), елементи ≥ 44px, safe-area. */
+
+.msg-body { overflow-x: hidden; }
+.msg-body .mp-page { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+.msg-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 20px; height: 20px; padding: 0 6px; margin-left: 4px;
+    border-radius: 999px; background: #ffffff; color: #2116ad;
+    font-size: 0.75rem; font-weight: 800; line-height: 1; vertical-align: middle;
+}
+
+.msg-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.msg-tabs .mp-tab { min-height: 44px; display: inline-flex; align-items: center; }
+
+.msg-list { list-style: none; margin: 0; padding: 0; }
+.msg-item { margin: 0 0 10px; }
+.msg-item__link {
+    display: flex; gap: 12px; align-items: center; min-height: 64px; padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(255, 255, 255, 0.05);
+    color: #ffffff; text-decoration: none; min-width: 0;
+}
+.msg-item__link:hover, .msg-item__link:focus-visible { background: rgba(255, 255, 255, 0.1); }
+.msg-item--unread .msg-item__link { border-color: rgba(165, 192, 255, 0.7); background: rgba(91, 140, 255, 0.14); }
+.msg-thumb {
+    flex: none; width: 52px; height: 52px; border-radius: 10px; object-fit: cover;
+    background: rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; font-size: 1.3rem;
+}
+.msg-item__main { flex: 1; min-width: 0; }
+.msg-item__title { margin: 0; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-item__meta { margin: 2px 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-item__preview { margin: 2px 0 0; font-size: 0.9rem; color: rgba(255, 255, 255, 0.85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-item__side { flex: none; text-align: right; font-size: 0.78rem; color: rgba(255, 255, 255, 0.7); }
+.msg-item__side .msg-badge { margin: 6px 0 0; }
+
+/* Сторінка розмови */
+.msg-thread { display: flex; flex-direction: column; min-height: calc(100dvh - 120px); }
+.msg-card {
+    display: flex; gap: 12px; align-items: center; padding: 10px 12px; margin: 0 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 14px; background: rgba(255, 255, 255, 0.05);
+    color: #ffffff; text-decoration: none; min-width: 0;
+}
+.msg-card__title { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.msg-card__meta { margin: 2px 0 0; font-size: 0.82rem; color: rgba(255, 255, 255, 0.75); }
+
+.msg-safety {
+    margin: 0 0 12px; padding: 10px 12px; border-radius: 12px; font-size: 0.85rem;
+    border: 1px solid rgba(252, 211, 77, 0.5); background: rgba(252, 211, 77, 0.12);
+}
+
+.msg-log { list-style: none; margin: 0; padding: 0 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.msg-row { display: flex; flex-direction: column; align-items: flex-start; max-width: 100%; }
+.msg-row--mine { align-items: flex-end; }
+.msg-row--system { align-items: center; }
+.msg-bubble {
+    max-width: min(560px, 86%); padding: 10px 14px; border-radius: 18px 18px 18px 6px;
+    background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.16);
+    overflow-wrap: anywhere; word-break: break-word; white-space: normal;
+}
+.msg-row--mine .msg-bubble { border-radius: 18px 18px 6px 18px; background: #ffffff; color: #00032c; border-color: transparent; }
+.msg-row--mine .msg-bubble .msg-link { color: #2116ad; }
+.msg-row--system .msg-bubble { background: transparent; border-style: dashed; font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); }
+.msg-bubble__label { display: block; font-size: 0.75rem; font-weight: 700; opacity: 0.8; margin-bottom: 2px; }
+.msg-bubble__time { display: block; font-size: 0.72rem; opacity: 0.65; margin-top: 4px; text-align: right; }
+.msg-link { color: #bcd0ff; text-decoration: underline; overflow-wrap: anywhere; }
+.msg-ext { font-size: 0.72rem; opacity: 0.75; white-space: nowrap; }
+.msg-row--platform .msg-bubble__label::after { content: " ✓"; }
+
+.msg-compose {
+    position: sticky; bottom: 0; z-index: 5;
+    margin: 8px calc(-1 * max(16px, env(safe-area-inset-left))) 0;
+    padding: 10px max(16px, env(safe-area-inset-right)) calc(10px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    background: rgba(0, 3, 44, 0.94); border-top: 1px solid rgba(255, 255, 255, 0.16);
+    display: flex; gap: 8px; align-items: flex-end;
+}
+.msg-compose__field { flex: 1; min-width: 0; }
+.msg-compose textarea {
+    display: block; width: 100%; min-height: 44px; max-height: 40vh; resize: none;
+    padding: 10px 12px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.08); color: #ffffff;
+    font-family: inherit; font-size: 16px; line-height: 1.4;   /* ≥ 16px: Safari не масштабує сторінку */
+}
+.msg-compose textarea:focus { outline: 2px solid #5b8cff; outline-offset: 1px; }
+.msg-compose .mp-btn { min-height: 44px; min-width: 44px; flex: none; }
+.msg-compose__count { display: block; font-size: 0.72rem; color: rgba(255, 255, 255, 0.65); margin-top: 2px; }
+.msg-compose__error { display: block; font-size: 0.82rem; color: #fecaca; margin-top: 4px; }
+
+.msg-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.msg-tools form { margin: 0; }
+.msg-tools .mp-btn, .msg-body .mp-btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+.msg-details { margin: 12px 0 0; }
+.msg-details summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-weight: 600; }
+.msg-details .mp-input, .msg-body select.mp-input, .msg-body input.mp-input, .msg-body textarea.mp-input { font-size: 16px; min-height: 44px; }
+
+.msg-note { font-size: 0.85rem; color: rgba(255, 255, 255, 0.75); }
+.msg-check { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+.msg-check input { width: 22px; height: 22px; }
+.msg-mode__opt { display: flex; gap: 10px; align-items: center; min-height: 44px; }
+
+.msg-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.msg-table th, .msg-table td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.msg-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.msg-snapshot { max-height: 420px; overflow-y: auto; padding: 8px; border-radius: 12px; background: rgba(0, 0, 0, 0.2); }
+
+@media (max-width: 600px) {
+    .msg-item__side { max-width: 70px; }
+    .msg-bubble { max-width: 92%; }
+    .msg-tools .mp-btn { flex: 1 1 auto; }
+}
+.msg-body .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }

@@ -100,10 +100,14 @@ mpb_open((string) $board['title'], !$isLive, 'home');
 
         <?php if ($isLive && !$isOwner): ?>
             <div class="mp-offer__actions">
+                <?php // Режим звʼязку (contact_mode): messages_only — без «Показати контакт», contacts_only — без «Написати автору». ?>
+                <?php if (mp_contacts_visible($pdo, $bid)): ?>
                 <form method="post" action="mp-contact.php" id="mpContactForm" data-error="<?= mp_e(t('mpb_contact_error')) ?>">
                     <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
                     <button class="mp-btn mp-btn--primary mp-btn--lg" type="submit" id="mpContactBtn"><?= mp_e(t('mpb_contact_btn')) ?></button>
                 </form>
+                <?php endif; ?>
+                <?= mp_write_button_html($pdo, $bid) ?>
                 <?php if ($viewerId !== null): ?>
                     <form method="post" action="mp-favorite.php">
                         <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">

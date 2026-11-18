@@ -158,6 +158,14 @@ if ($existing !== null) {
     ];
     $photos = mpb_photos($pdo, $id);
 }
+// Внутрішні повідомлення (2026-11-18): режим звʼязку з автором — лише коли функцію ввімкнено (інакше поле не показується й не змінюється).
+$msgOn = false;
+if (mp_config()['messaging_enabled'] === true) {
+    require_once __DIR__ . '/../app/mp-messages.php';
+    $msgOn = msg_enabled($pdo);
+}
+$v['contact_mode'] = $existing !== null && in_array((string) ($existing['contact_mode'] ?? ''), ['both', 'messages_only', 'contacts_only'], true)
+    ? (string) $existing['contact_mode'] : 'both';
 // Блок «Де надається» (етап 6): формат, місто з автопідказки, охоплення — app/mp-geo.php.
 $geoV = $existing !== null ? mpg_form_from_listing($pdo, $existing) : mpg_form_defaults();
 $geoReady = mpg_ready($pdo);
@@ -191,6 +199,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             $v[$k] = mb_substr($str($k), 0, 300);
         }
         $v['rules'] = ($_POST['rules'] ?? '') === '1';
+        if ($msgOn) {
+            $v['contact_mode'] = msg_mode_from_post($_POST);
+        }
         $v['ai_media'] = ($_POST['ai_media'] ?? '') === '1';
         $v['usage'] = in_array($str('usage_terms'), MPL_USAGE_TERMS, true) ? $str('usage_terms') : '';
         $v['usage_note'] = mb_substr($str('usage_terms_note'), 0, 200);
@@ -254,6 +265,10 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
 
         // Контакти
         $contact = mpb_normalize_contacts($v, $errors);
+        // «Лише повідомлення»: контакти не обовʼязкові (їх ніхто не побачить).
+        if ($msgOn && $v['contact_mode'] === 'messages_only') {
+            $errors = array_values(array_filter($errors, static fn($e): bool => $e !== 'mpb_err_contact_required'));
+        }
 
         // Згода з Правилами
         if (!$v['rules']) {
@@ -360,6 +375,9 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
                     'geo' => $geoReady ? $geo + ['price_usd' => mpg_price_usd($pdo, $priceAmount, $currency)] : null,
                 ], $existing, $userId, $sellerId, $lang, $created, $deleteIds, $photoOrder);
                 mpl_save_listing_extras($pdo, $savedId, $v['ai_media'], $v['usage'], $v['usage_note']);
+                if ($msgOn) {
+                    msg_save_contact_mode($pdo, $savedId, $v['contact_mode']);
+                }
 
                 if ($existing === null) {
                     mpd_delete($pdo, $userId, 'board');   // чернетку подано — більше не потрібна
@@ -565,6 +583,7 @@ mpb_open($pageTitle, true, 'post');
             </fieldset>
             <fieldset class="mpf-block" id="blk-contacts">
                 <legend class="mpf-block__title"><?= mp_e(mpf_tr('blk_contacts')) ?></legend>
+            <?php if ($msgOn): ?><?= msg_contact_mode_html($v['contact_mode']) ?><?php endif; ?>
             <fieldset class="mp-field mp-fieldset">
                 <legend class="mp-label"><?= mp_e(t('mpb_f_contacts')) ?></legend>
                 <p class="mp-hint"><?= mp_e(t('mpb_f_contacts_hint')) ?></p>

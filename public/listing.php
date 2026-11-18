@@ -126,6 +126,8 @@ lst_open((string) $row['title'], !($live && mp_public_enabled()), $head, 'home')
                     <a class="mp-btn mp-btn--primary mp-btn--lg" href="listing-go.php?id=<?= $id ?>" rel="nofollow noopener" target="_blank"><?= lst_e(lst_tr('go')) ?></a>
                 </p>
                 <p class="mp-offer__hint"><?= lst_e(lst_tr('go_hint', $host)) ?></p>
+                <?php $msgBtn = $live && !$isOwner ? mp_write_button_html($pdo, $id) : ''; ?>
+                <?php if ($msgBtn !== ''): ?><p class="mp-offer__actions"><?= $msgBtn ?></p><?php endif; ?>
             <?php endif; ?>
             <?php if ($freeLabel !== ''): ?><p class="mp-hint lst-free-inline"><?= lst_e($freeLabel) ?></p><?php endif; ?>
         </article>
