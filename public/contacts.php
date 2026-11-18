@@ -150,7 +150,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
         <h1 class="stub__title"><?= $tx('Контакти', 'Contacts') ?></h1>
         <p class="stub__text"><?= $tx('Оберіть, куди написати — і ми відповімо.', 'Choose where to write — and we will get back to you.') ?></p>
 
-        <?php $showPartnerCards = false; // тимчасово приховано «Для партнерів» і «Реклама» (2026-11-18); повернути — true ?>
+        <?php $showPartnerCards = false; // тимчасово приховано «Для партнерів» (2026-11-18); «Реклама» показується з promotion.ailabhub.directory@gmail.com; повернути — true ?>
         <div class="contact-grid">
             <section class="contact-card">
                 <h2 class="contact-card__title"><?= $tx('Для користувачів', 'For users') ?></h2>
@@ -178,15 +178,13 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
                 <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@gmail.com</a>
             </section>
 
-            <?php if ($showPartnerCards): ?>
             <section class="contact-card">
                 <h2 class="contact-card__title"><?= $tx('Реклама', 'Advertising') ?></h2>
                 <p class="contact-card__text">
                     <?= $tx('Розміщення реклами на сайті, питання щодо рекламних кампаній.', 'Advertising on the site, questions about ad campaigns.') ?>
                 </p>
-                <a class="contact-card__mail" href="mailto:admin.ailabhub.directory@gmail.com">admin.ailabhub.directory@gmail.com</a>
+                <a class="contact-card__mail" href="mailto:promotion.ailabhub.directory@gmail.com">promotion.ailabhub.directory@gmail.com</a>
             </section>
-            <?php endif; ?>
         </div>
     </main>
 
