@@ -256,6 +256,9 @@ $subcategoryIcons = [
     'ua-schools'             => 'school',
     'ua-exams'               => 'clipboard-check',
     'ua-courses'             => 'book-open',
+    'ua-movies'              => 'film',
+    'ua-music'               => 'music',
+    'ua-games'               => 'gamepad-2',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',

@@ -1,80 +1,76 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-11-18: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps): школи й електронні щоденники, садочки, університети, підготовка до НМТ, IT-курси та онлайн-школи англійської.
+-- AI LAB HUB — партія 2026-11-18: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps): кіно й серіали онлайн, кінотеатри, музика, радіо й подкасти, ігри українською.
 -- Нові підкатегорії:
---   * Школи, садочки та університети / Schools, Kindergartens & Universities (slug ua-schools)
---   * Підготовка до НМТ / NMT & Exam Prep (slug ua-exams)
---   * Курси та онлайн-школи / Courses & Online Schools (slug ua-courses)
--- + 29 продуктів (якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються).
+--   * Кіно й серіали онлайн / Movies & Series Streaming (slug ua-movies)
+--   * Музика, радіо та подкасти / Music, Radio & Podcasts (slug ua-music)
+--   * Ігри українською / Games in Ukrainian (slug ua-games)
+-- + 30 продуктів (якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються).
 -- Тексти UA/EN написано за офіційними описами застосунків в App Store (регіон UA) та сайтами, звірено 2026-11-18.
 -- Ціни не вказано: план «Ціна: див. сайт» (0, one_time); Free — застосунок безкоштовний у магазині застосунків.
--- Пропущено: NZ.UA «Журнали та щоденники» (стара версія з 2021, додано нову), KPI Hub (з 2023), Upword (походження не підтверджено),
---   Laba/Skvot (польські версії застосунків), Novakid, Lingualeo, Skyeng (не українські); Mate academy, Hillel, Promova, Prometheus уже є в каталозі — лише привʼязка.
+-- Пропущено: KinoZone (з 2019), Linia kino (з 2021, російськомовний), Alias UA і «Де це?» (з 2022–2023), «Всяка Музяка» (з 2016), Crosswordium (є російська версія),
+--   Vvuha (походження не підтверджено), «Правда або Дія 18+» (18+), лотереї (азартні ігри), Kinorium (не український).
 -- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
 -- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
---   NZ.UA — електронні журнали — Школи, садочки та університети, Освіта
---   My School — щоденник — Школи, садочки та університети
---   Sadok — Школи, садочки та університети, Для бізнесу та ФОП
---   ЄАС — Єдина атестаційна система — Школи, садочки та університети, Освіта
---   Обирай ХАІ — Школи, садочки та університети
---   Learning.ua — Школи, садочки та університети, Освіта
---   Просте ЗНО/НМТ — Підготовка до НМТ
---   НМТ на 200 — Підготовка до НМТ
---   MathCorp — НМТ/ЗНО — Підготовка до НМТ
---   ЗНОХАБ — Підготовка до НМТ
---   Наголоси НМТ — Підготовка до НМТ
---   НМТ+ — Підготовка до НМТ
---   ЗНО і НМТ тести — Підготовка до НМТ
---   Соловій: НМТ українська мова — Підготовка до НМТ
---   Вивчай Просто | НМТ — Підготовка до НМТ
---   Читай — НМТ, ЗНО та ЄВІ — Підготовка до НМТ
---   Mindfly — Підготовка до НМТ
---   CAM ON SCHOOL — Підготовка до НМТ
---   Тест з державної мови — Підготовка до НМТ
---   GoIT — Курси та онлайн-школи
---   MyStat (IT STEP Academy) — Курси та онлайн-школи
---   Genius.Space — Курси та онлайн-школи
---   Englishdom ED Class — Курси та онлайн-школи
---   EDWords — англійські слова — Курси та онлайн-школи
---   AllRight — Курси та онлайн-школи
---   JustSchool — Курси та онлайн-школи
---   Wally: англійська мова — Курси та онлайн-школи
---   Мова — ДНК нації — Курси та онлайн-школи
---   ЛогопедіЯ — Курси та онлайн-школи
+--   Takflix — Кіно й серіали онлайн
+--   youtv — Кіно й серіали онлайн, ТБ, новини та радіо
+--   Vodafone TV — Кіно й серіали онлайн, ТБ, новини та радіо
+--   Твоя Сінематика — Кіно й серіали онлайн
+--   Вкіно — Кіно, концерти та квитки
+--   Сінема Сіті — Кіно, концерти та квитки
+--   Wizoria — Кіно, концерти та квитки
+--   SmartCinema — Кіно, концерти та квитки
+--   Слухай UA — Музика, радіо та подкасти
+--   Перець FM — Музика, радіо та подкасти
+--   DJFM — Музика, радіо та подкасти
+--   Svoe Radio — Музика, радіо та подкасти
+--   Radio Ukraine FM & AM Online — Музика, радіо та подкасти
+--   Радіо «Дзвони» — Музика, радіо та подкасти
+--   Крокодил Українською — Ігри українською
+--   Поясни Слово — Ігри українською
+--   Аліас: гра в слова (aliasgame.com.ua) — Ігри українською
+--   Аліас Українською — Ігри українською
+--   Gamir — Ігри українською
+--   Вікторина Українською — Ігри українською
+--   Кобза — Ігри українською
+--   Близько — Ігри українською
+--   СЛОВА: балда українською — Ігри українською
+--   Слова зі слова — Ігри українською
+--   Сканворди UA — Ігри українською
+--   Українські кросворди — Ігри українською
+--   БезСуржику — Ігри українською, Освіта
+--   Паляниця — знайди слова — Ігри українською
+--   Guess The Song — Ігри українською, Музика, радіо та подкасти
+--   Військові звання України — Ігри українською, Військовим і ветеранам
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'ukrainian-apps' LIMIT 1);
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Школи, садочки та університети', 'Schools, Kindergartens & Universities', 'ua-schools' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Підготовка до НМТ', 'NMT & Exam Prep', 'ua-exams' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Курси та онлайн-школи', 'Courses & Online Schools', 'ua-courses' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Кіно й серіали онлайн', 'Movies & Series Streaming', 'ua-movies' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Музика, радіо та подкасти', 'Music, Radio & Podcasts', 'ua-music' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Ігри українською', 'Games in Ukrainian', 'ua-games' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games');
 
--- NZ.UA — електронні журнали — Школи, садочки та університети, Освіта
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6670438104' OR LOWER(`name`) = 'nz.ua — електронні журнали')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'NZ.UA — електронні журнали', NULL, 'https://apps.apple.com/ua/app/id6670438104', NULL, NULL, 'Електронні щоденники й журнали «Нові Знання»: оцінки, розклад, домашні завдання та кабінет вчителя.', 'Novi Znannia e-diaries and gradebooks: grades, timetable, homework and a teacher’s account.', 'NZ.UA — мобільний застосунок електронних щоденників і журналів «Нові Знання», якими користуються тисячі школярів, батьків і вчителів. Учні й батьки бачать розклад, домашні завдання, оцінки та аналіз успішності; вчителі виставляють оцінки й ведуть розклад із телефона, зокрема частково без інтернету. Доступ для родини надає класний керівник.', 'NZ.UA is the mobile app of the Novi Znannia e-diaries and gradebooks used by thousands of students, parents and teachers. Students and parents see the timetable, homework, grades and progress analysis; teachers enter grades and manage the timetable from a phone, partly offline. Family access is granted by the class teacher.', 'Щоденник і розклад
-Домашні завдання
-Оцінки й аналіз успішності
-Кабінет педагога
-Часткова робота офлайн', 'Diary and timetable
-Homework
-Grades and progress analysis
-Teacher account
-Partial offline mode', 'Школярам, батькам і вчителям шкіл, що працюють з «Новими Знаннями».', 'Students, parents and teachers at schools using Novi Znannia.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6670438104' OR LOWER(`name`) = 'nz.ua — електронні журнали') ORDER BY `id` LIMIT 1);
+-- Takflix — Кіно й серіали онлайн
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'takflix.com' OR LOWER(`name`) = 'takflix')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Takflix', NULL, 'https://takflix.com', NULL, NULL, 'Онлайн-кінотеатр українського кіно: добірка кураторів, половина доходу йде українським кінематографістам.', 'Online cinema of Ukrainian films: curated selection, half of revenue goes to Ukrainian filmmakers.', 'Takflix — VOD-сервіс українських фільмів, відібраних кураторами. Тут зібрано одну з найбільших онлайн-колекцій українського кіно, а 50% доходу сервісу йде безпосередньо українським кінематографістам. Дивитися можна на сайті та в застосунку з будь-якої точки світу.', 'Takflix is a VOD service of Ukrainian films hand-picked by curators. It hosts one of the largest online collections of Ukrainian cinema, and 50% of revenue goes directly to Ukrainian filmmakers. Watch on the website or in the app from anywhere in the world.', 'Українські фільми від кураторів
+50% доходу — кінематографістам
+Перегляд з будь-якої країни
+Сайт і застосунок', 'Curated Ukrainian films
+50% of revenue to filmmakers
+Watch from any country
+Website and app', 'Глядачам, які шукають українське кіно, зокрема за кордоном.', 'Viewers looking for Ukrainian cinema, including abroad.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'takflix.com' OR LOWER(`name`) = 'takflix') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-education' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Novi Znannia e-diaries and gradebooks: grades, timetable, homework and a teacher’s account.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'NZ.UA is the mobile app of the Novi Znannia e-diaries and gradebooks used by thousands of students, parents and teachers. Students and parents see the timetable, homework, grades and progress analysis; teachers enter grades and manage the timetable from a phone, partly offline. Family access is granted by the class teacher.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Diary and timetable
-Homework
-Grades and progress analysis
-Teacher account
-Partial offline mode', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Students, parents and teachers at schools using Novi Znannia.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online cinema of Ukrainian films: curated selection, half of revenue goes to Ukrainian filmmakers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Takflix is a VOD service of Ukrainian films hand-picked by curators. It hosts one of the largest online collections of Ukrainian cinema, and 50% of revenue goes directly to Ukrainian filmmakers. Watch on the website or in the app from anywhere in the world.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Curated Ukrainian films
+50% of revenue to filmmakers
+Watch from any country
+Website and app', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Viewers looking for Ukrainian cinema, including abroad.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -84,29 +80,28 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- My School — щоденник — Школи, садочки та університети
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6801995276' OR LOWER(`name`) = 'my school — щоденник')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'My School — щоденник', NULL, 'https://apps.apple.com/ua/app/id6801995276', NULL, NULL, 'Електронний щоденник школи My School: розклад, оцінки з коментарями, домашні завдання й відвідуваність.', 'My School e-diary: timetable, grades with comments, homework and attendance.', 'My School — електронний щоденник для учнів і батьків школи My School. Батьки бачать розклад дитини, оцінки з коментарями вчителів і середній бал, домашні завдання з термінами, пропуски й запізнення, можуть повідомити про відсутність. Учні мають власний розклад, відмітки про виконані завдання, шкільну бібліотеку підручників і цілі. Обліковий запис створює школа.', 'My School is an e-diary for students and parents of My School. Parents see their child’s timetable, grades with teacher comments and average, homework deadlines, absences and lateness, and can report an absence. Students get their own timetable, homework check-offs, a school textbook library and goals. Accounts are created by the school.', 'Розклад уроків
-Оцінки з коментарями
-Домашні завдання
-Відвідуваність
-Бібліотека підручників', 'Lesson timetable
-Grades with comments
-Homework
-Attendance
-Textbook library', 'Учням і батькам школи My School.', 'My School students and parents.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6801995276' OR LOWER(`name`) = 'my school — щоденник') ORDER BY `id` LIMIT 1);
+-- youtv — Кіно й серіали онлайн, ТБ, новини та радіо
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1176282993' OR LOWER(`name`) = 'youtv')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'youtv', NULL, 'https://apps.apple.com/ua/app/id1176282993', NULL, NULL, 'Онлайн-ТБ і кінотеатр: 500+ каналів, 18 000+ фільмів і понад 300 каналів безкоштовно.', 'Online TV and cinema: 500+ channels, 18,000+ films and 300+ free channels.', 'youtv — інтерактивне українське телебачення й онлайн-кінотеатр. 500+ телеканалів (350+ у HD), понад 18 000 фільмів і HD/Full HD-контент; понад 300 каналів, зокрема «Єдині новини», ICTV, Інтер і Суспільне, доступні безкоштовно. Є 7 днів безкоштовного доступу без привʼязки картки.', 'youtv is interactive Ukrainian television and an online cinema with 500+ TV channels (350+ in HD), 18,000+ films and HD/Full HD content; over 300 channels, including the national news marathon, ICTV, Inter and Suspilne, are free. There is a 7-day free trial without a card.', '500+ телеканалів
+18 000+ фільмів
+300+ каналів безкоштовно
+7 днів без привʼязки картки', '500+ TV channels
+18,000+ films
+300+ free channels
+7-day trial without a card', 'Глядачам ТБ, фільмів і серіалів.', 'TV, film and series viewers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1176282993' OR LOWER(`name`) = 'youtv') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'My School e-diary: timetable, grades with comments, homework and attendance.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'My School is an e-diary for students and parents of My School. Parents see their child’s timetable, grades with teacher comments and average, homework deadlines, absences and lateness, and can report an absence. Students get their own timetable, homework check-offs, a school textbook library and goals. Accounts are created by the school.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Lesson timetable
-Grades with comments
-Homework
-Attendance
-Textbook library', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'My School students and parents.', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-media' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online TV and cinema: 500+ channels, 18,000+ films and 300+ free channels.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'youtv is interactive Ukrainian television and an online cinema with 500+ TV channels (350+ in HD), 18,000+ films and HD/Full HD content; over 300 channels, including the national news marathon, ICTV, Inter and Suspilne, are free. There is a 7-day free trial without a card.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '500+ TV channels
+18,000+ films
+300+ free channels
+7-day trial without a card', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'TV, film and series viewers.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -116,31 +111,28 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Sadok — Школи, садочки та університети, Для бізнесу та ФОП
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sadok.app' OR LOWER(`name`) = 'sadok')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sadok', NULL, 'https://sadok.app', NULL, NULL, 'CRM для дитячих садочків і центрів розвитку: відвідуваність, нарахування, рахунки батькам і оплати.', 'CRM for kindergartens and kids’ centers: attendance, charges, invoices to parents and payments.', 'Sadok — CRM-система для керівників, адміністраторів, вихователів і батьків дитячих садочків, центрів і просторів розвитку та студій. Вона автоматизує нарахування й абонементи, облік харчування та додаткових послуг, формує рахунки батькам з урахуванням пропусків, автоматично фіксує оплати через банківську інтеграцію й показує баланси вихованців.', 'Sadok is a CRM for managers, administrators, educators and parents at kindergartens, kids’ development centers and studios. It automates charges and memberships, tracks meals and extra services, issues invoices to parents taking absences into account, records payments via bank integration and shows each child’s balance.', 'Автоматичні нарахування й абонементи
-Рахунки батькам у 2 кліки
-Автофіксація оплат через банк
-Баланси вихованців
-Нагадування про оплату', 'Automatic charges and memberships
-Invoices to parents in 2 clicks
-Automatic bank payment matching
-Child balances
-Payment reminders', 'Керівникам і адміністраторам садочків та дитячих центрів, батькам.', 'Kindergarten and kids’ center managers, and parents.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sadok.app' OR LOWER(`name`) = 'sadok') ORDER BY `id` LIMIT 1);
+-- Vodafone TV — Кіно й серіали онлайн, ТБ, новини та радіо
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6447689855' OR LOWER(`name`) = 'vodafone tv')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Vodafone TV', NULL, 'https://apps.apple.com/ua/app/id6447689855', NULL, NULL, 'Телебачення, фільми й серіали від Vodafone Україна в HD і 4K, з переглядом офлайн.', 'TV, films and series from Vodafone Ukraine in HD and 4K, with offline viewing.', 'Vodafone TV — сервіс Vodafone Україна з бібліотекою відеоконтенту в HD і 4K: українські та міжнародні телеканали наживо, фільми й серіали провідних студій. Фільми можна завантажити й дивитися офлайн без інтернету.', 'Vodafone TV is Vodafone Ukraine’s service with an HD and 4K video library: live Ukrainian and international TV channels and films and series from leading studios. Films can be downloaded and watched offline.', 'ТБ-канали наживо
+Фільми й серіали
+HD і 4K
+Перегляд офлайн', 'Live TV channels
+Films and series
+HD and 4K
+Offline viewing', 'Абонентам Vodafone і всім глядачам.', 'Vodafone subscribers and all viewers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6447689855' OR LOWER(`name`) = 'vodafone tv') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-business' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-media' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'CRM for kindergartens and kids’ centers: attendance, charges, invoices to parents and payments.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sadok is a CRM for managers, administrators, educators and parents at kindergartens, kids’ development centers and studios. It automates charges and memberships, tracks meals and extra services, issues invoices to parents taking absences into account, records payments via bank integration and shows each child’s balance.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Automatic charges and memberships
-Invoices to parents in 2 clicks
-Automatic bank payment matching
-Child balances
-Payment reminders', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kindergarten and kids’ center managers, and parents.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'TV, films and series from Vodafone Ukraine in HD and 4K, with offline viewing.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Vodafone TV is Vodafone Ukraine’s service with an HD and 4K video library: live Ukrainian and international TV channels and films and series from leading studios. Films can be downloaded and watched offline.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Live TV channels
+Films and series
+HD and 4K
+Offline viewing', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Vodafone subscribers and all viewers.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -150,28 +142,26 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- ЄАС — Єдина атестаційна система — Школи, садочки та університети, Освіта
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6755683551' OR LOWER(`name`) = 'єас — єдина атестаційна система')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ЄАС — Єдина атестаційна система', NULL, 'https://apps.apple.com/ua/app/id6755683551', NULL, NULL, 'Національна платформа атестації педагогів: заяви, документи й результати атестації онлайн.', 'National platform for teacher certification: applications, documents and results online.', 'ЄАС (Єдина атестаційна система) — національна електронна платформа для атестації педагогічних працівників. Педагоги створюють електронний профіль, подають заяву й документи онлайн; характеристики, відгуки, сертифікати й накази формуються та перевіряються автоматично, а результати зберігаються в централізованій базі з аналітикою для органів управління освітою.', 'EAS (Unified Certification System) is a national e-platform for certifying teaching staff. Teachers create an e-profile and submit applications and documents online; references, certificates and orders are generated and checked automatically, and results are stored in a central database with analytics for education authorities.', 'Електронний профіль педагога
-Подання документів онлайн
-Автоматичні атестаційні матеріали
-Історія атестацій', 'Teacher e-profile
-Online document submission
-Automatic certification materials
-Certification history', 'Вчителям і закладам освіти.', 'Teachers and educational institutions.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6755683551' OR LOWER(`name`) = 'єас — єдина атестаційна система') ORDER BY `id` LIMIT 1);
+-- Твоя Сінематика — Кіно й серіали онлайн
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cinematyka.app' OR LOWER(`name`) = 'твоя сінематика')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Твоя Сінематика', NULL, 'https://cinematyka.app', NULL, NULL, 'Особиста бібліотека кіно й серіалів: оцінюй фільми свайпами, веди власний топ і статистику.', 'Personal film and series library: rate titles by swiping, keep your own top list and stats.', '«Твоя Сінематика» — особиста бібліотека кіно й серіалів. Стрічки гортаються як картки: вправо — бачено (що далі тягнеш, то вища оцінка від 1 до 10), вліво — ще не бачено, вгору — «На потім». З оцінок автоматично складаються бібліотека, власний топ і статистика.', 'Tvoia Sinematyka is a personal film and series library. Titles are swiped like cards: right means watched (the further you drag, the higher the 1–10 rating), left means not seen, up means “Later”. Your ratings build a library, your own top list and statistics.', 'Оцінювання свайпами
+Список «На потім»
+Власний топ фільмів
+Статистика переглядів', 'Swipe ratings
+“Later” list
+Your own top list
+Viewing statistics', 'Кіноманам, які хочуть вести облік переглянутого.', 'Film fans who want to track what they have watched.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cinematyka.app' OR LOWER(`name`) = 'твоя сінематика') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-education' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'National platform for teacher certification: applications, documents and results online.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'EAS (Unified Certification System) is a national e-platform for certifying teaching staff. Teachers create an e-profile and submit applications and documents online; references, certificates and orders are generated and checked automatically, and results are stored in a central database with analytics for education authorities.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Teacher e-profile
-Online document submission
-Automatic certification materials
-Certification history', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Teachers and educational institutions.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Personal film and series library: rate titles by swiping, keep your own top list and stats.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Tvoia Sinematyka is a personal film and series library. Titles are swiped like cards: right means watched (the further you drag, the higher the 1–10 rating), left means not seen, up means “Later”. Your ratings build a library, your own top list and statistics.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Swipe ratings
+“Later” list
+Your own top list
+Viewing statistics', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Film fans who want to track what they have watched.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -181,29 +171,26 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Обирай ХАІ — Школи, садочки та університети
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6756081653' OR LOWER(`name`) = 'обирай хаі')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Обирай ХАІ', NULL, 'https://apps.apple.com/ua/app/id6756081653', NULL, NULL, 'Застосунок для вступників до ХАІ: умови вступу, прохідні бали, події та асистент вступу.', 'App for applicants to KhAI: admission rules, passing scores, events and an admission assistant.', '«Обирай ХАІ» — офіційний застосунок для абітурієнтів Національного аерокосмічного університету «Харківський авіаційний інститут». У ньому можна дізнатися про університет і спеціальності, етапи вступної кампанії, потрібні предмети НМТ і прохідні бали минулих років, оцінити свої шанси в асистенті вступу, переглянути події для абітурієнтів і звʼязатися з приймальною комісією.', 'Choose KhAI is the official app for applicants to the National Aerospace University “Kharkiv Aviation Institute”. You can learn about the university and programs, admission stages, required NMT subjects and past passing scores, estimate your chances with the admission assistant, see events for applicants and contact the admissions office.', 'Умови вступу й предмети НМТ
-Прохідні бали минулих років
-Асистент вступу
-Події для абітурієнтів
-Звʼязок із приймальною комісією', 'Admission rules and NMT subjects
-Past passing scores
-Admission assistant
-Events for applicants
-Admissions office contact', 'Випускникам шкіл і коледжів, які обирають ХАІ, та їхнім батькам.', 'School and college graduates considering KhAI, and their parents.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6756081653' OR LOWER(`name`) = 'обирай хаі') ORDER BY `id` LIMIT 1);
+-- Вкіно — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vkino.com.ua' OR LOWER(`name`) = 'вкіно')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Вкіно', NULL, 'https://vkino.com.ua', NULL, NULL, 'Купівля квитків у кінотеатри України онлайн: афіша, вибір сеансу й місць, оплата карткою.', 'Buy cinema tickets across Ukraine online: listings, session and seat choice, card payment.', 'Вкіно — застосунок для купівлі квитків у кіно без черг. Можна переглянути афішу, обрати фільм, кінотеатр і найкращі місця та оплатити банківською карткою з телефона.', 'Vkino is an app for buying cinema tickets without queues. Browse listings, choose a film, cinema and the best seats, and pay by card from your phone.', 'Афіша кінотеатрів
+Вибір сеансу й місць
+Оплата карткою
+Електронні квитки', 'Cinema listings
+Session and seat choice
+Card payment
+E-tickets', 'Глядачам кінотеатрів.', 'Cinema-goers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vkino.com.ua' OR LOWER(`name`) = 'вкіно') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'App for applicants to KhAI: admission rules, passing scores, events and an admission assistant.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Choose KhAI is the official app for applicants to the National Aerospace University “Kharkiv Aviation Institute”. You can learn about the university and programs, admission stages, required NMT subjects and past passing scores, estimate your chances with the admission assistant, see events for applicants and contact the admissions office.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Admission rules and NMT subjects
-Past passing scores
-Admission assistant
-Events for applicants
-Admissions office contact', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School and college graduates considering KhAI, and their parents.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Buy cinema tickets across Ukraine online: listings, session and seat choice, card payment.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Vkino is an app for buying cinema tickets without queues. Browse listings, choose a film, cinema and the best seats, and pay by card from your phone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Cinema listings
+Session and seat choice
+Card payment
+E-tickets', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cinema-goers.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -213,28 +200,26 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Learning.ua — Школи, садочки та університети, Освіта
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'learning.ua' OR LOWER(`name`) = 'learning.ua')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Learning.ua', NULL, 'https://learning.ua', NULL, NULL, 'Інтерактивні завдання з математики та української мови для учнів, батьків і вчителів.', 'Interactive maths and Ukrainian language exercises for students, parents and teachers.', 'Learning.ua — навчальна платформа з математики та української мови. Учні розвʼязують сотні інтерактивних завдань, отримують нагороди й змагаються в лізі; батьки стежать за прогресом кількох дітей; вчителі створюють класи до 35 учнів, власну програму, призначають завдання й контролюють виконання.', 'Learning.ua is a learning platform for maths and Ukrainian. Students solve hundreds of interactive exercises, earn rewards and compete in a league; parents track several children’s progress; teachers create classes of up to 35 students, build their own curriculum, assign tasks and monitor completion.', 'Сотні завдань з математики й української
-Прогрес для батьків
-Класи для вчителів
-Нагороди, ліга й рейтинг', 'Hundreds of maths and Ukrainian tasks
-Progress for parents
-Classes for teachers
-Rewards, league and ranking', 'Школярам молодших і середніх класів, батькам і вчителям.', 'Primary and middle school students, parents and teachers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'learning.ua' OR LOWER(`name`) = 'learning.ua') ORDER BY `id` LIMIT 1);
+-- Сінема Сіті — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cinemaciti.ua' OR LOWER(`name`) = 'сінема сіті')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Сінема Сіті', NULL, 'https://cinemaciti.ua', NULL, NULL, 'Застосунок мережі кінотеатрів Сінема Сіті: квитки без реєстрації, кешбек, промокоди й сертифікати.', 'Cinema Citi chain app: tickets without registration, cashback, promo codes and gift cards.', 'Застосунок мережі кінотеатрів «Сінема Сіті» дає змогу швидко купити квитки без реєстрації або зареєструватися за 5 секунд і отримувати кешбек на рахунок, використовувати промокоди й подарункові сертифікати онлайн.', 'The Cinema Citi cinema chain app lets you quickly buy tickets without registering, or sign up in 5 seconds to earn cashback, use promo codes and redeem gift certificates online.', 'Квитки без реєстрації
+Кешбек
+Промокоди
+Подарункові сертифікати', 'Tickets without registration
+Cashback
+Promo codes
+Gift certificates', 'Глядачам кінотеатрів «Сінема Сіті».', 'Cinema Citi visitors.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cinemaciti.ua' OR LOWER(`name`) = 'сінема сіті') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-education' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Interactive maths and Ukrainian language exercises for students, parents and teachers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Learning.ua is a learning platform for maths and Ukrainian. Students solve hundreds of interactive exercises, earn rewards and compete in a league; parents track several children’s progress; teachers create classes of up to 35 students, build their own curriculum, assign tasks and monitor completion.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hundreds of maths and Ukrainian tasks
-Progress for parents
-Classes for teachers
-Rewards, league and ranking', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Primary and middle school students, parents and teachers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Cinema Citi chain app: tickets without registration, cashback, promo codes and gift cards.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Cinema Citi cinema chain app lets you quickly buy tickets without registering, or sign up in 5 seconds to earn cashback, use promo codes and redeem gift certificates online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tickets without registration
+Cashback
+Promo codes
+Gift certificates', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cinema Citi visitors.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -244,29 +229,26 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Просте ЗНО/НМТ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1533304985' OR LOWER(`name`) = 'просте зно/нмт')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Просте ЗНО/НМТ', NULL, 'https://apps.apple.com/ua/app/id1533304985', NULL, NULL, 'Тести ЗНО 2009–2021 і НМТ 2022–2025, 8+ ігрових режимів і розрахунок балів мультитесту.', 'ZNO tests 2009–2021 and NMT 2022–2025, 8+ game modes and multitest score calculation.', 'ПростеЗНО — застосунок для підготовки до НМТ. У ньому всі тести ЗНО з 2009 по 2021 рік і НМТ за 2022–2025 роки з української мови й літератури, історії України, англійської, математики, біології, хімії та фізики, авторські тести команди, понад 8 ігрових режимів, розумний підбір питань, пояснення викладачів і розрахунок балів за таблицями МОН. Для англійської є аудіювання.', 'ProsteZNO is an NMT prep app with all ZNO tests from 2009–2021 and NMT tests from 2022–2025 in Ukrainian language and literature, Ukrainian history, English, maths, biology, chemistry and physics, plus the team’s own tests, 8+ game modes, smart question selection, teacher explanations and score calculation using Ministry tables. English includes listening.', 'Тести ЗНО 2009–2021 і НМТ 2022–2025
-8+ ігрових режимів
-Розрахунок балів мультитесту
-Пояснення викладачів
-Аудіювання з англійської', 'ZNO 2009–2021 and NMT 2022–2025 tests
-8+ game modes
-Multitest score calculator
-Teacher explanations
-English listening', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1533304985' OR LOWER(`name`) = 'просте зно/нмт') ORDER BY `id` LIMIT 1);
+-- Wizoria — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wizoria.ua' OR LOWER(`name`) = 'wizoria')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Wizoria', NULL, 'https://wizoria.ua', NULL, NULL, 'Застосунок мережі кінотеатрів Wizoria: квитки, кешбек Wizoria, промокоди й сертифікати.', 'Wizoria cinema chain app: tickets, Wizoria cashback, promo codes and gift cards.', 'Застосунок мережі кінотеатрів Wizoria дозволяє купувати чи бронювати квитки без реєстрації або з акаунтом, отримувати Wizoria Cashback, застосовувати промокоди на знижки й подарункові сертифікати та синхронізувати дані із сайтом.', 'The Wizoria cinema chain app lets you buy or book tickets with or without an account, earn Wizoria Cashback, apply discount promo codes and gift certificates, and sync with the website.', 'Купівля й бронювання квитків
+Wizoria Cashback
+Промокоди
+Подарункові сертифікати', 'Ticket purchase and booking
+Wizoria Cashback
+Promo codes
+Gift certificates', 'Глядачам кінотеатрів Wizoria.', 'Wizoria cinema visitors.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wizoria.ua' OR LOWER(`name`) = 'wizoria') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'ZNO tests 2009–2021 and NMT 2022–2025, 8+ game modes and multitest score calculation.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ProsteZNO is an NMT prep app with all ZNO tests from 2009–2021 and NMT tests from 2022–2025 in Ukrainian language and literature, Ukrainian history, English, maths, biology, chemistry and physics, plus the team’s own tests, 8+ game modes, smart question selection, teacher explanations and score calculation using Ministry tables. English includes listening.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'ZNO 2009–2021 and NMT 2022–2025 tests
-8+ game modes
-Multitest score calculator
-Teacher explanations
-English listening', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Wizoria cinema chain app: tickets, Wizoria cashback, promo codes and gift cards.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Wizoria cinema chain app lets you buy or book tickets with or without an account, earn Wizoria Cashback, apply discount promo codes and gift certificates, and sync with the website.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ticket purchase and booking
+Wizoria Cashback
+Promo codes
+Gift certificates', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Wizoria cinema visitors.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -276,26 +258,26 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- НМТ на 200 — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmtna200.vgroupe.academy' OR LOWER(`name`) = 'нмт на 200')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'НМТ на 200', NULL, 'https://nmtna200.vgroupe.academy', NULL, NULL, 'Персональний репетитор для НМТ: тести за програмою МОН, короткі конспекти й симуляція іспиту.', 'A pocket NMT tutor: Ministry-aligned tests, short notes and exam simulation.', '«НМТ на 200» — застосунок для підготовки до національного мультипредметного тесту. Тести минулих років і авторські завдання за програмою МОН, короткі конспекти з таблицями й формулами, аналітика сильних і слабких тем та симуляція реального іспиту з розподілом часу між предметами.', 'NMT na 200 is an NMT preparation app with past and original tests aligned with the Ministry curriculum, short notes with tables and formulas, analytics of strong and weak topics and a realistic exam simulation with time split across subjects.', 'Тести за програмою МОН
-Короткі конспекти
-Аналітика прогресу
-Симуляція іспиту', 'Ministry-aligned tests
-Short notes
-Progress analytics
-Exam simulation', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmtna200.vgroupe.academy' OR LOWER(`name`) = 'нмт на 200') ORDER BY `id` LIMIT 1);
+-- SmartCinema — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'smartcinema.ua' OR LOWER(`name`) = 'smartcinema')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'SmartCinema', NULL, 'https://smartcinema.ua', NULL, NULL, 'Застосунок кінотеатру SmartCinema: розклад сеансів, онлайн-квитки з QR-кодом і бонуси.', 'SmartCinema app: session schedule, online tickets with QR code and bonuses.', 'Застосунок кінотеатру SmartCinema: актуальний розклад сеансів, купівля квитків онлайн і електронні квитки з QR-кодом, які не потрібно друкувати. Вхід за бонусною карткою показує бали на бонусному рахунку.', 'The SmartCinema app offers the current session schedule, online ticket purchase and QR e-tickets that don’t need printing. Logging in with your bonus card shows your bonus balance.', 'Розклад сеансів
+Онлайн-квитки
+QR-квитки без друку
+Бонусний рахунок', 'Session schedule
+Online tickets
+QR tickets, no printing
+Bonus account', 'Глядачам кінотеатру SmartCinema.', 'SmartCinema visitors.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'smartcinema.ua' OR LOWER(`name`) = 'smartcinema') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'A pocket NMT tutor: Ministry-aligned tests, short notes and exam simulation.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'NMT na 200 is an NMT preparation app with past and original tests aligned with the Ministry curriculum, short notes with tables and formulas, analytics of strong and weak topics and a realistic exam simulation with time split across subjects.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ministry-aligned tests
-Short notes
-Progress analytics
-Exam simulation', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'SmartCinema app: session schedule, online tickets with QR code and bonuses.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The SmartCinema app offers the current session schedule, online ticket purchase and QR e-tickets that don’t need printing. Logging in with your bonus card shows your bonus balance.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Session schedule
+Online tickets
+QR tickets, no printing
+Bonus account', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'SmartCinema visitors.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -305,23 +287,29 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- MathCorp — НМТ/ЗНО — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mathcorporation.com/app' OR LOWER(`name`) = 'mathcorp — нмт/зно')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MathCorp — НМТ/ЗНО', NULL, 'https://www.mathcorporation.com/app', NULL, NULL, 'Інтерактивна платформа підготовки до НМТ і ЗНО: щоденні тести, статистика й аналіз результатів.', 'Interactive NMT and ZNO prep platform: daily tests, statistics and result analysis.', 'MathCorp — інтерактивна освітня платформа для підготовки до НМТ і ЗНО. Школярі щодня тренуються в онлайн-тестах, відстежують прогрес і аналізують результати.', 'MathCorp is an interactive learning platform for NMT and ZNO preparation. Students practice online tests daily, track progress and analyse their results.', 'Онлайн-тести НМТ і ЗНО
-Статистика й аналіз
-Щоденні тренування', 'NMT and ZNO online tests
-Statistics and analysis
-Daily practice', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mathcorporation.com/app' OR LOWER(`name`) = 'mathcorp — нмт/зно') ORDER BY `id` LIMIT 1);
+-- Слухай UA — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slukhai.com.ua' OR LOWER(`name`) = 'слухай ua')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Слухай UA', NULL, 'https://slukhai.com.ua', NULL, NULL, 'Українське радіо, подкасти, музика й новини онлайн в одному застосунку від ТРК «Люкс».', 'Ukrainian radio, podcasts, music and news online in one app from TRK Lux.', 'Слухай UA — аудіосервіс ТРК «Люкс», де в одному застосунку зібрано FM-станції та прямі ефіри, подкасти, музику й новини. Відтворення не переривається у фоні, тож слухати можна будь-де й будь-коли.', 'Slukhai UA is TRK Lux’s audio service bringing FM stations and live broadcasts, podcasts, music and news into one app. Playback keeps going in the background, so you can listen anywhere, anytime.', 'FM-радіо й прямі ефіри
+Подкасти
+Музика
+Новини
+Фонове відтворення', 'FM radio and live broadcasts
+Podcasts
+Music
+News
+Background playback', 'Слухачам українського радіо й подкастів.', 'Ukrainian radio and podcast listeners.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slukhai.com.ua' OR LOWER(`name`) = 'слухай ua') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Interactive NMT and ZNO prep platform: daily tests, statistics and result analysis.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MathCorp is an interactive learning platform for NMT and ZNO preparation. Students practice online tests daily, track progress and analyse their results.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'NMT and ZNO online tests
-Statistics and analysis
-Daily practice', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian radio, podcasts, music and news online in one app from TRK Lux.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Slukhai UA is TRK Lux’s audio service bringing FM stations and live broadcasts, podcasts, music and news into one app. Playback keeps going in the background, so you can listen anywhere, anytime.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'FM radio and live broadcasts
+Podcasts
+Music
+News
+Background playback', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Ukrainian radio and podcast listeners.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -331,26 +319,20 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- ЗНОХАБ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6742744326' OR LOWER(`name`) = 'знохаб')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ЗНОХАБ', NULL, 'https://apps.apple.com/ua/app/id6742744326', NULL, NULL, 'Онлайн-школа підготовки до НМТ: заняття наживо й у записі, практика та перевірка знань з 7 предметів.', 'NMT prep school: live and recorded classes, practice and knowledge checks in 7 subjects.', 'ЗНОХАБ — онлайн-школа підготовки до НМТ. У застосунку доступні заняття онлайн і в записі, регулярна практика й перевірка знань з української мови, математики, історії України, англійської, української літератури, географії та біології. За даними школи, понад 600 випускників отримали 200 балів на НМТ.', 'ZNOHUB is an online NMT prep school. The app offers live and recorded classes, regular practice and knowledge checks in Ukrainian, maths, Ukrainian history, English, Ukrainian literature, geography and biology. According to the school, more than 600 graduates scored 200 on the NMT.', 'Заняття онлайн і в записі
-Практика й перевірка знань
-7 предметів НМТ
-Досвідчені викладачі', 'Live and recorded classes
-Practice and checks
-7 NMT subjects
-Experienced teachers', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6742744326' OR LOWER(`name`) = 'знохаб') ORDER BY `id` LIMIT 1);
+-- Перець FM — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'perec.fm' OR LOWER(`name`) = 'перець fm')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Перець FM', NULL, 'https://perec.fm', NULL, NULL, 'Перша й єдина гумористична радіостанція України — у застосунку.', 'Ukraine’s first and only comedy radio station — in an app.', 'Перець FM — перша й єдина гумористична радіостанція України. У застосунку можна слухати її прямий ефір.', 'Perets FM is Ukraine’s first and only comedy radio station. The app streams its live broadcast.', 'Прямий ефір
+Гумор і музика', 'Live broadcast
+Comedy and music', 'Тим, хто любить гумор у радіоефірі.', 'Fans of comedy radio.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'perec.fm' OR LOWER(`name`) = 'перець fm') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'NMT prep school: live and recorded classes, practice and knowledge checks in 7 subjects.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ZNOHUB is an online NMT prep school. The app offers live and recorded classes, regular practice and knowledge checks in Ukrainian, maths, Ukrainian history, English, Ukrainian literature, geography and biology. According to the school, more than 600 graduates scored 200 on the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Live and recorded classes
-Practice and checks
-7 NMT subjects
-Experienced teachers', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukraine’s first and only comedy radio station — in an app.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Perets FM is Ukraine’s first and only comedy radio station. The app streams its live broadcast.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Live broadcast
+Comedy and music', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Fans of comedy radio.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -360,29 +342,399 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Наголоси НМТ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nagolocy.com' OR LOWER(`name`) = 'наголоси нмт')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Наголоси НМТ', NULL, 'https://www.nagolocy.com', NULL, NULL, 'Щоденне тренування наголосів і української мови для НМТ: 5–15 хвилин, місії, лідерборд, офлайн.', 'Daily Ukrainian stress and language practice for the NMT: 5–15 minutes, missions, leaderboard, offline.', '«Наголоси» допомагають регулярно тренувати українську, закріплювати матеріал і бачити прогрес. Коротка практика 5–15 хвилин на день, розумне повторення, місії, досягнення й лідерборд; працює офлайн. Підходить для підготовки до НМТ і для всіх, хто хоче говорити грамотніше.', 'Naholosy helps you practice Ukrainian regularly, reinforce material and see your progress. Short 5–15 minute daily sessions, smart repetition, missions, achievements and a leaderboard; works offline. Good for NMT prep and for anyone wanting to speak more correctly.', 'Тренування наголосів
-Практика 5–15 хвилин на день
-Розумне повторення
-Місії й лідерборд
-Офлайн', 'Stress practice
-5–15 minutes a day
-Smart repetition
-Missions and leaderboard
-Offline', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nagolocy.com' OR LOWER(`name`) = 'наголоси нмт') ORDER BY `id` LIMIT 1);
+-- DJFM — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'djfm.ua' OR LOWER(`name`) = 'djfm')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'DJFM', NULL, 'https://djfm.ua', NULL, NULL, 'Радіостанція DJFM: танцювальні хіти, спілкування зі слухачами, конкурси й розіграші.', 'DJFM radio: dance hits, listener interaction, contests and giveaways.', 'DJFM — радіостанція нового покоління, що поєднує танцювальні хіти зі спілкуванням зі слухачами, конкурсами, розіграшами та корисною інформацією. Застосунок транслює прямий ефір.', 'DJFM is a new-generation radio station combining dance hits with listener interaction, contests, giveaways and useful information. The app streams the live broadcast.', 'Прямий ефір
+Танцювальні хіти
+Конкурси й розіграші', 'Live broadcast
+Dance hits
+Contests and giveaways', 'Слухачам танцювальної музики.', 'Dance music listeners.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'djfm.ua' OR LOWER(`name`) = 'djfm') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Daily Ukrainian stress and language practice for the NMT: 5–15 minutes, missions, leaderboard, offline.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Naholosy helps you practice Ukrainian regularly, reinforce material and see your progress. Short 5–15 minute daily sessions, smart repetition, missions, achievements and a leaderboard; works offline. Good for NMT prep and for anyone wanting to speak more correctly.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Stress practice
-5–15 minutes a day
-Smart repetition
-Missions and leaderboard
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'DJFM radio: dance hits, listener interaction, contests and giveaways.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'DJFM is a new-generation radio station combining dance hits with listener interaction, contests, giveaways and useful information. The app streams the live broadcast.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Live broadcast
+Dance hits
+Contests and giveaways', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Dance music listeners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Svoe Radio — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6760871153' OR LOWER(`name`) = 'svoe radio')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Svoe Radio', NULL, 'https://apps.apple.com/ua/app/id6760871153', NULL, NULL, 'Онлайн-радіо з найкращою українською музикою 24/7 у будь-якій точці світу.', 'Online radio playing the best Ukrainian music 24/7 anywhere in the world.', 'Svoe Radio — персональна онлайн-радіостанція, що транслює найкращу українську музику 24/7 у будь-якій точці світу. Створена для тих, хто любить рідні хіти й підтримує українських виконавців.', 'Svoe Radio is a personal online radio station streaming the best Ukrainian music 24/7 anywhere in the world, made for people who love Ukrainian hits and support Ukrainian artists.', 'Українська музика 24/7
+Слухати з будь-якої країни
+Підтримка українських виконавців', 'Ukrainian music 24/7
+Listen from any country
+Support for Ukrainian artists', 'Шанувальникам української музики, зокрема за кордоном.', 'Fans of Ukrainian music, including abroad.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6760871153' OR LOWER(`name`) = 'svoe radio') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online radio playing the best Ukrainian music 24/7 anywhere in the world.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Svoe Radio is a personal online radio station streaming the best Ukrainian music 24/7 anywhere in the world, made for people who love Ukrainian hits and support Ukrainian artists.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ukrainian music 24/7
+Listen from any country
+Support for Ukrainian artists', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Fans of Ukrainian music, including abroad.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Radio Ukraine FM & AM Online — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'radioua.com.ua' OR LOWER(`name`) = 'radio ukraine fm & am online')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Radio Ukraine FM & AM Online', NULL, 'https://radioua.com.ua', NULL, NULL, 'Близько 350 українських радіостанцій: пошук за жанром і містом, поточна пісня й подкасти.', 'About 350 Ukrainian radio stations: search by genre and city, current song and podcasts.', 'Застосунок із близько 350 FM- та онлайн-радіостанціями України: поп, рок, фолк, танцювальна музика, новини, спорт і подкасти. Станції можна шукати за назвою, жанром чи містом, бачити назву й обкладинку поточної пісні. Безкоштовно й без реєстрації.', 'An app with about 350 Ukrainian FM and online radio stations: pop, rock, folk, dance, news, sports and podcasts. Search stations by name, genre or city and see the title and cover of the current song. Free, no registration.', '~350 радіостанцій України
+Пошук за жанром і містом
+Поточна пісня
+Подкасти
+Без реєстрації', '~350 Ukrainian stations
+Search by genre and city
+Current song
+Podcasts
+No registration', 'Слухачам українського радіо.', 'Ukrainian radio listeners.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'radioua.com.ua' OR LOWER(`name`) = 'radio ukraine fm & am online') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'About 350 Ukrainian radio stations: search by genre and city, current song and podcasts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'An app with about 350 Ukrainian FM and online radio stations: pop, rock, folk, dance, news, sports and podcasts. Search stations by name, genre or city and see the title and cover of the current song. Free, no registration.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '~350 Ukrainian stations
+Search by genre and city
+Current song
+Podcasts
+No registration', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Ukrainian radio listeners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Радіо «Дзвони» — Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dzvony.fm' OR LOWER(`name`) = 'радіо «дзвони»')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Радіо «Дзвони»', NULL, 'https://dzvony.fm', NULL, NULL, 'Християнське Радіо «Дзвони» 105.8 FM: прямий ефір, розклад програм і Євангеліє дня.', 'Christian Radio Dzvony 105.8 FM: live broadcast, program schedule and daily Gospel.', 'Застосунок християнського Радіо «Дзвони» 105.8 FM: пряма трансляція, розклад програм, Євангеліє дня та молитви.', 'The app of the Christian Radio Dzvony 105.8 FM: live broadcast, program schedule, the daily Gospel and prayers.', 'Прямий ефір
+Розклад програм
+Євангеліє дня
+Молитви', 'Live broadcast
+Program schedule
+Daily Gospel
+Prayers', 'Слухачам християнського радіо.', 'Christian radio listeners.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dzvony.fm' OR LOWER(`name`) = 'радіо «дзвони»') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Christian Radio Dzvony 105.8 FM: live broadcast, program schedule and daily Gospel.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The app of the Christian Radio Dzvony 105.8 FM: live broadcast, program schedule, the daily Gospel and prayers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Live broadcast
+Program schedule
+Daily Gospel
+Prayers', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Christian radio listeners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Крокодил Українською — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kram.fun' OR LOWER(`name`) = 'крокодил українською')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Крокодил Українською', NULL, 'https://kram.fun', NULL, NULL, 'Гра для компанії: покажи слово жестами й мімікою, а команда відгадує.', 'Party game: act out a word with gestures and the team guesses.', '«Крокодил Українською» — гра для вечірки, сімейного відпочинку чи зустрічі з друзями. Один гравець показує слово жестами й мімікою, не промовляючи його, а решта намагаються відгадати.', 'Krokodyl in Ukrainian is a game for parties, family time or meeting friends. One player acts out a word with gestures and facial expressions without speaking, and the others try to guess it.', 'Слова українською
+Гра для компанії
+Один телефон на всіх', 'Ukrainian words
+Party game
+One phone for all', 'Компаніям друзів, родинам і всім, хто любить ігри в слова.', 'Groups of friends, families and word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kram.fun' OR LOWER(`name`) = 'крокодил українською') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Party game: act out a word with gestures and the team guesses.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Krokodyl in Ukrainian is a game for parties, family time or meeting friends. One player acts out a word with gestures and facial expressions without speaking, and the others try to guess it.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ukrainian words
+Party game
+One phone for all', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Groups of friends, families and word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Поясни Слово — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6745406565' OR LOWER(`name`) = 'поясни слово')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Поясни Слово', NULL, 'https://apps.apple.com/ua/app/id6745406565', NULL, NULL, 'Гра в слова для компаній: понад 13 500 слів, поясни на час без однокореневих слів.', 'Party word game: 13,500+ words, explain against the clock without using root words.', '«Поясни Слово» — класична гра в слова для компаній з понад 13 500 словами. Гравці пояснюють слова на час, не називаючи однокореневих, і змагаються командами. Цифровий аналог улюбленої настільної гри.', 'Explain the Word is a classic party word game with 13,500+ words. Players explain words against the clock without using words with the same root and compete in teams — a digital version of the favourite board game.', '13 500+ слів
+Командна гра на час
+Цифровий аналог настілки', '13,500+ words
+Timed team game
+Digital board game', 'Компаніям друзів, родинам і всім, хто любить ігри в слова.', 'Groups of friends, families and word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6745406565' OR LOWER(`name`) = 'поясни слово') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Party word game: 13,500+ words, explain against the clock without using root words.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Explain the Word is a classic party word game with 13,500+ words. Players explain words against the clock without using words with the same root and compete in teams — a digital version of the favourite board game.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '13,500+ words
+Timed team game
+Digital board game', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Groups of friends, families and word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Аліас: гра в слова (aliasgame.com.ua) — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'aliasgame.com.ua' OR LOWER(`name`) = 'аліас: гра в слова (aliasgame.com.ua)')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Аліас: гра в слова (aliasgame.com.ua)', NULL, 'https://aliasgame.com.ua', NULL, NULL, 'Аліас для вечірок: понад 10 000 слів у 30+ категоріях, команди й раунди на час.', 'Alias for parties: 10,000+ words in 30+ categories, teams and timed rounds.', 'Alias — гра для вечірок, у якій гравці пояснюють слова своїй команді, не використовуючи спільнокореневих слів чи перекладів. Понад 10 000 слів у більш ніж 30 категоріях; виграє команда, що набрала найбільше очок за всі раунди.', 'Alias is a party game where players explain words to their team without using related words or translations. It has 10,000+ words in more than 30 categories; the team with the most points after all rounds wins.', '10 000+ слів
+30+ категорій
+Команди й раунди на час', '10,000+ words
+30+ categories
+Teams and timed rounds', 'Компаніям друзів, родинам і всім, хто любить ігри в слова.', 'Groups of friends, families and word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'aliasgame.com.ua' OR LOWER(`name`) = 'аліас: гра в слова (aliasgame.com.ua)') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Alias for parties: 10,000+ words in 30+ categories, teams and timed rounds.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Alias is a party game where players explain words to their team without using related words or translations. It has 10,000+ words in more than 30 categories; the team with the most points after all rounds wins.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '10,000+ words
+30+ categories
+Teams and timed rounds', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Groups of friends, families and word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Аліас Українською — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'haibude.com/alias-ukrainian' OR LOWER(`name`) = 'аліас українською')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Аліас Українською', NULL, 'https://haibude.com/alias-ukrainian/', NULL, NULL, 'Аліас («скажи інакше») українською з одним телефоном для 4+ гравців: слова й підрахунок очок.', 'Alias (“say it differently”) in Ukrainian on one phone for 4+ players: words and scoring.', 'Застосунок для гри в Аліас українською (скажи інакше) з одним телефоном. Розрахований на 4 і більше гравців: показує слова з бази й рахує очки двох команд.', 'An app for playing Alias in Ukrainian on one phone. Designed for 4 or more players, it shows words from its database and keeps score for two teams.', 'Слова з бази
+Підрахунок очок двох команд
+Один телефон', 'Word database
+Scoring for two teams
+One phone', 'Компаніям друзів, родинам і всім, хто любить ігри в слова.', 'Groups of friends, families and word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'haibude.com/alias-ukrainian' OR LOWER(`name`) = 'аліас українською') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Alias (“say it differently”) in Ukrainian on one phone for 4+ players: words and scoring.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'An app for playing Alias in Ukrainian on one phone. Designed for 4 or more players, it shows words from its database and keeps score for two teams.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Word database
+Scoring for two teams
+One phone', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Groups of friends, families and word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Gamir — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'gamir.app' OR LOWER(`name`) = 'gamir')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Gamir', NULL, 'https://gamir.app', NULL, NULL, 'Шість класичних ігор для компанії в одному застосунку українською: 10 000+ питань і слів, без інтернету.', 'Six classic party games in one Ukrainian app: 10,000+ questions and words, offline.', 'Gamir — шість ігор для компанії, на яких виросли українці, зібрані в одному застосунку. Усе українською: понад 10 000 питань і слів, написаних і відібраних вручну. Один телефон на столі, від 2 до 12 гравців, без інтернету й реєстрації, правила застосунок пояснює сам.', 'Gamir brings six party games Ukrainians grew up with into one app. Everything is in Ukrainian, with 10,000+ hand-written questions and words. One phone on the table, 2 to 12 players, no internet or sign-up, and the app explains the rules itself.', '6 ігор для компанії
+10 000+ питань і слів
+2–12 гравців
+Без інтернету й реєстрації', '6 party games
+10,000+ questions and words
+2–12 players
+No internet or sign-up', 'Компаніям друзів, родинам і всім, хто любить ігри в слова.', 'Groups of friends, families and word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'gamir.app' OR LOWER(`name`) = 'gamir') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Six classic party games in one Ukrainian app: 10,000+ questions and words, offline.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Gamir brings six party games Ukrainians grew up with into one app. Everything is in Ukrainian, with 10,000+ hand-written questions and words. One phone on the table, 2 to 12 players, no internet or sign-up, and the app explains the rules itself.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '6 party games
+10,000+ questions and words
+2–12 players
+No internet or sign-up', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Groups of friends, families and word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Вікторина Українською — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'anemos-llc.com' OR LOWER(`name`) = 'вікторина українською')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Вікторина Українською', NULL, 'https://anemos-llc.com', NULL, NULL, 'Гра-вікторина українською: тести, загадки й питання, щоб перевірити знання й потренувати памʼять.', 'Quiz game in Ukrainian: tests, riddles and questions to check knowledge and train memory.', '«Вікторина Українською» — гра, яка допомагає перевірити знання, потренувати памʼять і весело провести час. Підійде тим, хто любить тести, загадки й словесні ігри.', 'Quiz in Ukrainian is a game for checking your knowledge, training memory and having fun, ideal for fans of tests, riddles and word games.', 'Питання з різних тем
+Тренування памʼяті
+Гра українською', 'Questions on many topics
+Memory training
+Game in Ukrainian', 'Любителям вікторин.', 'Quiz fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'anemos-llc.com' OR LOWER(`name`) = 'вікторина українською') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Quiz game in Ukrainian: tests, riddles and questions to check knowledge and train memory.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Quiz in Ukrainian is a game for checking your knowledge, training memory and having fun, ideal for fans of tests, riddles and word games.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Questions on many topics
+Memory training
+Game in Ukrainian', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Quiz fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Кобза — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1605389381' OR LOWER(`name`) = 'кобза')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Кобза', NULL, 'https://apps.apple.com/ua/app/id1605389381', NULL, NULL, 'Популярна гра відгадування слова з 5 літер за 6 спроб — українською.', 'The popular guess-a-5-letter-word-in-6-tries game — in Ukrainian.', '«Кобза» — українська версія популярної гри: потрібно відгадати загадане слово з 5 літер за 6 спроб. Після кожної спроби кольори клітинок підказують, наскільки ви близькі до відповіді.', 'Kobza is the Ukrainian version of the popular game: guess the hidden 5-letter word in 6 tries. After each try, tile colours show how close you are.', 'Слово з 5 літер
+6 спроб
+Кольорові підказки', '5-letter word
+6 tries
+Colour hints', 'Любителям словесних головоломок.', 'Word puzzle fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1605389381' OR LOWER(`name`) = 'кобза') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'The popular guess-a-5-letter-word-in-6-tries game — in Ukrainian.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Kobza is the Ukrainian version of the popular game: guess the hidden 5-letter word in 6 tries. After each try, tile colours show how close you are.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '5-letter word
+6 tries
+Colour hints', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Word puzzle fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Близько — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'blyzko.com' OR LOWER(`name`) = 'близько')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Близько', NULL, 'https://blyzko.com', NULL, NULL, 'Українська гра, де приховане слово відгадують за змістом: що «тепліше», то ближче.', 'Ukrainian game where you guess a hidden word by meaning: the warmer, the closer.', '«Близько» — українська гра, у якій приховане слово відгадують за змістом і сенсом. Вводиш будь-яке слово, а гра показує, наскільки воно близьке до загаданого: що тепліший колір і довша смуга, то ближче.', 'Blyzko is a Ukrainian game where you guess a hidden word by meaning. Enter any word and the game shows how close it is: the warmer the colour and the longer the bar, the closer you are.', 'Відгадування за змістом
+Кольорова шкала близькості
+Щоденне слово', 'Guess by meaning
+Colour closeness scale
+Daily word', 'Любителям словесних головоломок.', 'Word puzzle fans.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'blyzko.com' OR LOWER(`name`) = 'близько') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian game where you guess a hidden word by meaning: the warmer, the closer.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Blyzko is a Ukrainian game where you guess a hidden word by meaning. Enter any word and the game shows how close it is: the warmer the colour and the longer the bar, the closer you are.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Guess by meaning
+Colour closeness scale
+Daily word', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Word puzzle fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- СЛОВА: балда українською — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slivtsia.com.ua' OR LOWER(`name`) = 'слова: балда українською')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'СЛОВА: балда українською', NULL, 'https://slivtsia.com.ua', NULL, NULL, 'Класична «балда» українською: складай слова з літер, змагайся онлайн і дізнавайся значення слів.', 'Classic “balda” in Ukrainian: build words from letters, compete online and learn word meanings.', '«СЛОВА: балда українською» поєднує класичну механіку «балди» з відкриттям нових українських слів, їхніх значень і слова дня. У центрі поля — стартове слово: додаєш літеру й складаєш слова з сусідніх літер; що довше слово, то більше очок. Можна грати самому чи змагатися з друзями онлайн.', 'SLOVA: Balda in Ukrainian combines the classic “balda” mechanics with discovering new Ukrainian words, their meanings and a word of the day. Start from a word in the centre, add a letter and form words from adjacent letters; longer words score more. Play solo or online against friends.', 'Класична «балда»
+Значення слів
+Слово дня
+Гра з друзями онлайн', 'Classic balda
+Word meanings
+Word of the day
+Online play with friends', 'Любителям словесних ігор.', 'Word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slivtsia.com.ua' OR LOWER(`name`) = 'слова: балда українською') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Classic “balda” in Ukrainian: build words from letters, compete online and learn word meanings.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'SLOVA: Balda in Ukrainian combines the classic “balda” mechanics with discovering new Ukrainian words, their meanings and a word of the day. Start from a word in the centre, add a letter and form words from adjacent letters; longer words score more. Play solo or online against friends.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Classic balda
+Word meanings
+Word of the day
+Online play with friends', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Слова зі слова — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'games.ua-play.com' OR LOWER(`name`) = 'слова зі слова')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Слова зі слова', NULL, 'https://games.ua-play.com', NULL, NULL, 'Головоломка українською: складай слова з літер довгого слова й дивись значення відгаданих.', 'Ukrainian puzzle: make words from a long word’s letters and see the meanings.', '«Слова зі слова» — гра-головоломка, що розвиває словниковий запас: із літер довгого слова потрібно скласти якомога більше коротших. Українською мовою, з можливістю переглядати значення відгаданих слів, системою підказок і монетами за час у грі.', 'Words from a Word is a vocabulary-building puzzle: form as many shorter words as possible from the letters of a long one. In Ukrainian, with meanings of guessed words, a hint system and coins for time played.', 'Слова з літер довгого слова
+Значення слів
+Підказки', 'Words from a long word
+Word meanings
+Hints', 'Любителям словесних ігор.', 'Word game fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'games.ua-play.com' OR LOWER(`name`) = 'слова зі слова') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian puzzle: make words from a long word’s letters and see the meanings.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Words from a Word is a vocabulary-building puzzle: form as many shorter words as possible from the letters of a long one. In Ukrainian, with meanings of guessed words, a hint system and coins for time played.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Words from a long word
+Word meanings
+Hints', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Word game fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Сканворди UA — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'scanvordy.gravit.tech' OR LOWER(`name`) = 'сканворди ua')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Сканворди UA', NULL, 'https://scanvordy.gravit.tech', NULL, NULL, 'Класичні сканворди повністю українською, без інтернету.', 'Classic arrow-word puzzles fully in Ukrainian, offline.', '«Сканворди UA» — класичні сканворди українською: питання розташовані просто в клітинках сітки, а стрілки підказують напрям слова. Розвʼязувати можна без інтернету.', 'Skanvordy UA offers classic arrow-word puzzles in Ukrainian, with clues placed in grid cells and arrows showing word direction. Solve them offline.', 'Сканворди українською
+Без інтернету', 'Arrow-words in Ukrainian
+Offline', 'Любителям кросвордів і сканвордів.', 'Crossword fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'scanvordy.gravit.tech' OR LOWER(`name`) = 'сканворди ua') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Classic arrow-word puzzles fully in Ukrainian, offline.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Skanvordy UA offers classic arrow-word puzzles in Ukrainian, with clues placed in grid cells and arrows showing word direction. Solve them offline.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Arrow-words in Ukrainian
 Offline', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Crossword fans.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -392,374 +744,20 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- НМТ+ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmt-plus.com' OR LOWER(`name`) = 'нмт+')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'НМТ+', NULL, 'https://nmt-plus.com', NULL, NULL, 'Підготовка до НМТ у форматі гри: 20 000+ питань, адаптивний алгоритм, XP, рівні та стріки.', 'Gamified NMT prep: 20,000+ questions, adaptive algorithm, XP, levels and streaks.', 'НМТ+ — застосунок для підготовки до НМТ, що замінює зошити серіями правильних відповідей, XP, рівнями й щоденними викликами. 20 000+ питань з програми МОН, адаптивний алгоритм, 7+ режимів тренування, пояснення до кожного питання, дорожня карта тем і графіки прогресу.', 'NMT+ is an NMT prep app that replaces workbooks with answer streaks, XP, levels and daily challenges. It has 20,000+ questions from the Ministry curriculum, an adaptive algorithm, 7+ practice modes, explanations for every question, a topic roadmap and progress charts.', '20 000+ питань
-Адаптивний підбір питань
-7+ режимів тренування
-Пояснення до відповідей
-XP, рівні й стріки', '20,000+ questions
-Adaptive question selection
-7+ practice modes
-Answer explanations
-XP, levels and streaks', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nmt-plus.com' OR LOWER(`name`) = 'нмт+') ORDER BY `id` LIMIT 1);
+-- Українські кросворди — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6624294382' OR LOWER(`name`) = 'українські кросворди')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Українські кросворди', NULL, 'https://apps.apple.com/ua/app/id6624294382', NULL, NULL, 'Кросворди українською мовою для розвитку мислення й словникового запасу.', 'Crosswords in Ukrainian to boost thinking and vocabulary.', '«Українські кросворди» — кросворди українською мовою, що розвивають творче мислення й аналітичні навички, розширюють словниковий запас і допомагають цікаво провести вільний час.', 'Ukrainian Crosswords offers crosswords in Ukrainian that develop creative and analytical thinking, expand vocabulary and make for a good pastime.', 'Кросворди українською
+Розвиток словникового запасу', 'Crosswords in Ukrainian
+Vocabulary building', 'Любителям кросвордів.', 'Crossword fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6624294382' OR LOWER(`name`) = 'українські кросворди') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Gamified NMT prep: 20,000+ questions, adaptive algorithm, XP, levels and streaks.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'NMT+ is an NMT prep app that replaces workbooks with answer streaks, XP, levels and daily challenges. It has 20,000+ questions from the Ministry curriculum, an adaptive algorithm, 7+ practice modes, explanations for every question, a topic roadmap and progress charts.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '20,000+ questions
-Adaptive question selection
-7+ practice modes
-Answer explanations
-XP, levels and streaks', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- ЗНО і НМТ тести — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'katenin.dev/znotesty' OR LOWER(`name`) = 'зно і нмт тести')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ЗНО і НМТ тести', NULL, 'https://katenin.dev/znotesty/', NULL, NULL, '95 тестів і 1940 питань без інтернету й реєстрації: 20 питань, таймер і правильні відповіді.', '95 tests and 1,940 questions offline with no sign-up: 20 questions, a timer and correct answers.', '«ЗНО і НМТ тести» — 95 тестів і 1940 питань, доступних без інтернету й реєстрації. Кожен тест має 20 питань і таймер, а наприкінці показано результат і правильні відповіді поруч із вашими. Розділи охоплюють українську мову та інші предмети НМТ.', 'ZNO and NMT Tests offers 95 tests and 1,940 questions with no internet or sign-up. Each test has 20 questions and a timer, and at the end you see your score with the correct answers beside yours. Sections cover Ukrainian and other NMT subjects.', '95 тестів, 1940 питань
-Без інтернету й реєстрації
-Таймер
-Правильні відповіді після тесту', '95 tests, 1,940 questions
-No internet or sign-up
-Timer
-Correct answers after each test', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'katenin.dev/znotesty' OR LOWER(`name`) = 'зно і нмт тести') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', '95 tests and 1,940 questions offline with no sign-up: 20 questions, a timer and correct answers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ZNO and NMT Tests offers 95 tests and 1,940 questions with no internet or sign-up. Each test has 20 questions and a timer, and at the end you see your score with the correct answers beside yours. Sections cover Ukrainian and other NMT subjects.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '95 tests, 1,940 questions
-No internet or sign-up
-Timer
-Correct answers after each test', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Соловій: НМТ українська мова — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'education.soloviy.app' OR LOWER(`name`) = 'соловій: нмт українська мова')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Соловій: НМТ українська мова', NULL, 'https://education.soloviy.app', NULL, NULL, 'Підготовка до НМТ з української: план на кожен день, теорія за темами й тести після кожної теми.', 'NMT Ukrainian prep: a daily plan, theory by topic and tests after each topic.', '«Соловій освіта» — підготовка до НМТ з української мови в телефоні. Коротка діагностика визначає орієнтовний бал і складає план на кожен день до іспиту. Уся програма розкладена на зрозумілі теми, а після кожної теорії одразу йдуть тести.', 'Soloviy Education is NMT Ukrainian language prep on your phone. A short diagnostic estimates your score and builds a day-by-day plan to the exam. The whole curriculum is split into clear topics, each followed by tests.', 'Діагностика й орієнтовний бал
-План на кожен день
-Теорія за темами
-Тести після кожної теми', 'Diagnostic and estimated score
-Daily plan
-Theory by topic
-Tests after each topic', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'education.soloviy.app' OR LOWER(`name`) = 'соловій: нмт українська мова') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'NMT Ukrainian prep: a daily plan, theory by topic and tests after each topic.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Soloviy Education is NMT Ukrainian language prep on your phone. A short diagnostic estimates your score and builds a day-by-day plan to the exam. The whole curriculum is split into clear topics, each followed by tests.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Diagnostic and estimated score
-Daily plan
-Theory by topic
-Tests after each topic', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Вивчай Просто | НМТ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6758337594' OR LOWER(`name`) = 'вивчай просто | нмт')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Вивчай Просто | НМТ', NULL, 'https://apps.apple.com/ua/app/id6758337594', NULL, NULL, 'Підготовка до НМТ як гра: короткі уроки без води, щоб займатися навіть дорогою до школи.', 'NMT prep as a game: short no-fluff lessons you can do on the way to school.', '«Вивчай Просто | НМТ» перетворює підготовку до НМТ на гру: увесь матеріал скорочено до головного, щоб готуватися короткими сесіями — навіть дорогою до школи — без годин зубріння.', 'Vyvchai Prosto | NMT turns NMT preparation into a game: material is cut down to the essentials so you can study in short sessions, even on the way to school, without hours of cramming.', 'Ігровий формат
-Короткі уроки
-Матеріал без води', 'Game format
-Short lessons
-No-fluff material', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6758337594' OR LOWER(`name`) = 'вивчай просто | нмт') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'NMT prep as a game: short no-fluff lessons you can do on the way to school.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Vyvchai Prosto | NMT turns NMT preparation into a game: material is cut down to the essentials so you can study in short sessions, even on the way to school, without hours of cramming.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Game format
-Short lessons
-No-fluff material', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Читай — НМТ, ЗНО та ЄВІ — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'chitay.org.ua' OR LOWER(`name`) = 'читай — нмт, зно та єві')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Читай — НМТ, ЗНО та ЄВІ', NULL, 'https://chitay.org.ua', NULL, NULL, 'Понад 450 тестів НМТ, ЗНО та ЄВІ/ЄФВВ в форматі реального іспиту з аналізом помилок.', '450+ NMT, ZNO and master’s entrance (EVI/EFVV) tests in real exam format with error analysis.', '«Читай» — застосунок для підготовки до НМТ, ЗНО та вступних іспитів до магістратури (ЄВІ/ЄФВВ). Понад 450 тестів, зокрема офіційні варіанти минулих років, тренування у форматі реального іспиту, аналіз помилок і відстеження прогресу.', 'Chytai is an app for preparing for the NMT, ZNO and master’s entrance exams (EVI/EFVV). It has over 450 tests, including official past papers, real-exam-format practice, error analysis and progress tracking.', '450+ тестів
-Офіційні варіанти минулих років
-Формат реального іспиту
-Аналіз помилок
-Вступ до магістратури', '450+ tests
-Official past papers
-Real exam format
-Error analysis
-Master’s entrance exams', 'Абітурієнтам і вступникам до магістратури.', 'University and master’s applicants.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'chitay.org.ua' OR LOWER(`name`) = 'читай — нмт, зно та єві') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', '450+ NMT, ZNO and master’s entrance (EVI/EFVV) tests in real exam format with error analysis.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Chytai is an app for preparing for the NMT, ZNO and master’s entrance exams (EVI/EFVV). It has over 450 tests, including official past papers, real-exam-format practice, error analysis and progress tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '450+ tests
-Official past papers
-Real exam format
-Error analysis
-Master’s entrance exams', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'University and master’s applicants.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Mindfly — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mindfly.com.ua' OR LOWER(`name`) = 'mindfly')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Mindfly', NULL, 'https://mindfly.com.ua', NULL, NULL, 'Тренажер НМТ і ЗНО з 9 предметів: тести в форматі іспиту, пояснення, статистика й офлайн-режим.', 'NMT and ZNO trainer in 9 subjects: exam-format tests, explanations, statistics and offline mode.', 'Mindfly — тренажер для підготовки до НМТ і ЗНО з математики, української мови й літератури, історії України, англійської, біології, географії, фізики та хімії. Тести у форматі реального іспиту, правильні відповіді з поясненнями, статистика слабких тем і офлайн-режим — можна готуватися навіть в укритті чи без світла.', 'Mindfly is an NMT and ZNO trainer in maths, Ukrainian language and literature, Ukrainian history, English, biology, geography, physics and chemistry. It offers real-exam-format tests, answers with explanations, weak-topic statistics and an offline mode for studying even in a shelter or during blackouts.', '9 предметів
-Тести у форматі іспиту
-Пояснення відповідей
-Статистика
-Офлайн-режим', '9 subjects
-Exam-format tests
-Answer explanations
-Statistics
-Offline mode', 'Випускникам, які готуються до НМТ.', 'School leavers preparing for the NMT.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mindfly.com.ua' OR LOWER(`name`) = 'mindfly') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'NMT and ZNO trainer in 9 subjects: exam-format tests, explanations, statistics and offline mode.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mindfly is an NMT and ZNO trainer in maths, Ukrainian language and literature, Ukrainian history, English, biology, geography, physics and chemistry. It offers real-exam-format tests, answers with explanations, weak-topic statistics and an offline mode for studying even in a shelter or during blackouts.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '9 subjects
-Exam-format tests
-Answer explanations
-Statistics
-Offline mode', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'School leavers preparing for the NMT.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- CAM ON SCHOOL — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'westudy.ua/camon' OR LOWER(`name`) = 'cam on school')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'CAM ON SCHOOL', NULL, 'https://westudy.ua/camon', NULL, NULL, 'Застосунок онлайн-школи CAM ON для підготовки до НМТ: курси, уроки, тести й конспекти.', 'CAM ON online school app for NMT prep: courses, lessons, tests and notes.', 'CAM ON SCHOOL — мобільний застосунок онлайн-школи для підготовки до НМТ. В одному місці зібрано особистий доступ до курсів і уроків, тести для тренування й перевірки знань, конспекти та матеріали для повторення.', 'CAM ON SCHOOL is the online school’s mobile app for NMT preparation, bringing together personal access to courses and lessons, practice and check tests, notes and revision materials.', 'Курси й уроки
-Тести
-Конспекти для повторення', 'Courses and lessons
-Tests
-Revision notes', 'Учням онлайн-школи CAM ON.', 'CAM ON school students.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'westudy.ua/camon' OR LOWER(`name`) = 'cam on school') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'CAM ON online school app for NMT prep: courses, lessons, tests and notes.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'CAM ON SCHOOL is the online school’s mobile app for NMT preparation, bringing together personal access to courses and lessons, practice and check tests, notes and revision materials.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Courses and lessons
-Tests
-Revision notes', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'CAM ON school students.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Тест з державної мови — Підготовка до НМТ
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dilogical.com' OR LOWER(`name`) = 'тест з державної мови')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Тест з державної мови', NULL, 'https://dilogical.com', NULL, NULL, 'Підготовка до іспиту на рівень володіння державною мовою для держслужбовців, вчителів і лікарів.', 'Prep for the state language proficiency exam for civil servants, teachers and doctors.', 'Застосунок для підготовки до іспиту на рівень володіння державною (українською) мовою, який з 16 липня 2021 року складають особи, що претендують на посади на державній службі, в органах місцевого самоврядування, в освіті, медицині та інших сферах, визначених законом.', 'An app for preparing for the state (Ukrainian) language proficiency exam, required since 16 July 2021 for candidates for civil service, local government, education, healthcare and other positions defined by law.', 'Тести на рівень володіння мовою
-Підготовка до сертифікації', 'Language proficiency tests
-Certification prep', 'Кандидатам на посади, де потрібен сертифікат з державної мови.', 'Candidates for positions requiring a state language certificate.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dilogical.com' OR LOWER(`name`) = 'тест з державної мови') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Prep for the state language proficiency exam for civil servants, teachers and doctors.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'An app for preparing for the state (Ukrainian) language proficiency exam, required since 16 July 2021 for candidates for civil service, local government, education, healthcare and other positions defined by law.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Language proficiency tests
-Certification prep', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Candidates for positions requiring a state language certificate.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- GoIT — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1672285281' OR LOWER(`name`) = 'goit')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'GoIT', NULL, 'https://apps.apple.com/ua/app/id1672285281', NULL, NULL, 'LMS онлайн-школи GoIT: відеоуроки, автоперевірка коду, дуелі та прогрес на IT-курсах.', 'GoIT online school LMS: video lessons, auto code checking, duels and progress on IT courses.', 'GoIT LMS — платформа онлайн-навчання IT від GoIT: курси з веброзробки, тестування, Java, Python, Frontend і Fullstack. У застосунку доступні відеоуроки, конспекти й домашні завдання (зокрема офлайн), автоматична перевірка коду, статистика прогресу, дуелі з програмування та ачівки.', 'GoIT LMS is GoIT’s online IT learning platform with courses in web development, testing, Java, Python, Frontend and Fullstack. The app offers video lessons, notes and homework (including offline), automatic code checking, progress statistics, coding duels and achievements.', 'Відеоуроки й домашні завдання
-Автоперевірка коду
-Статистика прогресу
-Дуелі з програмування
-Офлайн-матеріали', 'Video lessons and homework
-Automatic code checking
-Progress statistics
-Coding duels
-Offline materials', 'Студентам IT-курсів GoIT.', 'GoIT IT course students.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1672285281' OR LOWER(`name`) = 'goit') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'GoIT online school LMS: video lessons, auto code checking, duels and progress on IT courses.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'GoIT LMS is GoIT’s online IT learning platform with courses in web development, testing, Java, Python, Frontend and Fullstack. The app offers video lessons, notes and homework (including offline), automatic code checking, progress statistics, coding duels and achievements.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Video lessons and homework
-Automatic code checking
-Progress statistics
-Coding duels
-Offline materials', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'GoIT IT course students.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- MyStat (IT STEP Academy) — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'itstep.org' OR LOWER(`name`) = 'mystat (it step academy)')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MyStat (IT STEP Academy)', NULL, 'https://itstep.org', NULL, NULL, 'Сервіс для студентів Комп’ютерної Академії IT STEP: розклад, оцінки, новини та відгуки про заняття.', 'Service for IT STEP Computer Academy students: timetable, grades, news and class feedback.', 'MyStat — сервіс для студентів Комп’ютерної Академії IT STEP. У ньому можна переглядати розклад занять і професійних подій, отримувати новини філії й академії, бачити оцінки та динаміку успішності й залишати відгуки про заняття.', 'MyStat is a service for students of IT STEP Computer Academy. You can view the class and event schedule, get branch and academy news, see grades and performance trends, and leave feedback on classes.', 'Розклад занять
-Оцінки й динаміка успішності
-Новини академії
-Відгуки про заняття', 'Class schedule
-Grades and trends
-Academy news
-Class feedback', 'Студентам IT STEP Academy.', 'IT STEP Academy students.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'itstep.org' OR LOWER(`name`) = 'mystat (it step academy)') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Service for IT STEP Computer Academy students: timetable, grades, news and class feedback.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MyStat is a service for students of IT STEP Computer Academy. You can view the class and event schedule, get branch and academy news, see grades and performance trends, and leave feedback on classes.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Class schedule
-Grades and trends
-Academy news
-Class feedback', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'IT STEP Academy students.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Genius.Space — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6780527032' OR LOWER(`name`) = 'genius.space')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Genius.Space', NULL, 'https://apps.apple.com/ua/app/id6780527032', NULL, NULL, 'Застосунок освітньої платформи Genius Space: придбані курси, відеоуроки й прогрес у кишені.', 'Genius Space learning platform app: your courses, video lessons and progress in your pocket.', 'Genius Space — мобільний застосунок освітньої платформи genius.space для навчання новим професіям. У ньому зібрано придбані курси з прогресом, відеоплеєр із вибором якості, закладки уроків, пошук по матеріалах і продовження з місця, де ви зупинилися. Акаунт створюється при купівлі курсу на сайті.', 'Genius Space is the mobile app of the genius.space learning platform for new careers. It holds your purchased courses with progress, a video player with quality options, lesson bookmarks, search across materials and resume-where-you-left-off. Accounts are created when you buy a course on the website.', 'Мої курси з прогресом
-Відеоуроки
-Закладки й пошук
-Продовження з місця зупинки', 'My courses with progress
-Video lessons
-Bookmarks and search
-Resume where you left off', 'Студентам курсів Genius Space.', 'Genius Space course students.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6780527032' OR LOWER(`name`) = 'genius.space') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Genius Space learning platform app: your courses, video lessons and progress in your pocket.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Genius Space is the mobile app of the genius.space learning platform for new careers. It holds your purchased courses with progress, a video player with quality options, lesson bookmarks, search across materials and resume-where-you-left-off. Accounts are created when you buy a course on the website.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'My courses with progress
-Video lessons
-Bookmarks and search
-Resume where you left off', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Genius Space course students.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Englishdom ED Class — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'englishdom.com' OR LOWER(`name`) = 'englishdom ed class')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Englishdom ED Class', NULL, 'https://www.englishdom.com', NULL, NULL, 'Застосунок для студентів онлайн-школи англійської Englishdom: уроки, домашні завдання й куратор.', 'App for Englishdom online English school students: lessons, homework and a personal curator.', 'Englishdom — онлайн-школа англійської, яка поєднує індивідуальні уроки з викладачем і самостійне навчання на власній платформі. ED Class — застосунок для студентів школи: розклад і баланс уроків, домашні завдання, вивчення слів, чат із персональним куратором і нагадування про заняття.', 'Englishdom is an online English school combining one-to-one lessons with a teacher and self-study on its own platform. ED Class is the students’ app: lesson schedule and balance, homework, vocabulary practice, chat with a personal curator and class reminders.', 'Розклад і баланс уроків
-Домашні завдання
-Вивчення слів
-Чат із куратором
-Нагадування про заняття', 'Lesson schedule and balance
-Homework
-Vocabulary practice
-Curator chat
-Class reminders', 'Студентам Englishdom.', 'Englishdom students.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'englishdom.com' OR LOWER(`name`) = 'englishdom ed class') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'App for Englishdom online English school students: lessons, homework and a personal curator.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Englishdom is an online English school combining one-to-one lessons with a teacher and self-study on its own platform. ED Class is the students’ app: lesson schedule and balance, homework, vocabulary practice, chat with a personal curator and class reminders.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Lesson schedule and balance
-Homework
-Vocabulary practice
-Curator chat
-Class reminders', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Englishdom students.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- EDWords — англійські слова — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1282915927' OR LOWER(`name`) = 'edwords — англійські слова')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'EDWords — англійські слова', NULL, 'https://apps.apple.com/ua/app/id1282915927', NULL, NULL, 'Тренажер англійських слів від Englishdom: 3000 найпоширеніших слів і 4 види тренувань.', 'Englishdom vocabulary trainer: 3,000 most common words and 4 practice types.', 'EDWords — застосунок від Englishdom для вивчення 3000 найпоширеніших англійських слів, які покривають, за даними школи, 92% усіх фраз. Слова запамʼятовуються через чотири види тренувань.', 'EDWords is an Englishdom app for learning the 3,000 most common English words, which, according to the school, cover 92% of all phrases. Words are memorised through four types of practice.', '3000 найпоширеніших слів
-4 види тренувань
-Розширення словникового запасу', '3,000 most common words
-4 practice types
-Vocabulary building', 'Тим, хто вчить англійську.', 'English learners.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1282915927' OR LOWER(`name`) = 'edwords — англійські слова') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Englishdom vocabulary trainer: 3,000 most common words and 4 practice types.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'EDWords is an Englishdom app for learning the 3,000 most common English words, which, according to the school, cover 92% of all phrases. Words are memorised through four types of practice.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '3,000 most common words
-4 practice types
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Crosswords in Ukrainian to boost thinking and vocabulary.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Ukrainian Crosswords offers crosswords in Ukrainian that develop creative and analytical thinking, expand vocabulary and make for a good pastime.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Crosswords in Ukrainian
 Vocabulary building', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'English learners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Crossword fans.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -769,29 +767,25 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- AllRight — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1474799842' OR LOWER(`name`) = 'allright')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'AllRight', NULL, 'https://apps.apple.com/ua/app/id1474799842', NULL, NULL, 'Онлайн-школа англійської для дітей AllRight: уроки прямо в застосунку, розклад і чат з викладачем.', 'AllRight online English school for kids: lessons in the app, scheduling and teacher chat.', 'AllRight — онлайн-школа англійської для дітей. Уроки проходять прямо в застосунку без компʼютера; тут же можна планувати й переносити заняття, стежити за прогресом і результатами перевірок знань, отримувати відгук і писати викладачеві та службі підтримки. Перший урок безкоштовний.', 'AllRight is an online English school for kids. Lessons run right in the app, no computer needed; you can also schedule and reschedule lessons, track progress and test results, get teacher feedback and chat with the teacher and support. The first lesson is free.', 'Уроки в застосунку
-Розклад і перенесення занять
-Прогрес дитини
-Чат з викладачем
-Перший урок безкоштовно', 'Lessons in the app
-Scheduling and rescheduling
-Child progress
-Teacher chat
-First lesson free', 'Батькам дітей, які вчать англійську.', 'Parents of children learning English.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1474799842' OR LOWER(`name`) = 'allright') ORDER BY `id` LIMIT 1);
+-- БезСуржику — Ігри українською, Освіта
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6444486704' OR LOWER(`name`) = 'безсуржику')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'БезСуржику', NULL, 'https://apps.apple.com/ua/app/id6444486704', NULL, NULL, 'Гра-кросворд проти суржику: згадай правильний український відповідник поширеного слова.', 'Crossword game against surzhyk: recall the correct Ukrainian form of common words.', '«БезСуржику» допомагає позбутися суржику через кросворди: гравець бачить поширене в побуті некоректне слово чи вислів і має пригадати й ввести правильний український відповідник.', 'BezSurzhyku helps you get rid of surzhyk through crosswords: you see a common incorrect word or phrase and must recall and enter the correct Ukrainian equivalent.', 'Кросворди проти суржику
+Правильні відповідники
+Тренування мови', 'Anti-surzhyk crosswords
+Correct equivalents
+Language practice', 'Усім, хто хоче говорити чистою українською.', 'Anyone wanting to speak proper Ukrainian.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6444486704' OR LOWER(`name`) = 'безсуржику') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'AllRight online English school for kids: lessons in the app, scheduling and teacher chat.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'AllRight is an online English school for kids. Lessons run right in the app, no computer needed; you can also schedule and reschedule lessons, track progress and test results, get teacher feedback and chat with the teacher and support. The first lesson is free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Lessons in the app
-Scheduling and rescheduling
-Child progress
-Teacher chat
-First lesson free', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Parents of children learning English.', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-education' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Crossword game against surzhyk: recall the correct Ukrainian form of common words.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'BezSurzhyku helps you get rid of surzhyk through crosswords: you see a common incorrect word or phrase and must recall and enter the correct Ukrainian equivalent.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Anti-surzhyk crosswords
+Correct equivalents
+Language practice', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone wanting to speak proper Ukrainian.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -801,26 +795,23 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- JustSchool — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'justschool.me' OR LOWER(`name`) = 'justschool')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'JustSchool', NULL, 'https://justschool.me', NULL, NULL, 'Онлайн-школа англійської для дітей і дорослих: уроки з викладачем, розклад і баланс занять.', 'Online English school for kids and adults: lessons with a teacher, schedule and lesson balance.', 'JustSchool — онлайн-школа англійської мови для дітей і дорослих з індивідуальними програмами. У застосунку можна відвідувати онлайн-уроки з викладачем, керувати розкладом, переглядати історію занять і поповнювати баланс, отримувати додаткові матеріали й нагадування.', 'JustSchool is an online English school for kids and adults with individual programs. In the app you can attend online lessons with a teacher, manage your schedule, view lesson history and top up your balance, and get extra materials and reminders.', 'Онлайн-уроки з викладачем
-Розклад занять
-Історія й баланс уроків
-Додаткові матеріали', 'Online lessons with a teacher
-Class schedule
-Lesson history and balance
-Extra materials', 'Дітям і дорослим, які вчать англійську.', 'Kids and adults learning English.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'justschool.me' OR LOWER(`name`) = 'justschool') ORDER BY `id` LIMIT 1);
+-- Паляниця — знайди слова — Ігри українською
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1641128977' OR LOWER(`name`) = 'паляниця — знайди слова')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Паляниця — знайди слова', NULL, 'https://apps.apple.com/ua/app/id1641128977', NULL, NULL, 'Гра «знайди слова» українською з вибором рівня складності.', 'Ukrainian word search game with selectable difficulty.', '«Паляниця» — гра «знайди слова» українською: потрібно складати правильні слова з літер на полі. Рівень складності можна обрати самостійно.', 'Palyanytsia is a Ukrainian word search game: form correct words from the letters on the board. You can choose the difficulty level.', 'Пошук слів
+Вибір складності
+Українська мова', 'Word search
+Difficulty choice
+Ukrainian language', 'Любителям словесних головоломок.', 'Word puzzle fans.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1641128977' OR LOWER(`name`) = 'паляниця — знайди слова') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online English school for kids and adults: lessons with a teacher, schedule and lesson balance.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'JustSchool is an online English school for kids and adults with individual programs. In the app you can attend online lessons with a teacher, manage your schedule, view lesson history and top up your balance, and get extra materials and reminders.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Online lessons with a teacher
-Class schedule
-Lesson history and balance
-Extra materials', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kids and adults learning English.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian word search game with selectable difficulty.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Palyanytsia is a Ukrainian word search game: form correct words from the letters on the board. You can choose the difficulty level.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Word search
+Difficulty choice
+Ukrainian language', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Word puzzle fans.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -830,29 +821,28 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Wally: англійська мова — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wally-study.com' OR LOWER(`name`) = 'wally: англійська мова')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Wally: англійська мова', NULL, 'https://wally-study.com', NULL, NULL, 'Англійська для українців по кілька хвилин на день: граматика A1–C2, 10 000 слів і розбір помилок.', 'English for Ukrainians a few minutes a day: A1–C2 grammar, 10,000 words and error review.', 'Wally — англійська для українців з поясненнями простою українською. Тест визначає рівень від A1 до C2. Повний курс граматики (106 правил, кожне безкоштовне), понад 8000 вправ шести видів із поясненням кожної відповіді, майже 10 000 слів у 48 темах із вимовою й прикладами, «Мої помилки» для відпрацювання та слово дня на віджеті.', 'Wally teaches English to Ukrainians with explanations in plain Ukrainian. A test sets your level from A1 to C2. There is a full grammar course (106 rules, all free), 8,000+ exercises of six types with every answer explained, nearly 10,000 words in 48 topics with pronunciation and examples, a “My mistakes” review and a word-of-the-day widget.', 'Тест рівня A1–C2
-106 правил граматики
-8000+ вправ
-~10 000 слів у 48 темах
-Розбір помилок', 'A1–C2 level test
-106 grammar rules
-8,000+ exercises
-~10,000 words in 48 topics
-Mistake review', 'Українцям, які вчать англійську самостійно.', 'Ukrainians learning English on their own.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wally-study.com' OR LOWER(`name`) = 'wally: англійська мова') ORDER BY `id` LIMIT 1);
+-- Guess The Song — Ігри українською, Музика, радіо та подкасти
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'guessthesong.pro' OR LOWER(`name`) = 'guess the song')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Guess The Song', NULL, 'https://guessthesong.pro', NULL, NULL, 'Музична вікторина: впізнай хіт за перші ноти — самому, проти суперника онлайн чи з друзями.', 'Music trivia: recognise a hit from the first notes — solo, live against a rival or with friends.', 'Guess The Song — музична вікторина з понад 10 000 популярних пісень усіх десятиліть і жанрів. Грає пісня, на екрані чотири обкладинки — обери правильну: що швидше впізнаєш, то більше очок. Можна грати самому, проти реального суперника наживо чи з друзями на вечірці. Акаунт не потрібен.', 'Guess The Song is a music quiz with 10,000+ popular songs from every decade and genre. A song plays and four covers appear: tap the right one, and the sooner you know it, the more points you get. Play solo, live against a real opponent or with friends at a party. No account needed.', '10 000+ пісень
+Гра наживо проти суперника
+Режим для вечірок
+Без акаунта', '10,000+ songs
+Live play against a rival
+Party mode
+No account', 'Меломанам і компаніям друзів.', 'Music lovers and groups of friends.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'guessthesong.pro' OR LOWER(`name`) = 'guess the song') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'English for Ukrainians a few minutes a day: A1–C2 grammar, 10,000 words and error review.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Wally teaches English to Ukrainians with explanations in plain Ukrainian. A test sets your level from A1 to C2. There is a full grammar course (106 rules, all free), 8,000+ exercises of six types with every answer explained, nearly 10,000 words in 48 topics with pronunciation and examples, a “My mistakes” review and a word-of-the-day widget.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'A1–C2 level test
-106 grammar rules
-8,000+ exercises
-~10,000 words in 48 topics
-Mistake review', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Ukrainians learning English on their own.', 'manual' FROM DUAL WHERE @new = 1;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Music trivia: recognise a hit from the first notes — solo, live against a rival or with friends.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Guess The Song is a music quiz with 10,000+ popular songs from every decade and genre. A song plays and four covers appear: tap the right one, and the sooner you know it, the more points you get. Play solo, live against a real opponent or with friends at a party. No account needed.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '10,000+ songs
+Live play against a rival
+Party mode
+No account', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Music lovers and groups of friends.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -862,61 +852,25 @@ SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = 
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Мова — ДНК нації — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ukr-mova.in.ua' OR LOWER(`name`) = 'мова — днк нації')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Мова — ДНК нації', NULL, 'https://ukr-mova.in.ua', NULL, NULL, 'Правила української мови в картинках: правопис, наголоси, фразеологізми й антисуржик.', 'Ukrainian language rules in pictures: spelling, stress, idioms and anti-surzhyk.', '«Мова — ДНК нації» допомагає писати й говорити українською без помилок. Правила пояснює персонаж Лепетун — у картинках, коротко й із прикладами. У бібліотеці — правопис, наголоси, фразеологізми й антисуржик, а пошук підказує правильну форму слова.', 'Mova – DNA of the Nation helps you write and speak Ukrainian without mistakes. The character Lepetun explains rules briefly in pictures with examples. The library covers spelling, stress, idioms and anti-surzhyk, and search suggests the correct word form.', 'Правила в картинках
-Правопис і наголоси
-Фразеологізми
-Антисуржик
-Пошук правильної форми', 'Rules in pictures
-Spelling and stress
-Idioms
-Anti-surzhyk
-Correct form search', 'Усім, хто хоче говорити й писати українською грамотно.', 'Anyone wanting to speak and write correct Ukrainian.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ukr-mova.in.ua' OR LOWER(`name`) = 'мова — днк нації') ORDER BY `id` LIMIT 1);
+-- Військові звання України — Ігри українською, Військовим і ветеранам
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nbw.app/en/products/ukrainian-military-ranks' OR LOWER(`name`) = 'військові звання україни')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Військові звання України', NULL, 'https://nbw.app/en/products/ukrainian-military-ranks', NULL, NULL, 'Навчальна гра-вікторина про систему військових звань ЗСУ різних родів військ.', 'Educational quiz game on the Armed Forces of Ukraine rank system across branches.', 'Ukrainian Military Ranks — навчальна гра-вікторина, яка допомагає легко вивчити систему військових звань України й структуру ЗСУ. Питання охоплюють Сухопутні війська, Десантно-штурмові війська, Повітряні сили та інші роди військ.', 'Ukrainian Military Ranks is an educational quiz game that makes it easy to learn Ukraine’s military rank system and the structure of the Armed Forces, with questions covering the Ground Forces, Air Assault Forces, Air Force and other branches.', 'Вікторина про звання ЗСУ
+Різні роди військ
+Навчання у формі гри', 'Quiz on Ukrainian ranks
+Different branches
+Game-based learning', 'Усім, хто хоче розібратися у військових званнях.', 'Anyone wanting to understand military ranks.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'nbw.app/en/products/ukrainian-military-ranks' OR LOWER(`name`) = 'військові звання україни') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-games' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian language rules in pictures: spelling, stress, idioms and anti-surzhyk.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mova – DNA of the Nation helps you write and speak Ukrainian without mistakes. The character Lepetun explains rules briefly in pictures with examples. The library covers spelling, stress, idioms and anti-surzhyk, and search suggests the correct word form.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Rules in pictures
-Spelling and stress
-Idioms
-Anti-surzhyk
-Correct form search', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone wanting to speak and write correct Ukrainian.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- ЛогопедіЯ — Курси та онлайн-школи
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'logopediya.com.ua' OR LOWER(`name`) = 'логопедія')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ЛогопедіЯ', NULL, 'https://logopediya.com.ua', NULL, NULL, 'Логопедичний застосунок для розвитку мовлення дітей: артикуляційна гімнастика, звуки й картки Домана.', 'Speech therapy app for kids: articulation exercises, sound practice and Doman cards.', 'ЛогопедіЯ — застосунок для розвитку мовлення дітей, корисний батькам, логопедам і вихователям. Розділи: артикуляційна гімнастика з відео, озвучені картки Домана, запуск мовлення для дітей, які ще не говорять, понад 900 вправ на автоматизацію звуків, диференціація подібних звуків і розвиток словникового запасу та фразового мовлення.', 'LogopediYa is a speech development app for children, useful for parents, speech therapists and educators. It includes articulation exercises with video, voiced Doman cards, speech starters for non-verbal children, 900+ sound automation exercises, differentiation of similar sounds and vocabulary and phrase development.', 'Артикуляційна гімнастика
-Картки Домана
-Запуск мовлення
-900+ вправ на звуки
-Розрізнення звуків', 'Articulation exercises
-Doman cards
-Speech starters
-900+ sound exercises
-Sound differentiation', 'Батькам, логопедам і вихователям.', 'Parents, speech therapists and educators.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'logopediya.com.ua' OR LOWER(`name`) = 'логопедія') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-military' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Speech therapy app for kids: articulation exercises, sound practice and Doman cards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'LogopediYa is a speech development app for children, useful for parents, speech therapists and educators. It includes articulation exercises with video, voiced Doman cards, speech starters for non-verbal children, 900+ sound automation exercises, differentiation of similar sounds and vocabulary and phrase development.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Articulation exercises
-Doman cards
-Speech starters
-900+ sound exercises
-Sound differentiation', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Parents, speech therapists and educators.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Educational quiz game on the Armed Forces of Ukraine rank system across branches.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Ukrainian Military Ranks is an educational quiz game that makes it easy to learn Ukraine’s military rank system and the structure of the Armed Forces, with questions covering the Ground Forces, Air Assault Forces, Air Force and other branches.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Quiz on Ukrainian ranks
+Different branches
+Game-based learning', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone wanting to understand military ranks.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
@@ -928,76 +882,77 @@ INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`,
 
 -- Прив'язка наявних продуктів (за назвою) до нових підкатегорій; тексти не змінюються
 
--- Мрія — Школи, садочки та університети
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'мрія' ORDER BY `id` LIMIT 1);
+-- MEGOGO — Кіно й серіали онлайн
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'megogo' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Єдина Школа — Школи, садочки та університети
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'єдина школа' ORDER BY `id` LIMIT 1);
+-- SWEET.TV — Кіно й серіали онлайн
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'sweet.tv' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Всеукраїнська школа онлайн — Школи, садочки та університети, Підготовка до НМТ
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'всеукраїнська школа онлайн' ORDER BY `id` LIMIT 1);
+-- Київстар ТБ — Кіно й серіали онлайн
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'київстар тб' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-schools' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-exams' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Prometheus — Курси та онлайн-школи
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'prometheus' ORDER BY `id` LIMIT 1);
+-- 1+1 video — Кіно й серіали онлайн
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = '1+1 video' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-movies' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Біг Мат (EdEra) — Курси та онлайн-школи
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'біг мат (edera)' ORDER BY `id` LIMIT 1);
+-- RadioPlayer — Музика, радіо та подкасти
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'radioplayer' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Promova — Курси та онлайн-школи
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'promova' ORDER BY `id` LIMIT 1);
+-- suspilne.radio — Музика, радіо та подкасти
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'suspilne.radio' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Mate academy — QA — Курси та онлайн-школи
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'mate academy — qa' ORDER BY `id` LIMIT 1);
+-- Люкс FM — Музика, радіо та подкасти
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'люкс fm' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
--- Hillel IT School — QA Manual — Курси та онлайн-школи
-SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'hillel it school — qa manual' ORDER BY `id` LIMIT 1);
+-- Громадське радіо — Музика, радіо та подкасти
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'громадське радіо' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-courses' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-music' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
 
 -- Інтенти запасного пошуку Елі (tools/eli-intents.php, нові підкатегорії ukrainian-apps)
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'електронний щоденник', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'електронний щоденник' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'електронний журнал', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'електронний журнал' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'щоденник учн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'щоденник учн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'дитячий садок', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'дитячий садок' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'садочок', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'садочок' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'абітурієнт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'абітурієнт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'вступна кампан', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'вступна кампан' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'вступ до університет', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'вступ до університет' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-schools' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'нмт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'нмт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'зно', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'зно' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'мультитест', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'мультитест' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'підготовка до нмт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'підготовка до нмт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'тести нмт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'тести нмт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'єві', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'єві' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'єфвв', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'єфвв' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-exams' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'онлайн шко', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'онлайн шко' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'it курс', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'it курс' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'айті курс', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'айті курс' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'курси англійськ', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'курси англійськ' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'англійська для діте', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'англійська для діте' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'логопед', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'логопед' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'english school', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'english school' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-courses' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'фільми онлайн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'фільми онлайн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'серіали онлайн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'серіали онлайн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'онлайн кінотеатр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'онлайн кінотеатр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'дивитися фільм', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'дивитися фільм' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'дивитися серіа', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'дивитися серіа' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'українське кін', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'українське кін' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'українські фільм', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'українські фільм' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'movies online', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'movies online' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-movies' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'раді', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'раді' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'радіостанц', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'радіостанц' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'fm раді', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'fm раді' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'українська музик', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'українська музик' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'українські пісн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'українські пісн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'слухати раді', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'слухати раді' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'radio', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'radio' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-music' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'ігри українськ', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'ігри українськ' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'гра українськ', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'гра українськ' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'аліас', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'аліас' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'крокодил', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'крокодил' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'кросворд', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'кросворд' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'сканворд', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'сканворд' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'вікторин', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'вікторин' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'гра в слов', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'гра в слов' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'ігри для компан', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'ігри для компан' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'party game', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'party game' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-games' LIMIT 1));
