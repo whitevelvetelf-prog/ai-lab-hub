@@ -32,14 +32,21 @@ require_once __DIR__ . '/marketplace.php';
         <?php if (auth_check()): ?>
         <?php
         // Значок непрочитаних повідомлень Marketplace (лише коли функцію ввімкнено; інакше бібліотека не підключається).
+        // Посилання «Повідомлення» показуємо завжди, коли функцію ввімкнено; значок — лише якщо є непрочитані.
         $msgBadge = '';
+        $msgOn = false;
         if (mp_config()['messaging_enabled'] === true) {
             require_once __DIR__ . '/mp-messages.php';
-            $msgBadge = msg_header_badge_html();
+            try {
+                $msgOn = msg_enabled();
+            } catch (Throwable) {
+                $msgOn = false;
+            }
+            $msgBadge = $msgOn ? msg_header_badge_html() : '';
         }
         ?>
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
-        <?php if ($msgBadge !== ''): ?>
+        <?php if ($msgOn): ?>
         <a class="site-nav__link site-nav__link--msg" href="mp-messages.php"><?= htmlspecialchars(t('msg_title'), ENT_QUOTES) ?><?= $msgBadge ?></a>
         <?php endif; ?>
         <?php if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'account.php'): // навігація кабінету: «Блог» для всіх залогінених ролей ?>
