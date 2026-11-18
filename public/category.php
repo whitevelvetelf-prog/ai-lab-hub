@@ -249,6 +249,9 @@ $subcategoryIcons = [
     'ua-beauty'              => 'scissors',
     'ua-pets'                => 'paw-print',
     'ua-car-service'         => 'wrench',
+    'ua-clinics'             => 'stethoscope',
+    'ua-dental'              => 'smile',
+    'ua-labs'                => 'test-tube',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',

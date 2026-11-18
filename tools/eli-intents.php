@@ -240,6 +240,9 @@ const ELI_INTENTS = [
     ['салон краси, салони краси, барбершоп, барбер, перукарня, стрижка, манікюр, брови, beauty salon, barbershop, haircut, manicure', 'ukrainian-apps', 'ua-beauty', 1.0],
     ['ветклініка, ветеринар, ветеринарна клініка, ветлікар, зоомагазин, товари для тварин, щеплення тварин, vet, veterinary, pet store', 'ukrainian-apps', 'ua-pets', 1.0],
     ['автосервіс, ремонт авто, шиномонтаж, автомийка, мийка самообслуговування, автозапчастини, запчастини, car service, car repair, car wash, car parts', 'ukrainian-apps', 'ua-car-service', 1.0],
+    ['клініка, клініки, приватна клініка, медичний центр, медцентр, пологовий будинок, телемедицина, онлайн-консультація лікаря, clinic, medical center, telemedicine', 'ukrainian-apps', 'ua-clinics', 1.0],
+    ['стоматологія, стоматолог, стоматологічна клініка, зубний лікар, лікування зубів, ортодонт, брекети, елайнери, dentist, dental, orthodontist', 'ukrainian-apps', 'ua-dental', 1.0],
+    ['лабораторія, медична лабораторія, здати аналізи, аналізи крові, аналіз крові, результати аналізів, blood test, lab test', 'ukrainian-apps', 'ua-labs', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */
