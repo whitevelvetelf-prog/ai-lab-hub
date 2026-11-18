@@ -691,7 +691,7 @@ function msg_start(PDO $pdo, int $userId, array $listing, string $body): array
     if ($existing !== null) {
         $conv = msg_conversation($pdo, $existing);
 
-        return $conv === null ? ['status' => 'msg_err_save', 'conv_id' => null] : msg_send($pdo, $conv, 'buyer', $userId, $body);
+        return $conv === null ? ['status' => 'msg_err_save', 'conv_id' => null] : msg_send_in_conv($pdo, $conv, 'buyer', $userId, $body);
     }
     $lock = 'mp_msg_' . $userId;
     if (!mpb_lock($pdo, $lock)) {
@@ -745,7 +745,7 @@ function msg_insert(PDO $pdo, int $convId, ?int $senderId, ?string $label, strin
  *
  * @return array{status:string,conv_id:?int,message_id?:int}
  */
-function msg_send(PDO $pdo, array $conv, string $role, int $userId, string $body): array
+function msg_send_in_conv(PDO $pdo, array $conv, string $role, int $userId, string $body): array
 {
     $convId = (int) $conv['id'];
     $body = msg_clean_body($body);

@@ -110,7 +110,7 @@ if ($isPost) {
             if ($role !== 'platform') {
                 $needVerified($back);
             }
-            $res = msg_send($pdo, $conv, $role, $uid, $body);
+            $res = msg_send_in_conv($pdo, $conv, $role, $uid, $body);
             if ($res['status'] === 'ok') {
                 if ($json) {
                     $since = max(0, (int) ($_POST['since'] ?? 0));
