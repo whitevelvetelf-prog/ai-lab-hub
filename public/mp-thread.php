@@ -361,7 +361,7 @@ msg_open(t('msg_title'));
                 <label class="mp-label" for="msgNote"><?= mp_e(t('msg_report_note')) ?></label>
                 <textarea class="mp-input" id="msgNote" name="note" rows="3" maxlength="500"></textarea>
                 <p class="mp-hint"><?= mp_e(t('msg_report_hint')) ?></p>
-                <p class="mp-actions"><button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('msg_report_send')) ?></button></p>
+                <p class="mp-actions msg-actions"><button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('msg_report_send')) ?></button></p>
             </form>
         </details>
         <?php endif; ?>

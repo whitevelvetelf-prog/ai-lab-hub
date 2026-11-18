@@ -64,7 +64,7 @@ msg_open(t('msg_settings'));
                 <label class="msg-check"><input type="checkbox" name="email_new_message" value="1"<?= $emailOn ? ' checked' : '' ?>> <span><?= mp_e(t('msg_email_toggle')) ?></span></label>
                 <p class="mp-hint"><?= mp_e(t('msg_email_hint')) ?></p>
                 <?php if (msg_cfg('messaging_email_enabled') !== true): ?><p class="mp-hint"><?= mp_e(t('msg_email_site_off')) ?></p><?php endif; ?>
-                <p class="mp-actions"><button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('msg_save')) ?></button></p>
+                <p class="mp-actions msg-actions"><button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('msg_save')) ?></button></p>
             </form>
         </section>
         <section class="mp-panel">
