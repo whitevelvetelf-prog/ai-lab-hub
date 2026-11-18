@@ -23,4 +23,4 @@ exit(promo_cron_run('promo-hourly', 600, static function (PDO $pdo): string {
     }
 
     return implode(' ', $parts);
-}));
+}, true));   // повтор після MySQL 1615 (див. cron/_bootstrap.php)

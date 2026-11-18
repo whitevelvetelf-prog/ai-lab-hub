@@ -23,4 +23,4 @@ exit(promo_cron_run('outreach-send', 240, static function (PDO $pdo): string {
     $followups = omail_followup_drafts($pdo);
 
     return 'відскоків=' . $bounced . ' нагадувань-чернеток=' . $followups . ' | ' . omail_dispatch($pdo);
-}));
+}, true));   // повтор після MySQL 1615 (див. cron/_bootstrap.php)

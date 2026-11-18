@@ -26,4 +26,4 @@ exit(promo_cron_run('marketplace-daily', 600, static function (PDO $pdo): string
     $j = mpj_refresh($pdo);   // Хвиля 1: зарплата вакансій у USD і місто з геодовідника
 
     return $out . ($n > 0 ? "; price_usd: $n" : '') . ($j > 0 ? "; salary_usd/place: $j" : '');
-}));
+}, true));   // повтор після MySQL 1615 (див. cron/_bootstrap.php)

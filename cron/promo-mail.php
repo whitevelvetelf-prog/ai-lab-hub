@@ -15,4 +15,4 @@ exit(promo_cron_run('promo-mail', 240, static function (PDO $pdo): string {
     $r = promo_mail_send_pending($pdo, 50);
 
     return 'sent=' . $r['sent'] . ' retry=' . $r['retry'] . ' failed=' . $r['failed'] . ' transport=' . promo_mail_config()['transport'];
-}));
+}, true));   // повтор після MySQL 1615 (див. cron/_bootstrap.php)

@@ -28,4 +28,4 @@ exit(promo_cron_run('outreach-daily', 1500, static function (PDO $pdo): string {
     }
 
     return mb_substr($sources, 0, 700) . ' | контакти: перевірено ' . count($ids) . ', знайдено ' . $found;
-}));
+}, true));   // повтор після MySQL 1615 (див. cron/_bootstrap.php)

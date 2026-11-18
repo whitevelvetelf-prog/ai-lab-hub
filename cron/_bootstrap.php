@@ -48,9 +48,11 @@ function promo_cron_is_reprepare(Throwable $e): bool
 }
 
 /**
- * $retryOnReprepare — для ідемпотентних завдань (promo-daily): якщо MySQL повернув 1615 (на спільному сервері хостингу
+ * $retryOnReprepare — для завдань, що вибирають роботу за станом у базі (зараз — усі cron-завдання): якщо MySQL повернув 1615 (на спільному сервері хостингу
  * кеш визначень таблиць витісняє підготовлені запити), завдання повторюється ОДИН раз на новому з'єднанні з
  * емульованими prepared statements (PDO::ATTR_EMULATE_PREPARES = true; значення так само екрануються драйвером).
+ * Незавершену транзакцію першої спроби перед повтором відкочуємо, щоб повтор не чекав на її блокування.
+ * Повтор рівносильний наступному плановому запуску (листи — з черги за статусом), тож дублів не додає.
  */
 function promo_cron_run(string $job, int $maxSeconds, callable $fn, bool $retryOnReprepare = false): int
 {
@@ -104,6 +106,12 @@ function promo_cron_run(string $job, int $maxSeconds, callable $fn, bool $retryO
         } catch (Throwable $first) {
             if (!$retryOnReprepare || !promo_cron_is_reprepare($first)) {
                 throw $first;
+            }
+            if ($pdo->inTransaction()) {
+                try {
+                    $pdo->rollBack();
+                } catch (Throwable) {
+                }
             }
             promo_cron_log($job, 'RETRY after 1615 at ' . basename($first->getFile()) . ':' . $first->getLine());
             /** @var PDO $retryPdo */
