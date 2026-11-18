@@ -253,6 +253,9 @@ $subcategoryIcons = [
     'ua-dental'              => 'smile',
     'ua-labs'                => 'test-tube',
     'ua-realty'              => 'building-2',
+    'ua-schools'             => 'school',
+    'ua-exams'               => 'clipboard-check',
+    'ua-courses'             => 'book-open',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',
