@@ -133,7 +133,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
             font-weight: 600;
             color: #bcd0ff;
             text-decoration: none;
-            word-break: break-all;
+            overflow-wrap: anywhere;
         }
 
         .contact-card__mail:hover {
@@ -157,7 +157,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
                 <p class="contact-card__text">
                     <?= $tx('Питання щодо роботи платформи, пропозиції, повідомлення про проблему.', 'Questions about the platform, suggestions, reporting a problem.') ?>
                 </p>
-                <a class="contact-card__mail" href="mailto:hello.ailabhub.directory@gmail.com">hello.ailabhub.directory@gmail.com</a>
+                <a class="contact-card__mail" href="mailto:hello.ailabhub.directory@gmail.com">hello.ailabhub.directory@<wbr>gmail.com</a>
             </section>
 
             <?php if ($showPartnerCards): ?>
@@ -166,7 +166,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
                 <p class="contact-card__text">
                     <?= $tx('Співпраця, розміщення AI-продукту, партнерські програми.', 'Cooperation, listing an AI product, partner programs.') ?>
                 </p>
-                <a class="contact-card__mail" href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@gmail.com</a>
+                <a class="contact-card__mail" href="mailto:partners.ailabhub.directory@gmail.com">partners.ailabhub.directory@<wbr>gmail.com</a>
             </section>
             <?php endif; ?>
 
@@ -175,7 +175,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
                 <p class="contact-card__text">
                     <?= $tx('Скарги на оголошення, заяви правовласників, оскарження рішень модерації.', 'Complaints about listings, rights-holder notices, appeals against moderation decisions.') ?>
                 </p>
-                <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@gmail.com</a>
+                <a class="contact-card__mail" href="mailto:abuse.ailabhub.directory@gmail.com">abuse.ailabhub.directory@<wbr>gmail.com</a>
             </section>
 
             <section class="contact-card">
@@ -183,7 +183,7 @@ $tx = static fn(string $uk, string $enText): string => htmlspecialchars($en ? $e
                 <p class="contact-card__text">
                     <?= $tx('Розміщення реклами на сайті, питання щодо рекламних кампаній.', 'Advertising on the site, questions about ad campaigns.') ?>
                 </p>
-                <a class="contact-card__mail" href="mailto:promotion.ailabhub.directory@gmail.com">promotion.ailabhub.directory@gmail.com</a>
+                <a class="contact-card__mail" href="mailto:promotion.ailabhub.directory@gmail.com">promotion.ailabhub.directory@<wbr>gmail.com</a>
             </section>
         </div>
     </main>
