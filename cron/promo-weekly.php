@@ -30,4 +30,4 @@ exit(promo_cron_run('promo-weekly', 1500, static function (PDO $pdo): string {
 
     return 'links_checked=' . $links['checked'] . ' links_paused=' . $links['paused']
         . ' purged: checks=' . $checks . ' events=' . $events . ' mails=' . $mails . ' runs=' . $runs;
-}));
+}, true));   // перевірки посилань і очищення за датою ідемпотентні → один повтор при MySQL 1615 (див. cron/_bootstrap.php)
