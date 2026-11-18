@@ -259,6 +259,9 @@ $subcategoryIcons = [
     'ua-movies'              => 'film',
     'ua-music'               => 'music',
     'ua-games'               => 'gamepad-2',
+    'ua-kids'                => 'baby',
+    'ua-language'            => 'spell-check',
+    'ua-agro'                => 'tractor',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',
