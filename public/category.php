@@ -262,6 +262,9 @@ $subcategoryIcons = [
     'ua-kids'                => 'baby',
     'ua-language'            => 'spell-check',
     'ua-agro'                => 'tractor',
+    'ua-sport'               => 'trophy',
+    'ua-faith'               => 'church',
+    'ua-global'              => 'globe',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',
