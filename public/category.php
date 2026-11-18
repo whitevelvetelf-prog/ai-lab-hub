@@ -241,6 +241,11 @@ $subcategoryIcons = [
     'ua-charity'             => 'hand-heart',
     'ua-business'            => 'briefcase-business',
     'ua-booking'             => 'calendar-check',
+    'ua-restaurants'         => 'utensils',
+    'ua-cafes'               => 'coffee',
+    'ua-fitness'             => 'dumbbell',
+    'ua-malls'               => 'store',
+    'ua-tickets'             => 'clapperboard',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',

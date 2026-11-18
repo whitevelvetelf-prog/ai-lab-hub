@@ -232,6 +232,11 @@ const ELI_INTENTS = [
     ['донат, донати, збір, збори, благодійність, волонтер, волонтерство, переселенці, правова допомога, donate, donation, charity', 'ukrainian-apps', 'ua-charity', 1.0],
     ['фоп, рро, прро, документообіг, кеп, sole trader', 'ukrainian-apps', 'ua-business', 1.0],
     ['онлайн-запис, онлайн запис, запис клієнтів, запис до майстра, журнал записів, crm для салону, салон краси, бʼюті-майстер, booking, appointment', 'ukrainian-apps', 'ua-booking', 1.0],
+    ['ресторан, ресторани, доставка їжі, замовити їжу, піца, піцерія, суші, роли, food delivery, restaurant, pizza, sushi', 'ukrainian-apps', 'ua-restaurants', 1.0],
+    ['кавʼярня, кав\'ярня, кавʼярні, кав\'ярні, кава, пекарня, круасан, coffee shop, cafe, bakery', 'ukrainian-apps', 'ua-cafes', 1.0],
+    ['спортзал, тренажерний зал, фітнес-клуб, фітнес клуб, абонемент у зал, падел, gym, fitness club', 'ukrainian-apps', 'ua-fitness', 1.0],
+    ['трц, торговий центр, торгові центри, торговельний центр, mall, shopping mall', 'ukrainian-apps', 'ua-malls', 1.0],
+    ['кіно, кінотеатр, кінотеатри, квитки в кіно, концерт, концерти, квитки на концерт, вистава, театр, стендап, cinema, concert tickets', 'ukrainian-apps', 'ua-tickets', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */

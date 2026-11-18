@@ -1,1465 +1,1519 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-11-11: нова категорія «Подорожі та туризм» / «Travel & Tourism» (slug travel-tourism) з підкатегоріями:
---   hotel-booking — Бронювання готелів
---   vacation-rentals — Апартаменти, хостели й оренда житла
---   hotel-loyalty — Готельні мережі та бонусні програми
---   flights — Авіаквитки та відстеження рейсів
---   ground-transport — Потяги, автобуси й оренда авто
---   tours-activities — Екскурсії та квитки до атракцій
---   trip-planners — АІ-планувальники подорожей
--- 47 нових продуктів + прив’язка наявних: KAYAK, Hopper, Tripadvisor, Mindtrip, Layla, Wonderplan, iplan.ai, Wanderlog, TripIt, GuideGeek, Roadtrippers, Укрзалізниця, proizd.ua, BlaBlaCar.
--- Тексти UA/EN — за описами в App Store (iTunes lookup, 11.11.2026) і офіційними сайтами; з каталогів конкурентів — лише назви.
--- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою. Повторний запуск безпечний.
--- Застосування: phpMyAdmin → gu621051_ailabhublive → «Импорт» (або вкладка SQL) → цей файл → «Вперёд».
---   Booking.com — Бронювання готелів, Апартаменти, хостели й оренда житла
---   Expedia — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
---   Hotels.com — Бронювання готелів
---   Agoda — Бронювання готелів, Апартаменти, хостели й оренда житла, Авіаквитки та відстеження рейсів
---   Trip.com — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
---   trivago — Бронювання готелів
---   Priceline — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
---   HotelTonight — Бронювання готелів
---   momondo — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
---   lastminute.com — Бронювання готелів, Авіаквитки та відстеження рейсів
---   Traveloka — Бронювання готелів, Авіаквитки та відстеження рейсів, Екскурсії та квитки до атракцій
---   Tablet Hotels — Бронювання готелів
---   Mr & Mrs Smith — Бронювання готелів
---   Hotels24.ua — Бронювання готелів
---   Google Hotels — Бронювання готелів
---   Skyscanner — Авіаквитки та відстеження рейсів, Бронювання готелів, Потяги, автобуси й оренда авто
---   Airbnb — Апартаменти, хостели й оренда житла, Екскурсії та квитки до атракцій
---   Vrbo — Апартаменти, хостели й оренда житла
---   Hostelworld — Апартаменти, хостели й оренда житла
---   HomeExchange — Апартаменти, хостели й оренда житла
---   Holidu — Апартаменти, хостели й оренда житла
---   Marriott Bonvoy — Готельні мережі та бонусні програми, Бронювання готелів
---   Hilton Honors — Готельні мережі та бонусні програми, Бронювання готелів
---   IHG One Rewards — Готельні мережі та бонусні програми, Бронювання готелів
---   World of Hyatt — Готельні мережі та бонусні програми, Бронювання готелів
---   ALL Accor — Готельні мережі та бонусні програми, Бронювання готелів
---   Radisson Hotels — Готельні мережі та бонусні програми, Бронювання готелів
---   Wyndham Hotels & Resorts — Готельні мережі та бонусні програми, Бронювання готелів
---   Best Western — Готельні мережі та бонусні програми, Бронювання готелів
---   Choice Hotels — Готельні мережі та бонусні програми, Бронювання готелів
---   Google Flights — Авіаквитки та відстеження рейсів
---   Kiwi.com — Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
---   eDreams — Авіаквитки та відстеження рейсів, Бронювання готелів
---   Flighty — Авіаквитки та відстеження рейсів
---   Flightradar24 — Авіаквитки та відстеження рейсів
---   Omio — Потяги, автобуси й оренда авто, Авіаквитки та відстеження рейсів
---   Trainline — Потяги, автобуси й оренда авто
---   FlixBus — Потяги, автобуси й оренда авто
---   Rentalcars.com — Потяги, автобуси й оренда авто
---   Discover Cars — Потяги, автобуси й оренда авто
---   INFOBUS — Потяги, автобуси й оренда авто, Авіаквитки та відстеження рейсів
---   GetYourGuide — Екскурсії та квитки до атракцій
---   Viator — Екскурсії та квитки до атракцій
---   Klook — Екскурсії та квитки до атракцій, Бронювання готелів
---   Tiqets — Екскурсії та квитки до атракцій
---   Trip Planner AI — АІ-планувальники подорожей
---   Tripsy — АІ-планувальники подорожей
+-- AI LAB HUB — партія 2026-11-18: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps): ресторани, кав'ярні, спортзали, ТРЦ, кіно й квитки, маркети, аптеки, таксі.
+-- Нові підкатегорії:
+--   * Ресторани та доставка їжі / Restaurants & Food Delivery (slug ua-restaurants)
+--   * Кав'ярні та пекарні / Coffee Shops & Bakeries (slug ua-cafes)
+--   * Спортзали та фітнес-клуби / Gyms & Fitness Clubs (slug ua-fitness)
+--   * Торгові центри / Shopping Malls (slug ua-malls)
+--   * Кіно, концерти та квитки / Cinema, Concerts & Tickets (slug ua-tickets)
+-- + 52 продуктів (якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються).
+-- Тексти UA/EN написано за офіційними описами застосунків в App Store (регіон UA) та сайтами, звірено 2026-11-18.
+-- Ціни не вказано: план «Ціна: див. сайт» (0, one_time); Free — застосунок безкоштовний у магазині застосунків.
+-- Пропущено: Glovo, Bolt Food, Wolt, Uber Eats, McDonald's, Auchan, Watsons (іноземні компанії), Пузата Хата та IQ pizza (неофіційні/російськомовні описи),
+--   ONE PLUS COFFEE і «Мед-сервис» (російськомовні описи), ТРЦ Караван (не оновлюється з 2016), Love Sales (польський агрегатор).
+-- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
+-- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
+--   PIZZA DAY — Ресторани та доставка їжі
+--   Sushi Master — Ресторани та доставка їжі
+--   Yapiko — Ресторани та доставка їжі
+--   Ninja Sushi — Ресторани та доставка їжі
+--   Smaki-Maki — Ресторани та доставка їжі
+--   Mister.Am — Ресторани та доставка їжі, Пошта й доставка
+--   holDO — Ресторани та доставка їжі, Кав'ярні та пекарні
+--   BAO GROUP — Ресторани та доставка їжі
+--   Restaron — Ресторани та доставка їжі
+--   Хінкальня — Ресторани та доставка їжі
+--   Mama Manana — Ресторани та доставка їжі
+--   LA П'ЄЦ — Ресторани та доставка їжі
+--   Pronto Pizza — Ресторани та доставка їжі
+--   OhMyPizza — Ресторани та доставка їжі
+--   Sushi•Go — Ресторани та доставка їжі
+--   Lviv Croissants — Кав'ярні та пекарні
+--   Aroma Kava — Кав'ярні та пекарні
+--   KREDENS — Кав'ярні та пекарні
+--   Я це KAVA — Кав'ярні та пекарні
+--   Mikko Coffee — Кав'ярні та пекарні
+--   Fresh Coffee — Кав'ярні та пекарні
+--   ELITECOFFEE — Кав'ярні та пекарні, Покупки
+--   Sport Life — Спортзали та фітнес-клуби
+--   APOLLO NEXT — Спортзали та фітнес-клуби
+--   Smartass — Спортзали та фітнес-клуби
+--   FitNow — Спортзали та фітнес-клуби, Онлайн-запис на послуги
+--   LimeFit — Спортзали та фітнес-клуби
+--   Інтер Атлетика — Спортзали та фітнес-клуби
+--   Padl.UA — Спортзали та фітнес-клуби
+--   BetterMe — Спортзали та фітнес-клуби
+--   Respublika Park — Торгові центри
+--   Forum Lviv — Торгові центри
+--   River Mall — Торгові центри
+--   Планета Кіно — Кіно, концерти та квитки
+--   Multiplex — Кіно, концерти та квитки
+--   Контрамарка — Кіно, концерти та квитки
+--   KARABAS — Кіно, концерти та квитки
+--   Квиток — Кіно, концерти та квитки
+--   Рукавичка — Супермаркети
+--   Копійка — Супермаркети
+--   ToSim (Сім23) — Супермаркети
+--   Копійочка — Супермаркети, Покупки
+--   Аптека D.S. — Медицина й аптеки
+--   MEGASPORT — Покупки
+--   PROSTOR — Покупки
+--   MAKEUP — Покупки
+--   MD-Fashion — Покупки
+--   OnTaxi — Транспорт і квитки
+--   Таксі 838 — Транспорт і квитки
+--   SHARK Taxi — Транспорт і квитки
+--   Bond — Транспорт і квитки, Ресторани та доставка їжі
+--   Getmancar — Транспорт і квитки, АЗС і водіям
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
-INSERT INTO `categories` (`name`, `name_en`, `slug`) SELECT 'Подорожі та туризм', 'Travel & Tourism', 'travel-tourism' FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM `categories` WHERE `slug` = 'travel-tourism');
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'travel-tourism' LIMIT 1);
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Бронювання готелів', 'Hotel booking', 'hotel-booking' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Апартаменти, хостели й оренда житла', 'Vacation rentals & hostels', 'vacation-rentals' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Готельні мережі та бонусні програми', 'Hotel chains & loyalty', 'hotel-loyalty' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Авіаквитки та відстеження рейсів', 'Flights & flight tracking', 'flights' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Потяги, автобуси й оренда авто', 'Trains, buses & car rental', 'ground-transport' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Екскурсії та квитки до атракцій', 'Tours & attractions', 'tours-activities' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities');
-INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'АІ-планувальники подорожей', 'AI trip planners', 'trip-planners' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners');
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'ukrainian-apps' LIMIT 1);
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Ресторани та доставка їжі', 'Restaurants & Food Delivery', 'ua-restaurants' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Кав''ярні та пекарні', 'Coffee Shops & Bakeries', 'ua-cafes' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Спортзали та фітнес-клуби', 'Gyms & Fitness Clubs', 'ua-fitness' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Торгові центри', 'Shopping Malls', 'ua-malls' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls');
+INSERT INTO `subcategories` (`category_id`, `name`, `name_en`, `slug`) SELECT @cat, 'Кіно, концерти та квитки', 'Cinema, Concerts & Tickets', 'ua-tickets' FROM DUAL WHERE @cat IS NOT NULL AND NOT EXISTS (SELECT 1 FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets');
 
--- Booking.com — Бронювання готелів, Апартаменти, хостели й оренда житла
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'booking.com' OR LOWER(`name`) = 'booking.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Booking.com', NULL, 'https://www.booking.com/', NULL, NULL, 'Сервіс бронювання готелів, апартаментів і будинків для відпочинку по всьому світу.', 'Worldwide booking service for hotels, apartments and holiday homes.', 'Booking.com дає змогу шукати й бронювати готелі, мотелі, апартаменти та будинки для відпочинку в будь-якій країні. За даними розробника, у застосунку понад 27 мільйонів варіантів житла. Пошук працює за містом, пам’яткою чи назвою готелю, результати фільтруються за ціною, оцінкою гостей і зручностями; застосунок має український інтерфейс.', 'Booking.com lets you search and book hotels, motels, apartments and holiday homes in any country. According to the developer, the app lists over 27 million places to stay. Search works by city, landmark or hotel name, and results can be filtered by price, guest review score and amenities; the app has a Ukrainian interface.', 'Пошук за містом, пам’яткою чи назвою готелю
-Фільтри за ціною, оцінкою й зручностями
-Бронювання в останню хвилину
-Відгуки гостей
-Український інтерфейс', 'Search by city, landmark or hotel name
-Filters by price, score and amenities
-Last-minute bookings
-Guest reviews
-Ukrainian interface', 'Користувачі, які шукають і бронюють житло для відпустки, відрядження чи поїздки на вихідні', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'booking.com' OR LOWER(`name`) = 'booking.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+-- PIZZA DAY — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pizzaday.ua' OR LOWER(`name`) = 'pizza day')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'PIZZA DAY', NULL, 'https://pizzaday.ua', NULL, NULL, 'Застосунок мережі піцерій Pizza Day: замовлення піци онлайн, акції, бонуси та відстеження приготування.', 'Pizza Day pizzeria chain app: order pizza online, get deals and rewards, and track your order as it is made.', 'Pizza Day — одна з найбільших мереж піцерій в Україні: понад 280 закладів у більш ніж 50 містах. У застосунку можна переглянути меню, замовити доставку чи самовивіз, отримувати знижки й бонуси та стежити за кожним етапом приготування замовлення в реальному часі.', 'Pizza Day is one of the largest pizzeria chains in Ukraine, with 280+ locations in more than 50 cities. In the app you can browse the menu, order delivery or pickup, get discounts and rewards, and follow every stage of your order in real time.', 'Меню й онлайн-замовлення
+Доставка або самовивіз
+Бонуси та акції
+Відстеження замовлення в реальному часі', 'Menu and online ordering
+Delivery or pickup
+Rewards and deals
+Real-time order tracking', 'Усім, хто замовляє піцу додому чи в офіс.', 'Anyone ordering pizza to their home or office.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'pizzaday.ua' OR LOWER(`name`) = 'pizza day') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Worldwide booking service for hotels, apartments and holiday homes.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Booking.com lets you search and book hotels, motels, apartments and holiday homes in any country. According to the developer, the app lists over 27 million places to stay. Search works by city, landmark or hotel name, and results can be filtered by price, guest review score and amenities; the app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Search by city, landmark or hotel name
-Filters by price, score and amenities
-Last-minute bookings
-Guest reviews
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Expedia — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'expedia.com' OR LOWER(`name`) = 'expedia')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Expedia', NULL, 'https://www.expedia.com/', NULL, NULL, 'Бронювання готелів, авіаквитків, оренди авто, розваг і пакетних турів в одному застосунку.', 'Book hotels, flights, car hire, activities and package holidays in one app.', 'Expedia об’єднує в одному застосунку готелі, авіаквитки, оренду авто, розваги й пакетні тури. Безкоштовна програма лояльності Expedia One Key відкриває ціни для учасників, а відстеження цін на авіаквитки надсилає сповіщення про зміну вартості. Якщо додати готель до перельоту, пакет виходить дешевшим.', 'Expedia brings hotels, flights, car hire, activities and package holidays into one app. The free Expedia One Key loyalty programme unlocks member prices, and price tracking sends alerts when flight prices change. Adding a hotel to a flight makes the package cheaper.', 'Готелі, перельоти, авто й розваги в одному місці
-Ціни для учасників Expedia One Key
-Відстеження цін на авіаквитки
-Пакети «переліт + готель»
-Розумні фільтри', 'Hotels, flights, cars and activities in one place
-Expedia One Key member prices
-Flight price tracking
-Flight + hotel packages
-Smart filters', 'Користувачі, які шукають і бронюють житло для відпустки, відрядження чи поїздки на вихідні', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'expedia.com' OR LOWER(`name`) = 'expedia') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Book hotels, flights, car hire, activities and package holidays in one app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Expedia brings hotels, flights, car hire, activities and package holidays into one app. The free Expedia One Key loyalty programme unlocks member prices, and price tracking sends alerts when flight prices change. Adding a hotel to a flight makes the package cheaper.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hotels, flights, cars and activities in one place
-Expedia One Key member prices
-Flight price tracking
-Flight + hotel packages
-Smart filters', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hotels.com — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hotels.com' OR LOWER(`name`) = 'hotels.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hotels.com', NULL, 'https://www.hotels.com/', NULL, NULL, 'Застосунок для пошуку й бронювання готелів із винагородами за кожну ніч.', 'Hotel search and booking app with rewards for every night stayed.', 'Hotels.com спеціалізується на бронюванні готелів — від бюджетних B&B до курортів і люксових готелів; за даними розробника, у каталозі понад 500 тисяч об’єктів. Учасники безкоштовної програми лояльності отримують ціни для учасників і накопичують винагороди Hotels.com Cash за ночі. Готелі можна порівнювати поруч і отримувати сповіщення про зміну цін.', 'Hotels.com focuses on hotel bookings, from budget B&Bs to resorts and luxury hotels; the developer cites over 500,000 properties. Members of the free loyalty programme get member prices and earn Hotels.com Cash rewards for nights stayed. Hotels can be compared side by side, with price change alerts.', 'Понад 500 тисяч готелів
-Ціни для учасників
-Винагороди Hotels.com Cash
-Порівняння готелів поруч
-Сповіщення про ціни', 'Over 500,000 properties
-Member prices
-Hotels.com Cash rewards
-Side-by-side comparison
-Price alerts', 'Користувачі, які шукають і бронюють житло для відпустки, відрядження чи поїздки на вихідні', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hotels.com' OR LOWER(`name`) = 'hotels.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hotel search and booking app with rewards for every night stayed.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hotels.com focuses on hotel bookings, from budget B&Bs to resorts and luxury hotels; the developer cites over 500,000 properties. Members of the free loyalty programme get member prices and earn Hotels.com Cash rewards for nights stayed. Hotels can be compared side by side, with price change alerts.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 500,000 properties
-Member prices
-Hotels.com Cash rewards
-Side-by-side comparison
-Price alerts', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Agoda — Бронювання готелів, Апартаменти, хостели й оренда житла, Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'agoda.com' OR LOWER(`name`) = 'agoda')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Agoda', NULL, 'https://www.agoda.com/', NULL, NULL, 'Бронювання готелів, вілл, апартаментів і авіаквитків, сильний вибір в Азії.', 'Book hotels, villas, apartments and flights, with a strong selection in Asia.', 'Agoda — платформа бронювання житла й авіаквитків. За даними розробника, доступно понад 6 мільйонів варіантів проживання (готелі, курорти, вілли, будинки, B&B) і рейси близько 400 авіакомпаній. Пошук порівнює ціни на перельоти майже в реальному часі; застосунок має український інтерфейс.', 'Agoda is a platform for booking accommodation and flights. According to the developer, it offers over 6 million places to stay (hotels, resorts, villas, homes, B&Bs) and flights from around 400 airlines. Flight search compares prices in near real time; the app has a Ukrainian interface.', 'Понад 6 млн варіантів житла
-Авіаквитки близько 400 авіакомпаній
-Вілли й апартаменти
-Порівняння цін на рейси
-Український інтерфейс', 'Over 6 million properties
-Flights from around 400 airlines
-Villas and apartments
-Flight price comparison
-Ukrainian interface', 'Користувачі, які шукають і бронюють житло для відпустки, відрядження чи поїздки на вихідні', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'agoda.com' OR LOWER(`name`) = 'agoda') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Book hotels, villas, apartments and flights, with a strong selection in Asia.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Agoda is a platform for booking accommodation and flights. According to the developer, it offers over 6 million places to stay (hotels, resorts, villas, homes, B&Bs) and flights from around 400 airlines. Flight search compares prices in near real time; the app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 6 million properties
-Flights from around 400 airlines
-Villas and apartments
-Flight price comparison
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Trip.com — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trip.com' OR LOWER(`name`) = 'trip.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Trip.com', NULL, 'https://www.trip.com/', NULL, NULL, 'Бронювання готелів, авіаквитків і квитків на потяги з підтримкою 24/7.', 'Book hotels, flights and train tickets with 24/7 support.', 'Trip.com — туристичний сервіс для бронювання готелів, авіаквитків, квитків на потяги в Європі та Азії й інших послуг. Застосунок підтримує 24 мови, зокрема українську, має цілодобову службу підтримки та програму лояльності з бонусами Trip Coins.', 'Trip.com is a travel service for booking hotels, flights, train tickets in Europe and Asia and other services. The app supports 24 languages including Ukrainian, offers 24/7 customer support and a loyalty programme with Trip Coins rewards.', 'Готелі, рейси й потяги
-Підтримка 24/7
-24 мови, зокрема українська
-Бонуси Trip Coins
-Квитки на потяги в Європі та Азії', 'Hotels, flights and trains
-24/7 support
-24 languages incl. Ukrainian
-Trip Coins rewards
-Train tickets in Europe and Asia', 'Користувачі, які шукають і бронюють житло для відпустки, відрядження чи поїздки на вихідні', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trip.com' OR LOWER(`name`) = 'trip.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Book hotels, flights and train tickets with 24/7 support.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Trip.com is a travel service for booking hotels, flights, train tickets in Europe and Asia and other services. The app supports 24 languages including Ukrainian, offers 24/7 customer support and a loyalty programme with Trip Coins rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hotels, flights and trains
-24/7 support
-24 languages incl. Ukrainian
-Trip Coins rewards
-Train tickets in Europe and Asia', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for and booking accommodation for holidays, business trips or weekend getaways', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- trivago — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trivago.com' OR LOWER(`name`) = 'trivago')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'trivago', NULL, 'https://www.trivago.com/', NULL, NULL, 'Метапошук готелів: порівнює ціни з багатьох сайтів бронювання за один пошук.', 'Hotel metasearch: compares prices from many booking sites in one search.', 'trivago не продає номери сам, а порівнює ціни на той самий готель із різних сайтів бронювання й веде на обрану пропозицію. Можна зберегти улюблені готелі, порівняти їх поруч, отримувати сповіщення про зниження ціни й читати зведені відгуки з кількох джерел. Фільтри враховують, наприклад, тварин, пізній виїзд, безкоштовне скасування чи сніданок.', 'trivago does not sell rooms itself; it compares prices for the same hotel across booking sites and sends you to the chosen offer. You can save favourite hotels, compare them side by side, get price drop alerts and read aggregated reviews from several sources. Filters cover pets, late checkout, free cancellation, breakfast and more.', 'Порівняння цін із багатьох сайтів
-Сповіщення про зниження ціни
-Зведені відгуки
-Порівняння готелів поруч
-Фільтр безкоштовного скасування', 'Price comparison across many sites
-Price drop alerts
-Aggregated reviews
-Side-by-side comparison
-Free cancellation filter', 'Ті, хто хоче знайти найвигіднішу ціну на конкретний готель перед бронюванням', 'People who want the best price for a specific hotel before booking', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'trivago.com' OR LOWER(`name`) = 'trivago') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hotel metasearch: compares prices from many booking sites in one search.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'trivago does not sell rooms itself; it compares prices for the same hotel across booking sites and sends you to the chosen offer. You can save favourite hotels, compare them side by side, get price drop alerts and read aggregated reviews from several sources. Filters cover pets, late checkout, free cancellation, breakfast and more.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Price comparison across many sites
-Price drop alerts
-Aggregated reviews
-Side-by-side comparison
-Free cancellation filter', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who want the best price for a specific hotel before booking', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Priceline — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'priceline.com' OR LOWER(`name`) = 'priceline')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Priceline', NULL, 'https://www.priceline.com/', NULL, NULL, 'Американський сервіс знижок на готелі, оренду авто й авіаквитки.', 'US deals service for hotels, car rentals and flights.', 'Priceline (входить до Booking Holdings) пропонує готелі, оренду авто й авіаквитки зі знижками, зокрема ціни лише в застосунку. Програма Priceline VIP за кількість бронювань відкриває додаткові знижки на готелі. Сервіс орієнтований насамперед на поїздки США.', 'Priceline (part of Booking Holdings) offers discounted hotels, car rentals and flights, including app-only deals. The Priceline VIP programme unlocks extra hotel discounts as you book more. The service mainly targets US travel.', 'Знижки лише в застосунку
-Програма Priceline VIP
-Готелі, авто й рейси
-Частина Booking Holdings', 'App-only deals
-Priceline VIP programme
-Hotels, cars and flights
-Part of Booking Holdings', 'Мандрівники, які планують поїздки до США й шукають знижки', 'Travellers planning US trips and looking for deals', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'priceline.com' OR LOWER(`name`) = 'priceline') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'US deals service for hotels, car rentals and flights.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Priceline (part of Booking Holdings) offers discounted hotels, car rentals and flights, including app-only deals. The Priceline VIP programme unlocks extra hotel discounts as you book more. The service mainly targets US travel.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'App-only deals
-Priceline VIP programme
-Hotels, cars and flights
-Part of Booking Holdings', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers planning US trips and looking for deals', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- HotelTonight — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hoteltonight.com' OR LOWER(`name`) = 'hoteltonight')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'HotelTonight', NULL, 'https://www.hoteltonight.com/', NULL, NULL, 'Бронювання готелів в останню хвилину зі знижками за кілька дотиків.', 'Last-minute hotel bookings with discounts in a few taps.', 'HotelTonight (належить Airbnb) спеціалізується на бронюванні готелів в останню хвилину й наперед. Розробник обіцяє бронювання за кілька дотиків, щоденну пропозицію Daily Drop зі знижкою та рівні учасника, що відкривають додаткові знижки. Готелі відбирає команда сервісу.', 'HotelTonight (owned by Airbnb) specialises in last-minute and advance hotel bookings. The developer promises booking in a few taps, a discounted Daily Drop deal and member levels that unlock extra discounts. Hotels are curated by the team.', 'Бронювання в останню хвилину
-Щоденна знижка Daily Drop
-Рівні учасника зі знижками
-Відібрані готелі', 'Last-minute bookings
-Daily Drop deal
-Member levels with discounts
-Curated hotels', 'Ті, хто шукає готель на сьогодні чи найближчі дні', 'People looking for a hotel tonight or in the next few days', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hoteltonight.com' OR LOWER(`name`) = 'hoteltonight') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Last-minute hotel bookings with discounts in a few taps.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'HotelTonight (owned by Airbnb) specialises in last-minute and advance hotel bookings. The developer promises booking in a few taps, a discounted Daily Drop deal and member levels that unlock extra discounts. Hotels are curated by the team.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Last-minute bookings
-Daily Drop deal
-Member levels with discounts
-Curated hotels', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People looking for a hotel tonight or in the next few days', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- momondo — Бронювання готелів, Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'momondo.com' OR LOWER(`name`) = 'momondo')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'momondo', NULL, 'https://www.momondo.com/', NULL, NULL, 'Метапошук авіаквитків, готелів і оренди авто з сотень сайтів.', 'Metasearch for flights, hotels and car hire across hundreds of sites.', 'momondo (компанія KAYAK) шукає перельоти, готелі й оренду авто на сотнях туристичних сайтів і показує варіанти разом. Можна встановити сповіщення про зниження ціни, бюджет, фільтр безкоштовного скасування й зібрати маршрут подорожі; окремі готелі дають ціни лише в застосунку. Є український інтерфейс.', 'momondo (a KAYAK company) searches flights, hotels and car hire across hundreds of travel sites and shows the options together. You can set price alerts, a budget, a free-cancellation filter and build an itinerary; some hotels offer app-only rates. A Ukrainian interface is available.', 'Пошук на сотнях сайтів
-Сповіщення про ціни
-Фільтр безкоштовного скасування
-Маршрут подорожі
-Український інтерфейс', 'Search across hundreds of sites
-Price alerts
-Free cancellation filter
-Trip itinerary
-Ukrainian interface', 'Мандрівники, які порівнюють ціни на перельоти й готелі перед покупкою', 'Travellers comparing flight and hotel prices before buying', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'momondo.com' OR LOWER(`name`) = 'momondo') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Metasearch for flights, hotels and car hire across hundreds of sites.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'momondo (a KAYAK company) searches flights, hotels and car hire across hundreds of travel sites and shows the options together. You can set price alerts, a budget, a free-cancellation filter and build an itinerary; some hotels offer app-only rates. A Ukrainian interface is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Search across hundreds of sites
-Price alerts
-Free cancellation filter
-Trip itinerary
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers comparing flight and hotel prices before buying', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- lastminute.com — Бронювання готелів, Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lastminute.com' OR LOWER(`name`) = 'lastminute.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'lastminute.com', NULL, 'https://www.lastminute.com/', NULL, NULL, 'Європейський сервіс пакетних турів, готелів і перельотів у останню хвилину.', 'European service for last-minute package holidays, hotels and flights.', 'lastminute.com — європейський сервіс для бронювання пакетних турів (переліт + готель), окремих готелів і перельотів. Застосунок супроводжує поїздку від бронювання до повернення додому: усі деталі подорожі зібрані в одному місці.', 'lastminute.com is a European service for booking package holidays (flight + hotel), hotels and flights. The app accompanies the trip from booking to returning home, keeping all travel details in one place.', 'Пакети «переліт + готель»
-Готелі й перельоти
-Пропозиції в останню хвилину
-Деталі поїздки в одному місці', 'Flight + hotel packages
-Hotels and flights
-Last-minute deals
-Trip details in one place', 'Ті, хто спонтанно планує відпустку в Європі', 'People planning a spontaneous holiday in Europe', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lastminute.com' OR LOWER(`name`) = 'lastminute.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'European service for last-minute package holidays, hotels and flights.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'lastminute.com is a European service for booking package holidays (flight + hotel), hotels and flights. The app accompanies the trip from booking to returning home, keeping all travel details in one place.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Flight + hotel packages
-Hotels and flights
-Last-minute deals
-Trip details in one place', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People planning a spontaneous holiday in Europe', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Traveloka — Бронювання готелів, Авіаквитки та відстеження рейсів, Екскурсії та квитки до атракцій
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'traveloka.com' OR LOWER(`name`) = 'traveloka')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Traveloka', NULL, 'https://www.traveloka.com/', NULL, NULL, 'Туристична платформа Південно-Східної Азії з АІ-рекомендаціями.', 'Southeast Asian travel platform with AI recommendations.', 'Traveloka — універсальна туристична платформа, популярна в Південно-Східній Азії: перельоти, готелі, атракції, оренда авто, круїзи. За словами розробника, сервіс використовує АІ для персональних рекомендацій. За кожну покупку нараховуються бали, які дають знижки й інші переваги.', 'Traveloka is an all-in-one travel platform popular in Southeast Asia: flights, hotels, attractions, car hire and cruises. According to the developer, it uses AI for personalised recommendations. Every purchase earns points that unlock discounts and other benefits.', 'АІ-рекомендації
-Перельоти, готелі й атракції
-Оренда авто й круїзи
-Бали за покупки', 'AI recommendations
-Flights, hotels and attractions
-Car hire and cruises
-Points for purchases', 'Мандрівники до Південно-Східної Азії', 'Travellers to Southeast Asia', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'traveloka.com' OR LOWER(`name`) = 'traveloka') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Southeast Asian travel platform with AI recommendations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Traveloka is an all-in-one travel platform popular in Southeast Asia: flights, hotels, attractions, car hire and cruises. According to the developer, it uses AI for personalised recommendations. Every purchase earns points that unlock discounts and other benefits.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI recommendations
-Flights, hotels and attractions
-Car hire and cruises
-Points for purchases', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers to Southeast Asia', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Tablet Hotels — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tablethotels.com' OR LOWER(`name`) = 'tablet hotels')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Tablet Hotels', NULL, 'https://www.tablethotels.com/', NULL, NULL, 'Добірка бутик- і дизайн-готелів від команди, що належить до гіда MICHELIN.', 'Curated boutique and design hotels from the team behind the MICHELIN Guide hotels.', 'Tablet Hotels понад двадцять років відбирає готелі з виразним стилем, сервісом і характером — у сервісі немає «всіх готелів», лише вибрані. Користування застосунком безкоштовне й не потребує членства. Компанія Tablet Inc. також видає застосунок The MICHELIN Guide.', 'For over twenty years Tablet Hotels has hand-picked hotels with distinctive style, service and personality; it lists a curated selection rather than every hotel. Using the app is free and requires no membership. Tablet Inc. also publishes The MICHELIN Guide app.', 'Вручну відібрані готелі
-Без членства
-Бутик- і дизайн-готелі
-Пов’язаний із гідом MICHELIN', 'Hand-picked hotels
-No membership needed
-Boutique and design hotels
-Linked to the MICHELIN Guide', 'Мандрівники, яким важливі стиль і атмосфера готелю', 'Travellers who care about a hotel’s style and atmosphere', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tablethotels.com' OR LOWER(`name`) = 'tablet hotels') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Curated boutique and design hotels from the team behind the MICHELIN Guide hotels.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'For over twenty years Tablet Hotels has hand-picked hotels with distinctive style, service and personality; it lists a curated selection rather than every hotel. Using the app is free and requires no membership. Tablet Inc. also publishes The MICHELIN Guide app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hand-picked hotels
-No membership needed
-Boutique and design hotels
-Linked to the MICHELIN Guide', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers who care about a hotel’s style and atmosphere', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Mr & Mrs Smith — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mrandmrssmith.com' OR LOWER(`name`) = 'mr & mrs smith')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Mr & Mrs Smith', NULL, 'https://www.mrandmrssmith.com/', NULL, NULL, 'Добірка бутик- і люксових готелів, які команда відвідує особисто.', 'Boutique and luxury hotel collection personally visited by the team.', 'Mr & Mrs Smith — колекція бутик- і люксових готелів по всьому світу. За словами компанії, її експерти особисто відвідують кожен готель; у застосунку — фото, інсайдерські поради й бронювання через Apple Pay. Оплатити можна також подарунковими картками й бонусами програми лояльності.', 'Mr & Mrs Smith is a collection of boutique and luxury hotels worldwide. The company says its experts personally visit every hotel; the app has photos, insider tips and booking via Apple Pay. Gift cards and loyalty money can also be used for payment.', 'Готелі, перевірені особисто
-Бутик і люкс
-Бронювання через Apple Pay
-Подарункові картки', 'Personally visited hotels
-Boutique and luxury
-Booking via Apple Pay
-Gift cards', 'Пари й мандрівники, які шукають особливий готель для відпочинку', 'Couples and travellers looking for a special hotel stay', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mrandmrssmith.com' OR LOWER(`name`) = 'mr & mrs smith') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Boutique and luxury hotel collection personally visited by the team.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mr & Mrs Smith is a collection of boutique and luxury hotels worldwide. The company says its experts personally visit every hotel; the app has photos, insider tips and booking via Apple Pay. Gift cards and loyalty money can also be used for payment.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Personally visited hotels
-Boutique and luxury
-Booking via Apple Pay
-Gift cards', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Couples and travellers looking for a special hotel stay', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hotels24.ua — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hotels24.ua' OR LOWER(`name`) = 'hotels24.ua')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hotels24.ua', NULL, 'https://hotels24.ua/', NULL, NULL, 'Український сервіс безкоштовного бронювання готелів по всій Україні.', 'Ukrainian service for free hotel booking across Ukraine.', 'Hotels24.ua — український сервіс бронювання готелів, що працює з 2010 року (ТОВ «ХОТЕЛС 24 ЮА»). На сайті понад 4,7 тисячі готелів України з цінами, фото, описами номерів, відгуками й розташуванням на карті. Забронювати можна онлайн або за телефоном; є пропозиції для бізнес-клієнтів і груп, конференц-зали.', 'Hotels24.ua is a Ukrainian hotel booking service operating since 2010 (Hotels 24 UA LLC). The site lists over 4,700 hotels in Ukraine with prices, photos, room descriptions, guest reviews and map locations. Bookings can be made online or by phone; there are offers for business clients, groups and conference rooms.', 'Понад 4,7 тис. готелів України
-Бронювання онлайн або телефоном
-Відгуки гостей і карта
-Групи та бізнес-клієнти
-Конференц-зали', 'Over 4,700 hotels in Ukraine
-Book online or by phone
-Guest reviews and map
-Groups and business clients
-Conference rooms', 'Ті, хто подорожує Україною: відпочинок, відрядження, групові поїздки', 'People travelling within Ukraine for holidays, business or groups', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hotels24.ua' OR LOWER(`name`) = 'hotels24.ua') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian service for free hotel booking across Ukraine.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hotels24.ua is a Ukrainian hotel booking service operating since 2010 (Hotels 24 UA LLC). The site lists over 4,700 hotels in Ukraine with prices, photos, room descriptions, guest reviews and map locations. Bookings can be made online or by phone; there are offers for business clients, groups and conference rooms.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 4,700 hotels in Ukraine
-Book online or by phone
-Guest reviews and map
-Groups and business clients
-Conference rooms', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People travelling within Ukraine for holidays, business or groups', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Google Hotels — Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'google.com/travel/hotels' OR LOWER(`name`) = 'google hotels')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Google Hotels', NULL, 'https://www.google.com/travel/hotels', NULL, NULL, 'Пошук готелів від Google з порівнянням цін сайтів бронювання на карті.', 'Google hotel search comparing booking-site prices on a map.', 'Google Hotels показує готелі на карті й порівнює ціни на той самий номер із різних сайтів бронювання та сайтів самих готелів. Можна фільтрувати за ціною, оцінкою й зручностями, дивитися відгуки та фото, відстежувати ціни на обрані дати. Бронювання відбувається на сайті партнера чи готелю.', 'Google Hotels shows hotels on a map and compares prices for the same room across booking sites and hotel websites. You can filter by price, rating and amenities, read reviews, view photos and track prices for chosen dates. Booking is completed on the partner or hotel site.', 'Порівняння цін сайтів бронювання
-Готелі на карті
-Відстеження цін
-Відгуки й фото
-Фільтри зручностей', 'Booking-site price comparison
-Hotels on a map
-Price tracking
-Reviews and photos
-Amenity filters', 'Усі, хто шукає готель і хоче швидко порівняти ціни', 'Anyone searching for a hotel who wants a quick price comparison', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'google.com/travel/hotels' OR LOWER(`name`) = 'google hotels') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Google hotel search comparing booking-site prices on a map.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Google Hotels shows hotels on a map and compares prices for the same room across booking sites and hotel websites. You can filter by price, rating and amenities, read reviews, view photos and track prices for chosen dates. Booking is completed on the partner or hotel site.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Booking-site price comparison
-Hotels on a map
-Price tracking
-Reviews and photos
-Amenity filters', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone searching for a hotel who wants a quick price comparison', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Skyscanner — Авіаквитки та відстеження рейсів, Бронювання готелів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'skyscanner.net' OR LOWER(`name`) = 'skyscanner')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Skyscanner', NULL, 'https://www.skyscanner.net/', NULL, NULL, 'Порівняння цін на авіаквитки, готелі й оренду авто з українським інтерфейсом.', 'Price comparison for flights, hotels and car hire with a Ukrainian interface.', 'Skyscanner порівнює тарифи авіакомпаній і туристичних сайтів, а також ціни на готелі й оренду авто. Розумні фільтри дають шукати за тривалістю перельоту, авіакомпанією, кількістю пересадок і класом. Сповіщення про ціну повідомить, коли вартість рейсу зміниться. Застосунок має український інтерфейс.', 'Skyscanner compares fares from airlines and travel sites, plus hotel and car hire prices. Smart filters let you search by flight duration, airline, number of stops and cabin class. Price alerts tell you when a fare changes. The app has a Ukrainian interface.', 'Порівняння тарифів авіакомпаній
-Готелі й оренда авто
-Фільтри за пересадками й класом
-Сповіщення про ціну
-Український інтерфейс', 'Airline fare comparison
-Hotels and car hire
-Filters by stops and class
-Price alerts
-Ukrainian interface', 'Мандрівники, які шукають недорогі авіаквитки', 'Travellers looking for affordable flights', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'skyscanner.net' OR LOWER(`name`) = 'skyscanner') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Price comparison for flights, hotels and car hire with a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Skyscanner compares fares from airlines and travel sites, plus hotel and car hire prices. Smart filters let you search by flight duration, airline, number of stops and cabin class. Price alerts tell you when a fare changes. The app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Airline fare comparison
-Hotels and car hire
-Filters by stops and class
-Price alerts
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for affordable flights', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Airbnb — Апартаменти, хостели й оренда житла, Екскурсії та квитки до атракцій
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'airbnb.com' OR LOWER(`name`) = 'airbnb')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Airbnb', NULL, 'https://www.airbnb.com/', NULL, NULL, 'Оренда житла в господарів, враження й послуги в понад 240 країнах.', 'Homes from hosts, experiences and services in over 240 countries.', 'Airbnb — платформа оренди житла в приватних господарів: за даними компанії, понад 8 мільйонів варіантів у понад 240 країнах і регіонах. Понад 80 фільтрів допомагають знайти басейн, кухню чи інші потрібні зручності. Також через Airbnb бронюють враження (екскурсії, майстер-класи) й послуги; застосунок має український інтерфейс.', 'Airbnb is a platform for renting homes from hosts; the company cites over 8 million listings in more than 240 countries and regions. Over 80 filters help find a pool, a kitchen or other amenities. Airbnb also offers bookable experiences (tours, workshops) and services; the app has a Ukrainian interface.', 'Понад 8 млн варіантів житла
-Понад 80 фільтрів
-Враження та послуги
-Житло для груп
-Український інтерфейс', 'Over 8 million listings
-Over 80 filters
-Experiences and services
-Stays for groups
-Ukrainian interface', 'Мандрівники, яким потрібна квартира чи будинок замість готелю', 'Travellers who want an apartment or house instead of a hotel', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'airbnb.com' OR LOWER(`name`) = 'airbnb') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Homes from hosts, experiences and services in over 240 countries.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Airbnb is a platform for renting homes from hosts; the company cites over 8 million listings in more than 240 countries and regions. Over 80 filters help find a pool, a kitchen or other amenities. Airbnb also offers bookable experiences (tours, workshops) and services; the app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 8 million listings
-Over 80 filters
-Experiences and services
-Stays for groups
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers who want an apartment or house instead of a hotel', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Vrbo — Апартаменти, хостели й оренда житла
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vrbo.com' OR LOWER(`name`) = 'vrbo')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Vrbo', NULL, 'https://www.vrbo.com/', NULL, NULL, 'Будинки для відпочинку цілком — для сімей і компаній.', 'Entire holiday homes for families and groups.', 'Vrbo (Expedia Group) спеціалізується на будинках для відпочинку, які орендуються цілком: котеджі, шале, вілли, пляжні будинки — щоб уся компанія жила разом. Учасники отримують ціни для учасників і винагороди за поїздки, а планувальник поїздки дає разом обирати житло.', 'Vrbo (Expedia Group) specialises in entire holiday homes: cottages, cabins, villas and beach houses, so the whole group can stay together. Members get member prices and trip rewards, and the trip planner lets a group choose a home together.', 'Житло цілком
-Відгуки гостей
-Спільний планувальник поїздки
-Ціни для учасників', 'Entire homes
-Guest reviews
-Shared trip planner
-Member prices', 'Сім’ї та компанії друзів', 'Families and groups of friends', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vrbo.com' OR LOWER(`name`) = 'vrbo') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Entire holiday homes for families and groups.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Vrbo (Expedia Group) specialises in entire holiday homes: cottages, cabins, villas and beach houses, so the whole group can stay together. Members get member prices and trip rewards, and the trip planner lets a group choose a home together.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Entire homes
-Guest reviews
-Shared trip planner
-Member prices', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Families and groups of friends', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hostelworld — Апартаменти, хостели й оренда житла
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hostelworld.com' OR LOWER(`name`) = 'hostelworld')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hostelworld', NULL, 'https://www.hostelworld.com/', NULL, NULL, 'Бронювання хостелів у 180 країнах для бюджетних подорожей.', 'Hostel bookings in 180 countries for budget travel.', 'Hostelworld працює 25 років і, за даними компанії, пропонує 16,5 тисячі хостелів у 180 країнах із відгуками понад 13 мільйонів мандрівників. Фільтри — за розташуванням, ціною, типом кімнати, екологічністю й зручностями. Застосунок також допомагає знайомитися з іншими мандрівниками.', 'Hostelworld has been running for 25 years and lists 16,500 hostels in 180 countries with reviews from over 13 million travellers, according to the company. Filters cover location, price, room type, sustainability and facilities. The app also helps travellers meet each other.', '16,5 тис. хостелів у 180 країнах
-Відгуки мандрівників
-Фільтр за типом кімнати
-Знайомства з мандрівниками', '16,500 hostels in 180 countries
-Traveller reviews
-Room type filter
-Meet other travellers', 'Студенти, бекпекери й усі, хто подорожує з обмеженим бюджетом', 'Students, backpackers and budget travellers', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hostelworld.com' OR LOWER(`name`) = 'hostelworld') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hostel bookings in 180 countries for budget travel.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hostelworld has been running for 25 years and lists 16,500 hostels in 180 countries with reviews from over 13 million travellers, according to the company. Filters cover location, price, room type, sustainability and facilities. The app also helps travellers meet each other.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '16,500 hostels in 180 countries
-Traveller reviews
-Room type filter
-Meet other travellers', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Students, backpackers and budget travellers', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- HomeExchange — Апартаменти, хостели й оренда житла
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'homeexchange.com' OR LOWER(`name`) = 'homeexchange')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'HomeExchange', NULL, 'https://www.homeexchange.com/', NULL, NULL, 'Обмін житлом між учасниками спільноти замість оренди.', 'Home swapping between community members instead of renting.', 'HomeExchange — платформа обміну житлом: учасники живуть у домівках одне одного під час відпустки. За даними компанії, у спільноті понад 250 тисяч учасників у 155 країнах. Обмін можливий і не одночасно — завдяки балам GuestPoints; для повного доступу потрібне річне членство, обміни захищені гарантіями.', 'HomeExchange is a home swapping platform: members stay in each other’s homes on holiday. The company cites over 250,000 members in 155 countries. Swaps need not be simultaneous thanks to GuestPoints; full access requires an annual membership, and exchanges are covered by guarantees.', 'Обмін житлом
-Бали GuestPoints
-Річне членство
-Гарантії для обмінів
-Чат з учасниками', 'Home swapping
-GuestPoints
-Annual membership
-Exchange guarantees
-Chat with members', 'Власники житла, які хочуть подорожувати, не платячи за оренду', 'Homeowners who want to travel without paying for accommodation', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'homeexchange.com' OR LOWER(`name`) = 'homeexchange') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Home swapping between community members instead of renting.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'HomeExchange is a home swapping platform: members stay in each other’s homes on holiday. The company cites over 250,000 members in 155 countries. Swaps need not be simultaneous thanks to GuestPoints; full access requires an annual membership, and exchanges are covered by guarantees.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Home swapping
-GuestPoints
-Annual membership
-Exchange guarantees
-Chat with members', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Homeowners who want to travel without paying for accommodation', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Потрібне платне членство; актуальні ціни — на офіційному сайті.', 'A paid membership is required; current prices are on the official website.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Pizza Day pizzeria chain app: order pizza online, get deals and rewards, and track your order as it is made.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Pizza Day is one of the largest pizzeria chains in Ukraine, with 280+ locations in more than 50 cities. In the app you can browse the menu, order delivery or pickup, get discounts and rewards, and follow every stage of your order in real time.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Menu and online ordering
+Delivery or pickup
+Rewards and deals
+Real-time order tracking', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone ordering pizza to their home or office.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A paid membership is required; current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Holidu — Апартаменти, хостели й оренда житла
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'holidu.com' OR LOWER(`name`) = 'holidu')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Holidu', NULL, 'https://www.holidu.com/', NULL, NULL, 'Пошук перевірених будинків і апартаментів для відпочинку в Європі.', 'Search for verified holiday homes and apartments in Europe.', 'Holidu — німецький сервіс пошуку житла для відпочинку в Європі: шале, котеджі, апартаменти, пляжні вілли. Компанія наголошує на перевірених оголошеннях, простому бронюванні та власній службі підтримки.', 'Holidu is a German service for finding holiday rentals in Europe: chalets, cottages, apartments and beach villas. The company highlights verified listings, simple booking and its own support team.', 'Житло для відпочинку в Європі
-Перевірені оголошення
-Служба підтримки
-Шале, котеджі, вілли', 'Holiday rentals in Europe
-Verified listings
-Support team
-Chalets, cottages, villas', 'Ті, хто планує відпочинок у Європі в окремому житлі', 'People planning a European holiday in a rental home', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'holidu.com' OR LOWER(`name`) = 'holidu') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Search for verified holiday homes and apartments in Europe.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Holidu is a German service for finding holiday rentals in Europe: chalets, cottages, apartments and beach villas. The company highlights verified listings, simple booking and its own support team.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Holiday rentals in Europe
-Verified listings
-Support team
-Chalets, cottages, villas', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People planning a European holiday in a rental home', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Marriott Bonvoy — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'marriott.com' OR LOWER(`name`) = 'marriott bonvoy')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Marriott Bonvoy', NULL, 'https://www.marriott.com/', NULL, NULL, 'Застосунок і програма лояльності Marriott: понад 8 тисяч готелів 30+ брендів.', 'Marriott’s app and loyalty programme: 8,000+ hotels across 30+ brands.', 'Marriott Bonvoy — застосунок і безкоштовна програма лояльності Marriott International: понад 8 тисяч готелів у 130+ країнах під понад 30 брендами. Учасники бронюють напряму з гарантією найкращої ціни, накопичують і витрачають бали, керують перебуванням у застосунку.', 'Marriott Bonvoy is the app and free loyalty programme of Marriott International: over 8,000 hotels in 130+ countries across 30+ brands. Members book direct with a best rate guarantee, earn and redeem points and manage stays in the app.', 'Понад 8 тис. готелів
-Гарантія найкращої ціни
-Бали за проживання
-Безкоштовне членство', 'Over 8,000 hotels
-Best rate guarantee
-Points for stays
-Free membership', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'marriott.com' OR LOWER(`name`) = 'marriott bonvoy') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Marriott’s app and loyalty programme: 8,000+ hotels across 30+ brands.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Marriott Bonvoy is the app and free loyalty programme of Marriott International: over 8,000 hotels in 130+ countries across 30+ brands. Members book direct with a best rate guarantee, earn and redeem points and manage stays in the app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 8,000 hotels
-Best rate guarantee
-Points for stays
-Free membership', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hilton Honors — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hilton.com' OR LOWER(`name`) = 'hilton honors')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hilton Honors', NULL, 'https://www.hilton.com/', NULL, NULL, 'Застосунок Hilton: бронювання, вибір номера й цифровий ключ у 9 тисячах готелів.', 'Hilton app: booking, room choice and Digital Key across 9,000 hotels.', 'Hilton Honors — застосунок і програма лояльності Hilton для понад 9 тисяч готелів. Можна заздалегідь обрати номер, зареєструватися напередодні й пройти до кімнати без стійки реєстрації завдяки цифровому ключу. Бали нараховуються за проживання й обмінюються на винагороди.', 'Hilton Honors is Hilton’s app and loyalty programme for over 9,000 hotels. You can choose a room in advance, check in the day before and skip the front desk using the Digital Key. Points are earned for stays and redeemed for rewards.', 'Вибір номера заздалегідь
-Цифровий ключ
-Онлайн-реєстрація
-Бали за проживання', 'Choose your room in advance
-Digital Key
-Online check-in
-Points for stays', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hilton.com' OR LOWER(`name`) = 'hilton honors') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hilton app: booking, room choice and Digital Key across 9,000 hotels.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hilton Honors is Hilton’s app and loyalty programme for over 9,000 hotels. You can choose a room in advance, check in the day before and skip the front desk using the Digital Key. Points are earned for stays and redeemed for rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Choose your room in advance
-Digital Key
-Online check-in
-Points for stays', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- IHG One Rewards — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ihg.com' OR LOWER(`name`) = 'ihg one rewards')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'IHG One Rewards', NULL, 'https://www.ihg.com/', NULL, NULL, 'Застосунок IHG (Holiday Inn, InterContinental та інші): 7 тисяч готелів.', 'IHG app (Holiday Inn, InterContinental and more): 7,000 hotels.', 'IHG One Rewards — застосунок і безкоштовна програма лояльності IHG Hotels & Resorts: понад 7 тисяч готелів у 100+ країнах під 21+ брендом. Учасники отримують ексклюзивні тарифи при прямому бронюванні та бали за кожне проживання.', 'IHG One Rewards is the app and free loyalty programme of IHG Hotels & Resorts: over 7,000 hotels in 100+ countries across 21+ brands. Members get exclusive rates when booking direct and points for every stay.', 'Понад 7 тис. готелів
-Тарифи для учасників
-Бали за проживання
-Безкоштовне членство', 'Over 7,000 hotels
-Member rates
-Points for stays
-Free membership', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ihg.com' OR LOWER(`name`) = 'ihg one rewards') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'IHG app (Holiday Inn, InterContinental and more): 7,000 hotels.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'IHG One Rewards is the app and free loyalty programme of IHG Hotels & Resorts: over 7,000 hotels in 100+ countries across 21+ brands. Members get exclusive rates when booking direct and points for every stay.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 7,000 hotels
-Member rates
-Points for stays
-Free membership', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- World of Hyatt — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hyatt.com' OR LOWER(`name`) = 'world of hyatt')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'World of Hyatt', NULL, 'https://www.hyatt.com/', NULL, NULL, 'Застосунок Hyatt для бронювання за гроші чи бали з гарантією ціни.', 'Hyatt app for booking with cash or points and a rate guarantee.', 'World of Hyatt — застосунок і безкоштовна програма лояльності Hyatt. При прямому бронюванні діє гарантія найкращої ціни; оплачувати проживання можна грошима, балами або поєднанням. У застосунку — фото, деталі готелів, пропозиції й місцеві пам’ятки.', 'World of Hyatt is Hyatt’s app and free loyalty programme. Booking direct comes with a best rate guarantee; stays can be paid with cash, points or both. The app shows hotel photos, details, offers and local attractions.', 'Оплата грошима чи балами
-Гарантія найкращої ціни
-Пропозиції готелів
-Безкоштовне членство', 'Pay with cash or points
-Best rate guarantee
-Hotel offers
-Free membership', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hyatt.com' OR LOWER(`name`) = 'world of hyatt') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hyatt app for booking with cash or points and a rate guarantee.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'World of Hyatt is Hyatt’s app and free loyalty programme. Booking direct comes with a best rate guarantee; stays can be paid with cash, points or both. The app shows hotel photos, details, offers and local attractions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Pay with cash or points
-Best rate guarantee
-Hotel offers
-Free membership', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- ALL Accor — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'all.accor.com' OR LOWER(`name`) = 'all accor')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ALL Accor', NULL, 'https://all.accor.com/', NULL, NULL, 'Застосунок Accor: Novotel, Ibis, Sofitel, Fairmont та інші — 5 тисяч готелів.', 'Accor app: Novotel, Ibis, Sofitel, Fairmont and more — 5,000 hotels.', 'ALL Accor — застосунок і програма лояльності групи Accor: понад 5 тисяч закладів у 111 країнах, серед брендів Raffles, Sofitel, Fairmont, MGallery, Novotel, Pullman, Mövenpick, Adagio. Підходить і для поїздок в останню хвилину, і для тривалого проживання.', 'ALL Accor is the app and loyalty programme of the Accor group: over 5,000 properties in 111 countries, with brands such as Raffles, Sofitel, Fairmont, MGallery, Novotel, Pullman, Mövenpick and Adagio. It suits both last-minute trips and long stays.', 'Понад 5 тис. закладів
-Десятки брендів Accor
-Програма лояльності ALL
-Тривале проживання', 'Over 5,000 properties
-Dozens of Accor brands
-ALL loyalty programme
-Long stays', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'all.accor.com' OR LOWER(`name`) = 'all accor') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Accor app: Novotel, Ibis, Sofitel, Fairmont and more — 5,000 hotels.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ALL Accor is the app and loyalty programme of the Accor group: over 5,000 properties in 111 countries, with brands such as Raffles, Sofitel, Fairmont, MGallery, Novotel, Pullman, Mövenpick and Adagio. It suits both last-minute trips and long stays.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Over 5,000 properties
-Dozens of Accor brands
-ALL loyalty programme
-Long stays', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Radisson Hotels — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'radissonhotels.com' OR LOWER(`name`) = 'radisson hotels')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Radisson Hotels', NULL, 'https://www.radissonhotels.com/', NULL, NULL, 'Застосунок Radisson з тарифами лише для учасників і бонусними балами.', 'Radisson app with member-only rates and reward points.', 'Застосунок Radisson Hotels охоплює готелі мережі в Європі, на Близькому Сході, в Африці, Океанії та Азійсько-Тихоокеанському регіоні. Учасники отримують тарифи лише для учасників (за даними компанії, до 15% дешевше), бонусні бали й ціни лише в застосунку; є український інтерфейс.', 'The Radisson Hotels app covers the group’s hotels in Europe, the Middle East, Africa, Oceania and Asia Pacific. Members get member-only rates (up to 15% off, per the company), reward points and app-only prices; a Ukrainian interface is available.', 'Тарифи лише для учасників
-Бонусні бали
-Ціни лише в застосунку
-Український інтерфейс', 'Member-only rates
-Reward points
-App-only prices
-Ukrainian interface', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'radissonhotels.com' OR LOWER(`name`) = 'radisson hotels') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Radisson app with member-only rates and reward points.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Radisson Hotels app covers the group’s hotels in Europe, the Middle East, Africa, Oceania and Asia Pacific. Members get member-only rates (up to 15% off, per the company), reward points and app-only prices; a Ukrainian interface is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Member-only rates
-Reward points
-App-only prices
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Wyndham Hotels & Resorts — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wyndhamhotels.com' OR LOWER(`name`) = 'wyndham hotels & resorts')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Wyndham Hotels & Resorts', NULL, 'https://www.wyndhamhotels.com/', NULL, NULL, 'Застосунок Wyndham: бронювання, бонуси Wyndham Rewards і функції під час проживання.', 'Wyndham app: booking, Wyndham Rewards and in-stay features.', 'Застосунок Wyndham Hotels & Resorts дає змогу шукати й бронювати тисячі готелів мережі по світу, отримувати тарифи для учасників і бонуси Wyndham Rewards, а також користуватися функціями під час проживання. Улюблені готелі можна зберігати для швидкого бронювання.', 'The Wyndham Hotels & Resorts app lets you search and book thousands of the group’s hotels worldwide, get member rates and Wyndham Rewards, and use in-stay features. Favourite hotels can be saved for quick booking.', 'Тисячі готелів мережі
-Wyndham Rewards
-Тарифи для учасників
-Функції під час проживання', 'Thousands of hotels
-Wyndham Rewards
-Member rates
-In-stay features', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'wyndhamhotels.com' OR LOWER(`name`) = 'wyndham hotels & resorts') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Wyndham app: booking, Wyndham Rewards and in-stay features.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Wyndham Hotels & Resorts app lets you search and book thousands of the group’s hotels worldwide, get member rates and Wyndham Rewards, and use in-stay features. Favourite hotels can be saved for quick booking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Thousands of hotels
-Wyndham Rewards
-Member rates
-In-stay features', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Best Western — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bestwestern.com' OR LOWER(`name`) = 'best western')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Best Western', NULL, 'https://www.bestwestern.com/', NULL, NULL, 'Застосунок Best Western: 18 брендів у понад 100 країнах і бонуси Best Western Rewards.', 'Best Western app: 18 brands in 100+ countries and Best Western Rewards.', 'Застосунок Best Western To Go дає шукати готелі 18 брендів мережі в понад 100 країнах, бронювати, переглядати майбутні й минулі бронювання та рахунок Best Western Rewards. Є фільтри для подорожей із тваринами й пошуку зарядних станцій для електромобілів.', 'The Best Western To Go app lets you search the group’s 18 brands in over 100 countries, book, view upcoming and past reservations and your Best Western Rewards account. Filters cover pet-friendly stays and EV charging stations.', '18 брендів у 100+ країнах
-Best Western Rewards
-Фільтр для подорожей із тваринами
-Зарядні станції для електромобілів', '18 brands in 100+ countries
-Best Western Rewards
-Pet-friendly filter
-EV charging stations', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bestwestern.com' OR LOWER(`name`) = 'best western') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Best Western app: 18 brands in 100+ countries and Best Western Rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Best Western To Go app lets you search the group’s 18 brands in over 100 countries, book, view upcoming and past reservations and your Best Western Rewards account. Filters cover pet-friendly stays and EV charging stations.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '18 brands in 100+ countries
-Best Western Rewards
-Pet-friendly filter
-EV charging stations', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Choice Hotels — Готельні мережі та бонусні програми, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'choicehotels.com' OR LOWER(`name`) = 'choice hotels')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Choice Hotels', NULL, 'https://www.choicehotels.com/', NULL, NULL, 'Застосунок Choice Hotels з гарантією найнижчої ціни й балами Choice Privileges.', 'Choice Hotels app with a lowest price guarantee and Choice Privileges points.', 'Застосунок Choice Hotels дозволяє шукати, бронювати й керувати проживанням з гарантією найнижчої ціни при прямому бронюванні (за даними компанії, до 10% економії). Бали Choice Privileges накопичуються й витрачаються в застосунку; є віртуальні тури 360° і відгуки гостей.', 'The Choice Hotels app lets you search, book and manage stays with a lowest price guarantee when booking direct (up to 10% savings, per the company). Choice Privileges points are earned and redeemed in the app; there are 360° virtual tours and guest reviews.', 'Гарантія найнижчої ціни
-Бали Choice Privileges
-Віртуальні тури 360°
-Відгуки гостей', 'Lowest price guarantee
-Choice Privileges points
-360° virtual tours
-Guest reviews', 'Мандрівники, які часто зупиняються в готелях однієї мережі й хочуть накопичувати бали та бронювати напряму', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'choicehotels.com' OR LOWER(`name`) = 'choice hotels') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Choice Hotels app with a lowest price guarantee and Choice Privileges points.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Choice Hotels app lets you search, book and manage stays with a lowest price guarantee when booking direct (up to 10% savings, per the company). Choice Privileges points are earned and redeemed in the app; there are 360° virtual tours and guest reviews.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Lowest price guarantee
-Choice Privileges points
-360° virtual tours
-Guest reviews', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent travellers who stay with one hotel group and want to earn points and book direct', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Google Flights — Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'google.com/travel/flights' OR LOWER(`name`) = 'google flights')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Google Flights', NULL, 'https://www.google.com/travel/flights', NULL, NULL, 'Пошук авіаквитків від Google з графіком цін і відстеженням тарифів.', 'Google flight search with price graphs and fare tracking.', 'Google Flights шукає рейси авіакомпаній і туристичних сайтів, показує календар і графік цін на різні дати та підказує, чи поточна ціна низька або висока порівняно зі звичайною. Можна відстежувати ціни на маршрут і отримувати сповіщення; купівля відбувається на сайті авіакомпанії чи агента.', 'Google Flights searches airline and travel-site flights, shows a calendar and price graph across dates and indicates whether the current price is low or high compared with usual. You can track route prices and get alerts; purchase is completed on the airline or agent site.', 'Календар і графік цін
-Оцінка, чи ціна низька
-Відстеження цін на маршрут
-Пошук гнучких дат', 'Price calendar and graph
-Price level insights
-Route price tracking
-Flexible date search', 'Усі, хто купує авіаквитки й хоче вибрати вдалий момент', 'Anyone buying flights who wants to pick the right moment', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'google.com/travel/flights' OR LOWER(`name`) = 'google flights') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Google flight search with price graphs and fare tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Google Flights searches airline and travel-site flights, shows a calendar and price graph across dates and indicates whether the current price is low or high compared with usual. You can track route prices and get alerts; purchase is completed on the airline or agent site.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Price calendar and graph
-Price level insights
-Route price tracking
-Flexible date search', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone buying flights who wants to pick the right moment', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Kiwi.com — Авіаквитки та відстеження рейсів, Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kiwi.com' OR LOWER(`name`) = 'kiwi.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Kiwi.com', NULL, 'https://www.kiwi.com/', NULL, NULL, 'Пошук дешевих перельотів із комбінуванням авіакомпаній, потягів і автобусів.', 'Cheap flight search combining airlines, trains and buses.', 'Kiwi.com шукає недорогі перельоти, зокрема маршрути, які поєднують різні авіакомпанії, а також потяги й автобуси. Гарантія Kiwi.com допомагає, якщо пропущено пересадку на такому комбінованому маршруті. Застосунок має український інтерфейс.', 'Kiwi.com finds cheap flights, including routes that combine different airlines, plus trains and buses. The Kiwi.com Guarantee helps if a connection on such a combined route is missed. The app has a Ukrainian interface.', 'Комбіновані маршрути
-Потяги й автобуси
-Гарантія Kiwi.com
-Український інтерфейс', 'Combined routes
-Trains and buses
-Kiwi.com Guarantee
-Ukrainian interface', 'Бюджетні мандрівники, готові до пересадок заради нижчої ціни', 'Budget travellers willing to take connections for a lower price', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kiwi.com' OR LOWER(`name`) = 'kiwi.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Cheap flight search combining airlines, trains and buses.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Kiwi.com finds cheap flights, including routes that combine different airlines, plus trains and buses. The Kiwi.com Guarantee helps if a connection on such a combined route is missed. The app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Combined routes
-Trains and buses
-Kiwi.com Guarantee
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Budget travellers willing to take connections for a lower price', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- eDreams — Авіаквитки та відстеження рейсів, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'edreams.com' OR LOWER(`name`) = 'edreams')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'eDreams', NULL, 'https://www.edreams.com/', NULL, NULL, 'Європейська онлайн-агенція: авіаквитки, готелі, оренда авто й автоматична реєстрація.', 'European online travel agency: flights, hotels, car hire and automatic check-in.', 'eDreams — європейська онлайн-туристична агенція для пошуку дешевих авіаквитків, готелів і оренди авто. Застосунок може автоматично зареєструвати вас на рейс, щойно реєстрація відкриється. За даними компанії, у застосунку понад 18 мільйонів користувачів.', 'eDreams is a European online travel agency for finding cheap flights, hotels and car hire. The app can check you in automatically as soon as check-in opens. The company cites over 18 million app users.', 'Авіаквитки й готелі
-Автоматична реєстрація на рейс
-Оренда авто
-Квитки в застосунку', 'Flights and hotels
-Automatic flight check-in
-Car hire
-Tickets in the app', 'Мандрівники, які купують перельоти в Європі', 'Travellers buying flights in Europe', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'edreams.com' OR LOWER(`name`) = 'edreams') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'European online travel agency: flights, hotels, car hire and automatic check-in.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'eDreams is a European online travel agency for finding cheap flights, hotels and car hire. The app can check you in automatically as soon as check-in opens. The company cites over 18 million app users.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Flights and hotels
-Automatic flight check-in
-Car hire
-Tickets in the app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers buying flights in Europe', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Flighty — Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flighty.com' OR LOWER(`name`) = 'flighty')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Flighty', NULL, 'https://www.flighty.com/', NULL, NULL, 'Трекер рейсів зі швидкими сповіщеннями про затримки та їхні прогнози.', 'Flight tracker with fast delay alerts and delay predictions.', 'Flighty відстежує ваші рейси й, за словами розробника, повідомляє про затримки на 2–90 хвилин раніше, ніж застосунки авіакомпаній, а про скасування — на 24–48 годин раніше. Показує причину затримки, де зараз ваш літак, прогнози затримок і виходу на посадку. Без реклами й без обов’язкового акаунта; Pro-функції безкоштовні на першому рейсі.', 'Flighty tracks your flights and, according to the developer, alerts you to delays 2–90 minutes faster than airline apps and to cancellations 24–48 hours earlier. It shows why a flight is delayed, where your plane is, delay and gate predictions. No ads and no account required; Pro features are free on your first flight.', 'Швидкі сповіщення про затримки
-Прогноз затримок і виходу
-Де зараз мій літак
-Без реклами
-Історія перельотів', 'Fast delay alerts
-Delay and gate predictions
-Where is my plane
-No ads
-Flight history', 'Ті, хто часто літає й хоче першим знати про зміни рейсу', 'Frequent flyers who want to know about flight changes first', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flighty.com' OR LOWER(`name`) = 'flighty') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Flight tracker with fast delay alerts and delay predictions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Flighty tracks your flights and, according to the developer, alerts you to delays 2–90 minutes faster than airline apps and to cancellations 24–48 hours earlier. It shows why a flight is delayed, where your plane is, delay and gate predictions. No ads and no account required; Pro features are free on your first flight.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Fast delay alerts
-Delay and gate predictions
-Where is my plane
-No ads
-Flight history', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Frequent flyers who want to know about flight changes first', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовна версія; частина функцій — у платній підписці.', 'A free version is available; some features require a paid subscription.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free version is available; some features require a paid subscription.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни платних функцій — на офіційному сайті.', 'Current prices for paid features are on the official website.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Sushi Master — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sushi-master.ua' OR LOWER(`name`) = 'sushi master')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sushi Master', NULL, 'https://sushi-master.ua', NULL, NULL, 'Доставка суші, ролів, сетів і WOK від мережі Sushi Master з можливістю самовивозу.', 'Sushi, rolls, sets and WOK delivery from the Sushi Master chain, with a pickup option.', 'Sushi Master — мережа ресторанів доставки японської та паназійської кухні із закладами в Україні та за кордоном. У застосунку можна замовити суші, роли, сети, гарячі страви чи WOK з доставкою або забрати замовлення самостійно.', 'Sushi Master is a chain of Japanese and pan-Asian delivery restaurants with locations in Ukraine and abroad. In the app you can order sushi, rolls, sets, hot dishes or WOK for delivery, or pick the order up yourself.', 'Суші, роли, сети та WOK
+Доставка й самовивіз
+Акції та добірки страв', 'Sushi, rolls, sets and WOK
+Delivery and pickup
+Deals and dish selections', 'Любителям японської та паназійської кухні.', 'Fans of Japanese and pan-Asian food.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sushi-master.ua' OR LOWER(`name`) = 'sushi master') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Sushi, rolls, sets and WOK delivery from the Sushi Master chain, with a pickup option.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sushi Master is a chain of Japanese and pan-Asian delivery restaurants with locations in Ukraine and abroad. In the app you can order sushi, rolls, sets, hot dishes or WOK for delivery, or pick the order up yourself.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Sushi, rolls, sets and WOK
+Delivery and pickup
+Deals and dish selections', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Fans of Japanese and pan-Asian food.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices for paid features are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Flightradar24 — Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flightradar24.com' OR LOWER(`name`) = 'flightradar24')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Flightradar24', NULL, 'https://www.flightradar24.com/', NULL, NULL, 'Відстеження літаків на карті в реальному часі та статус рейсів.', 'Real-time aircraft tracking on a map and flight status.', 'Flightradar24 показує рух літаків по світу на карті в реальному часі. Можна дізнатися статус рейсу, а навівши телефон на літак у небі — побачити, куди він летить і що це за модель. Основні функції безкоштовні; підписки Silver і Gold додають розширені дані.', 'Flightradar24 shows aircraft moving around the world on a real-time map. You can check flight status, and by pointing your phone at a plane in the sky see where it is going and what aircraft it is. Core features are free; Silver and Gold subscriptions add extended data.', 'Карта літаків у реальному часі
-Статус рейсу
-Розпізнавання літака камерою
-Підписки Silver і Gold', 'Real-time aircraft map
-Flight status
-Point at a plane to identify it
-Silver and Gold subscriptions', 'Мандрівники, ті, хто зустрічає рейси, і любителі авіації', 'Travellers, people meeting flights and aviation enthusiasts', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flightradar24.com' OR LOWER(`name`) = 'flightradar24') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Real-time aircraft tracking on a map and flight status.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Flightradar24 shows aircraft moving around the world on a real-time map. You can check flight status, and by pointing your phone at a plane in the sky see where it is going and what aircraft it is. Core features are free; Silver and Gold subscriptions add extended data.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Real-time aircraft map
-Flight status
-Point at a plane to identify it
-Silver and Gold subscriptions', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers, people meeting flights and aviation enthusiasts', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовна версія; частина функцій — у платній підписці.', 'A free version is available; some features require a paid subscription.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free version is available; some features require a paid subscription.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни платних функцій — на офіційному сайті.', 'Current prices for paid features are on the official website.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Yapiko — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1541655931' OR LOWER(`name`) = 'yapiko')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Yapiko', NULL, 'https://apps.apple.com/ua/app/id1541655931', NULL, NULL, 'Українська мережа ресторанів і доставки YAPIKO: суші, піца, сети та гарячі страви.', 'YAPIKO, a Ukrainian restaurant and delivery chain: sushi, pizza, sets and hot dishes.', 'YAPIKO — українська мережа ресторанів і доставки їжі, заснована 2011 року в Харкові. Працює в Києві, Полтаві, Одесі та Харкові. У застосунку можна замовити суші, піцу, сети, гарячі страви й десерти з доставкою або забрати замовлення з найближчої кухні.', 'YAPIKO is a Ukrainian restaurant and food delivery chain founded in Kharkiv in 2011. It operates in Kyiv, Poltava, Odesa and Kharkiv. In the app you can order sushi, pizza, sets, hot dishes and desserts for delivery or pick up from the nearest kitchen.', 'Суші, піца, сети й десерти
+Доставка або самовивіз з найближчої кухні
+Швидке оформлення замовлення', 'Sushi, pizza, sets and desserts
+Delivery or pickup from the nearest kitchen
+Quick checkout', 'Мешканцям Києва, Полтави, Одеси та Харкова.', 'Residents of Kyiv, Poltava, Odesa and Kharkiv.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1541655931' OR LOWER(`name`) = 'yapiko') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'YAPIKO, a Ukrainian restaurant and delivery chain: sushi, pizza, sets and hot dishes.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'YAPIKO is a Ukrainian restaurant and food delivery chain founded in Kharkiv in 2011. It operates in Kyiv, Poltava, Odesa and Kharkiv. In the app you can order sushi, pizza, sets, hot dishes and desserts for delivery or pick up from the nearest kitchen.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Sushi, pizza, sets and desserts
+Delivery or pickup from the nearest kitchen
+Quick checkout', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Residents of Kyiv, Poltava, Odesa and Kharkiv.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices for paid features are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Omio — Потяги, автобуси й оренда авто, Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'omio.com' OR LOWER(`name`) = 'omio')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Omio', NULL, 'https://www.omio.com/', NULL, NULL, 'Порівняння й купівля квитків на потяги, автобуси, рейси й пороми.', 'Compare and book train, bus, flight and ferry tickets.', 'Omio допомагає знайти маршрут і порівняти ціни на потяги, автобуси, перельоти й пороми від понад 3 тисяч перевізників у 45+ країнах (Європа, Велика Британія, США, Японія, Південно-Східна Азія, Бразилія). Квитки зберігаються в застосунку; є український інтерфейс.', 'Omio helps you find routes and compare prices for trains, buses, flights and ferries from over 3,000 carriers in 45+ countries (Europe, the UK, the US, Japan, Southeast Asia, Brazil). Tickets are stored in the app; a Ukrainian interface is available.', 'Потяги, автобуси, рейси й пороми
-Понад 3 тис. перевізників
-Квитки в застосунку
-Український інтерфейс', 'Trains, buses, flights and ferries
-Over 3,000 carriers
-Tickets in the app
-Ukrainian interface', 'Ті, хто подорожує Європою наземним транспортом', 'People travelling around Europe by land', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'omio.com' OR LOWER(`name`) = 'omio') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Compare and book train, bus, flight and ferry tickets.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Omio helps you find routes and compare prices for trains, buses, flights and ferries from over 3,000 carriers in 45+ countries (Europe, the UK, the US, Japan, Southeast Asia, Brazil). Tickets are stored in the app; a Ukrainian interface is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Trains, buses, flights and ferries
-Over 3,000 carriers
-Tickets in the app
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People travelling around Europe by land', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Trainline — Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'thetrainline.com' OR LOWER(`name`) = 'trainline')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Trainline', NULL, 'https://www.thetrainline.com/', NULL, NULL, 'Квитки на потяги й автобуси в Європі з відстеженням розкладу.', 'European train and coach tickets with live timetable tracking.', 'Trainline — європейський застосунок для купівлі квитків на потяги й автобуси наперед чи в день поїздки. Сповіщення в реальному часі й відстеження розкладу допомагають не пропустити зміни, а електронні квитки зберігаються в телефоні.', 'Trainline is a European app for buying train and coach tickets in advance or on the day. Real-time notifications and live timetable tracking help you keep up with changes, and e-tickets are stored on your phone.', 'Квитки на потяги й автобуси
-Відстеження розкладу
-Сповіщення в реальному часі
-Електронні квитки', 'Train and coach tickets
-Live timetable tracking
-Real-time notifications
-E-tickets', 'Ті, хто їздить потягами Європою чи Великою Британією', 'Rail travellers in Europe and the UK', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'thetrainline.com' OR LOWER(`name`) = 'trainline') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'European train and coach tickets with live timetable tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Trainline is a European app for buying train and coach tickets in advance or on the day. Real-time notifications and live timetable tracking help you keep up with changes, and e-tickets are stored on your phone.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Train and coach tickets
-Live timetable tracking
-Real-time notifications
-E-tickets', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Rail travellers in Europe and the UK', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- FlixBus — Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flixbus.com' OR LOWER(`name`) = 'flixbus')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'FlixBus', NULL, 'https://www.flixbus.com/', NULL, NULL, 'Недорогі автобусні рейси Європою з відстеженням автобуса.', 'Affordable European coach trips with live bus tracking.', 'FlixBus — мережа міжміських автобусів Європи з бронюванням місць, зрозумілим розкладом і відстеженням автобуса в реальному часі. Автобуси мають Wi-Fi, розетки й збільшений простір для ніг; застосунок має український інтерфейс.', 'FlixBus is a European intercity coach network with seat reservations, a clear timetable and live bus tracking. Coaches have Wi-Fi, power outlets and extra legroom; the app has a Ukrainian interface.', 'Міжміські автобуси Європи
-Відстеження автобуса
-Wi-Fi і розетки
-Український інтерфейс', 'European intercity coaches
-Live bus tracking
-Wi-Fi and power outlets
-Ukrainian interface', 'Бюджетні мандрівники Європою', 'Budget travellers in Europe', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flixbus.com' OR LOWER(`name`) = 'flixbus') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Affordable European coach trips with live bus tracking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'FlixBus is a European intercity coach network with seat reservations, a clear timetable and live bus tracking. Coaches have Wi-Fi, power outlets and extra legroom; the app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'European intercity coaches
-Live bus tracking
-Wi-Fi and power outlets
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Budget travellers in Europe', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Rentalcars.com — Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rentalcars.com' OR LOWER(`name`) = 'rentalcars.com')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Rentalcars.com', NULL, 'https://www.rentalcars.com/', NULL, NULL, 'Порівняння й оренда авто в понад 49 тисячах точок по світу.', 'Compare and rent cars at over 49,000 locations worldwide.', 'Rentalcars.com (Booking.com Transport) порівнює пропозиції прокатних компаній і, за даними сервісу, працює в понад 49 тисячах точок видачі по світу. Електронний ваучер приймається більшістю компаній, тож друкувати нічого не потрібно.', 'Rentalcars.com (Booking.com Transport) compares rental companies’ offers and, according to the service, covers over 49,000 pick-up locations worldwide. The e-voucher is accepted almost everywhere, so there is nothing to print.', 'Порівняння прокатних компаній
-Понад 49 тис. точок
-Електронний ваучер
-Керування бронюванням', 'Rental company comparison
-Over 49,000 locations
-E-voucher
-Booking management', 'Мандрівники, яким потрібне авто на місці', 'Travellers who need a car at their destination', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rentalcars.com' OR LOWER(`name`) = 'rentalcars.com') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Compare and rent cars at over 49,000 locations worldwide.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Rentalcars.com (Booking.com Transport) compares rental companies’ offers and, according to the service, covers over 49,000 pick-up locations worldwide. The e-voucher is accepted almost everywhere, so there is nothing to print.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Rental company comparison
-Over 49,000 locations
-E-voucher
-Booking management', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers who need a car at their destination', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Discover Cars — Потяги, автобуси й оренда авто
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'discovercars.com' OR LOWER(`name`) = 'discover cars')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Discover Cars', NULL, 'https://www.discovercars.com/', NULL, NULL, 'Порівняння оренди авто з прозорими умовами щодо пального й страхування.', 'Car rental comparison with clear fuel and insurance terms.', 'Discover Cars порівнює пропозиції прокату авто й показує умови оренди в одному місці: політику щодо пального й пробігу, що входить у покриття. У застосунку можна змінити дати, додати водія чи покращити клас авто, а також переглянути гнучкі умови скасування.', 'Discover Cars compares car rental offers and shows rental terms in one place: fuel and mileage policy and what coverage is included. In the app you can change dates, add a driver or upgrade the car, and review flexible cancellation terms.', 'Порівняння прокату
-Умови пального й пробігу
-Зміна бронювання
-Гнучке скасування', 'Rental comparison
-Fuel and mileage terms
-Booking changes
-Flexible cancellation', 'Мандрівники, які орендують авто за кордоном', 'Travellers renting a car abroad', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'discovercars.com' OR LOWER(`name`) = 'discover cars') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Car rental comparison with clear fuel and insurance terms.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Discover Cars compares car rental offers and shows rental terms in one place: fuel and mileage policy and what coverage is included. In the app you can change dates, add a driver or upgrade the car, and review flexible cancellation terms.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Rental comparison
-Fuel and mileage terms
-Booking changes
-Flexible cancellation', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers renting a car abroad', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- INFOBUS — Потяги, автобуси й оренда авто, Авіаквитки та відстеження рейсів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'infobus.eu' OR LOWER(`name`) = 'infobus')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'INFOBUS', NULL, 'https://infobus.eu/', NULL, NULL, 'Квитки на автобуси, потяги й літаки, зокрема на міжнародні рейси з України.', 'Bus, train and flight tickets, including international routes from Ukraine.', 'INFOBUS — сервіс пошуку й купівлі квитків на автобуси, потяги й літаки. Квиток надходить одразу після оплати й зберігається в застосунку, за покупки нараховуються бонуси. Застосунок має український інтерфейс.', 'INFOBUS is a service for finding and buying bus, train and plane tickets. The ticket arrives right after payment and is stored in the app, and purchases earn bonuses. The app has a Ukrainian interface.', 'Автобуси, потяги й літаки
-Квиток одразу після оплати
-Бонуси за покупки
-Український інтерфейс', 'Buses, trains and planes
-Ticket right after payment
-Purchase bonuses
-Ukrainian interface', 'Ті, хто їздить автобусами між Україною та Європою', 'People travelling by bus between Ukraine and Europe', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'infobus.eu' OR LOWER(`name`) = 'infobus') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Bus, train and flight tickets, including international routes from Ukraine.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'INFOBUS is a service for finding and buying bus, train and plane tickets. The ticket arrives right after payment and is stored in the app, and purchases earn bonuses. The app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Buses, trains and planes
-Ticket right after payment
-Purchase bonuses
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People travelling by bus between Ukraine and Europe', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- GetYourGuide — Екскурсії та квитки до атракцій
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'getyourguide.com' OR LOWER(`name`) = 'getyourguide')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'GetYourGuide', NULL, 'https://www.getyourguide.com/', NULL, NULL, 'Бронювання екскурсій, одноденних поїздок і квитків до атракцій по всьому світу.', 'Book tours, day trips and attraction tickets worldwide.', 'GetYourGuide допомагає знайти й забронювати екскурсії, одноденні поїздки та активності — культура, їжа, пригоди, природа — а також квитки до головних музеїв і пам’яток. Квитки зберігаються в застосунку, є варіанти в останню хвилину; застосунок має український інтерфейс.', 'GetYourGuide helps you find and book tours, day trips and activities (culture, food, adventure, nature) plus tickets to top museums and attractions. Tickets are stored in the app, last-minute options are available, and the app has a Ukrainian interface.', 'Екскурсії й одноденні поїздки
-Квитки до музеїв і пам’яток
-Бронювання в останню хвилину
-Український інтерфейс', 'Tours and day trips
-Museum and attraction tickets
-Last-minute bookings
-Ukrainian interface', 'Мандрівники, які планують, чим зайнятися на місці', 'Travellers planning what to do at their destination', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'getyourguide.com' OR LOWER(`name`) = 'getyourguide') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Book tours, day trips and attraction tickets worldwide.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'GetYourGuide helps you find and book tours, day trips and activities (culture, food, adventure, nature) plus tickets to top museums and attractions. Tickets are stored in the app, last-minute options are available, and the app has a Ukrainian interface.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tours and day trips
-Museum and attraction tickets
-Last-minute bookings
-Ukrainian interface', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers planning what to do at their destination', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Viator — Екскурсії та квитки до атракцій
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'viator.com' OR LOWER(`name`) = 'viator')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Viator', NULL, 'https://www.viator.com/', NULL, NULL, 'Каталог екскурсій і активностей від Tripadvisor з гнучкими умовами.', 'Tripadvisor’s catalogue of tours and activities with flexible terms.', 'Viator (компанія Tripadvisor) пропонує екскурсії й активності по всьому світу з гнучкими умовами скасування та доступністю в останню хвилину. У застосунку можна шукати ідеї, бронювати й тримати квитки під рукою.', 'Viator (a Tripadvisor company) offers tours and activities worldwide with flexible cancellation and last-minute availability. In the app you can browse ideas, book and keep tickets at hand.', 'Екскурсії по всьому світу
-Гнучке скасування
-Бронювання в останню хвилину
-Квитки в застосунку', 'Tours worldwide
-Flexible cancellation
-Last-minute availability
-Tickets in the app', 'Мандрівники, які шукають екскурсії та враження', 'Travellers looking for tours and experiences', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'viator.com' OR LOWER(`name`) = 'viator') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Tripadvisor’s catalogue of tours and activities with flexible terms.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Viator (a Tripadvisor company) offers tours and activities worldwide with flexible cancellation and last-minute availability. In the app you can browse ideas, book and keep tickets at hand.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tours worldwide
-Flexible cancellation
-Last-minute availability
-Tickets in the app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for tours and experiences', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Klook — Екскурсії та квитки до атракцій, Бронювання готелів
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'klook.com' OR LOWER(`name`) = 'klook')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Klook', NULL, 'https://www.klook.com/', NULL, NULL, 'Активності, екскурсії, готелі й оренда авто з акцентом на Азію.', 'Activities, tours, hotels and car rentals with a focus on Asia.', 'Klook — платформа для бронювання місцевих активностей, одноденних турів, готелів і оренди авто. Каталог включає тисячі активностей у світі з відібраними, перевіреними пропозиціями; сервіс особливо поширений в Азії.', 'Klook is a platform for booking local activities, day tours, hotels and car rentals. The catalogue includes thousands of activities worldwide with hand-picked offers; the service is especially popular in Asia.', 'Тисячі активностей
-Одноденні тури
-Готелі й оренда авто
-Пропозиції в Азії', 'Thousands of activities
-Day tours
-Hotels and car rentals
-Deals in Asia', 'Мандрівники до Азії та всі, хто шукає активності на місці', 'Travellers to Asia and anyone looking for local activities', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'klook.com' OR LOWER(`name`) = 'klook') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Activities, tours, hotels and car rentals with a focus on Asia.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Klook is a platform for booking local activities, day tours, hotels and car rentals. The catalogue includes thousands of activities worldwide with hand-picked offers; the service is especially popular in Asia.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Thousands of activities
-Day tours
-Hotels and car rentals
-Deals in Asia', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers to Asia and anyone looking for local activities', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Tiqets — Екскурсії та квитки до атракцій
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tiqets.com' OR LOWER(`name`) = 'tiqets')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Tiqets', NULL, 'https://www.tiqets.com/', NULL, NULL, 'Електронні квитки до музеїв і атракцій, часто без черги.', 'Mobile tickets to museums and attractions, often skip-the-line.', 'Tiqets продає електронні квитки до музеїв, пам’яток і атракцій. Квиток надходить у смартфон одразу, а сотні закладів мають варіанти без черги. У застосунку можна переглядати заклади й читати відгуки.', 'Tiqets sells mobile tickets to museums, landmarks and attractions. Tickets arrive on your phone instantly, and hundreds of venues offer skip-the-line options. The app lets you browse venues and read reviews.', 'Електронні квитки
-Без черги в сотнях закладів
-Відгуки про заклади
-Миттєва доставка квитка', 'Mobile tickets
-Skip-the-line at hundreds of venues
-Venue reviews
-Instant ticket delivery', 'Ті, хто планує відвідати музеї й атракції в поїздці', 'People planning museum and attraction visits on a trip', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tiqets.com' OR LOWER(`name`) = 'tiqets') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Mobile tickets to museums and attractions, often skip-the-line.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Tiqets sells mobile tickets to museums, landmarks and attractions. Tickets arrive on your phone instantly, and hundreds of venues offer skip-the-line options. The app lets you browse venues and read reviews.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Mobile tickets
-Skip-the-line at hundreds of venues
-Venue reviews
-Instant ticket delivery', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People planning museum and attraction visits on a trip', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Безкоштовно для мандрівника', 'Free for travellers', 0.00, 'free', 'Застосунок і пошук безкоштовні; ви оплачуєте лише саме бронювання (проживання, квитки, оренду).', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Безкоштовно для мандрівника' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free for travellers', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The app and search are free; you only pay for the booking itself (stay, tickets, rental).', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Trip Planner AI — АІ-планувальники подорожей
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tripplanner.ai' OR LOWER(`name`) = 'trip planner ai')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Trip Planner AI', NULL, 'https://tripplanner.ai/', NULL, NULL, 'АІ-конструктор маршрутів: план поїздки з рейсами, готелями й активностями за хвилини.', 'AI itinerary builder: a trip plan with flights, hotels and activities in minutes.', 'Trip Planner AI (tripplanner.ai) за датами й напрямками складає повний план поїздки — рейси, готелі, активності, час і маршрути між точками, оцінку бюджету. План підлаштовується під стиль подорожі (сімейна, романтична, автоподорож), а ціни в реальному часі можна порівняти й перейти до бронювання.', 'Trip Planner AI (tripplanner.ai) builds a full trip plan from your dates and destinations: flights, hotels, activities, timing, routes between stops and a budget estimate. The plan adapts to your travel style (family, romantic, road trip), and real-time prices can be compared before booking.', 'Генерація маршруту АІ
-Рейси, готелі й активності
-Оцінка бюджету
-Підлаштування під стиль подорожі
-Ціни в реальному часі', 'AI itinerary generation
-Flights, hotels and activities
-Budget estimate
-Adapts to travel style
-Real-time prices', 'Ті, хто хоче швидко отримати готовий план поїздки', 'People who want a ready-made trip plan quickly', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tripplanner.ai' OR LOWER(`name`) = 'trip planner ai') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'AI itinerary builder: a trip plan with flights, hotels and activities in minutes.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Trip Planner AI (tripplanner.ai) builds a full trip plan from your dates and destinations: flights, hotels, activities, timing, routes between stops and a budget estimate. The plan adapts to your travel style (family, romantic, road trip), and real-time prices can be compared before booking.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'AI itinerary generation
-Flights, hotels and activities
-Budget estimate
-Adapts to travel style
-Real-time prices', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who want a ready-made trip plan quickly', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовна версія; частина функцій — у платній підписці.', 'A free version is available; some features require a paid subscription.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free version is available; some features require a paid subscription.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни платних функцій — на офіційному сайті.', 'Current prices for paid features are on the official website.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Ninja Sushi — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ninjasushi.com.ua' OR LOWER(`name`) = 'ninja sushi')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Ninja Sushi', NULL, 'https://ninjasushi.com.ua', NULL, NULL, 'Доставка японської кухні Ninja Sushi додому й в офіс: роли, суші, сети та закуски.', 'Ninja Sushi Japanese food delivery to your home or office: rolls, sushi, sets and snacks.', 'Ninja Sushi — сервіс доставки японської кухні. У застосунку можна замовити класичні та авторські роли, суші, сети, закуски й напої для вечері вдома чи свята у великій компанії.', 'Ninja Sushi is a Japanese food delivery service. In the app you can order classic and signature rolls, sushi, sets, snacks and drinks for a quiet dinner at home or a party with a big group.', 'Класичні й авторські роли
+Сети для компанії
+Доставка додому та в офіс', 'Classic and signature rolls
+Sets for groups
+Delivery to home and office', 'Любителям суші.', 'Sushi lovers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ninjasushi.com.ua' OR LOWER(`name`) = 'ninja sushi') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ninja Sushi Japanese food delivery to your home or office: rolls, sushi, sets and snacks.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Ninja Sushi is a Japanese food delivery service. In the app you can order classic and signature rolls, sushi, sets, snacks and drinks for a quiet dinner at home or a party with a big group.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Classic and signature rolls
+Sets for groups
+Delivery to home and office', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Sushi lovers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices for paid features are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Tripsy — АІ-планувальники подорожей
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tripsy.app' OR LOWER(`name`) = 'tripsy')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Tripsy', NULL, 'https://tripsy.app/', NULL, NULL, 'Планувальник поїздок: маршрут по днях, бронювання й витрати в одному застосунку.', 'Trip planner: day-by-day itinerary, reservations and expenses in one app.', 'Tripsy збирає рейси, готелі, активності, бронювання й витрати подорожі в одному місці та будує маршрут по днях, доступний офлайн. Застосунок перетворює скриншоти, документи, вставлений текст і списки Google Maps чи Apple Maps на місця й бронювання; його можна підключити до сумісного АІ-асистента, щоб редагувати поїздку в розмові. Частина функцій — у Tripsy Pro (підписка або разова покупка).', 'Tripsy brings flights, hotels, activities, reservations and travel expenses together and builds a day-by-day itinerary available offline. It turns screenshots, documents, pasted text and Google Maps or Apple Maps lists into places and reservations, and can connect to a compatible AI assistant to edit trips through conversation. Some features need Tripsy Pro (subscription or one-time purchase).', 'Маршрут по днях
-Імпорт зі скриншотів і документів
-Підключення АІ-асистента
-Облік витрат
-Офлайн-доступ', 'Day-by-day itinerary
-Import from screenshots and documents
-AI assistant connection
-Expense tracking
-Offline access', 'Ті, хто самостійно планує складні поїздки з кількома містами', 'Independent travellers planning multi-city trips', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-11 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'tripsy.app' OR LOWER(`name`) = 'tripsy') ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Trip planner: day-by-day itinerary, reservations and expenses in one app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Tripsy brings flights, hotels, activities, reservations and travel expenses together and builds a day-by-day itinerary available offline. It turns screenshots, documents, pasted text and Google Maps or Apple Maps lists into places and reservations, and can connect to a compatible AI assistant to edit trips through conversation. Some features need Tripsy Pro (subscription or one-time purchase).', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Day-by-day itinerary
-Import from screenshots and documents
-AI assistant connection
-Expense tracking
-Offline access', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Independent travellers planning multi-city trips', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Є безкоштовна версія; частина функцій — у платній підписці.', 'A free version is available; some features require a paid subscription.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'A free version is available; some features require a paid subscription.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни платних функцій — на офіційному сайті.', 'Current prices for paid features are on the official website.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Smaki-Maki — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'smaki-maki.com' OR LOWER(`name`) = 'smaki-maki')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Smaki-Maki', NULL, 'https://smaki-maki.com', NULL, NULL, 'Доставка піци та суші Smaki-Maki у Львові з обіцяною доставкою до 29 хвилин.', 'Smaki-Maki pizza and sushi delivery in Lviv, promised within 29 minutes.', 'Застосунок Smaki-Maki дає змогу замовити італійську піцу, роли та суші у вашому місті. Доставка займає до 29 хвилин, а за кожну хвилину запізнення кур’єра мережа обіцяє компенсацію.', 'The Smaki-Maki app lets you order Italian pizza, rolls and sushi in your city. Delivery takes up to 29 minutes, and the chain promises compensation for every minute the courier is late.', 'Піца й суші в одному замовленні
+Доставка до 29 хвилин
+Компенсація за запізнення', 'Pizza and sushi in one order
+Delivery within 29 minutes
+Compensation for late delivery', 'Тим, хто хоче швидко замовити піцу чи суші.', 'People who want pizza or sushi fast.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'smaki-maki.com' OR LOWER(`name`) = 'smaki-maki') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Smaki-Maki pizza and sushi delivery in Lviv, promised within 29 minutes.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Smaki-Maki app lets you order Italian pizza, rolls and sushi in your city. Delivery takes up to 29 minutes, and the chain promises compensation for every minute the courier is late.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Pizza and sushi in one order
+Delivery within 29 minutes
+Compensation for late delivery', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who want pizza or sushi fast.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices for paid features are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Наявні продукти → нові підкатегорії (якщо є в базі; за точною назвою)
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'KAYAK' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+-- Mister.Am — Ресторани та доставка їжі, Пошта й доставка
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'misteram.com.ua' OR LOWER(`name`) = 'mister.am')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Mister.Am', NULL, 'https://misteram.com.ua', NULL, NULL, 'Сервіс доставки страв із закладів міста без націнок: акції, бонуси та відстеження замовлення.', 'Food delivery from local restaurants with no markup: deals, rewards and order tracking.', 'Mister.Am збирає меню закладів міста в одному застосунку й доставляє страви без націнок. Працює у Вінниці, Житомирі, Івано-Франківську, Луцьку, Полтаві, Рівному, Сумах, Тернополі, Хмельницькому, Черкасах, Чернівцях та інших містах. Статус замовлення видно в реальному часі, а бонуси можна обміняти на безкоштовну піцу.', 'Mister.Am brings local restaurant menus into one app and delivers dishes with no markup. It works in Vinnytsia, Zhytomyr, Ivano-Frankivsk, Lutsk, Poltava, Rivne, Sumy, Ternopil, Khmelnytskyi, Cherkasy, Chernivtsi and other cities. Order status is shown in real time, and rewards can be swapped for free pizza.', 'Меню багатьох закладів міста
+Ціни без націнок
+Відстеження замовлення
+Бонуси за замовлення', 'Menus of many local restaurants
+No-markup prices
+Order tracking
+Rewards for orders', 'Мешканцям обласних центрів, які замовляють їжу з ресторанів.', 'Residents of regional cities who order restaurant food.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'misteram.com.ua' OR LOWER(`name`) = 'mister.am') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Hopper' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'flights' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-delivery' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Tripadvisor' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-booking' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Mindtrip' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Layla' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Wonderplan' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'iplan.ai' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Wanderlog' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'TripIt' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'GuideGeek' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Roadtrippers' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'trip-planners' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'Укрзалізниця' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'proizd.ua' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @pid = (SELECT `id` FROM `products` WHERE `name` = 'BlaBlaCar' ORDER BY `id` LIMIT 1);
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ground-transport' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Food delivery from local restaurants with no markup: deals, rewards and order tracking.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mister.Am brings local restaurant menus into one app and delivers dishes with no markup. It works in Vinnytsia, Zhytomyr, Ivano-Frankivsk, Lutsk, Poltava, Rivne, Sumy, Ternopil, Khmelnytskyi, Cherkasy, Chernivtsi and other cities. Order status is shown in real time, and rewards can be swapped for free pizza.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Menus of many local restaurants
+No-markup prices
+Order tracking
+Rewards for orders', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Residents of regional cities who order restaurant food.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Пошук Елі: слова-наміри → підкатегорії «Подорожей»
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'готел', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'готел' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'отел', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'отел' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'hotel', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'hotel' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'hotels', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'hotels' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-booking' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'хостел', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'хостел' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'апартамент', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'апартамент' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'hostel', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'hostel' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'airbnb', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'airbnb' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'vacation-rentals' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'готельн', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-loyalty' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-loyalty' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'готельн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'hotel-loyalty' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'авіаквитк', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'авіаквитк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'рейс', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'рейс' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'літак', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'літак' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'flight', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'flight' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'flights' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'потяг', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'потяг' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'поїзд', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'поїзд' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'автобус', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'автобус' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'прокат', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'прокат' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'ground-transport' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'екскурс', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'екскурс' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'атракц', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'атракц' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'tour', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'tour' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'tours-activities' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'подорож', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'подорож' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'мандрівк', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'мандрівк' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'маршрут', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'маршрут' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1));
-INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'travel', (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'travel' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'travel-tourism' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'travel-tourism' AND s.slug = 'trip-planners' LIMIT 1));
+-- holDO — Ресторани та доставка їжі, Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'usgh.com.ua' OR LOWER(`name`) = 'holdo')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'holDO', NULL, 'https://www.usgh.com.ua', NULL, NULL, 'Доставка та кешбек від ресторанів il Molino, Сушия, Tbiliso, Salmon Box і Coffee Lover.', 'Delivery and cashback from il Molino, Sushiya, Tbiliso, Salmon Box and Coffee Lover.', 'holDO об’єднує ресторани USG Holding: il Molino, Сушия, Tbiliso, Salmon Box та Coffee Lover. Через застосунок можна замовити доставку в Києві й передмісті (Сушия та Salmon Box — також у Львові) або самовивіз і накопичувати кешбек у закладах.', 'holDO brings together the USG Holding restaurants: il Molino, Sushiya, Tbiliso, Salmon Box and Coffee Lover. Through the app you can order delivery in Kyiv and its suburbs (Sushiya and Salmon Box also in Lviv) or pickup, and collect cashback in the venues.', 'Кілька ресторанів в одному застосунку
+Доставка й самовивіз
+Кешбек за замовлення', 'Several restaurants in one app
+Delivery and pickup
+Cashback on orders', 'Гостям ресторанів USG Holding у Києві та Львові.', 'Guests of USG Holding restaurants in Kyiv and Lviv.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'usgh.com.ua' OR LOWER(`name`) = 'holdo') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Delivery and cashback from il Molino, Sushiya, Tbiliso, Salmon Box and Coffee Lover.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'holDO brings together the USG Holding restaurants: il Molino, Sushiya, Tbiliso, Salmon Box and Coffee Lover. Through the app you can order delivery in Kyiv and its suburbs (Sushiya and Salmon Box also in Lviv) or pickup, and collect cashback in the venues.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Several restaurants in one app
+Delivery and pickup
+Cashback on orders', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Guests of USG Holding restaurants in Kyiv and Lviv.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
+-- BAO GROUP — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bao.ua' OR LOWER(`name`) = 'bao group')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'BAO GROUP', NULL, 'https://bao.ua', NULL, NULL, 'Програма лояльності ресторанів BAO, NAM, BAO LVIV та Georgia: бонуси, подарунки й події.', 'Loyalty program of the BAO, NAM, BAO LVIV and Georgia restaurants: rewards, gifts and events.', 'Застосунок BAO GROUP для гостей ресторанів BAO, NAM, BAO LVIV та Georgia. У ньому накопичуються бонуси за програмою лояльності, приходять персональні знижки, запрошення на закриті заходи та новини ресторанів.', 'The BAO GROUP app is for guests of the BAO, NAM, BAO LVIV and Georgia restaurants. It collects loyalty points and brings personal discounts, invitations to private events and restaurant news.', 'Бонуси за програмою лояльності
+Персональні знижки та подарунки
+Запрошення на події', 'Loyalty points
+Personal discounts and gifts
+Event invitations', 'Постійним гостям ресторанів групи.', 'Regular guests of the group restaurants.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'bao.ua' OR LOWER(`name`) = 'bao group') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Loyalty program of the BAO, NAM, BAO LVIV and Georgia restaurants: rewards, gifts and events.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The BAO GROUP app is for guests of the BAO, NAM, BAO LVIV and Georgia restaurants. It collects loyalty points and brings personal discounts, invitations to private events and restaurant news.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Loyalty points
+Personal discounts and gifts
+Event invitations', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Regular guests of the group restaurants.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Restaron — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'restaron.ua' OR LOWER(`name`) = 'restaron')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Restaron', NULL, 'https://restaron.ua', NULL, NULL, 'Замовлення страв у львівських закладах групи Restaron, зокрема м’ясного ресторану Mons Pius.', 'Order dishes from the Restaron group venues in Lviv, including the Mons Pius steakhouse.', 'Застосунок Restaron дає змогу замовляти страви в закладах групи у Львові. Серед них м’ясний ресторан Mons Pius, що працює з 2010 року й спеціалізується на м’ясі сухого дозрівання.', 'The Restaron app lets you order dishes from the group venues in Lviv. Among them is Mons Pius, a meat restaurant open since 2010 that specialises in dry-aged meat.', 'Замовлення в закладах групи
+Меню ресторанів
+Контакти та адреси', 'Orders from group venues
+Restaurant menus
+Contacts and addresses', 'Гостям львівських ресторанів.', 'Guests of Lviv restaurants.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'restaron.ua' OR LOWER(`name`) = 'restaron') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Order dishes from the Restaron group venues in Lviv, including the Mons Pius steakhouse.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Restaron app lets you order dishes from the group venues in Lviv. Among them is Mons Pius, a meat restaurant open since 2010 that specialises in dry-aged meat.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Orders from group venues
+Restaurant menus
+Contacts and addresses', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Guests of Lviv restaurants.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Хінкальня — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1488315430' OR LOWER(`name`) = 'хінкальня')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Хінкальня', NULL, 'https://apps.apple.com/ua/app/id1488315430', NULL, NULL, 'Застосунок мережі грузинських ресторанів «Хінкальня»: кешбек, доставка та бронювання столика.', 'Khinkalnya Georgian restaurant chain app: cashback, delivery and table booking.', '«Хінкальня» — мережа ресторанів грузинської кухні. У застосунку діє програма лояльності з кешбеком 3% на власні покупки, можна замовити доставку, забронювати столик і дізнатися про новини та акції.', 'Khinkalnya is a chain of Georgian restaurants. The app has a loyalty program with 3% cashback on your purchases, lets you order delivery, book a table and follow news and deals.', 'Кешбек 3%
+Доставка
+Бронювання столика
+Новини та акції', '3% cashback
+Delivery
+Table booking
+News and deals', 'Любителям грузинської кухні.', 'Fans of Georgian food.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1488315430' OR LOWER(`name`) = 'хінкальня') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Khinkalnya Georgian restaurant chain app: cashback, delivery and table booking.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Khinkalnya is a chain of Georgian restaurants. The app has a loyalty program with 3% cashback on your purchases, lets you order delivery, book a table and follow news and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '3% cashback
+Delivery
+Table booking
+News and deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Fans of Georgian food.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Mama Manana — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mamamanana.com.ua' OR LOWER(`name`) = 'mama manana')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Mama Manana', NULL, 'http://mamamanana.com.ua', NULL, NULL, 'Доставка страв грузинського ресторану Mama Manana в Києві: хачапурі, хінкалі, шашлик.', 'Delivery from Mama Manana, a Georgian restaurant in Kyiv: khachapuri, khinkali, kebabs.', 'Mama Manana — грузинський ресторан у Києві. Через застосунок можна замовити доставку свіжої випічки, хачапурі, хінкалі, шашлику, долми, овочів на вогні, салатів, соусів, десертів і вина.', 'Mama Manana is a Georgian restaurant in Kyiv. Through the app you can order delivery of fresh khachapuri, khinkali, kebabs, dolma, grilled vegetables, salads, sauces, desserts and wine.', 'Грузинське меню з доставкою
+Хачапурі, хінкалі, шашлик
+Десерти та вино', 'Georgian menu for delivery
+Khachapuri, khinkali, kebabs
+Desserts and wine', 'Мешканцям Києва.', 'Kyiv residents.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mamamanana.com.ua' OR LOWER(`name`) = 'mama manana') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Delivery from Mama Manana, a Georgian restaurant in Kyiv: khachapuri, khinkali, kebabs.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mama Manana is a Georgian restaurant in Kyiv. Through the app you can order delivery of fresh khachapuri, khinkali, kebabs, dolma, grilled vegetables, salads, sauces, desserts and wine.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Georgian menu for delivery
+Khachapuri, khinkali, kebabs
+Desserts and wine', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- LA П'ЄЦ — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'la.ua' OR LOWER(`name`) = 'la п''єц')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'LA П''ЄЦ', NULL, 'https://la.ua', NULL, NULL, 'Доставка їжі LA П''ЄЦ: піца, суші, бургери, кебаби, обіди та сніданки.', 'LA P''IETS food delivery: pizza, sushi, burgers, kebabs, lunches and breakfasts.', 'LA П''ЄЦ — сервіс доставки з широким меню: піца, суші, бургери, кебаби, хот-доги, обіди, сніданки, салати й десерти. У застосунку можна оплатити карткою, Apple Pay, Google Pay чи бонусами, обрати час доставки або самовивіз і повторити попереднє замовлення.', 'LA P''IETS is a delivery service with a broad menu: pizza, sushi, burgers, kebabs, hot dogs, lunches, breakfasts, salads and desserts. In the app you can pay by card, Apple Pay, Google Pay or rewards, choose a delivery time or pickup, and repeat a previous order.', 'Широке меню в одному замовленні
+Оплата карткою, Apple Pay, Google Pay
+Вибір часу доставки
+Повтор замовлення', 'Broad menu in one order
+Pay by card, Apple Pay, Google Pay
+Choose delivery time
+Repeat orders', 'Тим, хто замовляє їжу з доставкою.', 'People who order food delivery.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'la.ua' OR LOWER(`name`) = 'la п''єц') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'LA P''IETS food delivery: pizza, sushi, burgers, kebabs, lunches and breakfasts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'LA P''IETS is a delivery service with a broad menu: pizza, sushi, burgers, kebabs, hot dogs, lunches, breakfasts, salads and desserts. In the app you can pay by card, Apple Pay, Google Pay or rewards, choose a delivery time or pickup, and repeat a previous order.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Broad menu in one order
+Pay by card, Apple Pay, Google Pay
+Choose delivery time
+Repeat orders', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who order food delivery.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Pronto Pizza — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'prontopizza.ua' OR LOWER(`name`) = 'pronto pizza')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Pronto Pizza', NULL, 'https://prontopizza.ua', NULL, NULL, 'Замовлення піци та суші Pronto Pizza в Івано-Франківську з доставкою чи самовивозом.', 'Order Pronto Pizza pizza and sushi in Ivano-Frankivsk for delivery or pickup.', 'Застосунок Pronto Pizza дає онлайн-доступ до сервісу доставки ресторану: італійська піца, суші та інші страви. Готувати починають одразу після замовлення, доставка безкоштовна.', 'The Pronto Pizza app gives online access to the restaurant delivery service: Italian pizza, sushi and other dishes. Cooking starts as soon as you order, and delivery is free.', 'Піца й суші
+Безкоштовна доставка
+Самовивіз', 'Pizza and sushi
+Free delivery
+Pickup', 'Любителям піци та суші.', 'Pizza and sushi lovers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'prontopizza.ua' OR LOWER(`name`) = 'pronto pizza') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Order Pronto Pizza pizza and sushi in Ivano-Frankivsk for delivery or pickup.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Pronto Pizza app gives online access to the restaurant delivery service: Italian pizza, sushi and other dishes. Cooking starts as soon as you order, and delivery is free.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Pizza and sushi
+Free delivery
+Pickup', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Pizza and sushi lovers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- OhMyPizza — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6749968791' OR LOWER(`name`) = 'ohmypizza')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'OhMyPizza', NULL, 'https://apps.apple.com/ua/app/id6749968791', NULL, NULL, 'Доставка піци OhMyPizza у Львові.', 'OhMyPizza pizza delivery in Lviv.', 'OhMyPizza — сервіс доставки піци у Львові. У застосунку можна переглянути меню, замовити піцу для бранчу, вечірки чи перегляду футболу й отримувати акції.', 'OhMyPizza is a pizza delivery service in Lviv. In the app you can browse the menu, order pizza for a brunch, a party or a football night, and get deals.', 'Меню піц
+Доставка у Львові
+Акції', 'Pizza menu
+Delivery in Lviv
+Deals', 'Мешканцям Львова.', 'Lviv residents.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6749968791' OR LOWER(`name`) = 'ohmypizza') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'OhMyPizza pizza delivery in Lviv.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'OhMyPizza is a pizza delivery service in Lviv. In the app you can browse the menu, order pizza for a brunch, a party or a football night, and get deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Pizza menu
+Delivery in Lviv
+Deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Lviv residents.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Sushi•Go — Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sushi-go.com.ua' OR LOWER(`name`) = 'sushi•go')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sushi•Go', NULL, 'https://sushi-go.com.ua', NULL, NULL, 'Доставка ролів, суші-сетів і піци Sushi•Go у Львові та Івано-Франківську.', 'Sushi•Go delivery of rolls, sushi sets and pizza in Lviv and Ivano-Frankivsk.', 'Sushi•Go пропонує понад 50 видів ролів, суші-сети, піцу за класичними та авторськими рецептами, місо-супи, салати й десерти. Доставка у Львові та Івано-Франківську. В акаунті зберігаються історія замовлень, адреси та улюблені страви.', 'Sushi•Go offers 50+ kinds of rolls, sushi sets, pizza with classic and signature recipes, miso soups, salads and desserts. Delivery in Lviv and Ivano-Frankivsk. Your account keeps order history, addresses and favourite dishes.', 'Понад 50 видів ролів
+Піца та супи
+Історія замовлень і адрес', '50+ kinds of rolls
+Pizza and soups
+Order and address history', 'Мешканцям Львова та Івано-Франківська.', 'Residents of Lviv and Ivano-Frankivsk.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'sushi-go.com.ua' OR LOWER(`name`) = 'sushi•go') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Sushi•Go delivery of rolls, sushi sets and pizza in Lviv and Ivano-Frankivsk.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Sushi•Go offers 50+ kinds of rolls, sushi sets, pizza with classic and signature recipes, miso soups, salads and desserts. Delivery in Lviv and Ivano-Frankivsk. Your account keeps order history, addresses and favourite dishes.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '50+ kinds of rolls
+Pizza and soups
+Order and address history', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Residents of Lviv and Ivano-Frankivsk.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Lviv Croissants — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lvivcroissants.com' OR LOWER(`name`) = 'lviv croissants')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Lviv Croissants', NULL, 'https://lvivcroissants.com', NULL, NULL, 'Програма лояльності пекарень Lviv Croissants: бонуси за покупки, меню та найближчі заклади.', 'Lviv Croissants bakery loyalty program: rewards for purchases, menu and nearby bakeries.', 'Застосунок Lviv Croissants замінює пластикову картку: бонуси нараховуються за кожну покупку, ними можна розплатитися наступного разу. У застосунку є найближчі пекарні та графік роботи, актуальне меню, історія покупок, новини й акції.', 'The Lviv Croissants app replaces the plastic card: you earn points on every purchase and can pay with them next time. It shows nearby bakeries and opening hours, the current menu, purchase history, news and deals.', 'Бонуси за кожну покупку
+Найближчі пекарні та графік
+Меню й акції', 'Points on every purchase
+Nearby bakeries and hours
+Menu and deals', 'Постійним гостям пекарень.', 'Regular bakery customers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lvivcroissants.com' OR LOWER(`name`) = 'lviv croissants') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Lviv Croissants bakery loyalty program: rewards for purchases, menu and nearby bakeries.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Lviv Croissants app replaces the plastic card: you earn points on every purchase and can pay with them next time. It shows nearby bakeries and opening hours, the current menu, purchase history, news and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Points on every purchase
+Nearby bakeries and hours
+Menu and deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Regular bakery customers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Aroma Kava — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6529538405' OR LOWER(`name`) = 'aroma kava')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Aroma Kava', NULL, 'https://apps.apple.com/ua/app/id6529538405', NULL, NULL, 'Застосунок кав’ярень Aroma Kava: кешбек і бонуси за покупки, меню та акції.', 'Aroma Kava coffee shop app: cashback and rewards, menu and deals.', 'У застосунку Aroma Kava нараховується кешбек і бонуси за кожну покупку, ними можна оплачувати частину замовлення. Тут же меню напоїв і страв, нові акції та новини кав’ярні.', 'The Aroma Kava app gives cashback and points for every purchase that you can use to pay for orders. It also has the drinks and food menu, new deals and café news.', 'Кешбек і бонуси
+Меню напоїв і страв
+Акції та новини', 'Cashback and points
+Drinks and food menu
+Deals and news', 'Гостям кав’ярень Aroma Kava.', 'Aroma Kava customers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6529538405' OR LOWER(`name`) = 'aroma kava') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Aroma Kava coffee shop app: cashback and rewards, menu and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Aroma Kava app gives cashback and points for every purchase that you can use to pay for orders. It also has the drinks and food menu, new deals and café news.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Cashback and points
+Drinks and food menu
+Deals and news', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Aroma Kava customers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- KREDENS — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kredens.com.ua' OR LOWER(`name`) = 'kredens')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'KREDENS', NULL, 'https://kredens.com.ua', NULL, NULL, 'Замовлення кави KREDENS без черг: 7% кешбеку, бонусні зернятка й кава в подарунок.', 'Order KREDENS coffee without queues: 7% cashback, bonus beans and coffee as a gift.', 'Застосунок KREDENS дає змогу замовити напої та їжу онлайн і забрати їх біля бару чи отримати за столиком. За кожну покупку повертається 7% кешбеку, є бонусні «зернятка», персональні пропозиції та можливість подарувати каву близьким.', 'The KREDENS app lets you order drinks and food online and pick them up at the bar or get them at your table. Every purchase returns 7% cashback, and there are bonus "beans", personal offers and coffee you can gift to someone.', 'Онлайн-замовлення без черг
+7% кешбеку
+Кава в подарунок
+Персональні пропозиції', 'Online ordering without queues
+7% cashback
+Gift a coffee
+Personal offers', 'Гостям кав’ярень KREDENS.', 'KREDENS café customers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kredens.com.ua' OR LOWER(`name`) = 'kredens') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Order KREDENS coffee without queues: 7% cashback, bonus beans and coffee as a gift.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The KREDENS app lets you order drinks and food online and pick them up at the bar or get them at your table. Every purchase returns 7% cashback, and there are bonus "beans", personal offers and coffee you can gift to someone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Online ordering without queues
+7% cashback
+Gift a coffee
+Personal offers', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'KREDENS café customers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Я це KAVA — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6447684746' OR LOWER(`name`) = 'я це kava')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Я це KAVA', NULL, 'https://apps.apple.com/ua/app/id6447684746', NULL, NULL, 'Застосунок кав’ярень «Я це KAVA»: меню, кешбек і бонуси замість грошей.', '"Ya tse KAVA" coffee shop app: menu, cashback and points instead of money.', 'У застосунку «Я це KAVA» можна переглянути меню, отримувати кешбек за кожне замовлення, розраховуватися бонусами та першими дізнаватися про нові пропозиції.', 'In the "Ya tse KAVA" app you can view the menu, get cashback on every order, pay with points and be the first to hear about new offers.', 'Меню
+Кешбек за замовлення
+Оплата бонусами', 'Menu
+Cashback on orders
+Pay with points', 'Гостям кав’ярень мережі.', 'Customers of the coffee chain.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6447684746' OR LOWER(`name`) = 'я це kava') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', '"Ya tse KAVA" coffee shop app: menu, cashback and points instead of money.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'In the "Ya tse KAVA" app you can view the menu, get cashback on every order, pay with points and be the first to hear about new offers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Menu
+Cashback on orders
+Pay with points', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Customers of the coffee chain.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Mikko Coffee — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6445923284' OR LOWER(`name`) = 'mikko coffee')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Mikko Coffee', NULL, 'https://apps.apple.com/ua/app/id6445923284', NULL, NULL, 'Застосунок кав’ярні Mikko Coffee: бонуси за покупки, новинки та знижки.', 'Mikko Coffee café app: points for purchases, new items and discounts.', 'Mikko Coffee — кав’ярня з класичними та авторськими кавовими напоями, сезонними десертами й випічкою. У застосунку накопичуються бонуси за покупки та з’являються новинки й знижки.', 'Mikko Coffee is a café with classic and signature coffee drinks, seasonal desserts and pastries. The app collects points for purchases and shows new items and discounts.', 'Бонуси за покупки
+Новинки меню
+Знижки', 'Points for purchases
+New menu items
+Discounts', 'Гостям кав’ярні.', 'Café guests.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6445923284' OR LOWER(`name`) = 'mikko coffee') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Mikko Coffee café app: points for purchases, new items and discounts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Mikko Coffee is a café with classic and signature coffee drinks, seasonal desserts and pastries. The app collects points for purchases and shows new items and discounts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Points for purchases
+New menu items
+Discounts', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Café guests.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Fresh Coffee — Кав'ярні та пекарні
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1516615448' OR LOWER(`name`) = 'fresh coffee')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Fresh Coffee', NULL, 'https://apps.apple.com/ua/app/id1516615448', NULL, NULL, 'Офіційний магазин виробника свіжообсмаженої кави ТМ Fresh Coffee з доставкою по Україні.', 'Official store of the Fresh Coffee roaster with delivery across Ukraine.', 'Fresh Coffee — офіційний застосунок українського виробника свіжообсмаженої кави. Тут можна переглянути асортимент кави, чаю та аксесуарів, замовити з доставкою в будь-яку точку України, отримати консультацію та бачити історію замовлень.', 'Fresh Coffee is the official app of a Ukrainian fresh-roasted coffee producer. You can browse coffee, tea and accessories, order with delivery anywhere in Ukraine, get advice and see your order history.', 'Кава, чай та аксесуари
+Доставка по Україні
+Консультація щодо товарів
+Історія замовлень', 'Coffee, tea and accessories
+Delivery across Ukraine
+Product advice
+Order history', 'Тим, хто купує каву додому чи в офіс.', 'People buying coffee for home or office.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1516615448' OR LOWER(`name`) = 'fresh coffee') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Official store of the Fresh Coffee roaster with delivery across Ukraine.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Fresh Coffee is the official app of a Ukrainian fresh-roasted coffee producer. You can browse coffee, tea and accessories, order with delivery anywhere in Ukraine, get advice and see your order history.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Coffee, tea and accessories
+Delivery across Ukraine
+Product advice
+Order history', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People buying coffee for home or office.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- ELITECOFFEE — Кав'ярні та пекарні, Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1588410476' OR LOWER(`name`) = 'elitecoffee')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ELITECOFFEE', NULL, 'https://apps.apple.com/ua/app/id1588410476', NULL, NULL, 'Магазин кави й кавомашин ELITECOFFEE: кешбек, безкоштовна доставка й видача в точках.', 'ELITECOFFEE coffee and coffee machine store: cashback, free delivery and pickup points.', 'ELITECOFFEE — спеціалізований магазин кави та кавових апаратів. У застосунку можна оформити й оплатити замовлення кави чи кавомашини з безкоштовною доставкою по Україні, отримати кешбек або знижку, поспілкуватися з консультантом у чаті й забрати покупку в точці видачі чи у відділенні Нової пошти.', 'ELITECOFFEE is a specialist store for coffee and coffee machines. In the app you can order and pay for coffee or a coffee machine with free delivery across Ukraine, get cashback or a discount, chat with a consultant and collect your order at a pickup point or a Nova Poshta branch.', 'Кава та кавомашини
+Безкоштовна доставка
+Кешбек або знижка
+Онлайн-чат з консультантом', 'Coffee and coffee machines
+Free delivery
+Cashback or discount
+Live chat with a consultant', 'Поціновувачам кави та власникам кавомашин.', 'Coffee lovers and coffee machine owners.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1588410476' OR LOWER(`name`) = 'elitecoffee') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-cafes' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'ELITECOFFEE coffee and coffee machine store: cashback, free delivery and pickup points.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ELITECOFFEE is a specialist store for coffee and coffee machines. In the app you can order and pay for coffee or a coffee machine with free delivery across Ukraine, get cashback or a discount, chat with a consultant and collect your order at a pickup point or a Nova Poshta branch.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Coffee and coffee machines
+Free delivery
+Cashback or discount
+Live chat with a consultant', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Coffee lovers and coffee machine owners.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Sport Life — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1578676064' OR LOWER(`name`) = 'sport life')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Sport Life', NULL, 'https://apps.apple.com/ua/app/id1578676064', NULL, NULL, 'Застосунок мережі фітнес-клубів Sport Life: розклад, онлайн-запис на заняття та оплата.', 'Sport Life fitness club chain app: schedule, online class booking and payments.', 'Мобільний застосунок для клієнтів мережі фітнес-клубів Sport Life. Можна переглядати розклад групових занять у клубах, записуватися на них онлайн і швидко оплачувати послуги.', 'A mobile app for members of the Sport Life fitness club chain. You can view the group class schedule in the clubs, book classes online and pay for services quickly.', 'Розклад групових занять
+Онлайн-запис
+Оплата в застосунку', 'Group class schedule
+Online booking
+In-app payment', 'Клієнтам клубів Sport Life.', 'Sport Life members.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1578676064' OR LOWER(`name`) = 'sport life') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Sport Life fitness club chain app: schedule, online class booking and payments.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'A mobile app for members of the Sport Life fitness club chain. You can view the group class schedule in the clubs, book classes online and pay for services quickly.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Group class schedule
+Online booking
+In-app payment', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Sport Life members.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- APOLLO NEXT — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1571725261' OR LOWER(`name`) = 'apollo next')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'APOLLO NEXT', NULL, 'https://apps.apple.com/ua/app/id1571725261', NULL, NULL, 'Застосунок мережі спортивних просторів APOLLO NEXT: розклад, запис на тренування та абонементи.', 'APOLLO NEXT sports club app: schedule, workout booking and memberships.', 'APOLLO NEXT — фітнес-застосунок мережі спортивних просторів. У ньому видно розклад усіх відкритих клубів, можна записатися на групові та персональні тренування, керувати абонементом і стежити за своїм прогресом.', 'APOLLO NEXT is the fitness app of the sports club chain. It shows the schedule of all open clubs, lets you book group and personal workouts, manage your membership and follow your progress.', 'Розклад клубів
+Запис на тренування
+Керування абонементом', 'Club schedules
+Workout booking
+Membership management', 'Клієнтам клубів APOLLO NEXT.', 'APOLLO NEXT members.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1571725261' OR LOWER(`name`) = 'apollo next') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'APOLLO NEXT sports club app: schedule, workout booking and memberships.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'APOLLO NEXT is the fitness app of the sports club chain. It shows the schedule of all open clubs, lets you book group and personal workouts, manage your membership and follow your progress.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Club schedules
+Workout booking
+Membership management', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'APOLLO NEXT members.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Smartass — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1459097916' OR LOWER(`name`) = 'smartass')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Smartass', NULL, 'https://apps.apple.com/ua/app/id1459097916', NULL, NULL, 'Фітнес-клуб Smartass: групові тренування в атмосфері нічного клубу, запис і лист очікування.', 'Smartass fitness club: group workouts in a nightclub atmosphere, booking and waitlist.', 'Smartass — київський фітнес-клуб, де групові тренування проходять зі світлом і музикою, як у нічному клубі. У застосунку можна обрати заняття й тренера, записатися, стати в лист очікування, якщо місць немає, і бачити, хто ще йде.', 'Smartass is a Kyiv fitness club where group workouts run with nightclub-style lighting and music. In the app you can pick a class and trainer, book, join a waitlist when the class is full and see who else is going.', 'Запис на заняття й вибір тренера
+Лист очікування
+Сповіщення про вільні місця', 'Class booking and trainer choice
+Waitlist
+Alerts when a spot opens', 'Тим, хто любить групові тренування.', 'People who enjoy group workouts.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1459097916' OR LOWER(`name`) = 'smartass') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Smartass fitness club: group workouts in a nightclub atmosphere, booking and waitlist.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Smartass is a Kyiv fitness club where group workouts run with nightclub-style lighting and music. In the app you can pick a class and trainer, book, join a waitlist when the class is full and see who else is going.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Class booking and trainer choice
+Waitlist
+Alerts when a spot opens', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who enjoy group workouts.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- FitNow — Спортзали та фітнес-клуби, Онлайн-запис на послуги
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'fitnow.me' OR LOWER(`name`) = 'fitnow')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'FitNow', NULL, 'https://fitnow.me', NULL, NULL, 'Сотні фітнес-студій в одному застосунку: бронювання й оплата кожного заняття окремо.', 'Hundreds of fitness studios in one app: book and pay for each class separately.', 'FitNow збирає фітнес-студії з розкладом, цінами та адресами. Можна обрати заняття, забронювати й оплатити його окремо за цінами самої студії, а з FitNow Club — заощаджувати до 20% на кожному занятті.', 'FitNow brings fitness studios together with schedules, prices and addresses. You can pick a class, book it and pay for it separately at the studio price, and with FitNow Club save up to 20% on every class.', 'Сотні студій в одному місці
+Оплата за окреме заняття
+Знижка до 20% у FitNow Club', 'Hundreds of studios in one place
+Pay per class
+Up to 20% off with FitNow Club', 'Тим, хто не хоче купувати абонемент в одну студію.', 'People who do not want a single-studio membership.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'fitnow.me' OR LOWER(`name`) = 'fitnow') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-booking' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Hundreds of fitness studios in one app: book and pay for each class separately.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'FitNow brings fitness studios together with schedules, prices and addresses. You can pick a class, book it and pay for it separately at the studio price, and with FitNow Club save up to 20% on every class.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Hundreds of studios in one place
+Pay per class
+Up to 20% off with FitNow Club', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who do not want a single-studio membership.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- LimeFit — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'limefit.com.ua' OR LOWER(`name`) = 'limefit')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'LimeFit', NULL, 'https://limefit.com.ua', NULL, NULL, 'Застосунок фітнес-клубу LimeFit у Луцьку: клубна картка з QR-кодом і розклад.', 'LimeFit fitness club app in Lutsk: club card with a QR code and schedule.', 'LimeFit Club — застосунок фітнес-клубу в Луцьку, реєстрація не потрібна. Досить додати номер клубної картки (відсканувати або ввести), щоб на вході показувати QR-код, переглядати розклад і стан абонемента.', 'LimeFit Club is the app of a fitness club in Lutsk; no sign-up is needed. Add your club card number (scan or type it) to show a QR code at the entrance, view the schedule and your membership status.', 'Клубна картка в телефоні
+QR-код на вході
+Розклад клубу', 'Club card on your phone
+QR code at the entrance
+Club schedule', 'Клієнтам LimeFit у Луцьку.', 'LimeFit members in Lutsk.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'limefit.com.ua' OR LOWER(`name`) = 'limefit') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'LimeFit fitness club app in Lutsk: club card with a QR code and schedule.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'LimeFit Club is the app of a fitness club in Lutsk; no sign-up is needed. Add your club card number (scan or type it) to show a QR code at the entrance, view the schedule and your membership status.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Club card on your phone
+QR code at the entrance
+Club schedule', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'LimeFit members in Lutsk.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Інтер Атлетика — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'interatletika.lutsk.ua' OR LOWER(`name`) = 'інтер атлетика')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Інтер Атлетика', NULL, 'https://interatletika.lutsk.ua', NULL, NULL, 'Застосунок мережі спортивних клубів «Інтер Атлетика» в Луцьку: абонементи онлайн.', 'Inter Atletyka sports club app in Lutsk: buy memberships online.', 'Застосунок мережі спортивних клубів «Інтер Атлетика» в Луцьку. Тут можна зареєструватися, обрати й придбати абонемент онлайн та отримати персональну картку клієнта.', 'The app of the Inter Atletyka sports club chain in Lutsk. You can register, choose and buy a membership online and get a personal member card.', 'Реєстрація
+Купівля абонемента онлайн
+Персональна картка', 'Registration
+Buy a membership online
+Personal card', 'Клієнтам клубів у Луцьку.', 'Club members in Lutsk.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'interatletika.lutsk.ua' OR LOWER(`name`) = 'інтер атлетика') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Inter Atletyka sports club app in Lutsk: buy memberships online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The app of the Inter Atletyka sports club chain in Lutsk. You can register, choose and buy a membership online and get a personal member card.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Registration
+Buy a membership online
+Personal card', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Club members in Lutsk.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Padl.UA — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'padl.com.ua' OR LOWER(`name`) = 'padl.ua')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Padl.UA', NULL, 'https://padl.com.ua', NULL, NULL, 'Падел в Україні: клуби й корти, бронювання, відкриті ігри та турніри.', 'Padel in Ukraine: clubs and courts, booking, open games and tournaments.', 'Padl.UA об’єднує падел-клуби, корти, гравців і турніри України. У застосунку видно вільний час на кортах, можна забронювати корт, приєднатися до відкритої гри або створити власну.', 'Padl.UA brings together padel clubs, courts, players and tournaments in Ukraine. The app shows free court times and lets you book a court, join an open game or create your own.', 'Клуби й корти по Україні
+Бронювання корту
+Відкриті ігри
+Турніри', 'Clubs and courts across Ukraine
+Court booking
+Open games
+Tournaments', 'Гравцям у падел.', 'Padel players.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'padl.com.ua' OR LOWER(`name`) = 'padl.ua') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Padel in Ukraine: clubs and courts, booking, open games and tournaments.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Padl.UA brings together padel clubs, courts, players and tournaments in Ukraine. The app shows free court times and lets you book a court, join an open game or create your own.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Clubs and courts across Ukraine
+Court booking
+Open games
+Tournaments', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Padel players.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- BetterMe — Спортзали та фітнес-клуби
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'betterme.world' OR LOWER(`name`) = 'betterme')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'BetterMe', NULL, 'https://betterme.world', NULL, NULL, 'Тренування вдома й у залі, план харчування та звички від BetterMe.', 'Home and gym workouts, meal plans and habits from BetterMe.', 'BetterMe поєднує тренування, планування харчування та інструменти для звичок. Понад 4 000 тренувань — пілатес, калістеніка, силові, йога, ходьба й програми для залу — підлаштовуються під ваш темп. Частина функцій доступна за підпискою.', 'BetterMe combines workouts, meal planning and habit tools. Over 4,000 workouts — Pilates, calisthenics, strength, yoga, walking and gym programs — adapt to your pace. Some features require a subscription.', 'Понад 4 000 тренувань
+План харчування
+Трекінг звичок', '4,000+ workouts
+Meal planning
+Habit tracking', 'Тим, хто хоче тренуватися за планом.', 'People who want to train with a plan.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'betterme.world' OR LOWER(`name`) = 'betterme') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-fitness' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Home and gym workouts, meal plans and habits from BetterMe.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'BetterMe combines workouts, meal planning and habit tools. Over 4,000 workouts — Pilates, calisthenics, strength, yoga, walking and gym programs — adapt to your pace. Some features require a subscription.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '4,000+ workouts
+Meal planning
+Habit tracking', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People who want to train with a plan.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Respublika Park — Торгові центри
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'respublikapark.com.ua' OR LOWER(`name`) = 'respublika park')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Respublika Park', NULL, 'https://respublikapark.com.ua', NULL, NULL, 'Застосунок ТРЦ Respublika Park: магазини, ресторани, розваги та акції.', 'Respublika Park mall app: shops, restaurants, entertainment and deals.', 'Respublika Park — київський ТРЦ із понад 500 магазинами, фуд-зоною на 50+ ресторанів і парком розваг на 30+ атракціонів. Застосунок допомагає знайти магазини, дізнатися про акції та спланувати візит.', 'Respublika Park is a Kyiv mall with 500+ shops, a food court with 50+ restaurants and an entertainment park with 30+ attractions. The app helps you find shops, see deals and plan your visit.', 'Каталог магазинів і ресторанів
+Акції та події
+Розваги ТРЦ', 'Shop and restaurant directory
+Deals and events
+Mall entertainment', 'Відвідувачам ТРЦ у Києві.', 'Kyiv mall visitors.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'respublikapark.com.ua' OR LOWER(`name`) = 'respublika park') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Respublika Park mall app: shops, restaurants, entertainment and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Respublika Park is a Kyiv mall with 500+ shops, a food court with 50+ restaurants and an entertainment park with 30+ attractions. The app helps you find shops, see deals and plan your visit.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Shop and restaurant directory
+Deals and events
+Mall entertainment', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv mall visitors.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Forum Lviv — Торгові центри
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6749765974' OR LOWER(`name`) = 'forum lviv')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Forum Lviv', NULL, 'https://apps.apple.com/ua/app/id6749765974', NULL, NULL, 'Застосунок ТРЦ Forum Lviv: навігація між 116+ магазинами, акції, події та паркування.', 'Forum Lviv mall app: wayfinding across 116+ shops, offers, events and parking.', 'Застосунок Club Forum Lviv для відвідувачів львівського ТРЦ: ексклюзивні пропозиції, навігація в реальному часі між понад 116 магазинами, реєстрація на події, паркування та заклади харчування.', 'The Club Forum Lviv app for visitors of the Lviv mall: exclusive offers, real-time indoor wayfinding across 116+ shops, event sign-up, parking and food.', 'Навігація всередині ТРЦ
+Ексклюзивні пропозиції
+Реєстрація на події
+Паркування', 'Indoor wayfinding
+Exclusive offers
+Event sign-up
+Parking', 'Відвідувачам ТРЦ у Львові.', 'Lviv mall visitors.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id6749765974' OR LOWER(`name`) = 'forum lviv') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Forum Lviv mall app: wayfinding across 116+ shops, offers, events and parking.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Club Forum Lviv app for visitors of the Lviv mall: exclusive offers, real-time indoor wayfinding across 116+ shops, event sign-up, parking and food.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Indoor wayfinding
+Exclusive offers
+Event sign-up
+Parking', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Lviv mall visitors.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- River Mall — Торгові центри
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rivermall.ua' OR LOWER(`name`) = 'river mall')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'River Mall', NULL, 'https://rivermall.ua', NULL, NULL, 'Застосунок ТРЦ River Mall у Києві: навігатор, каталог 250 брендів і оплата паркування.', 'River Mall Kyiv app: in-mall navigator, directory of 250 brands and parking payment.', 'Застосунок київського ТРЦ River Mall допомагає швидко знайти потрібний магазин навігатором, переглянути каталог із 250 брендів, магазинів і ресторанів за категоріями, оплатити паркування в один дотик і стежити за акціями.', 'The River Mall app helps you find a shop quickly with the navigator, browse a directory of 250 brands, shops and restaurants by category, pay for parking in one tap and follow deals.', 'Навігатор ТРЦ
+Каталог 250 брендів
+Оплата паркування
+Акції', 'Mall navigator
+Directory of 250 brands
+Parking payment
+Deals', 'Відвідувачам ТРЦ у Києві.', 'Kyiv mall visitors.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rivermall.ua' OR LOWER(`name`) = 'river mall') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'River Mall Kyiv app: in-mall navigator, directory of 250 brands and parking payment.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The River Mall app helps you find a shop quickly with the navigator, browse a directory of 250 brands, shops and restaurants by category, pay for parking in one tap and follow deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Mall navigator
+Directory of 250 brands
+Parking payment
+Deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv mall visitors.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Планета Кіно — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'planetakino.ua' OR LOWER(`name`) = 'планета кіно')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Планета Кіно', NULL, 'https://planetakino.ua', NULL, NULL, 'Квитки в кінотеатри «Планета Кіно»: розклад, IMAX і 4DX, оплата та квиток у телефоні.', 'Planeta Kino cinema tickets: showtimes, IMAX and 4DX, payment and a ticket on your phone.', '«Планета Кіно» працює з 2008 року в Києві, Харкові, Львові, Дніпрі, Сумах та Одесі; мережа привезла в Україну IMAX і 4DX. У застосунку — розклад сеансів, купівля квитків, вибір місць і квитки в телефоні.', 'Planeta Kino has been running since 2008 in Kyiv, Kharkiv, Lviv, Dnipro, Sumy and Odesa; the chain brought IMAX and 4DX to Ukraine. The app has showtimes, ticket purchase, seat choice and tickets on your phone.', 'Розклад сеансів
+Купівля квитків і вибір місць
+IMAX і 4DX
+Квиток у телефоні', 'Showtimes
+Ticket purchase and seat choice
+IMAX and 4DX
+Ticket on your phone', 'Глядачам кінотеатрів.', 'Cinema-goers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'planetakino.ua' OR LOWER(`name`) = 'планета кіно') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Planeta Kino cinema tickets: showtimes, IMAX and 4DX, payment and a ticket on your phone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Planeta Kino has been running since 2008 in Kyiv, Kharkiv, Lviv, Dnipro, Sumy and Odesa; the chain brought IMAX and 4DX to Ukraine. The app has showtimes, ticket purchase, seat choice and tickets on your phone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Showtimes
+Ticket purchase and seat choice
+IMAX and 4DX
+Ticket on your phone', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cinema-goers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Multiplex — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'multiplex.ua' OR LOWER(`name`) = 'multiplex')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Multiplex', NULL, 'https://multiplex.ua', NULL, NULL, 'Офіційний застосунок мережі кінотеатрів Multiplex: розклад, електронні квитки та акції.', 'Official Multiplex cinema chain app: showtimes, e-tickets and deals.', 'Офіційний застосунок мережі кінотеатрів Multiplex. У ньому можна переглядати розклад кінотеатрів, купувати електронні квитки на фільми й зберігати їх у телефоні, дізнаватися про акції та спеціальні пропозиції.', 'The official app of the Multiplex cinema chain. You can view showtimes, buy e-tickets for films and keep them on your phone, and find out about deals and special offers.', 'Розклад кінотеатрів
+Електронні квитки
+Акції та пропозиції', 'Cinema showtimes
+E-tickets
+Deals and offers', 'Глядачам кінотеатрів.', 'Cinema-goers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'multiplex.ua' OR LOWER(`name`) = 'multiplex') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Official Multiplex cinema chain app: showtimes, e-tickets and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The official app of the Multiplex cinema chain. You can view showtimes, buy e-tickets for films and keep them on your phone, and find out about deals and special offers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Cinema showtimes
+E-tickets
+Deals and offers', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cinema-goers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Контрамарка — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kontramarka.ua' OR LOWER(`name`) = 'контрамарка')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Контрамарка', NULL, 'https://kontramarka.ua', NULL, NULL, 'Квитки на концерти, вистави, фестивалі та спортивні події в Україні.', 'Tickets for concerts, shows, festivals and sports events in Ukraine.', '«Контрамарка» — сервіс продажу квитків. Застосунок дає змогу швидко знайти й купити квитки на концерти, вистави, фестивалі та спортивні події.', 'Kontramarka is a ticketing service. The app lets you quickly find and buy tickets for concerts, shows, festivals and sports events.', 'Концерти, вистави, фестивалі
+Спортивні події
+Купівля квитків онлайн', 'Concerts, shows, festivals
+Sports events
+Buy tickets online', 'Глядачам концертів і вистав.', 'Concert and theatre goers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kontramarka.ua' OR LOWER(`name`) = 'контрамарка') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Tickets for concerts, shows, festivals and sports events in Ukraine.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Kontramarka is a ticketing service. The app lets you quickly find and buy tickets for concerts, shows, festivals and sports events.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Concerts, shows, festivals
+Sports events
+Buy tickets online', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Concert and theatre goers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- KARABAS — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'karabas.com' OR LOWER(`name`) = 'karabas')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'KARABAS', NULL, 'https://karabas.com', NULL, NULL, 'Квитки KARABAS.COM на концерти, вистави, фестивалі та інші події у вашому місті.', 'KARABAS.COM tickets for concerts, shows, festivals and other events in your city.', 'Застосунок сервісу продажу квитків KARABAS.COM. Тут можна знайти й купити квитки на концерти, театральні вистави, фестивалі, форуми й онлайн-семінари, а куплені квитки зберігаються в застосунку.', 'The app of the KARABAS.COM ticketing service. You can find and buy tickets for concerts, theatre shows, festivals, forums and online seminars, and your tickets are stored in the app.', 'Концерти й вистави
+Фестивалі та форуми
+Квитки зберігаються в застосунку', 'Concerts and shows
+Festivals and forums
+Tickets stored in the app', 'Тим, хто ходить на події.', 'Event-goers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'karabas.com' OR LOWER(`name`) = 'karabas') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'KARABAS.COM tickets for concerts, shows, festivals and other events in your city.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The app of the KARABAS.COM ticketing service. You can find and buy tickets for concerts, theatre shows, festivals, forums and online seminars, and your tickets are stored in the app.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Concerts and shows
+Festivals and forums
+Tickets stored in the app', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Event-goers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Квиток — Кіно, концерти та квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kvytok.co' OR LOWER(`name`) = 'квиток')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Квиток', NULL, 'https://kvytok.co', NULL, NULL, 'Квитки на концерти, вистави й стендап по всій Україні з інтерактивними схемами залів.', 'Tickets for concerts, shows and stand-up across Ukraine with interactive seating maps.', '«Квиток» — застосунок для купівлі квитків на концерти, вистави, стендап та інші події по всій Україні. Показує актуальні події у вашому місті та інтерактивні схеми залів, щоб обрати саме ті місця.', 'Kvytok is an app for buying tickets to concerts, shows, stand-up and other events across Ukraine. It shows current events in your city and interactive seating maps so you can pick your seats.', 'Події у вашому місті
+Інтерактивні схеми залів
+Концерти, вистави, стендап', 'Events in your city
+Interactive seating maps
+Concerts, shows, stand-up', 'Глядачам концертів і стендапу.', 'Concert and stand-up fans.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kvytok.co' OR LOWER(`name`) = 'квиток') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-tickets' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Tickets for concerts, shows and stand-up across Ukraine with interactive seating maps.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Kvytok is an app for buying tickets to concerts, shows, stand-up and other events across Ukraine. It shows current events in your city and interactive seating maps so you can pick your seats.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Events in your city
+Interactive seating maps
+Concerts, shows, stand-up', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Concert and stand-up fans.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Рукавичка — Супермаркети
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rukavychka.ua' OR LOWER(`name`) = 'рукавичка')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Рукавичка', NULL, 'https://rukavychka.ua', NULL, NULL, 'Застосунок мережі маркетів «Рукавичка»: цифрова картка, бонуси й акції.', 'Rukavychka store chain app: digital card, rewards and deals.', 'Застосунок мережі «Рукавичка» замінює пластикову картку й паперові флаєри: цифрова картка постійного покупця, бонуси та актуальні акції — у смартфоні.', 'The Rukavychka app replaces the plastic card and paper flyers: a digital loyalty card, rewards and current deals on your smartphone.', 'Цифрова картка
+Бонуси
+Акції мережі', 'Digital card
+Rewards
+Chain deals', 'Покупцям «Рукавички».', 'Rukavychka shoppers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'rukavychka.ua' OR LOWER(`name`) = 'рукавичка') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-groceries' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Rukavychka store chain app: digital card, rewards and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Rukavychka app replaces the plastic card and paper flyers: a digital loyalty card, rewards and current deals on your smartphone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Digital card
+Rewards
+Chain deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Rukavychka shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Копійка — Супермаркети
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1601999525' OR LOWER(`name`) = 'копійка')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Копійка', NULL, 'https://apps.apple.com/ua/app/id1601999525', NULL, NULL, 'Застосунок магазинів «Копійка»: бали на Картку Сусіда та акції.', 'Kopiyka store app: points on the Neighbour Card and deals.', 'У застосунку мережі магазинів «Копійка» можна накопичувати та списувати бали з Картки Сусіда, показуючи її касиру з телефона, і стежити за акціями.', 'In the Kopiyka store app you can earn and spend points on the Neighbour Card by showing it to the cashier from your phone, and follow deals.', 'Картка Сусіда в телефоні
+Накопичення й списання балів
+Акції', 'Neighbour Card on your phone
+Earn and spend points
+Deals', 'Покупцям магазинів «Копійка».', 'Kopiyka shoppers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id1601999525' OR LOWER(`name`) = 'копійка') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-groceries' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Kopiyka store app: points on the Neighbour Card and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'In the Kopiyka store app you can earn and spend points on the Neighbour Card by showing it to the cashier from your phone, and follow deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Neighbour Card on your phone
+Earn and spend points
+Deals', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kopiyka shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- ToSim (Сім23) — Супермаркети
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'simi.ua' OR LOWER(`name`) = 'tosim (сім23)')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ToSim (Сім23)', NULL, 'https://simi.ua', NULL, NULL, 'Програма лояльності мережі зручних маркетів Сім23 та Сімі.', 'Loyalty program of the Sim23 and Simi convenience store chains.', 'ToSim — мобільна програма лояльності мереж зручних маркетів Сім23 та Сімі: винагороди за покупки, акції та пропозиції для постійних покупців.', 'ToSim is the mobile loyalty program of the Sim23 and Simi convenience store chains: rewards for purchases, deals and offers for regular shoppers.', 'Бонуси за покупки
+Акції мережі
+Цифрова картка', 'Rewards for purchases
+Chain deals
+Digital card', 'Покупцям Сім23 та Сімі.', 'Sim23 and Simi shoppers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'simi.ua' OR LOWER(`name`) = 'tosim (сім23)') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-groceries' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Loyalty program of the Sim23 and Simi convenience store chains.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'ToSim is the mobile loyalty program of the Sim23 and Simi convenience store chains: rewards for purchases, deals and offers for regular shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Rewards for purchases
+Chain deals
+Digital card', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Sim23 and Simi shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Копійочка — Супермаркети, Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kopiyochka.ua' OR LOWER(`name`) = 'копійочка')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Копійочка', NULL, 'https://www.kopiyochka.ua', NULL, NULL, 'Застосунок магазинів «Копійочка»: карта лояльності й оплата бонусами до 100% чека.', 'Kopiyochka store app: loyalty card and paying up to 100% of the bill with points.', 'У застосунку мережі «Копійочка» можна зареєструватися й отримати карту лояльності, накопичувати бонусні гривні та використовувати їх для оплати до 100% вартості чека.', 'In the Kopiyochka app you can register and get a loyalty card, collect bonus hryvnias and use them to pay up to 100% of the bill.', 'Карта лояльності
+Бонусні гривні
+Оплата бонусами до 100% чека', 'Loyalty card
+Bonus hryvnias
+Pay up to 100% with points', 'Покупцям «Копійочки».', 'Kopiyochka shoppers.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kopiyochka.ua' OR LOWER(`name`) = 'копійочка') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-groceries' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Kopiyochka store app: loyalty card and paying up to 100% of the bill with points.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'In the Kopiyochka app you can register and get a loyalty card, collect bonus hryvnias and use them to pay up to 100% of the bill.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Loyalty card
+Bonus hryvnias
+Pay up to 100% with points', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kopiyochka shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Аптека D.S. — Медицина й аптеки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apteka-ds.com.ua' OR LOWER(`name`) = 'аптека d.s.')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Аптека D.S.', NULL, 'https://apteka-ds.com.ua', NULL, NULL, 'Пошук і резервування ліків у мережі аптек D.S.', 'Search and reserve medicines in the D.S. pharmacy chain.', 'Застосунок мережі аптек D.S. дає змогу знайти й зарезервувати ліки, медичні препарати та косметику. Є особистий кабінет з історією замовлень, покупок і бонусним балансом.', 'The D.S. pharmacy chain app lets you find and reserve medicines, medical products and cosmetics. It has a personal account with order and purchase history and your points balance.', 'Пошук ліків
+Резервування в аптеці
+Історія покупок і бонуси', 'Medicine search
+Reservation at a pharmacy
+Purchase history and points', 'Покупцям аптек D.S.', 'D.S. pharmacy customers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apteka-ds.com.ua' OR LOWER(`name`) = 'аптека d.s.') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-health' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Search and reserve medicines in the D.S. pharmacy chain.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The D.S. pharmacy chain app lets you find and reserve medicines, medical products and cosmetics. It has a personal account with order and purchase history and your points balance.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Medicine search
+Reservation at a pharmacy
+Purchase history and points', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'D.S. pharmacy customers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- MEGASPORT — Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'megasport.ua' OR LOWER(`name`) = 'megasport')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MEGASPORT', NULL, 'https://megasport.ua', NULL, NULL, 'Онлайн-магазин спортивного одягу, взуття й аксесуарів MEGASPORT.', 'MEGASPORT online store for sportswear, shoes and accessories.', 'MEGASPORT — застосунок магазину спортивного одягу, взуття й аксесуарів відомих брендів. Тут можна шукати товари, стежити за розпродажами та знижками й оформлювати замовлення онлайн.', 'MEGASPORT is the app of a store for sportswear, shoes and accessories from well-known brands. You can search products, follow sales and discounts and order online.', 'Спортивний одяг і взуття
+Розпродажі та знижки
+Замовлення онлайн', 'Sportswear and shoes
+Sales and discounts
+Online ordering', 'Покупцям спортивного одягу.', 'Sportswear shoppers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'megasport.ua' OR LOWER(`name`) = 'megasport') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'MEGASPORT online store for sportswear, shoes and accessories.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MEGASPORT is the app of a store for sportswear, shoes and accessories from well-known brands. You can search products, follow sales and discounts and order online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Sportswear and shoes
+Sales and discounts
+Online ordering', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Sportswear shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- PROSTOR — Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'prostor.ua' OR LOWER(`name`) = 'prostor')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'PROSTOR', NULL, 'https://prostor.ua', NULL, NULL, 'Застосунок мережі магазинів косметики й побутової хімії PROSTOR: знижки та доставка.', 'PROSTOR cosmetics and household store app: discounts and delivery.', 'Застосунок PROSTOR допомагає знайти засоби догляду, косметику та товари для дому, отримувати знижки й оформлювати швидку доставку.', 'The PROSTOR app helps you find personal care products, cosmetics and household goods, get discounts and order fast delivery.', 'Косметика та догляд
+Товари для дому
+Знижки й доставка', 'Cosmetics and care
+Household goods
+Discounts and delivery', 'Покупцям косметики та побутових товарів.', 'Shoppers for cosmetics and household goods.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'prostor.ua' OR LOWER(`name`) = 'prostor') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'PROSTOR cosmetics and household store app: discounts and delivery.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The PROSTOR app helps you find personal care products, cosmetics and household goods, get discounts and order fast delivery.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Cosmetics and care
+Household goods
+Discounts and delivery', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Shoppers for cosmetics and household goods.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- MAKEUP — Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'makeup.com.ua' OR LOWER(`name`) = 'makeup')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MAKEUP', NULL, 'https://makeup.com.ua', NULL, NULL, 'Інтернет-магазин косметики та парфумерії MAKEUP: понад 186 тисяч товарів.', 'MAKEUP cosmetics and perfume online store: 186,000+ products.', 'MAKEUP — онлайн-ритейлер краси, що починав в Україні. У застосунку понад 186 тисяч товарів: косметика, парфумерія та засоби догляду з доставкою.', 'MAKEUP is an online beauty retailer that started in Ukraine. The app has over 186,000 products: cosmetics, perfume and care products with delivery.', 'Понад 186 тисяч товарів
+Косметика й парфумерія
+Доставка', '186,000+ products
+Cosmetics and perfume
+Delivery', 'Покупцям косметики.', 'Beauty shoppers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'makeup.com.ua' OR LOWER(`name`) = 'makeup') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'MAKEUP cosmetics and perfume online store: 186,000+ products.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MAKEUP is an online beauty retailer that started in Ukraine. The app has over 186,000 products: cosmetics, perfume and care products with delivery.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '186,000+ products
+Cosmetics and perfume
+Delivery', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Beauty shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- MD-Fashion — Покупки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'md-fashion.ua' OR LOWER(`name`) = 'md-fashion')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MD-Fashion', NULL, 'https://md-fashion.ua', NULL, NULL, 'Понад 200 світових брендів одягу з офіційних магазинів в Україні в одному застосунку.', '200+ global fashion brands from official stores in Ukraine in one app.', 'MD-Fashion об’єднує понад 200 світових брендів із понад 100 офіційних магазинів в Україні, зокрема Diesel, Tommy Hilfiger, G-Star RAW, Replay та Under Armour. Є клубна програма, щоденне оновлення асортименту й зручна навігація.', 'MD-Fashion brings together 200+ global brands from 100+ official stores in Ukraine, including Diesel, Tommy Hilfiger, G-Star RAW, Replay and Under Armour. It has a club program, daily stock updates and easy navigation.', 'Понад 200 брендів
+Офіційні магазини в Україні
+Клубна програма', '200+ brands
+Official stores in Ukraine
+Club program', 'Покупцям брендового одягу.', 'Branded fashion shoppers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'md-fashion.ua' OR LOWER(`name`) = 'md-fashion') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-shopping' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', '200+ global fashion brands from official stores in Ukraine in one app.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MD-Fashion brings together 200+ global brands from 100+ official stores in Ukraine, including Diesel, Tommy Hilfiger, G-Star RAW, Replay and Under Armour. It has a club program, daily stock updates and easy navigation.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '200+ brands
+Official stores in Ukraine
+Club program', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Branded fashion shoppers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- OnTaxi — Транспорт і квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ontaxi.com.ua' OR LOWER(`name`) = 'ontaxi')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'OnTaxi', NULL, 'https://ontaxi.com.ua', NULL, NULL, 'Український сервіс таксі й доставки посилок у понад 100 містах: фіксована ціна.', 'Ukrainian taxi and parcel delivery service in 100+ cities with a fixed fare.', 'OnTaxi — український сервіс замовлення таксі й доставки посилок, що працює в понад 100 містах. Ціну видно до підтвердження, і вона не змінюється. Можна обрати клас авто (Стандарт, Комфорт, Бізнес, Універсал, Мінівен) і відправити посилку до 20 кг.', 'OnTaxi is a Ukrainian taxi and parcel delivery service operating in 100+ cities. You see the fare before confirming and it does not change. You can choose the car class (Standard, Comfort, Business, Wagon, Minivan) and send parcels up to 20 kg.', 'Фіксована ціна поїздки
+Класи авто
+Доставка посилок до 20 кг
+Понад 100 міст', 'Fixed fare
+Car classes
+Parcels up to 20 kg
+100+ cities', 'Пасажирам у містах України.', 'Passengers in Ukrainian cities.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ontaxi.com.ua' OR LOWER(`name`) = 'ontaxi') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-transport' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian taxi and parcel delivery service in 100+ cities with a fixed fare.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'OnTaxi is a Ukrainian taxi and parcel delivery service operating in 100+ cities. You see the fare before confirming and it does not change. You can choose the car class (Standard, Comfort, Business, Wagon, Minivan) and send parcels up to 20 kg.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Fixed fare
+Car classes
+Parcels up to 20 kg
+100+ cities', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Passengers in Ukrainian cities.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Таксі 838 — Транспорт і квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'taxi838.ua' OR LOWER(`name`) = 'таксі 838')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Таксі 838', NULL, 'https://taxi838.ua', NULL, NULL, 'Замовлення Таксі 838 онлайн у три кліки без дзвінків.', 'Order Taxi 838 online in three taps, no calls.', 'Застосунок Таксі 838 дає змогу замовити авто онлайн: вказати адресу, натиснути «Замовити» й стежити за пошуком і рухом машини на мапі.', 'The Taxi 838 app lets you order a car online: enter the address, tap Order and follow the search and the car on the map.', 'Замовлення без дзвінків
+Авто на мапі
+Швидка подача', 'Order without calling
+Car on the map
+Fast pickup', 'Пасажирам.', 'Passengers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'taxi838.ua' OR LOWER(`name`) = 'таксі 838') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-transport' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Order Taxi 838 online in three taps, no calls.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'The Taxi 838 app lets you order a car online: enter the address, tap Order and follow the search and the car on the map.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Order without calling
+Car on the map
+Fast pickup', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Passengers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- SHARK Taxi — Транспорт і квитки
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'shark-taxi.ua' OR LOWER(`name`) = 'shark taxi')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'SHARK Taxi', NULL, 'https://shark-taxi.ua', NULL, NULL, 'Онлайн-замовлення таксі SHARK у застосунку чи телефоном.', 'Order a SHARK taxi in the app or by phone.', 'SHARK — онлайн-сервіс замовлення авто в Україні. У застосунку таксі можна викликати за кілька секунд у будь-якій точці міста; сервіс сам підбирає найближче авто.', 'SHARK is an online car-ordering service in Ukraine. In the app you can call a taxi in seconds anywhere in the city; the service picks the nearest car.', 'Виклик за кілька секунд
+Найближче авто
+Замовлення телефоном', 'Ride in seconds
+Nearest car
+Phone orders', 'Пасажирам.', 'Passengers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'shark-taxi.ua' OR LOWER(`name`) = 'shark taxi') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-transport' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Order a SHARK taxi in the app or by phone.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'SHARK is an online car-ordering service in Ukraine. In the app you can call a taxi in seconds anywhere in the city; the service picks the nearest car.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ride in seconds
+Nearest car
+Phone orders', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Passengers.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Bond — Транспорт і квитки, Ресторани та доставка їжі
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id605780374' OR LOWER(`name`) = 'bond')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Bond', NULL, 'https://apps.apple.com/ua/app/id605780374', NULL, NULL, 'Таксі та доставка їжі в Одесі, Києві й Чорноморську, вантажне таксі в Одесі.', 'Taxi and food delivery in Odesa, Kyiv and Chornomorsk, plus cargo taxi in Odesa.', 'Bond — застосунок для виклику таксі й замовлення їжі в Одесі, Києві та Чорноморську, а в Одесі ще й вантажного таксі. Видно інформацію про водія, вартість і рух авто, поїздку можна оплатити карткою та оцінити.', 'Bond is an app for calling a taxi and ordering food in Odesa, Kyiv and Chornomorsk, plus a cargo taxi in Odesa. You see the driver, the fare and the car on the map, can pay by card and rate the ride.', 'Таксі та доставка їжі
+Вантажне таксі в Одесі
+Оплата карткою', 'Taxi and food delivery
+Cargo taxi in Odesa
+Card payment', 'Мешканцям Одеси, Києва та Чорноморська.', 'Residents of Odesa, Kyiv and Chornomorsk.', 'mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'apps.apple.com/ua/app/id605780374' OR LOWER(`name`) = 'bond') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-transport' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-restaurants' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Taxi and food delivery in Odesa, Kyiv and Chornomorsk, plus cargo taxi in Odesa.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Bond is an app for calling a taxi and ordering food in Odesa, Kyiv and Chornomorsk, plus a cargo taxi in Odesa. You see the driver, the fare and the car on the map, can pay by card and rate the ride.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Taxi and food delivery
+Cargo taxi in Odesa
+Card payment', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Residents of Odesa, Kyiv and Chornomorsk.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Getmancar — Транспорт і квитки, АЗС і водіям
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'getmancar.com' OR LOWER(`name`) = 'getmancar')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Getmancar', NULL, 'https://getmancar.com', NULL, NULL, 'Каршеринг і оренда авто Getmancar: на хвилину, годину, день або довше.', 'Getmancar carsharing and car rental: by the minute, hour, day or longer.', 'Getmancar — сервіс каршерингу та класичної оренди авто в застосунку. Найближчу машину видно на мапі, її можна забронювати на хвилину, годину, день чи довше, і все керування відбувається в застосунку.', 'Getmancar is a carsharing and classic car rental service in an app. You see the nearest car on the map and can book it for a minute, an hour, a day or longer, managing everything in the app.', 'Авто на мапі
+Оренда від хвилини до місяців
+Керування в застосунку', 'Cars on the map
+Rent from a minute to months
+Managed in the app', 'Водіям без власного авто.', 'Drivers without their own car.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-18 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'getmancar.com' OR LOWER(`name`) = 'getmancar') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-transport' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-auto' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Getmancar carsharing and car rental: by the minute, hour, day or longer.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Getmancar is a carsharing and classic car rental service in an app. You see the nearest car on the map and can book it for a minute, an hour, a day or longer, managing everything in the app.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Cars on the map
+Rent from a minute to months
+Managed in the app', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Drivers without their own car.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовний застосунок.', 'Free app.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free app.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Інтенти запасного пошуку Елі (tools/eli-intents.php, нові підкатегорії ukrainian-apps)
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'ресторан', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'ресторан' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'доставка їж', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'доставка їж' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'замовити їж', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'замовити їж' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'піца', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'піца' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'піцер', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'піцер' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'суші', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'суші' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'роли', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'роли' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'food delivery', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'food delivery' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'restaurant', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'restaurant' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'pizza', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'pizza' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'sushi', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'sushi' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-restaurants' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'кавярн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'кавярн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'кава', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'кава' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'пекарн', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'пекарн' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'круасан', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'круасан' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'coffee shop', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'coffee shop' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'cafe', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'cafe' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'baker', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'baker' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-cafes' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'спортзал', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'спортзал' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'тренажерний зал', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'тренажерний зал' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'фітнес клуб', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'фітнес клуб' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'абонемент у зал', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'абонемент у зал' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'падел', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'падел' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'gym', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'gym' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'fitness club', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'fitness club' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-fitness' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'трц', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'трц' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'торговий центр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'торговий центр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'торгові центр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'торгові центр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'торговельний центр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'торговельний центр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'mall', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'mall' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'shopping mall', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'shopping mall' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-malls' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'кіно', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'кіно' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'кінотеатр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'кінотеатр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'квитки в кін', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'квитки в кін' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'концерт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'концерт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'квитки на концерт', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'квитки на концерт' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'вистав', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'вистав' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'театр', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'театр' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'стендап', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'стендап' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'cinema', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'cinema' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
+INSERT INTO search_intents (term_stem, category_id, subcategory_id, weight) SELECT 'concert tickets', (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1), (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1), 1 FROM DUAL WHERE (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) IS NOT NULL AND (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1) IS NOT NULL AND NOT EXISTS (SELECT 1 FROM search_intents si WHERE si.term_stem = 'concert tickets' AND si.category_id <=> (SELECT id FROM categories WHERE slug = 'ukrainian-apps' LIMIT 1) AND si.subcategory_id <=> (SELECT s.id FROM subcategories s JOIN categories c ON c.id = s.category_id WHERE c.slug = 'ukrainian-apps' AND s.slug = 'ua-tickets' LIMIT 1));
