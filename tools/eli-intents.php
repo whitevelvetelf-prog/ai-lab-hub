@@ -243,6 +243,8 @@ const ELI_INTENTS = [
     ['клініка, клініки, приватна клініка, медичний центр, медцентр, пологовий будинок, телемедицина, онлайн-консультація лікаря, clinic, medical center, telemedicine', 'ukrainian-apps', 'ua-clinics', 1.0],
     ['стоматологія, стоматолог, стоматологічна клініка, зубний лікар, лікування зубів, ортодонт, брекети, елайнери, dentist, dental, orthodontist', 'ukrainian-apps', 'ua-dental', 1.0],
     ['лабораторія, медична лабораторія, здати аналізи, аналізи крові, аналіз крові, результати аналізів, blood test, lab test', 'ukrainian-apps', 'ua-labs', 1.0],
+    ['нерухомість, оренда квартири, зняти квартиру, оренда житла, купити квартиру, новобудова, новобудови, житловий комплекс, забудовник, ріелтор, рієлтор, осбб, real estate, flat rent, apartment rent', 'ukrainian-apps', 'ua-realty', 1.0],
+    ['страхова компанія, медичне страхування, страхування життя, поліс', 'ukrainian-apps', 'ua-insurance', 1.0],
 ];
 
 /** @return list<array{stem:string, cat:string, sub:?string, w:float}> */

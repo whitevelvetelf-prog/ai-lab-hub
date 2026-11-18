@@ -252,6 +252,7 @@ $subcategoryIcons = [
     'ua-clinics'             => 'stethoscope',
     'ua-dental'              => 'smile',
     'ua-labs'                => 'test-tube',
+    'ua-realty'              => 'building-2',
     // Подорожі та туризм
     'hotel-booking'          => 'hotel',
     'vacation-rentals'       => 'bed-double',
