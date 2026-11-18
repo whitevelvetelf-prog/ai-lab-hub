@@ -167,6 +167,25 @@ function msg_listing_scope_sql(string $a = 'l'): string
 }
 
 /**
+ * Колонка дати рішення модерації (міграція Правил Marketplace). На сервері без неї — NULL AS status_changed_at,
+ * і дата закриття береться з updated_at.
+ */
+function msg_status_changed_col(PDO $pdo): string
+{
+    static $has = null;
+    if ($has === null) {
+        try {
+            $pdo->query('SELECT status_changed_at FROM mp_listings LIMIT 0');
+            $has = true;
+        } catch (Throwable) {
+            $has = false;
+        }
+    }
+
+    return $has ? 'l.status_changed_at' : 'NULL AS status_changed_at';
+}
+
+/**
  * Оголошення для розмови: назва поточною мовою, мініатюра, автор, режим звʼязку, «живе» і дата закриття.
  * null — немає або тип оголошення без повідомлень.
  *
@@ -177,7 +196,7 @@ function msg_listing(PDO $pdo, int $listingId, ?string $lang = null): ?array
 {
     $lang ??= current_lang();
     $st = $pdo->prepare(
-        "SELECT l.id, l.section, l.post_form, l.slug, l.status, l.expires_at, l.status_changed_at, l.updated_at, l.cover_image,
+        "SELECT l.id, l.section, l.post_form, l.slug, l.status, l.expires_at, " . msg_status_changed_col($pdo) . ", l.updated_at, l.cover_image,
                 l.contact_mode, s.user_id AS seller_user_id,
                 (l.status = 'published' AND (l.expires_at IS NULL OR l.expires_at > NOW())) AS live,
                 (l.status = 'published' AND l.expires_at IS NOT NULL AND l.expires_at <= NOW()) AS elapsed,
