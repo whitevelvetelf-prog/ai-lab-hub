@@ -11,6 +11,7 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
+<?php // Сторінка переважно українською; абзаци з системи перекладу позначені lang мовою інтерфейсу. ?>
 <html lang="uk">
 <head>
     <meta charset="utf-8">
@@ -122,10 +123,10 @@ require_once __DIR__ . '/../app/translations.php';
 
         <?php /* ЧЕРНЕТКА: пункт про вимірювання реклами потребує перевірки юристом перед запуском реклами. */ ?>
         <?php // Текст — у системі перекладу (app/translations.php + ui_translations EN), а не в шаблоні. ?>
-        <h2 class="legal-heading"><?= htmlspecialchars(t('legal_privacy_ads_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_counts'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_session'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_targeting'), ENT_QUOTES) ?></p>
+        <h2 class="legal-heading" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_counts'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_session'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_targeting'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про цифрові матеріали потребує перевірки юристом. */ ?>
         <h2 class="legal-heading" id="assets">3.4. Цифрові матеріали й скарги — ЧЕРНЕТКА</h2>
@@ -134,11 +135,11 @@ require_once __DIR__ . '/../app/translations.php';
         <p class="stub__text">Скарги на порушення авторських прав містять ім'я й контакти заявника; ми використовуємо їх лише для розгляду скарги й можемо повідомити автору матеріалу суть скарги (без зайвих персональних даних заявника, якщо інше не потрібно для процедури).</p>
 
         <?php /* ЧЕРНЕТКА: пункт про cookie потребує перевірки юристом. Текст — у системі перекладу (cc/legal_privacy_cookies_*). */ ?>
-        <h2 class="legal-heading" id="cookies"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_geo'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
+        <h2 class="legal-heading" id="cookies" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_geo'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
 
         <p class="stub__text legal-updated">Останнє оновлення: 11 жовтня 2026 р.; пункт 3.4 (чернетка) — 22 жовтня 2026 р.; пункт 3.5 (cookie) — 3 листопада 2026 р.</p>
     </main>

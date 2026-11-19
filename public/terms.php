@@ -11,6 +11,7 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
+<?php // Сторінка переважно українською; абзаци з системи перекладу позначені lang мовою інтерфейсу. ?>
 <html lang="uk">
 <head>
     <meta charset="utf-8">
@@ -127,9 +128,9 @@ require_once __DIR__ . '/../app/translations.php';
 
         <?php /* ЧЕРНЕТКА: пункт про рекламодавців потребує перевірки юристом перед запуском реклами. */ ?>
         <?php // Текст — у системі перекладу (app/translations.php + ui_translations EN), а не в шаблоні. ?>
-        <h2 class="legal-heading" id="advertising"><?= htmlspecialchars(t('legal_terms_ads_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_ads_format'), ENT_QUOTES) ?></p>
-        <p class="stub__text"><?= sprintf(htmlspecialchars(t('legal_terms_ads_rules'), ENT_QUOTES), '<a href="promo-rules.php">' . htmlspecialchars(t('legal_ads_rules_link'), ENT_QUOTES) . '</a>') ?></p>
+        <h2 class="legal-heading" id="advertising" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_terms_ads_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_terms_ads_format'), ENT_QUOTES) ?></p>
+        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= sprintf(htmlspecialchars(t('legal_terms_ads_rules'), ENT_QUOTES), '<a href="promo-rules.php">' . htmlspecialchars(t('legal_ads_rules_link'), ENT_QUOTES) . '</a>') ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про цифрові матеріали потребує перевірки юристом (відповідальність платформи за контент
                  користувачів, процедура видалення в юрисдикції сайту й користувачів). */ ?>
