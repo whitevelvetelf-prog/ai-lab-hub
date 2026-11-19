@@ -11,12 +11,11 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
-<?php // Сторінка переважно українською; абзаци з системи перекладу позначені lang мовою інтерфейсу. ?>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Політика конфіденційності</title>
+    <title>AI LAB HUB — <?= htmlspecialchars(t('legal_privacy_title'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -111,37 +110,37 @@ require_once __DIR__ . '/../app/translations.php';
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
-        <h1 class="stub__title">Політика конфіденційності</h1>
-        <p class="stub__text">Документ буде додано найближчим часом</p>
+        <h1 class="stub__title"><?= htmlspecialchars(t('legal_privacy_title'), ENT_QUOTES) ?></h1>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_stub_note'), ENT_QUOTES) ?></p>
 
-        <h2 class="legal-heading">3.1. Дані в розділах Marketplace, курсів і вакансій</h2>
-        <p class="stub__text">Якщо ви публікуєте товар у Marketplace, курс, чи вакансію як роботодавець, ми можемо збирати додаткові дані: назву компанії, контактні дані для зв'язку з кандидатами чи покупцями, платіжні реквізити для отримання виплат (де застосовно). Ці дані використовуються виключно для функціонування відповідного розділу платформи й не передаються третім особам, окрім випадків, прямо необхідних для виконання транзакції (наприклад платіжному провайдеру).</p>
+        <h2 class="legal-heading"><?= htmlspecialchars(t('legal_privacy_market_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_market_text'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про донати потребує перевірки юристом перед остаточною публікацією. */ ?>
-        <h2 class="legal-heading">3.2. Донати</h2>
-        <p class="stub__text">Донати переказуються безпосередньо через банк або платіжний сервіс донора. Дані платежу (номер картки, рахунок, ім'я платника тощо) обробляє банк чи платіжний сервіс, а не сайт: сайт їх не отримує й не зберігає.</p>
+        <h2 class="legal-heading"><?= htmlspecialchars(t('legal_privacy_donate_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_donate_text'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про вимірювання реклами потребує перевірки юристом перед запуском реклами. */ ?>
         <?php // Текст — у системі перекладу (app/translations.php + ui_translations EN), а не в шаблоні. ?>
-        <h2 class="legal-heading" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_counts'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_session'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_ads_targeting'), ENT_QUOTES) ?></p>
+        <h2 class="legal-heading"><?= htmlspecialchars(t('legal_privacy_ads_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_counts'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_session'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_ads_targeting'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про цифрові матеріали потребує перевірки юристом. */ ?>
-        <h2 class="legal-heading" id="assets">3.4. Цифрові матеріали й скарги — ЧЕРНЕТКА</h2>
-        <p class="stub__text">Для «Цифрових матеріалів» ми зберігаємо оригінал файлу приватно (без публічної адреси), його хеш SHA-256, перцептивний хеш для пошуку схожих зображень, час завантаження, ідентифікатор автора й декларації (походження, права). Метадані зйомки (EXIF/XMP/GPS) у публічних превʼю не показуються; у файлі, виданому іншому користувачеві за ліцензією, метадані автора замінюються на дані про автора, ліцензію й номер завантаження.</p>
-        <p class="stub__text">При завантаженні оригіналу фіксуємо користувача, матеріал, час, хеш виданого файлу й анонімний хеш IP-адреси (не саму адресу). Для захисту від масового копіювання превʼю ведемо журнал запитів з анонімним хешем IP; записи зберігаються до 7 днів, журнал підозрілої активності — доки потрібно для розгляду.</p>
-        <p class="stub__text">Скарги на порушення авторських прав містять ім'я й контакти заявника; ми використовуємо їх лише для розгляду скарги й можемо повідомити автору матеріалу суть скарги (без зайвих персональних даних заявника, якщо інше не потрібно для процедури).</p>
+        <h2 class="legal-heading" id="assets"><?= htmlspecialchars(t('legal_privacy_assets_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_assets_store'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_assets_log'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_assets_complaints'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про cookie потребує перевірки юристом. Текст — у системі перекладу (cc/legal_privacy_cookies_*). */ ?>
-        <h2 class="legal-heading" id="cookies" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_geo'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
+        <h2 class="legal-heading" id="cookies"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_geo'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
 
-        <p class="stub__text legal-updated">Останнє оновлення: 11 жовтня 2026 р.; пункт 3.4 (чернетка) — 22 жовтня 2026 р.; пункт 3.5 (cookie) — 3 листопада 2026 р.</p>
+        <p class="stub__text legal-updated"><?= htmlspecialchars(t('legal_privacy_updated'), ENT_QUOTES) ?></p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>

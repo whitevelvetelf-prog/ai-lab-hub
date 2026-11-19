@@ -11,12 +11,11 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
-<?php // Сторінка переважно українською; абзаци з системи перекладу позначені lang мовою інтерфейсу. ?>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Умови використання</title>
+    <title>AI LAB HUB — <?= htmlspecialchars(t('legal_terms_title'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -111,37 +110,37 @@ require_once __DIR__ . '/../app/translations.php';
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
-        <h1 class="stub__title">Умови використання</h1>
-        <p class="stub__text">Документ буде додано найближчим часом</p>
+        <h1 class="stub__title"><?= htmlspecialchars(t('legal_terms_title'), ENT_QUOTES) ?></h1>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_stub_note'), ENT_QUOTES) ?></p>
 
-        <h2 class="legal-heading">3.1. Marketplace, курси та вакансії</h2>
-        <p class="stub__text">Платформа може надавати доступ до додаткових розділів: маркетплейсу готових AI-рішень, курсів від сторонніх авторів/компаній, та розділу вакансій для роботодавців у сфері AI.</p>
-        <p class="stub__text">Стосовно Marketplace: продавці готових рішень самостійно відповідають за якість, законність і відповідність заявленому опису своїх товарів/послуг. Платформа може утримувати комісію з транзакцій, розмір якої вказується окремо в момент здійснення покупки.</p>
-        <p class="stub__text">Стосовно курсів: автори курсів самостійно відповідають за зміст навчальних матеріалів. Платформа не гарантує певного результату навчання.</p>
-        <p class="stub__text">Стосовно вакансій: роботодавці, що розміщують вакансії, самостійно відповідають за правдивість інформації про вакансію та умови працевлаштування. Платформа не є стороною трудових відносин між роботодавцем і кандидатом і не несе відповідальності за умови працевлаштування.</p>
+        <h2 class="legal-heading"><?= htmlspecialchars(t('legal_terms_market_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_market_intro'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_market_sellers'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_market_courses'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_market_jobs'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про донати потребує перевірки юристом перед остаточною публікацією. */ ?>
-        <h2 class="legal-heading" id="donations">3.2. Донати</h2>
-        <p class="stub__text">Підтримати проєкт можна добровільним внеском (донатом) за реквізитами, наведеними на сторінці <a href="donate.php">«Підтримати проєкт»</a>. Донат є добровільною безоплатною підтримкою проєкту, не є оплатою товарів чи послуг і не надає донору додаткових прав чи переваг на платформі.</p>
-        <p class="stub__text">Повернення донатів не передбачено.</p>
-        <p class="stub__text">Платформа не приймає й не обробляє платежі: переказ здійснюється безпосередньо через банк чи платіжний сервіс донора. Платформа не отримує й не зберігає платіжних даних донорів (номерів карток, рахунків тощо).</p>
+        <h2 class="legal-heading" id="donations"><?= htmlspecialchars(t('legal_terms_donate_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= sprintf(htmlspecialchars(t('legal_terms_donate_voluntary'), ENT_QUOTES), '<a href="donate.php">' . htmlspecialchars(t('legal_terms_donate_link'), ENT_QUOTES) . '</a>') ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_donate_no_refund'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_donate_payments'), ENT_QUOTES) ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про рекламодавців потребує перевірки юристом перед запуском реклами. */ ?>
         <?php // Текст — у системі перекладу (app/translations.php + ui_translations EN), а не в шаблоні. ?>
-        <h2 class="legal-heading" id="advertising" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_terms_ads_title'), ENT_QUOTES) ?></h2>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= htmlspecialchars(t('legal_terms_ads_format'), ENT_QUOTES) ?></p>
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= sprintf(htmlspecialchars(t('legal_terms_ads_rules'), ENT_QUOTES), '<a href="promo-rules.php">' . htmlspecialchars(t('legal_ads_rules_link'), ENT_QUOTES) . '</a>') ?></p>
+        <h2 class="legal-heading" id="advertising"><?= htmlspecialchars(t('legal_terms_ads_title'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_ads_format'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= sprintf(htmlspecialchars(t('legal_terms_ads_rules'), ENT_QUOTES), '<a href="promo-rules.php">' . htmlspecialchars(t('legal_ads_rules_link'), ENT_QUOTES) . '</a>') ?></p>
 
         <?php /* ЧЕРНЕТКА: пункт про цифрові матеріали потребує перевірки юристом (відповідальність платформи за контент
                  користувачів, процедура видалення в юрисдикції сайту й користувачів). */ ?>
-        <h2 class="legal-heading" id="assets">3.4. Цифрові матеріали (зображення, ілюстрації, персонажі) — ЧЕРНЕТКА</h2>
-        <p class="stub__text">Публікувати можна лише власні роботи або роботи, на які автор має права. Заборонено публікувати чужих персонажів і бренди (фан-арт чужих франшиз, логотипи, відомих персонажів) без письмового дозволу правовласника, зображення реальних людей без їхньої згоди й будь-які зображення неповнолітніх у небезпечному чи інтимному контексті.</p>
-        <p class="stub__text">Автор зазначає походження роботи (створено вручну, за участі AI або повністю AI) і не може видавати AI-згенероване за ручну роботу. Правовий захист суто AI-згенерованих зображень у багатьох країнах обмежений або відсутній.</p>
-        <p class="stub__text">Публікуючи матеріал, автор надає платформі невиключне безоплатне право зберігати файл і показувати його превʼю на сайті на строк публікації. Користувачі отримують права на матеріал лише за ліцензією, обраною автором і показаною біля превʼю; платформа не є стороною ліцензійних угод і угод між автором і користувачем.</p>
-        <p class="stub__text">Автор відповідає за порушення прав третіх осіб. Платформа може видаляти чи приховувати матеріали, обмежувати публікацію й блокувати акаунти за порушення. Скарги на порушення авторських прав і зустрічні заяви розглядаються за <a href="copyright-policy.php">Політикою авторських прав</a>; повторні порушення ведуть до призупинення публікації.</p>
-        <p class="stub__text">Платформа застосовує технічні заходи (приватне сховище оригіналів, превʼю з водяним знаком, журнал завантажень), але повністю унеможливити копіювання того, що показується на екрані, неможливо — гарантій захисту від копіювання немає.</p>
+        <h2 class="legal-heading" id="assets"><?= htmlspecialchars(t('legal_terms_assets_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_assets_own'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_assets_origin'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_assets_license'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= sprintf(htmlspecialchars(t('legal_terms_assets_liability'), ENT_QUOTES), '<a href="copyright-policy.php">' . htmlspecialchars(t('legal_terms_copyright_link'), ENT_QUOTES) . '</a>') ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_terms_assets_tech'), ENT_QUOTES) ?></p>
 
-        <p class="stub__text legal-updated">Останнє оновлення: 11 жовтня 2026 р.; пункт 3.4 (чернетка) — 22 жовтня 2026 р.</p>
+        <p class="stub__text legal-updated"><?= htmlspecialchars(t('legal_terms_updated'), ENT_QUOTES) ?></p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>

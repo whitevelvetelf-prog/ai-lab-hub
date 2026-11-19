@@ -11,12 +11,11 @@ require_once __DIR__ . '/../app/translations.php';
 
 ?>
 <!DOCTYPE html>
-<?php // Сторінка переважно українською; абзаци з системи перекладу позначені lang мовою інтерфейсу. ?>
-<html lang="uk">
+<html lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI LAB HUB — Про проєкт</title>
+    <title>AI LAB HUB — <?= htmlspecialchars(t('about_title'), ENT_QUOTES) ?></title>
     <style>
         *,
         *::before,
@@ -127,29 +126,29 @@ require_once __DIR__ . '/../app/translations.php';
     <?php include __DIR__ . '/../app/site-header.php'; ?>
 
     <main class="page">
-        <h1 class="stub__title">Про проєкт</h1>
+        <h1 class="stub__title"><?= htmlspecialchars(t('about_title'), ENT_QUOTES) ?></h1>
 
-        <p class="stub__text">AI LAB HUB — це каталог AI-інструментів, створений, щоб допомогти кожному швидко знайти правильне рішення для своєї задачі, не гублячись у сотнях схожих сервісів.</p>
+        <p class="stub__text"><?= htmlspecialchars(t('about_intro'), ENT_QUOTES) ?></p>
 
-        <p class="stub__text">Наша місія проста: зібрати AI-інструменти з усього світу в одному місці, розподілити їх за зрозумілими напрямками, і дати змогу знайти потрібне рішення за лічені хвилини — незалежно від того, чи це разова безкоштовна задача, чи професійний інструмент для щоденної роботи.</p>
+        <p class="stub__text"><?= htmlspecialchars(t('about_mission'), ENT_QUOTES) ?></p>
 
-        <h2 class="about-heading">Що робить AI LAB HUB особливим:</h2>
+        <h2 class="about-heading"><?= htmlspecialchars(t('about_features_h'), ENT_QUOTES) ?></h2>
 
         <ul class="about-list">
-            <li>Еля, наша AI-асистентка, допомагає підібрати саме те, що потрібно, розуміючи вашу задачу і бюджет — а не просто показує список фільтрів.</li>
-            <li>Ми не показуємо рейтинги чи «накручені» оцінки — тільки чесний опис того, що робить кожен інструмент.</li>
-            <li>Каталог поповнюється й перевіряється регулярно, щоб інформація залишалась актуальною.</li>
+            <li><?= htmlspecialchars(t('about_feature_eli'), ENT_QUOTES) ?></li>
+            <li><?= htmlspecialchars(t('about_feature_honest'), ENT_QUOTES) ?></li>
+            <li><?= htmlspecialchars(t('about_feature_fresh'), ENT_QUOTES) ?></li>
         </ul>
 
-        <p class="stub__text">Платформа безкоштовна для користувачів і завжди такою залишиться. Ми можемо отримувати партнерську комісію від деяких сервісів, представлених у каталозі — це не впливає на те, які інструменти потрапляють до каталогу чи як їх описано.</p>
+        <p class="stub__text"><?= htmlspecialchars(t('about_free'), ENT_QUOTES) ?></p>
 
-        <p class="stub__text" lang="<?= htmlspecialchars(current_lang(), ENT_QUOTES) ?>"><?= sprintf(htmlspecialchars(t('about_ads_text'), ENT_QUOTES), '<a href="advertise.php">' . htmlspecialchars(t('about_ads_link'), ENT_QUOTES) . '</a>') ?></p>
+        <p class="stub__text"><?= sprintf(htmlspecialchars(t('about_ads_text'), ENT_QUOTES), '<a href="advertise.php">' . htmlspecialchars(t('about_ads_link'), ENT_QUOTES) . '</a>') ?></p>
 
-        <h2 class="about-heading">Хто стоїть за проєктом</h2>
+        <h2 class="about-heading"><?= htmlspecialchars(t('about_team_h'), ENT_QUOTES) ?></h2>
 
-        <p class="stub__text">AI LAB HUB створює та підтримує Серена Мілова — власниця, розробниця й адміністраторка проєкту.</p>
+        <p class="stub__text"><?= htmlspecialchars(t('about_team_text'), ENT_QUOTES) ?></p>
 
-        <p class="stub__text">Якщо у вас є пропозиція, зауваження чи ви хочете розповісти про свій AI-продукт — напишіть нам, контакти на сторінці «Контакти».</p>
+        <p class="stub__text"><?= htmlspecialchars(t('about_contact'), ENT_QUOTES) ?></p>
     </main>
 
     <?php include __DIR__ . '/../app/footer.php'; ?>
