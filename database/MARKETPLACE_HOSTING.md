@@ -276,6 +276,13 @@ SQL (до коду): № 22 `database/migration-2026-11-18-marketplace-messaging
 cities15000 не потрібен). Порядок: `15-…` → `geo-data-01…05` → `16-…` → `17-…`. Атрибуція «Geo data: GeoNames (CC BY 4.0)»
 — на пошуку Marketplace, сторінці місця, формі «Географія показу».
 
+### Місцеві назви місць (2026-11-19, **імпортовано на прод**)
+`php scripts/geo-local-names.php <тека з countryInfo.txt і alternateNamesV2.txt>` → `hosting-upload/marketplace-geo-local/geo-local-01.sql`
+(1,3 МБ, лише `INSERT IGNORE` у `geo_place_names`). Назви мовами країни місця з GeoNames (Warszawa, München, Praha, Wien,
+Lwów, Polska…), **без російської** (рішення власника), без історичних і розмовних; дублікати наявних назв (без регістру й
+діакритики) пропущено; нові місця не додаються. Прод: 98 868 → 135 926 назв (+37 058, `ru` = 0). Код не змінювався —
+автопідказка шукає за будь-якою назвою, підпис лишається мовою інтерфейсу.
+
 ### 1. SQL — ДО коду (`hosting-upload/geo-ads/`)
 № 24 `database/migration-2026-11-19-ad-geo.sql` (таблиці `ad_campaign_geo`, `ad_campaign_geo_settings`) →
 № 25 `database/migration-2026-11-19-geo-ui-strings.sql` (EN-написи). Лише CREATE TABLE IF NOT EXISTS, CREATE INDEX за
