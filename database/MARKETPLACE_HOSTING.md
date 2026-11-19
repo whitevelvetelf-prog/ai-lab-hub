@@ -286,7 +286,7 @@ cities15000 не потрібен). Порядок: `15-…` → `geo-data-01…
 `public/ad-geo.php`, `public/admin-ad-geo-check.php`.
 Змінені: `app/cookie-consent.php`, `app/mp-geo.php`, `app/mp-search.php`, `app/mp-section-nav.php`, `app/mp-tree.php`,
 `app/promo-select.php`, `app/promo-cabinet.php`, `app/promo-admin-cabinet.php`, `app/translations.php`,
-`public/marketplace.php`, `public/mp-count.php`, `public/mp-settings.php`, `public/promo-action.php`,
+`public/marketplace.php`, `public/mp-count.php`, `public/mp-settings.php`, `public/privacy.php`, `public/promo-action.php`,
 `public/assets/js/mp-geo.js`, `public/assets/css/mp-geo.css`.
 `public_enabled` / `posting_enabled` не змінювались.
 
@@ -298,4 +298,4 @@ PHP-розширення maxminddb і бази з прийнятою ліцен�
 ### 4. Перевірка
 Локально: `php tests/geo_match_test.php` (66), `php tests/mp-geo-tests.php` (70), `php tools/ad-geo-load-test.php 5000`.
 Наживо: `/geo-location.php`, `/marketplace.php?q=…` → «Поблизу мене», кабінет → «Географія», `/admin-ad-geo-check.php`.
-Перед заливкою оновити Політику конфіденційності 3.5 (cookie `geo_loc` замість `mp_loc`, `alh_geo`).
+Політику конфіденційності оновлено (3.5: `geo_loc`, `alh_geo`, категорія IP; пункт про таргетинг реклами) — `public/privacy.php` + тексти в № 25.

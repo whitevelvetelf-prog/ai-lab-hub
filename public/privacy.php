@@ -136,6 +136,7 @@ require_once __DIR__ . '/../app/translations.php';
         <?php /* ЧЕРНЕТКА: пункт про cookie потребує перевірки юристом. Текст — у системі перекладу (cc/legal_privacy_cookies_*). */ ?>
         <h2 class="legal-heading" id="cookies"><?= htmlspecialchars(t('legal_privacy_cookies_title'), ENT_QUOTES) ?></h2>
         <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_necessary'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_geo'), ENT_QUOTES) ?></p>
         <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
         <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
 
