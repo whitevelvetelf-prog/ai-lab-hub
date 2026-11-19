@@ -64,3 +64,6 @@ body:not(.mp-body) .mp-geo .mp-check { display: inline-flex; gap: 6px; align-ite
 .adgeo-credit { font-size: .75rem; opacity: .7; }
 .adgeo-credit a { color: inherit; }
 [data-geo-near] { min-height: 44px; }
+/* Кабінет (.pc input[type="text"] = 0.92rem) сильніший за .adgeo .mp-input — iOS Safari збільшує сторінку при фокусі < 16px */
+.pc .adgeo input[type="text"].mp-input, .pc .adgeo select.mp-input { font-size: 16px; }
+@media (max-width: 480px) { .adgeo { padding: 8px; } .adgeo .mp-geo-picker { flex-basis: 100%; } }
