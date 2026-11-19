@@ -39,6 +39,7 @@ const MPG_EARTH_KM = 6371.0;
 const MPG_COOKIE = 'mp_loc';          // стара cookie етапу 6 (лише читання як запасна; нова — GEO_COOKIE у app/geo.php)
 const MPG_LISTING_LANGS = ['uk', 'en'];
 const MPG_SUGGEST_LIMIT = 10;
+const MPG_SECTION_NEAR_KM = 25;        // частина міста ховається в підказках, якщо саме місто серед них ближче за це
 const MPG_FAR = 1000000000;            // «відстань» для онлайн-оголошень у сортуванні — у кінець
 
 /** Чи застосовано міграції етапу 6 (таблиці довідника й нові колонки). Кеш на запит. */
@@ -54,6 +55,22 @@ function mpg_ready(PDO $pdo): bool
                            AND TABLE_NAME = 'mp_listings' AND COLUMN_NAME IN ('work_format', 'price_usd'))"
             )->fetchColumn();
             $ready = $n === 6;
+        } catch (Throwable $e) {
+            $ready = false;
+        }
+    }
+
+    return $ready;
+}
+
+/** Чи є таблиця частин міст (міграція № 27). Без неї автопідказка працює як раніше. Кеш на запит. */
+function mpg_sections_ready(PDO $pdo): bool
+{
+    static $ready = null;
+    if ($ready === null) {
+        try {
+            $ready = (int) $pdo->query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
+                                        AND TABLE_NAME = 'geo_place_sections'")->fetchColumn() === 1;
         } catch (Throwable $e) {
             $ready = false;
         }
@@ -226,17 +243,41 @@ function mpg_suggest(PDO $pdo, string $q, string $lang, array $types = ['city', 
     }
     $limit = max(1, min(MPG_SUGGEST_LIMIT, $limit));
     $typeSql = "'" . implode("','", $types) . "'";   // лише значення з білого списку
-    // Внутрішній LIMIT обмежує роботу для коротких префіксів («Sa…» — тисячі назв).
+    $sections = mpg_sections_ready($pdo);
+    $secSel = $sections ? '(s.place_id IS NOT NULL)' : '0';
+    $secJoin = $sections ? 'LEFT JOIN geo_place_sections s ON s.place_id = t.id' : '';
+    $fetch = $sections ? $limit * 3 : $limit;
+    // Внутрішній LIMIT обмежує роботу для коротких префіксів («Sa…» — тисячі назв); частини міст
+    // перевіряються лише для відібраних рядків.
     $st = $pdo->prepare(
-        "SELECT p.id, p.type, p.population
-         FROM (SELECT DISTINCT n.place_id FROM geo_place_names n WHERE n.name LIKE :q ESCAPE '\\\\' LIMIT 3000) m
-         JOIN geo_places p ON p.id = m.place_id
-         WHERE p.type IN ($typeSql)
-         ORDER BY (p.type = 'country') DESC, p.population DESC, p.id
-         LIMIT $limit"
+        "SELECT t.*, $secSel AS is_section
+         FROM (SELECT p.id, p.type, p.population, p.lat, p.lon
+               FROM (SELECT DISTINCT n.place_id FROM geo_place_names n WHERE n.name LIKE :q ESCAPE '\\\\' LIMIT 3000) m
+               JOIN geo_places p ON p.id = m.place_id
+               WHERE p.type IN ($typeSql)
+               ORDER BY (p.type = 'country') DESC, p.population DESC, p.id
+               LIMIT $fetch) t
+         $secJoin
+         ORDER BY (t.type = 'country') DESC, t.population DESC, t.id"
     );
     $st->execute([':q' => addcslashes($q, '%_\\') . '%']);
-    $ids = array_map(static fn($r) => (int) $r['id'], $st->fetchAll(PDO::FETCH_ASSOC));
+    $rows = $st->fetchAll(PDO::FETCH_ASSOC);
+    // Частину міста («Lyon 03») не показуємо, якщо саме місто вже серед підказок і поруч; окремо («Оболонь») — показуємо.
+    $whole = array_values(array_filter($rows, static fn($r) => $r['type'] === 'city' && (int) $r['is_section'] === 0 && $r['lat'] !== null));
+    $ids = [];
+    foreach ($rows as $r) {
+        if ((int) $r['is_section'] === 1 && $r['lat'] !== null) {
+            foreach ($whole as $w) {
+                if (mpg_distance_km((float) $r['lat'], (float) $r['lon'], (float) $w['lat'], (float) $w['lon']) <= MPG_SECTION_NEAR_KM) {
+                    continue 2;
+                }
+            }
+        }
+        $ids[] = (int) $r['id'];
+        if (count($ids) >= $limit) {
+            break;
+        }
+    }
     $labels = mpg_labels($pdo, $ids, $lang);
     $out = [];
     foreach ($ids as $id) {

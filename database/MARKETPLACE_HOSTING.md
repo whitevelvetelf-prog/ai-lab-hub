@@ -290,6 +290,13 @@ Lwów, Polska…), **без російської** (рішення власни�
 без міток адмінодиниць. Прод: uk-назв 17 096 → 19 860 (+2 764: 1 655 міст, 1 108 регіонів, 1 країна). Решта
 (~2 800 місць) у Вікіданих без uk-мітки — показуються англійською, як і раніше.
 
+### Частини міст у підказках (2026-11-19, **на проді**)
+№ 27 `database/migration-2026-11-19-geo-place-sections.sql` (таблиця `geo_place_sections`) + дані
+`php scripts/geo-sections.php <тека з cities5000.txt>` → `hosting-upload/marketplace-geo-local/geo-sections-01.sql` (5 352 id:
+GeoNames PPLX + «місто + номер» на кшталт «Paris 15 Vaugirard», «Marseille 13»). `mpg_suggest()` не показує частину міста,
+якщо саме місто серед підказок у межах 25 км («Lyon» → лише Ліон); окремо («Оболонь», «Сихів») — знаходяться. Без таблиці
+код працює як раніше.
+
 ### 1. SQL — ДО коду (`hosting-upload/geo-ads/`)
 № 24 `database/migration-2026-11-19-ad-geo.sql` (таблиці `ad_campaign_geo`, `ad_campaign_geo_settings`) →
 № 25 `database/migration-2026-11-19-geo-ui-strings.sql` (EN-написи). Лише CREATE TABLE IF NOT EXISTS, CREATE INDEX за
