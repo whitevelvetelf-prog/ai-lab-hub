@@ -1,190 +1,249 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-11-19: «Подорожі та туризм» / «Travel & Tourism» (slug travel-tourism) — оренда житла, екскурсії, готельні програми.
--- + 6 нових продуктів і 0 прив'язок наявних (функцію звірено на офіційних сайтах 2026-11-19).
+-- AI LAB HUB — партія 2026-11-19: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps) — торгові центри й лабораторії.
+-- + 8 нових продуктів і 0 прив'язок наявних (функцію звірено на офіційних сайтах 2026-11-19).
 -- Якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються.
--- Тексти UA/EN — за офіційними сайтами, звірено 2026-11-19. Ціни вражень залежать від вибору — план «Ціна: див. сайт».
--- Пропущено: HomeToGo, TrustedHousesitters (сайти відмовили в доступі, 403); Musement перевірено, лишено в запасі.
+-- Тексти UA/EN — за офіційними сайтами, звірено 2026-11-19. Сайти ТРЦ безкоштовні (план Free); аналізи — «Ціна: див. сайт».
+-- Пропущено: Gulliver, Ocean Mall (сайти не відкрилися), karavan.ua (журнал, не ТРЦ), Добробут (основний текст сайту російською),
+--   Медлаб, Біотест, Унілаб (сайти недоступні).
 -- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
 -- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
---   Couchsurfing — vacation-rentals (новий)
---   Hipcamp — vacation-rentals (новий)
---   Headout — tours-activities (новий)
---   Civitatis — tours-activities (новий)
---   Fever — tours-activities (новий)
---   GHA DISCOVERY — hotel-loyalty (новий)
+--   Lavina Mall — ua-malls (новий)
+--   Retroville — ua-malls (новий)
+--   Dream Town — ua-malls (новий)
+--   Victoria Gardens — ua-malls (новий)
+--   King Cross Leopolis — ua-malls (новий)
+--   Blockbuster Mall — ua-malls (новий)
+--   Сінево — ua-labs (новий)
+--   CSD LAB — ua-labs (новий)
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'travel-tourism' LIMIT 1);
+SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'ukrainian-apps' LIMIT 1);
 
--- Couchsurfing
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'couchsurfing.com' OR LOWER(`name`) = 'couchsurfing')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Couchsurfing', NULL, 'https://www.couchsurfing.com', NULL, NULL, 'Спільнота мандрівників: зупинитися в місцевих жителів, знайти попутників і події в місті.', 'Travellers’ community: stay with locals, meet other travellers and find events in town.', 'Couchsurfing — спільнота, де місцеві жителі приймають мандрівників у себе вдома, а мандрівники знаходять господарів, інших подорожніх поруч і місцеві події. На сторінці міста видно погоду, господарів і мандрівників поблизу та зустрічі; є форуми спільноти й розділ перевірених господарів із відгуками інших учасників. Працює на сайті й у застосунку для iPhone та Android. Умови участі — на офіційному сайті.', 'Couchsurfing is a community where locals host travellers in their homes, and travellers find hosts, other travellers nearby and local events. A city page shows the weather, nearby hosts and travellers and meetups; there are community forums and a section of verified hosts with references from other members. Works on the website and in the iPhone and Android app. Membership terms are on the official website.', 'Пошук господарів у місцевих жителів
-Мандрівники поруч і місцеві події
-Перевірені господарі з відгуками
-Форуми спільноти
-Застосунок для iPhone та Android', 'Find local hosts
-Nearby travellers and local events
-Verified hosts with references
-Community forums
-iPhone and Android app', 'Мандрівникам, які шукають незвичне чи бюджетне житло й хочуть познайомитися з місцевими.', 'Travellers looking for unusual or budget stays who want to meet locals.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'couchsurfing.com' OR LOWER(`name`) = 'couchsurfing') ORDER BY `id` LIMIT 1);
+-- Lavina Mall
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lavinamall.ua' OR LOWER(`name`) = 'lavina mall')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Lavina Mall', NULL, 'https://lavinamall.ua', NULL, NULL, 'Сайт київського ТРЦ Lavina Mall: каталог магазинів, мапа, кіно, розваги, акції й новини.', 'Website of Lavina Mall in Kyiv: store directory, mall map, cinema, entertainment, deals and news.', 'Lavina Mall — торгово-розважальний центр у Києві (вул. Берковецька, 6Д) з близько 400 магазинами, понад 30 закладами харчування, сімейним парком Galaxy і кінотеатром Multiplex. На сайті є каталог магазинів, мапа ТРЦ, розділи розваг і ресторанів, акції та знижки, новини й події, а також як дістатися (зокрема шатл-бас).', 'Lavina Mall is a shopping and entertainment centre in Kyiv (6D Berkovetska St) with about 400 stores, 30+ places to eat, the Galaxy family park and a Multiplex cinema. The website has a store directory, a mall map, entertainment and restaurant sections, deals and sales, news and events, and directions (including the shuttle bus).', 'Каталог близько 400 магазинів
+Мапа ТРЦ
+Кіно Multiplex і парк Galaxy
+Акції та знижки
+Як дістатися й шатл-бас', 'Directory of about 400 stores
+Mall map
+Multiplex cinema and Galaxy park
+Deals and sales
+Directions and shuttle bus', 'Киянам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'lavinamall.ua' OR LOWER(`name`) = 'lavina mall') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Travellers’ community: stay with locals, meet other travellers and find events in town.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Couchsurfing is a community where locals host travellers in their homes, and travellers find hosts, other travellers nearby and local events. A city page shows the weather, nearby hosts and travellers and meetups; there are community forums and a section of verified hosts with references from other members. Works on the website and in the iPhone and Android app. Membership terms are on the official website.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Find local hosts
-Nearby travellers and local events
-Verified hosts with references
-Community forums
-iPhone and Android app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers looking for unusual or budget stays who want to meet locals.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Hipcamp
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hipcamp.com' OR LOWER(`name`) = 'hipcamp')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hipcamp', NULL, 'https://www.hipcamp.com', NULL, NULL, 'Пошук і бронювання кемпінгів і глемпінгу на приватній землі та в парках, планувальник подорожей.', 'Find and book campsites and glamping on private land and in parks, with a road trip planner.', 'Hipcamp — сервіс пошуку й бронювання місць для кемпінгу: на приватній землі, а також у національних, державних парках і лісах. Є планувальник автоподорожей, безкоштовні сповіщення, коли звільняється місце в заповненому кемпінгу, шари на карті й «гарантія погоди» — компенсація вартості поїздки, якщо йде дощ (за умовами сервісу). Власники землі й кемпінгів можуть розмістити свої місця. Працює на сайті й у застосунку.', 'Hipcamp is a service for finding and booking camping spots: on private land as well as in national and state parks and forests. It has a road trip planner, free alerts when a spot opens up at a sold-out campsite, map layers and a “weather guarantee” that reimburses the trip if it rains (under the service terms). Landowners and campground operators can list their sites. Works on the website and in the app.', 'Кемпінги на приватній землі й у парках
-Планувальник автоподорожей
-Сповіщення про вільні місця
-Гарантія погоди
-Розміщення власних місць', 'Campsites on private land and in parks
-Road trip planner
-Availability alerts
-Weather guarantee
-List your own sites', 'Туристам з наметом, автодомом чи фургоном і власникам землі, які хочуть приймати кемперів.', 'Tent, RV and van campers, and landowners who want to host campers.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hipcamp.com' OR LOWER(`name`) = 'hipcamp') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'vacation-rentals' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Find and book campsites and glamping on private land and in parks, with a road trip planner.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hipcamp is a service for finding and booking camping spots: on private land as well as in national and state parks and forests. It has a road trip planner, free alerts when a spot opens up at a sold-out campsite, map layers and a “weather guarantee” that reimburses the trip if it rains (under the service terms). Landowners and campground operators can list their sites. Works on the website and in the app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Campsites on private land and in parks
-Road trip planner
-Availability alerts
-Weather guarantee
-List your own sites', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Tent, RV and van campers, and landowners who want to host campers.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Headout
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'headout.com' OR LOWER(`name`) = 'headout')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Headout', NULL, 'https://www.headout.com', NULL, NULL, 'Квитки до атракцій, музеїв і екскурсії в містах світу, бронювання навіть напередодні.', 'Tickets to attractions, museums and tours in cities worldwide, bookable even the night before.', 'Headout — сервіс бронювання квитків до атракцій, музеїв і екскурсій у містах світу (Париж, Рим, Дубай, Токіо та інші). Бронювати можна будь-коли, навіть напередодні; для більшості вражень є безкоштовне скасування й оплата пізніше, діє гарантія захисту бронювання й підтримка 24/7 кількома мовами. Ціна залежить від вибраного враження, перегляд безкоштовний. Компанія Headout Inc, Нью-Йорк.', 'Headout is a service for booking tickets to attractions, museums and tours in cities worldwide (Paris, Rome, Dubai, Tokyo and others). You can book any time, even the night before; most experiences offer free cancellation and pay-later options, with a booking protection guarantee and 24/7 support in several languages. The price depends on the experience; browsing is free. Company: Headout Inc, New York.', 'Квитки до атракцій і музеїв
-Бронювання навіть напередодні
-Безкоштовне скасування для більшості вражень
-Підтримка 24/7
-Гарантія бронювання', 'Tickets to attractions and museums
-Book even the night before
-Free cancellation on most experiences
-24/7 support
-Booking guarantee', 'Туристам, які хочуть заздалегідь купити квитки й екскурсії в місті, куди їдуть.', 'Tourists who want to book tickets and tours in advance for the city they are visiting.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'headout.com' OR LOWER(`name`) = 'headout') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Tickets to attractions, museums and tours in cities worldwide, bookable even the night before.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Headout is a service for booking tickets to attractions, museums and tours in cities worldwide (Paris, Rome, Dubai, Tokyo and others). You can book any time, even the night before; most experiences offer free cancellation and pay-later options, with a booking protection guarantee and 24/7 support in several languages. The price depends on the experience; browsing is free. Company: Headout Inc, New York.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Tickets to attractions and museums
-Book even the night before
-Free cancellation on most experiences
-24/7 support
-Booking guarantee', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Tourists who want to book tickets and tours in advance for the city they are visiting.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Civitatis
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'civitatis.com/en' OR LOWER(`name`) = 'civitatis')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Civitatis', NULL, 'https://www.civitatis.com/en/', NULL, NULL, 'Екскурсії з гідом, квитки й враження в містах світу; безкоштовне скасування для багатьох активностей.', 'Guided tours, tickets and experiences in cities worldwide; free cancellation on many activities.', 'Civitatis — каталог екскурсій з гідом, квитків і вражень у містах світу. На сторінці кожного міста — активності з оцінками й відгуками, ціни вказано в євро; є й безкоштовні піші екскурсії. Для багатьох активностей діє безкоштовне скасування, сервіс обіцяє ціни без прихованих комісій і підтримку 24/7. Є застосунок.', 'Civitatis is a catalogue of guided tours, tickets and experiences in cities worldwide. Each city page lists activities with ratings and reviews, priced in euros; free walking tours are included too. Many activities have free cancellation, the service promises no hidden fees and 24/7 customer service. There is an app.', 'Екскурсії з гідом і квитки
-Безкоштовні піші екскурсії
-Безкоштовне скасування для багатьох активностей
-Без прихованих комісій
-Підтримка 24/7', 'Guided tours and tickets
-Free walking tours
-Free cancellation on many activities
-No hidden fees
-24/7 customer service', 'Туристам, які хочуть заздалегідь купити квитки й екскурсії в місті, куди їдуть.', 'Tourists who want to book tickets and tours in advance for the city they are visiting.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'civitatis.com/en' OR LOWER(`name`) = 'civitatis') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Guided tours, tickets and experiences in cities worldwide; free cancellation on many activities.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Civitatis is a catalogue of guided tours, tickets and experiences in cities worldwide. Each city page lists activities with ratings and reviews, priced in euros; free walking tours are included too. Many activities have free cancellation, the service promises no hidden fees and 24/7 customer service. There is an app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Guided tours and tickets
-Free walking tours
-Free cancellation on many activities
-No hidden fees
-24/7 customer service', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Tourists who want to book tickets and tours in advance for the city they are visiting.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Fever
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'feverup.com' OR LOWER(`name`) = 'fever')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Fever', NULL, 'https://feverup.com', NULL, NULL, 'Квитки на події й враження в понад 200 містах: концерти Candlelight, імерсивні виставки, атракції.', 'Tickets to events and experiences in 200+ cities: Candlelight concerts, immersive exhibitions, attractions.', 'Fever — платформа квитків на місцеві події й враження в понад 200 містах більш як 30 країн: понад 150 000 вражень, серед них концерти при свічках Candlelight, музичні фестивалі, імерсивні виставки (зокрема Van Gogh Experience) і туристичні атракції. Підтримка 24/7 одинадцятьма мовами в чаті застосунку чи телефоном, є програма Fever Club і подарункові картки. Працює на сайті й у застосунках для iPhone та Android.', 'Fever is a ticketing platform for local events and experiences in over 200 cities in more than 30 countries: over 150,000 experiences, including Candlelight concerts, music festivals, immersive exhibitions (such as the Van Gogh Experience) and tourist attractions. 24/7 support in 11 languages via in-app chat or phone, plus Fever Club and gift cards. Works on the website and in the iPhone and Android apps.', 'Понад 200 міст і 30 країн
-Концерти Candlelight
-Імерсивні виставки й фестивалі
-Підтримка 24/7 одинадцятьма мовами
-Fever Club і подарункові картки', '200+ cities in 30+ countries
-Candlelight concerts
-Immersive exhibitions and festivals
-24/7 support in 11 languages
-Fever Club and gift cards', 'Тим, хто шукає концерти, виставки й незвичні події в місті — вдома чи в подорожі.', 'People looking for concerts, exhibitions and unusual events in their city — at home or travelling.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'feverup.com' OR LOWER(`name`) = 'fever') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'tours-activities' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Tickets to events and experiences in 200+ cities: Candlelight concerts, immersive exhibitions, attractions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Fever is a ticketing platform for local events and experiences in over 200 cities in more than 30 countries: over 150,000 experiences, including Candlelight concerts, music festivals, immersive exhibitions (such as the Van Gogh Experience) and tourist attractions. 24/7 support in 11 languages via in-app chat or phone, plus Fever Club and gift cards. Works on the website and in the iPhone and Android apps.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '200+ cities in 30+ countries
-Candlelight concerts
-Immersive exhibitions and festivals
-24/7 support in 11 languages
-Fever Club and gift cards', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'People looking for concerts, exhibitions and unusual events in their city — at home or travelling.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- GHA DISCOVERY
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ghadiscovery.com' OR LOWER(`name`) = 'gha discovery')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'GHA DISCOVERY', NULL, 'https://www.ghadiscovery.com', NULL, NULL, 'Безкоштовна програма лояльності Global Hotel Alliance: 60+ брендів, 1000 готелів, бонуси D$.', 'Free Global Hotel Alliance loyalty programme: 60+ brands, 1,000 hotels, D$ rewards.', 'GHA DISCOVERY — програма лояльності Global Hotel Alliance, що об''єднує понад 60 незалежних брендів: близько 1000 готелів у 100 країнах (Anantara, Kempinski, NH Hotels, Corinthia та інші) і понад 30 000 будинків для відпочинку. Участь безкоштовна. За проживання повертається до 7% у DISCOVERY Dollars (D$1 = USD 1), які можна витратити на номери, апгрейди, ресторани й спа. Учасники отримують знижку від 10% при прямому бронюванні. Статуси Silver, Gold, Platinum і Titanium присвоюються за ночі, витрати або кількість брендів, у яких ви зупинялися.', 'GHA DISCOVERY is the Global Hotel Alliance loyalty programme, bringing together 60+ independent brands: around 1,000 hotels in 100 countries (Anantara, Kempinski, NH Hotels, Corinthia and others) and 30,000+ vacation homes. Membership is free. Stays earn up to 7% back in DISCOVERY Dollars (D$1 = USD 1), which can be spent on rooms, upgrades, dining and spa. Members get 10% or more off when booking direct. Silver, Gold, Platinum and Titanium tiers are earned by nights, spend or the number of brands stayed with.', '60+ незалежних готельних брендів
-До 7% назад у D$ (D$1 = USD 1)
-Знижка від 10% для учасників
-Статуси Silver – Titanium
-Застосунок для iPhone та Android', '60+ independent hotel brands
-Up to 7% back in D$ (D$1 = USD 1)
-10%+ member discount
-Silver to Titanium tiers
-iPhone and Android app', 'Мандрівникам, які зупиняються в незалежних готелях і хочуть знижок, статусів і бонусів.', 'Travellers staying at independent hotels who want discounts, status and rewards.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ghadiscovery.com' OR LOWER(`name`) = 'gha discovery') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'hotel-loyalty' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free Global Hotel Alliance loyalty programme: 60+ brands, 1,000 hotels, D$ rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'GHA DISCOVERY is the Global Hotel Alliance loyalty programme, bringing together 60+ independent brands: around 1,000 hotels in 100 countries (Anantara, Kempinski, NH Hotels, Corinthia and others) and 30,000+ vacation homes. Membership is free. Stays earn up to 7% back in DISCOVERY Dollars (D$1 = USD 1), which can be spent on rooms, upgrades, dining and spa. Members get 10% or more off when booking direct. Silver, Gold, Platinum and Titanium tiers are earned by nights, spend or the number of brands stayed with.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '60+ independent hotel brands
-Up to 7% back in D$ (D$1 = USD 1)
-10%+ member discount
-Silver to Titanium tiers
-iPhone and Android app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Travellers staying at independent hotels who want discounts, status and rewards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Участь у програмі безкоштовна.', 'Membership is free.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of Lavina Mall in Kyiv: store directory, mall map, cinema, entertainment, deals and news.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Lavina Mall is a shopping and entertainment centre in Kyiv (6D Berkovetska St) with about 400 stores, 30+ places to eat, the Galaxy family park and a Multiplex cinema. The website has a store directory, a mall map, entertainment and restaurant sections, deals and sales, news and events, and directions (including the shuttle bus).', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Directory of about 400 stores
+Mall map
+Multiplex cinema and Galaxy park
+Deals and sales
+Directions and shuttle bus', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Membership is free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Retroville
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'retroville.ua' OR LOWER(`name`) = 'retroville')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Retroville', NULL, 'https://retroville.ua', NULL, NULL, 'Сайт київського ТРЦ Retroville: магазини, карта ТРЦ, події, акції й паркінг на 3245 місць.', 'Website of Retroville mall in Kyiv: stores, mall map, events, deals and parking for 3,245 cars.', 'Retroville — торгово-розважальний центр на Виноградарі в Києві (просп. Європейського Союзу, 47), працює щодня з 10:00 до 22:00. На сайті — каталог магазинів, карта ТРЦ, події й акції, інформація про паркінг на 3245 місць і громадський транспорт, а також розділи бізнес-центру й спорту. У ТРЦ є кінотеатр.', 'Retroville is a shopping and entertainment centre in Vynohradar, Kyiv (47 Yevropeiskoho Soiuzu Ave), open daily from 10:00 to 22:00. The website has a store directory, a mall map, events and deals, information on the 3,245-space car park and public transport, plus business-centre and sports sections. The mall has a cinema.', 'Каталог магазинів
+Карта ТРЦ
+Події та акції
+Паркінг на 3245 місць
+Як дістатися громадським транспортом', 'Store directory
+Mall map
+Events and deals
+Car park with 3,245 spaces
+Public transport directions', 'Киянам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'retroville.ua' OR LOWER(`name`) = 'retroville') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of Retroville mall in Kyiv: stores, mall map, events, deals and parking for 3,245 cars.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Retroville is a shopping and entertainment centre in Vynohradar, Kyiv (47 Yevropeiskoho Soiuzu Ave), open daily from 10:00 to 22:00. The website has a store directory, a mall map, events and deals, information on the 3,245-space car park and public transport, plus business-centre and sports sections. The mall has a cinema.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Store directory
+Mall map
+Events and deals
+Car park with 3,245 spaces
+Public transport directions', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Dream Town
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dreamtown.ua' OR LOWER(`name`) = 'dream town')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Dream Town', NULL, 'https://dreamtown.ua', NULL, NULL, 'Сайт ТРЦ DREAM на Оболоні (DREAM yellow і DREAM berry): магазини, розваги, ресторани, акції.', 'Website of DREAM malls in Obolon, Kyiv (DREAM yellow and DREAM berry): stores, entertainment, restaurants, deals.', 'Dream Town — два торгово-розважальні центри DREAM на Оболонському проспекті в Києві: DREAM yellow (1Б, метро «Оболонь», «Мінська») і DREAM berry (21Б, метро «Мінська», «Героїв Дніпра»). На сайті — магазини за категоріями, розваги й кіно, ресторани та фуд-корт, послуги (квитки, пакування подарунків, фото, банк), карта ТРЦ, події, акції, графік роботи, паркінг і підписка на новини. Є англійська версія.', 'Dream Town is two DREAM shopping centres on Obolonskyi Avenue in Kyiv: DREAM yellow (1B, Obolon and Minska metro) and DREAM berry (21B, Minska and Heroiv Dnipra metro). The website lists stores by category, entertainment and cinema, restaurants and the food court, services (tickets, gift wrapping, photo, bank), a mall map, events, deals, opening hours, parking and a newsletter. There is an English version.', 'Два ТРЦ: DREAM yellow і DREAM berry
+Магазини за категоріями
+Розваги, кіно й фуд-корт
+Послуги: квитки, пакування, фото
+Акції, події й паркінг', 'Two malls: DREAM yellow and DREAM berry
+Stores by category
+Entertainment, cinema and food court
+Services: tickets, gift wrapping, photo
+Deals, events and parking', 'Киянам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dreamtown.ua' OR LOWER(`name`) = 'dream town') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of DREAM malls in Obolon, Kyiv (DREAM yellow and DREAM berry): stores, entertainment, restaurants, deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Dream Town is two DREAM shopping centres on Obolonskyi Avenue in Kyiv: DREAM yellow (1B, Obolon and Minska metro) and DREAM berry (21B, Minska and Heroiv Dnipra metro). The website lists stores by category, entertainment and cinema, restaurants and the food court, services (tickets, gift wrapping, photo, bank), a mall map, events, deals, opening hours, parking and a newsletter. There is an English version.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Two malls: DREAM yellow and DREAM berry
+Stores by category
+Entertainment, cinema and food court
+Services: tickets, gift wrapping, photo
+Deals, events and parking', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Victoria Gardens
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'victoriagardens.com.ua' OR LOWER(`name`) = 'victoria gardens')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Victoria Gardens', NULL, 'https://victoriagardens.com.ua', NULL, NULL, 'Сайт львівського ТРЦ Victoria Gardens: магазини, акції, ресторани, кіно Multiplex і новини.', 'Website of Victoria Gardens mall in Lviv: stores, deals, restaurants, Multiplex cinema and news.', 'Victoria Gardens — торгово-розважальний центр у Львові (вул. Кульпарківська, 226А), працює з 10:00 до 22:00; кінотеатр Multiplex — до 23:00, «Сільпо» — з 08:00 до 23:00. На сайті є каталог магазинів, акції та знижки, ресторани й кафе, розваги й послуги, новини, маршрут, сторінка для орендарів і розсилка. Є англійська версія.', 'Victoria Gardens is a shopping and entertainment centre in Lviv (226A Kulparkivska St), open 10:00–22:00; the Multiplex cinema runs until 23:00 and Silpo from 08:00 to 23:00. The website has a store directory, deals and sales, restaurants and cafes, entertainment and services, news, directions, a tenants page and a newsletter. There is an English version.', 'Каталог магазинів
+Акції та знижки
+Ресторани й кафе
+Кінотеатр Multiplex
+Як дістатися', 'Store directory
+Deals and sales
+Restaurants and cafes
+Multiplex cinema
+Directions', 'Львів''янам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Lviv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'victoriagardens.com.ua' OR LOWER(`name`) = 'victoria gardens') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of Victoria Gardens mall in Lviv: stores, deals, restaurants, Multiplex cinema and news.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Victoria Gardens is a shopping and entertainment centre in Lviv (226A Kulparkivska St), open 10:00–22:00; the Multiplex cinema runs until 23:00 and Silpo from 08:00 to 23:00. The website has a store directory, deals and sales, restaurants and cafes, entertainment and services, news, directions, a tenants page and a newsletter. There is an English version.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Store directory
+Deals and sales
+Restaurants and cafes
+Multiplex cinema
+Directions', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Lviv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- King Cross Leopolis
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kingcross.com.ua' OR LOWER(`name`) = 'king cross leopolis')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'King Cross Leopolis', NULL, 'https://kingcross.com.ua', NULL, NULL, 'Сайт ТРЦ King Cross Leopolis біля Львова: 100 брендів, Планета Кіно IMAX, ковзанка, карта й акції.', 'Website of King Cross Leopolis mall near Lviv: 100 brands, Planeta Kino IMAX, ice rink, map and deals.', 'King Cross Leopolis — торгово-розважальний центр на виїзді зі Львова (с. Сокільники, вул. Стрийська, 30), працює з 10:00 до 21:00. Тут близько 100 брендів, «Планета Кіно» з IMAX, ковзанка й дитячий простір Fly Kids, а також послуги: хімчистка, автомийка, фінансова компанія. На сайті — каталог магазинів, ресторани, розваги, акції, новини, карта ТРЦ, маршрут і вакансії. Є англійська версія.', 'King Cross Leopolis is a shopping and entertainment centre on the edge of Lviv (30 Stryiska St, Sokilnyky), open 10:00–21:00. It has about 100 brands, Planeta Kino with IMAX, an ice rink and the Fly Kids play area, plus services such as dry cleaning, a car wash and a finance company. The website has a store directory, restaurants, entertainment, deals, news, a mall map, directions and vacancies. There is an English version.', 'Близько 100 брендів
+Планета Кіно IMAX і ковзанка
+Карта ТРЦ
+Акції та новини
+Вакансії в ТРЦ', 'About 100 brands
+Planeta Kino IMAX and ice rink
+Mall map
+Deals and news
+Jobs at the mall', 'Львів''янам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Lviv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'kingcross.com.ua' OR LOWER(`name`) = 'king cross leopolis') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of King Cross Leopolis mall near Lviv: 100 brands, Planeta Kino IMAX, ice rink, map and deals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'King Cross Leopolis is a shopping and entertainment centre on the edge of Lviv (30 Stryiska St, Sokilnyky), open 10:00–21:00. It has about 100 brands, Planeta Kino with IMAX, an ice rink and the Fly Kids play area, plus services such as dry cleaning, a car wash and a finance company. The website has a store directory, restaurants, entertainment, deals, news, a mall map, directions and vacancies. There is an English version.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'About 100 brands
+Planeta Kino IMAX and ice rink
+Mall map
+Deals and news
+Jobs at the mall', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Lviv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Blockbuster Mall
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'blockbustermall.com.ua' OR LOWER(`name`) = 'blockbuster mall')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Blockbuster Mall', NULL, 'https://blockbustermall.com.ua', NULL, NULL, 'Сайт київського ТРЦ Blockbuster Mall: магазини, ресторани, розваги, послуги, події й карта.', 'Website of Blockbuster Mall in Kyiv: stores, restaurants, entertainment, services, events and map.', 'Blockbuster Mall — великий торгово-розважальний центр у Києві. На сайті є каталог магазинів, ресторанів, розваг і послуг, події та акції, карта ТРЦ, галерея й контакти, а також посилання на сторінки ТРЦ у Facebook та Instagram.', 'Blockbuster Mall is a large shopping and entertainment centre in Kyiv. The website has a directory of stores, restaurants, entertainment and services, events and deals, a mall map, a gallery and contacts, plus links to the mall’s Facebook and Instagram pages.', 'Каталог магазинів і ресторанів
+Розваги й послуги
+Події та акції
+Карта ТРЦ
+Контакти й соцмережі', 'Store and restaurant directory
+Entertainment and services
+Events and deals
+Mall map
+Contacts and social media', 'Киянам і гостям міста, які планують похід по магазинах, у кіно чи ресторан.', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'blockbustermall.com.ua' OR LOWER(`name`) = 'blockbuster mall') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-malls' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Website of Blockbuster Mall in Kyiv: stores, restaurants, entertainment, services, events and map.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Blockbuster Mall is a large shopping and entertainment centre in Kyiv. The website has a directory of stores, restaurants, entertainment and services, events and deals, a mall map, a gallery and contacts, plus links to the mall’s Facebook and Instagram pages.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Store and restaurant directory
+Entertainment and services
+Events and deals
+Mall map
+Contacts and social media', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents and visitors planning shopping, a cinema trip or a meal out.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Сайт ТРЦ безкоштовний.', 'The mall website is free to use.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'The mall website is free to use.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Сінево
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'synevo.ua' OR LOWER(`name`) = 'сінево')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Сінево', NULL, 'https://www.synevo.ua', NULL, NULL, 'Мережа медичних лабораторій Synevo: понад 1600 тестів із цінами, замовлення онлайн, результати в кабінеті.', 'Synevo medical laboratory network: 1,600+ tests with prices, online ordering and results in your account.', 'Сінево (Synevo) — європейська медична лабораторія, що входить до шведського холдингу Medicover. В Україні — понад 360 відділень у 164 населених пунктах і 7 лабораторій, понад 1600 видів тестів. На сайті є каталог аналізів із цінами в гривнях, кошик для замовлення онлайн, особистий кабінет із результатами й виклик медсестри додому.', 'Synevo is a European medical laboratory that is part of the Swedish Medicover group. In Ukraine it has 360+ branches in 164 towns and 7 laboratories, with over 1,600 types of tests. The website has a test catalogue with prices in hryvnias, a cart for ordering online, a personal account with results and a nurse home-visit service.', 'Понад 1600 видів тестів
+Ціни на сайті в гривнях
+Замовлення онлайн
+Результати в особистому кабінеті
+Медсестра вдома', '1,600+ types of tests
+Prices on the site in UAH
+Online ordering
+Results in your personal account
+Nurse home visit', 'Усім, хто здає аналізи в Україні й хоче замовити їх онлайн та отримати результати в кабінеті.', 'Anyone in Ukraine taking lab tests who wants to order them online and get results in a personal account.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'synevo.ua' OR LOWER(`name`) = 'сінево') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Synevo medical laboratory network: 1,600+ tests with prices, online ordering and results in your account.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Synevo is a European medical laboratory that is part of the Swedish Medicover group. In Ukraine it has 360+ branches in 164 towns and 7 laboratories, with over 1,600 types of tests. The website has a test catalogue with prices in hryvnias, a cart for ordering online, a personal account with results and a nurse home-visit service.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '1,600+ types of tests
+Prices on the site in UAH
+Online ordering
+Results in your personal account
+Nurse home visit', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone in Ukraine taking lab tests who wants to order them online and get results in a personal account.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- CSD LAB
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'csdlab.ua' OR LOWER(`name`) = 'csd lab')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'CSD LAB', NULL, 'https://csdlab.ua', NULL, NULL, 'Мережа лабораторій CSD LAB: понад 1350 досліджень із цінами, купівля онлайн, результати в кабінеті.', 'CSD LAB laboratory network: 1,350+ tests with prices, online purchase and results in your account.', 'CSD LAB — українська мережа медичних лабораторій із 183 сертифікованими відділеннями по всій країні та понад 1350 лабораторними дослідженнями. На сайті можна купити аналізи онлайн за цінами в гривнях, завантажити направлення для замовлення, отримати результат в особистому кабінеті й замовити аналізи вдома з мобільною медсестрою.', 'CSD LAB is a Ukrainian network of medical laboratories with 183 certified branches across the country and over 1,350 lab tests. On the website you can buy tests online with prices in hryvnias, upload a referral to place an order, get results in your personal account and book tests at home with a mobile nurse.', 'Понад 1350 досліджень
+183 відділення в Україні
+Купівля аналізів онлайн
+Результати в особистому кабінеті
+Аналізи вдома', '1,350+ lab tests
+183 branches in Ukraine
+Buy tests online
+Results in your personal account
+Tests at home', 'Усім, хто здає аналізи в Україні й хоче замовити їх онлайн та отримати результати в кабінеті.', 'Anyone in Ukraine taking lab tests who wants to order them online and get results in a personal account.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'csdlab.ua' OR LOWER(`name`) = 'csd lab') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'CSD LAB laboratory network: 1,350+ tests with prices, online purchase and results in your account.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'CSD LAB is a Ukrainian network of medical laboratories with 183 certified branches across the country and over 1,350 lab tests. On the website you can buy tests online with prices in hryvnias, upload a referral to place an order, get results in your personal account and book tests at home with a mobile nurse.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '1,350+ lab tests
+183 branches in Ukraine
+Buy tests online
+Results in your personal account
+Tests at home', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone in Ukraine taking lab tests who wants to order them online and get results in a personal account.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
 -- Прив'язки наявних продуктів (за назвою, без id)
