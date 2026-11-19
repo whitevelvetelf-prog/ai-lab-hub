@@ -282,7 +282,8 @@ try {
     $_SESSION = [];
     geo_config(true);
     geo_visitor($pdo, null, true);
-    ok(geo_config()['geo_ip_enabled'] === false && geo_config()['ad_geo_default_mode'] === 'soft', 'config/geo.php: geo_ip_enabled=false, ad_geo_default_mode=soft');
+    ok(geo_config()['geo_ip_enabled'] === true && geo_config()['geo_ip_header'] === 'HTTP_GEOIP_COUNTRY_CODE' && geo_config()['ad_geo_default_mode'] === 'soft', 'config/geo.php: geo_ip_enabled=true, заголовок HTTP_GEOIP_COUNTRY_CODE, ad_geo_default_mode=soft');
+    ok(!geo_visitor($pdo, null, true)['known'], 'config/geo.php увімкнено, але без згоди alh_geo країна за IP не визначається');
     $_COOKIE['geo_loc'] = 'AU';
     $v = geo_visitor($pdo, null, true);
     ok($v['known'] && $v['country_code'] === 'AU' && $v['place_id'] === null && $v['lat'] === null, 'cookie geo_loc з кодом країни → відома лише країна');

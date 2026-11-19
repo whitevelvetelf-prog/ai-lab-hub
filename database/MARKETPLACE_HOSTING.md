@@ -291,11 +291,14 @@ cities15000 не потрібен). Порядок: `15-…` → `geo-data-01…
 `public_enabled` / `posting_enabled` не змінювались.
 
 ### 3. Налаштування `config/geo.php`
-`geo_ip_enabled => false` (типово; країна за IP — лише з цим `true` І згодою відвідувача), `geo_ip_header` (напр.
-`HTTP_CF_IPCOUNTRY`, якщо колись буде CDN; на adm.tools такого заголовка немає), `geoip_db_path` (лише за наявності
-PHP-розширення maxminddb і бази з прийнятою ліцензією), `ad_geo_default_mode => 'soft'`, `cookie_days => 180`.
+`geo_ip_enabled => true` (**увімкнено 2026-11-19**; країна за IP — лише разом зі згодою відвідувача `alh_geo=1`),
+`geo_ip_header => 'HTTP_GEOIP_COUNTRY_CODE'` — nginx adm.tools сам передає код країни (перевірено тимчасовим
+діагностичним файлом 2026-11-19: заголовок є, для запиту з України — `UA`; розширень maxminddb/geoip у PHP 8.5 немає),
+`geoip_db_path => ''`, `ad_geo_default_mode => 'soft'`, `cookie_days => 180`.
+Разом із цим — № 26 `database/migration-2026-11-19-geo-ip-on.sql` (EN-текст `legal_privacy_cookies_geo` без
+«функція вимкнена»; застосовано на проді 2026-11-19).
 
 ### 4. Перевірка
-Локально: `php tests/geo_match_test.php` (66), `php tests/mp-geo-tests.php` (70), `php tools/ad-geo-load-test.php 5000`.
+Локально: `php tests/geo_match_test.php` (67), `php tests/mp-geo-tests.php` (70), `php tools/ad-geo-load-test.php 5000`.
 Наживо: `/geo-location.php`, `/marketplace.php?q=…` → «Поблизу мене», кабінет → «Географія», `/admin-ad-geo-check.php`.
 Політику конфіденційності оновлено (3.5: `geo_loc`, `alh_geo`, категорія IP; пункт про таргетинг реклами) — `public/privacy.php` + тексти в № 25.
