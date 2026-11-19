@@ -17,24 +17,26 @@ declare(strict_types=1);
  *       offline / hybrid — відстань від основного чи будь-якого додаткового міста ≤ радіус пошуку + радіус
  *                 обслуговування оголошення; з охопленням «вся країна» — будь-яке місце тієї країни.
  *     Відстань: спершу прямокутник lat/lon (індекс), потім формула гаверсинуса в SQL.
- *   * Налаштування: залогінений — mp_user_prefs; гість — лише cookie mp_loc (place_id, httponly, 1 рік),
- *     яка ставиться тільки після явного вибору місця. Координати браузера («Поблизу») не зберігаються.
- *     Геолокація за IP не використовується.
+ *   * Налаштування: залогінений — mp_user_prefs; гість — лише cookie geo_loc (place_id або код країни, httponly,
+ *     180 днів; app/geo.php), яка ставиться тільки після явного вибору місця. Стара mp_loc читається як запасна.
+ *     Координати браузера («Поблизу») не зберігаються. Країна за IP — лише app/geo.php за згоди (типово вимкнено).
+ *   * Фільтр за місцем НЕ застосовується сам: лише явні параметри пошуку або «Поблизу мене» (nearby=1).
  *
  * Підключати після app/marketplace.php (mp_config, mp_e) і app/translations.php.
  */
 
 require_once __DIR__ . '/fx.php';
+require_once __DIR__ . '/geo.php';    // місце відвідувача (cookie geo_loc, профіль, IP за згодою)
 
 const MPG_FORMATS = ['online', 'offline', 'hybrid'];
 const MPG_SCOPES = ['local', 'country', 'worldwide'];
-const MPG_RADII = [5, 10, 25, 50, 100];
+const MPG_RADII = [5, 10, 25, 50, 100, 200];
 const MPG_DEFAULT_RADIUS = 25;
 const MPG_MAX_EXTRA = 5;
-const MPG_MAX_LISTING_RADIUS = 100;    // км; верхня межа радіуса обслуговування оголошення (для прямокутника пошуку)
+const MPG_MAX_LISTING_RADIUS = 200;    // км; верхня межа радіуса обслуговування оголошення (для прямокутника пошуку)
 const MPG_KM_PER_MI = 1.609344;
 const MPG_EARTH_KM = 6371.0;
-const MPG_COOKIE = 'mp_loc';
+const MPG_COOKIE = 'mp_loc';          // стара cookie етапу 6 (лише читання як запасна; нова — GEO_COOKIE у app/geo.php)
 const MPG_LISTING_LANGS = ['uk', 'en'];
 const MPG_SUGGEST_LIMIT = 10;
 const MPG_FAR = 1000000000;            // «відстань» для онлайн-оголошень у сортуванні — у кінець
@@ -247,15 +249,15 @@ function mpg_suggest(PDO $pdo, string $q, string $lang, array $types = ['city', 
     return $out;
 }
 
-/** Найближче місто до координат (координати ніде не зберігаються). */
+/** Найближче місто до координат у межах 100 км (координати ніде не зберігаються). */
 function mpg_nearest_city(PDO $pdo, float $lat, float $lon): ?int
 {
     if ($lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
         return null;
     }
-    foreach ([25, 100, 400] as $km) {
+    foreach ([25, 100] as $km) {
         [$box, $dist] = [mpg_bbox_sql('lat', 'lon', $lat, $lon, $km), mpg_haversine_sql('lat', 'lon', $lat, $lon)];
-        $id = $pdo->query("SELECT id FROM geo_places WHERE type = 'city' AND $box ORDER BY $dist LIMIT 1")->fetchColumn();
+        $id = $pdo->query("SELECT id FROM geo_places WHERE type = 'city' AND $box AND $dist <= $km ORDER BY $dist LIMIT 1")->fetchColumn();
         if ($id !== false) {
             return (int) $id;
         }
@@ -808,22 +810,20 @@ function mpg_prefs(PDO $pdo, ?int $userId): array
 
         return $p;
     }
-    $c = $_COOKIE[MPG_COOKIE] ?? '';
-    if (is_string($c) && ctype_digit($c) && strlen($c) <= 10) {
-        $place = mpg_place($pdo, (int) $c);
-        if ($place !== null && $place['type'] === 'city') {
-            $p['place_id'] = $place['id'];
-            $p['country_code'] = $place['country_code'];
-            $p['saved'] = true;
-        }
+    // Гість: cookie geo_loc (місто або країна), запасна — стара mp_loc.
+    $v = geo_cookie_value() !== '' ? geo_from_value($pdo, geo_cookie_value(), 'user') : null;
+    if ($v !== null) {
+        $p['place_id'] = $v['lat'] !== null ? (int) $v['place_id'] : 0;
+        $p['country_code'] = (string) $v['country_code'];
+        $p['saved'] = true;
     }
 
     return $p;
 }
 
 /**
- * Зберігає налаштування: залогінений — mp_user_prefs (усі поля); гість — лише cookie mp_loc (place_id).
- * $placeId = 0 у гостя — cookie видаляється.
+ * Зберігає налаштування: залогінений — mp_user_prefs (усі поля); гість — лише cookie geo_loc (place_id або код країни).
+ * Без місця й країни у гостя — cookie видаляється.
  */
 function mpg_prefs_save(PDO $pdo, ?int $userId, array $in): void
 {
@@ -832,17 +832,14 @@ function mpg_prefs_save(PDO $pdo, ?int $userId, array $in): void
         $place = null;
     }
     if ($userId === null) {
-        $secure = (($_SERVER['HTTPS'] ?? '') !== '' && $_SERVER['HTTPS'] !== 'off');
-        if (!headers_sent()) {
-            setcookie(MPG_COOKIE, $place !== null ? (string) $place['id'] : '', [
-                'expires' => $place !== null ? time() + 365 * 86400 : time() - 3600,
-                'path' => '/', 'secure' => $secure, 'httponly' => true, 'samesite' => 'Lax',
-            ]);
-        }
+        // Гість: cookie geo_loc (app/geo.php) — місто або країна; порожньо — cookie видаляється.
+        $cc = strtoupper((string) ($in['country_code'] ?? ''));
         if ($place !== null) {
-            $_COOKIE[MPG_COOKIE] = (string) $place['id'];
+            geo_cookie_set((string) $place['id'], (string) ($in['source'] ?? 'user'));
+        } elseif (preg_match('/^[A-Z]{2}$/', $cc) === 1 && mpg_country_id($pdo, $cc) !== null) {
+            geo_cookie_set($cc);
         } else {
-            unset($_COOKIE[MPG_COOKIE]);
+            geo_cookie_clear();
         }
 
         return;

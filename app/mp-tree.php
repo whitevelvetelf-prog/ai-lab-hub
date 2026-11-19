@@ -558,7 +558,8 @@ function mpt_open(string $title, string $description, string $canonical, bool $n
         . '<meta property="og:description" content="' . mp_e(mb_substr($description, 0, 300)) . "\">\n";
     include __DIR__ . '/header.php';
     echo "\n<link rel=\"stylesheet\" href=\"/assets/css/site-nav.css\">\n"
-        . '<link rel="stylesheet" href="' . css_asset('mp-public.css') . "\">\n</head>\n<body class=\"mp-body\">\n";
+        . '<link rel="stylesheet" href="' . css_asset('mp-public.css') . "\">\n"
+        . '<link rel="stylesheet" href="' . css_asset('mp-geo.css') . "\">\n</head>\n<body class=\"mp-body\">\n";
     include __DIR__ . '/site-header.php';
     if ($nav !== '') {
         echo mp_section_nav($nav);

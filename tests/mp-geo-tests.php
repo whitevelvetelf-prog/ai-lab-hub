@@ -75,8 +75,8 @@ $mk = static function (string $title, string $lang, array $geo, ?string $price =
 };
 
 /** id знайдених оголошень (лише тестові) для фільтрів GET. */
-$find = static function (array $get, string $lang = 'uk', array $prefs = ['saved' => false]) use ($pdo, &$created): array {
-    $f = mpb_search_filters($pdo, $get, $lang, $prefs + ['units' => 'km']);
+$find = static function (array $get, string $lang = 'uk', array $prefs = ['saved' => false], ?array $visitor = null) use ($pdo, &$created): array {
+    $f = mpb_search_filters($pdo, $get, $lang, $prefs + ['units' => 'km'], $visitor);
     $f['q'] = 'MPG-TEST';
     $ids = [];
     $order = [];
@@ -249,10 +249,15 @@ try {
     $pr = mpg_prefs($pdo, TEST_USER);
     ok($pr['place_id'] === CANBERRA && $pr['country_code'] === 'AU' && $pr['radius_km'] === 50 && $pr['units'] === 'mi' && $pr['listing_langs'] === ['en'] && $pr['show_online'] === false,
         'збережено: Canberra, AU, 50, mi, [en], без онлайн');
-    $fp = mpb_search_filters($pdo, [], 'uk', $pr);
-    ok($fp['from_prefs'] && $fp['place_id'] === CANBERRA && abs($fp['geo']['radius_km'] - 50 * MPG_KM_PER_MI) < 0.001, 'без параметрів місця — підставлено збережене місце; 50 миль = 80.47 км');
-    $withPrefs = $find([], 'uk', $pr);
-    ok(in_array($A, $withPrefs, true) && !in_array($C, $withPrefs, true) && !in_array($X, $withPrefs, true), 'show_online=0 → без онлайн; listing_langs=en → без X');
+    // З 2026-11-19: збережене місце саме НЕ фільтрує; лише «Поблизу мене» (nearby=1) з місцем відвідувача (app/geo.php).
+    $vis = geo_visitor($pdo, TEST_USER, true);
+    $fp = mpb_search_filters($pdo, [], 'uk', $pr, $vis);
+    ok(!$fp['from_prefs'] && $fp['place_id'] === 0 && $fp['country'] === '', 'без параметрів місця — фільтра за місцем немає, хоча місце збережено');
+    ok($vis['source'] === 'profile' && $vis['place_id'] === CANBERRA, 'місце відвідувача з профілю (mp_user_prefs): Canberra');
+    $fp = mpb_search_filters($pdo, ['nearby' => '1'], 'uk', $pr, $vis);
+    ok($fp['nearby'] && $fp['place_id'] === CANBERRA && abs($fp['geo']['radius_km'] - 50 * MPG_KM_PER_MI) < 0.001, '«Поблизу мене»: місто з профілю, радіус 50 миль = 80.47 км');
+    $withPrefs = $find(['nearby' => '1'], 'uk', $pr, $vis);
+    ok(in_array($A, $withPrefs, true) && in_array($C, $withPrefs, true) && !in_array($X, $withPrefs, true), '«Поблизу мене» показує й онлайн; listing_langs=en → без X');
     ok(mpb_search_filters($pdo, ['country' => ''], 'uk', $pr)['from_prefs'] === false, '?country= (явне «будь-де») переважає збережене');
 
     echo "9. HTTP: сторінка пошуку UA/EN, ін'єкції, підказки, cookie гостя\n";
@@ -286,22 +291,26 @@ try {
         'сторінка оголошення (EN): «Where it is provided: In person · Lviv… · also: Canberra»');
 
     // Гість: cookie ставиться лише після явного вибору
-    ok(!preg_match('/mp_loc=/', $r['head']), 'гість: без вибору cookie mp_loc немає');
+    ok(!preg_match('/(mp|geo)_loc=/', $r['head']), 'гість: без вибору cookie geo_loc / mp_loc немає');
     preg_match('/name="csrf" value="([0-9a-f]+)"/', $http('mp-settings.php')['body'], $m);
     $csrf = $m[1] ?? '';
     $r = $http('mp-settings.php', ['csrf' => $csrf, 'action' => 'remember', 'place_id' => (string) CANBERRA, 'radius_km' => '25', 'back' => 'marketplace.php?q=MPG-TEST'], false);
-    ok(in_array($r['code'], [302, 303], true) && preg_match('/Set-Cookie: mp_loc=' . CANBERRA . ';[^\r\n]*HttpOnly/i', $r['head']) === 1 && preg_match('/expires=[^;]*20(27)/i', $r['head']) === 1,
-        'гість: «Запам\'ятати» → cookie mp_loc=' . CANBERRA . ', HttpOnly, на рік');
+    ok(in_array($r['code'], [302, 303], true) && preg_match('/Set-Cookie: geo_loc=' . CANBERRA . ';[^\r\n]*HttpOnly/i', $r['head']) === 1
+        && preg_match('/Set-Cookie: geo_loc=[^\r\n]*Max-Age=(\d+)/i', $r['head'], $mx) === 1 && abs((int) $mx[1] - 180 * 86400) < 120,
+        'гість: «Запам\'ятати» → cookie geo_loc=' . CANBERRA . ', HttpOnly, 180 днів');
     ok(preg_match('/Location: marketplace\.php\?q=MPG-TEST/', $r['head']) === 1, 'повернення на сторінку пошуку');
     $r = $http('mp-settings.php', ['csrf' => $csrf, 'action' => 'remember', 'place_id' => (string) CANBERRA, 'back' => 'https://evil.example/'], false);
     ok(preg_match('#Location: marketplace\.php\r?\n#', $r['head']) === 1, 'чужа адреса повернення → marketplace.php');
     $r = $http('marketplace.php?q=MPG-TEST');
-    ok(str_contains($r['body'], 'Showing results for your place: Canberra') && str_contains($r['body'], 'marketplace-offer.php?id=' . $A . '"') && !str_contains($r['body'], 'marketplace-offer.php?id=' . $H . '"'),
-        'гість: без параметрів — збережене місце Canberra застосовано');
+    ok(str_contains($r['body'], 'marketplace-offer.php?id=' . $A . '"') && str_contains($r['body'], 'marketplace-offer.php?id=' . $H . '"'),
+        'гість: без параметрів — фільтра за місцем немає (і Canberra, і Львів)');
+    $r = $http('marketplace.php?nearby=1&q=MPG-TEST');
+    ok(str_contains($r['body'], 'Near: Canberra') && str_contains($r['body'], 'marketplace-offer.php?id=' . $A . '"') && !str_contains($r['body'], 'marketplace-offer.php?id=' . $H . '"'),
+        'гість: «Near me» — збережене місце Canberra застосовано');
     $r = $http('mp-settings.php', ['csrf' => 'bad', 'action' => 'forget'], false);
     ok($r['code'] === 403, 'POST без правильного CSRF → 403');
     $r = $http('mp-settings.php', ['csrf' => $csrf, 'action' => 'forget'], false);
-    ok(preg_match('/Set-Cookie: mp_loc=(deleted|);/i', $r['head']) === 1, 'гість: «Забути місце» видаляє cookie');
+    ok(preg_match('/Set-Cookie: geo_loc=(deleted|);/i', $r['head']) === 1, 'гість: «Забути місце» видаляє cookie geo_loc');
 
     echo "10. Форма оголошення: блок «Де надається» і збереження через mpb_save_listing()\n";
     $html = mpg_form_html($pdo, mpg_form_defaults(), 'uk');

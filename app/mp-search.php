@@ -10,7 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/mp-jobs.php';
 
 /** Ключі GET розширеного пошуку (усе інше ігнорується). */
-const MPB_SEARCH_KEYS = ['q', 'section', 'cat', 'price_type', 'price_min', 'price_max', 'country', 'place', 'radius', 'format',
+const MPB_SEARCH_KEYS = ['q', 'section', 'cat', 'price_type', 'price_min', 'price_max', 'country', 'place', 'radius', 'format', 'nearby',
     'listing_lang', 'with_photos', 'verified', 'sort', 'page',
     // Хвиля 1: фільтри блока (app/mp-jobs.php → MPJ_KEYS)
     'emp', 'sched', 'exp', 'fit', 'wf', 'sal', 'scur', 'sper', 'cf', 'ptype', 'stype', 'region'];
@@ -20,12 +20,14 @@ const MPB_SEARCH_SORTS = ['new', 'price_asc', 'price_desc', 'distance', 'salary_
  * Нормалізовані фільтри пошуку з GET. Некоректні значення відкидаються мовчки (ніби параметра немає).
  * Синоніми старих посилань: min/max, remote=1 → format=online, city=<текст> → place
  * (перше місто з автопідказки), sort=cheap|expensive.
- * Налаштування відвідувача (mpg_prefs) підставляються, лише якщо в GET немає жодного параметра місця (country,
- * place, radius, format, city, remote) — інакше діє явний вибір.
+ * За замовчуванням фільтра за місцем НЕМАЄ (оголошення бачать усі). Місце відвідувача ($visitor — geo_visitor())
+ * застосовується лише з nearby=1 («Поблизу мене»): збіги за містом/країною відвідувача плюс онлайн; радіус — з GET
+ * або з налаштувань. Без відомого місця nearby=1 нічого не фільтрує, а сторінка просить вибрати місце (nearby_ask).
+ * Мова інтерфейсу й мова оголошення на збіг за місцем не впливають.
  *
- * @return array<string,mixed> фільтри для mpb_search() + page, url (канонічні параметри для посилань), units, from_prefs
+ * @return array<string,mixed> фільтри для mpb_search() + page, url (канонічні параметри для посилань), units, nearby, nearby_ask
  */
-function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): array
+function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs, ?array $visitor = null): array
 {
     $s = static fn(string $k, int $max = 100): string => is_string($get[$k] ?? null) ? mb_substr(trim((string) $get[$k]), 0, $max) : '';
     $int = static fn(string $k): int => preg_match('/^\d{1,9}$/', $s($k, 10)) === 1 ? (int) $s($k, 10) : 0;
@@ -53,13 +55,7 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
     $sort = ['cheap' => 'price_asc', 'expensive' => 'price_desc'][$sort] ?? $sort;
     $sort = in_array($sort, MPB_SEARCH_SORTS, true) ? $sort : 'new';
 
-    // Місце: явний вибір у GET → інакше налаштування відвідувача
-    $hasGeoParam = false;
-    foreach (['country', 'place', 'radius', 'format', 'city', 'remote'] as $k) {
-        if (array_key_exists($k, $get)) {
-            $hasGeoParam = true;
-        }
-    }
+    // Місце: лише явний вибір у GET (country / place / city) або «Поблизу мене» (nearby=1) нижче.
     $units = ($prefs['units'] ?? 'km') === 'mi' ? 'mi' : 'km';
     $format = in_array($s('format', 10), array_merge(['any'], MPG_FORMATS), true) ? $s('format', 10) : 'any';
     if ($format === 'any' && $s('remote', 2) === '1') {
@@ -81,12 +77,21 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
     }
     $fromPrefs = false;
     $showOnline = true;
-    if (!$hasGeoParam && !empty($prefs['saved'])) {
-        $fromPrefs = true;
-        $place = (int) $prefs['place_id'] > 0 ? mpg_place($pdo, (int) $prefs['place_id']) : null;
-        $country = $place['country_code'] ?? (string) $prefs['country_code'];
-        $radius = (int) $prefs['radius_km'];
-        $showOnline = (bool) $prefs['show_online'];
+    // «Поблизу мене»: місце відвідувача замість place/country (онлайн-оголошення лишаються).
+    $nearby = $s('nearby', 1) === '1';
+    $nearbyAsk = false;
+    if ($nearby) {
+        if (!empty($visitor['known'])) {
+            $place = !empty($visitor['place_id']) && $visitor['lat'] !== null ? mpg_place($pdo, (int) $visitor['place_id']) : null;
+            $country = (string) $visitor['country_code'];
+            if (!in_array($int('radius'), MPG_RADII, true) && in_array((int) ($prefs['radius_km'] ?? 0), MPG_RADII, true)) {
+                $radius = (int) $prefs['radius_km'];
+            }
+            $fromPrefs = true;
+        } else {
+            $nearby = false;
+            $nearbyAsk = true;
+        }
     }
     if ($country !== '' && mpg_country_id($pdo, $country) === null) {
         $country = '';
@@ -112,13 +117,14 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
         'geo' => ['format' => $format, 'show_online' => $showOnline, 'country' => $country, 'place' => $place, 'radius_km' => $radiusKm],
         'country' => $country, 'place_id' => $place['id'] ?? 0, 'radius' => $radius, 'format' => $format,
         'sort' => $sort, 'page' => max(1, min(10000, $int('page') ?: 1)), 'jf' => $jf,
-        'units' => $units, 'from_prefs' => $fromPrefs,
+        'units' => $units, 'from_prefs' => $fromPrefs, 'nearby' => $nearby, 'nearby_ask' => $nearbyAsk,
     ];
     // Канонічні параметри для посилань (пагінація) — лише непорожні.
     $f['url'] = array_filter([
         'q' => $f['q'], 'section' => $section, 'cat' => $cat ?: null, 'price_type' => $f['price_type'],
-        'price_min' => $priceMin, 'price_max' => $priceMax, 'country' => $country !== '' && $place === null ? $country : null,
-        'place' => $place['id'] ?? null, 'radius' => $place !== null ? $radius : null,
+        'price_min' => $priceMin, 'price_max' => $priceMax, 'nearby' => $nearby ? 1 : null,
+        'country' => !$nearby && $country !== '' && $place === null ? $country : null,
+        'place' => !$nearby ? ($place['id'] ?? null) : null, 'radius' => $place !== null ? $radius : null,
         'format' => $format !== 'any' ? $format : null, 'listing_lang' => $ll,
         'with_photos' => $f['with_photos'] ? 1 : null, 'verified' => $f['verified'] ? 1 : null,
         'sort' => $sort !== 'new' ? $sort : null,
@@ -131,6 +137,6 @@ function mpb_search_filters(PDO $pdo, array $get, string $lang, array $prefs): a
 function mpb_search_has_filters(array $f): bool
 {
     return $f['q'] !== '' || $f['section'] !== '' || $f['cat'] > 0 || $f['price_type'] !== '' || $f['price_min'] !== null
-        || $f['price_max'] !== null || $f['country'] !== '' || $f['format'] !== 'any' || $f['listing_langs'] !== []
+        || $f['price_max'] !== null || $f['country'] !== '' || $f['format'] !== 'any' || !empty($f['nearby']) || $f['listing_langs'] !== []
         || $f['with_photos'] || $f['verified'] || mpj_has_filters($f['jf'] ?? []);
 }

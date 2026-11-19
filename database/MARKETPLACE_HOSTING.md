@@ -171,7 +171,7 @@ CSRF на всіх POST; prepared statements; екранування вивод�
 
 ---
 
-## Етап 6 (2026-11-03): геолокація, розширений пошук, налаштування відвідувача — **НЕ залито**
+## Етап 6 (2026-11-03): геолокація, розширений пошук, налаштування відвідувача — **залито на прод 2026-11-03**
 
 Пакет SQL: `hosting-upload/marketplace-geo/` (не в git; README там же). Порядок: резервна копія → `15-marketplace-geo-places.sql` → `geo-data-01…05.sql` (GeoNames cities5000, 9,2 МБ, кожна частина ≤ 2 МБ) → `16-marketplace-listing-geo.sql` → `17-marketplace-ui-strings-geo.sql` → код. Джерела міграцій у git: `database/migration-2026-11-03-marketplace-{geo-places,listing-geo,ui-strings-geo}.sql`; дані перегенерувати: `php scripts/geo-import.php <тека GeoNames>`.
 
@@ -263,3 +263,39 @@ SQL (до коду): № 22 `database/migration-2026-11-18-marketplace-messaging
 Код: нові `app/mp-messages.php`, `public/mp-messages.php`, `mp-thread.php`, `mp-messages-poll.php`, `mp-notify-settings.php`, `mp-inbox-admin.php`, `mp-message-reports.php`, `mp-cron-messages.php`, `assets/css/mp-messages.css`, `assets/js/mp-thread.js`; змінені `app/auth.php`, `app/marketplace.php`, `app/mp-section-nav.php`, `app/mpb-offer.php`, `app/promo-quiet.php`, `app/site-header.php`, `app/translations.php`, `public/account.php`, `public/assets/css/site-nav.css`, `public/listing.php`, `public/listing-post.php`, `public/marketplace-offer.php`, `public/marketplace-post.php`, `public/mp-contact.php`, `public/mp-moderation.php`, `public/mp-seller.php`.
 Вмикання (серверний `config/marketplace.php`): `messaging_enabled => true` (працює лише з public_enabled); листи — `messaging_email_enabled => true` + `messaging_secret` (16+ випадкових символів). Cron раз на добу: `php …/public/mp-cron-messages.php` (строк зберігання 365 днів).
 Тест локально: `php tests/mp-messages-e2e.php` (79 перевірок).
+
+## Геолокація відвідувача й географія реклами (2026-11-19) — **НЕ залито**
+
+Потребує етапу 6 на хостингу (геодовідник GeoNames уже імпортовано 2026-11-03; повторно НЕ імпортувати).
+
+### Імпорт GeoNames частинами (довідка; потрібен лише на новій базі)
+Файли з https://download.geonames.org/export/dump/ (розпакувати): `countryInfo.txt`, `admin1CodesASCII.txt`,
+`cities5000.txt` (з `cities5000.zip`), `alternateNamesV2.txt` (з `alternateNamesV2.zip`; назви uk/en).
+`php scripts/geo-import.php <тека з файлами>` пише в `hosting-upload/marketplace-geo/`
+`geo-data-NN.sql` по ≤ 2 МБ (ліміт phpMyAdmin), `INSERT IGNORE`. Фактично: 5 частин, 9,2 МБ (cities5000 вміщується —
+cities15000 не потрібен). Порядок: `15-…` → `geo-data-01…05` → `16-…` → `17-…`. Атрибуція «Geo data: GeoNames (CC BY 4.0)»
+— на пошуку Marketplace, сторінці місця, формі «Географія показу».
+
+### 1. SQL — ДО коду (`hosting-upload/geo-ads/`)
+№ 24 `database/migration-2026-11-19-ad-geo.sql` (таблиці `ad_campaign_geo`, `ad_campaign_geo_settings`) →
+№ 25 `database/migration-2026-11-19-geo-ui-strings.sql` (EN-написи). Лише CREATE TABLE IF NOT EXISTS, CREATE INDEX за
+перевіркою, INSERT … ON DUPLICATE KEY UPDATE у `ui_translations`.
+
+### 2. Код (з перезаписом, у корінь проєкту)
+Нові: `app/geo.php`, `app/ad-geo.php`, `config/geo.php`, `public/geo-location.php`, `public/geo-suggest.php`,
+`public/ad-geo.php`, `public/admin-ad-geo-check.php`.
+Змінені: `app/cookie-consent.php`, `app/mp-geo.php`, `app/mp-search.php`, `app/mp-section-nav.php`, `app/mp-tree.php`,
+`app/promo-select.php`, `app/promo-cabinet.php`, `app/promo-admin-cabinet.php`, `app/translations.php`,
+`public/marketplace.php`, `public/mp-count.php`, `public/mp-settings.php`, `public/promo-action.php`,
+`public/assets/js/mp-geo.js`, `public/assets/css/mp-geo.css`.
+`public_enabled` / `posting_enabled` не змінювались.
+
+### 3. Налаштування `config/geo.php`
+`geo_ip_enabled => false` (типово; країна за IP — лише з цим `true` І згодою відвідувача), `geo_ip_header` (напр.
+`HTTP_CF_IPCOUNTRY`, якщо колись буде CDN; на adm.tools такого заголовка немає), `geoip_db_path` (лише за наявності
+PHP-розширення maxminddb і бази з прийнятою ліцензією), `ad_geo_default_mode => 'soft'`, `cookie_days => 180`.
+
+### 4. Перевірка
+Локально: `php tests/geo_match_test.php` (66), `php tests/mp-geo-tests.php` (70), `php tools/ad-geo-load-test.php 5000`.
+Наживо: `/geo-location.php`, `/marketplace.php?q=…` → «Поблизу мене», кабінет → «Географія», `/admin-ad-geo-check.php`.
+Перед заливкою оновити Політику конфіденційності 3.5 (cookie `geo_loc` замість `mp_loc`, `alh_geo`).

@@ -86,7 +86,8 @@ if ($isHub) {
 // ===== Розширений пошук =====
 $geoReady = mpg_ready($pdo);
 $prefs = $geoReady ? mpg_prefs($pdo, $userId) : ['saved' => false, 'units' => 'km'];
-$filters = mpb_search_filters($pdo, $_GET, $lang, $prefs);
+$visitor = $geoReady ? geo_visitor($pdo, $userId) : geo_unknown();
+$filters = mpb_search_filters($pdo, $_GET, $lang, $prefs, $visitor);
 $page = $filters['page'];
 $result = mpb_search($pdo, $lang, $filters, $page);
 $hasFilters = mpb_search_has_filters($filters);
@@ -276,9 +277,26 @@ mpt_open($heading . ' — ' . t('title_marketplace'), t('mpt_home_desc'), 'marke
         <?= mpj_chips_html($chips, 'marketplace.php?' . http_build_query(array_filter(['q' => $filters['q'], 'section' => $filters['section'], 'country' => '']))) ?>
         <script src="/assets/js/mp-filters.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mp-filters.js') ?>" defer></script>
         <?php if ($geoReady): ?>
+            <?php
+            // «Поблизу мене»: без фільтра за місцем за замовчуванням; перемикач лише звужує до збігів + онлайн.
+            $nearbyOn = !empty($filters['nearby']);
+            $nearbyHref = $visitor['known'] || $nearbyOn
+                ? $url(['nearby' => $nearbyOn ? null : 1, 'place' => null, 'country' => null, 'page' => null, 'sort' => $filters['sort'] !== 'new' && !($nearbyOn && $filters['sort'] === 'distance') ? $filters['sort'] : null])
+                : 'geo-location.php?' . http_build_query(['back' => $url(['nearby' => 1, 'place' => null, 'country' => null, 'page' => null])]);
+            $visitorLabel = $visitor['known'] ? geo_visitor_label($pdo, $visitor, $lang, true) : '';
+            ?>
+            <div class="mp-geo-nearby">
+                <a class="mp-chip mp-chip--toggle<?= $nearbyOn ? ' is-active' : '' ?>" href="<?= mp_e($nearbyHref) ?>" aria-pressed="<?= $nearbyOn ? 'true' : 'false' ?>"><?= mp_e(t('geo_nearby_chip')) ?></a>
+                <?php if ($nearbyOn): ?>
+                    <span class="mp-hint"><?= mp_e(sprintf(t('geo_nearby_using'), $visitorLabel . ($place !== null ? ' (+' . (int) $filters['radius'] . "\u{00A0}" . $unitLabel . ')' : ''))) ?>
+                        · <a href="geo-location.php?<?= mp_e(http_build_query(['back' => $currentUrl])) ?>"><?= mp_e(t('geo_change_place')) ?></a></span>
+                <?php elseif (!empty($filters['nearby_ask'])): ?>
+                    <span class="mp-hint"><?= mp_e(t('geo_nearby_ask')) ?></span>
+                <?php endif; ?>
+            </div>
             <div class="mp-geo-remember">
-                <?php if ($filters['from_prefs'] && $place !== null): ?>
-                    <p class="mp-hint"><?= mp_e(sprintf(t('mpg_using_saved'), $placeLabel)) ?> <a href="marketplace.php?country="><?= mp_e(t('mpg_anywhere')) ?></a> · <a href="mp-settings.php"><?= mp_e(t('mpg_settings_link')) ?></a></p>
+                <?php if ($nearbyOn): ?>
+                    <p class="mp-hint"><a href="mp-settings.php"><?= mp_e(t('mpg_settings_link')) ?></a></p>
                 <?php elseif ($place !== null && (int) ($prefs['place_id'] ?? 0) !== $place['id']): ?>
                     <form method="post" action="mp-settings.php" class="mp-inline">
                         <?= mp_csrf_field() ?>

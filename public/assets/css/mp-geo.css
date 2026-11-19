@@ -44,3 +44,23 @@ body:not(.mp-body) .mp-geo .mp-input {
 body:not(.mp-body) .mp-geo .mp-input--short { width: auto; }
 body:not(.mp-body) .mp-geo .mp-input option { color: #000; }
 body:not(.mp-body) .mp-geo .mp-check { display: inline-flex; gap: 6px; align-items: center; margin: 2px 14px 2px 0; }
+
+/* Місце відвідувача (app/geo.php): «Поблизу мене», значок місця в навігації Marketplace, сторінка geo-location.php */
+.mp-geo-nearby { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 12px 0 4px; }
+.mp-geo-nearby .mp-hint { margin: 0; overflow-wrap: anywhere; }
+.mp-chip--toggle { min-height: 44px; box-sizing: border-box; }
+.mp-tab--place { display: inline-flex; align-items: center; gap: 6px; max-width: 14rem; min-height: 44px; box-sizing: border-box; }
+.mp-tab--place span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.geo-loc-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.geo-loc-actions .mp-btn { min-height: 44px; }
+.mp-geo-loc .mp-input, .geo-loc-form .mp-input, .geo-loc-form select { font-size: 16px; min-height: 44px; }
+@media (max-width: 600px) { .mp-tab--place { max-width: 100%; } }
+/* «Географія показу» в кабінеті рекламодавця (app/ad-geo.php) */
+.adgeo { border: 1px solid rgba(255, 255, 255, .2); border-radius: 10px; padding: 12px; min-width: 0; }
+.adgeo-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 6px; }
+.adgeo .mp-input { font-size: 16px; min-height: 44px; box-sizing: border-box; max-width: 100%; }
+.adgeo .mp-geo-picker { flex: 1 1 14rem; }
+.adgeo .pc-check { display: flex; gap: 8px; align-items: flex-start; min-height: 44px; }
+.adgeo-credit { font-size: .75rem; opacity: .7; }
+.adgeo-credit a { color: inherit; }
+[data-geo-near] { min-height: 44px; }

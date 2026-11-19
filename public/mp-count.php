@@ -55,7 +55,7 @@ try {
         $total = mpt_search($pdo, $lang, $bf['f'], 1, 1)['total'];
     } elseif ($p === 'search') {
         $prefs = mpg_ready($pdo) ? mpg_prefs($pdo, $userId) : ['saved' => false, 'units' => 'km'];
-        $f = mpb_search_filters($pdo, $_GET, $lang, $prefs);
+        $f = mpb_search_filters($pdo, $_GET, $lang, $prefs, mpg_ready($pdo) ? geo_visitor($pdo, $userId) : null);
         $total = mpb_search($pdo, $lang, $f, 1)['total'];
     } else {
         http_response_code(400);

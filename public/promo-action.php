@@ -96,6 +96,14 @@ switch ($action) {
         // Власна реклама сайту (без білінгу) — лише для admin (перевірка за БД).
         $house = !empty($_POST['house']) && promo_is_admin($pdo, $userId);
         $result = promo_save_campaign($pdo, $userId, $_POST, $_FILES, $action === 'submit', $house);
+        // «Географія показу» з майстра (app/ad-geo.php) — окремі таблиці, статус і модерацію не змінює.
+        if ($result['id'] !== null && isset($_POST['geo_mode'])) {
+            require_once __DIR__ . '/../app/ad-geo.php';
+            if (adgeo_ready($pdo)) {
+                $geoIn = adgeo_from_post($pdo, $_POST);
+                adgeo_save($pdo, (int) $result['id'], $geoIn['include'], $geoIn['exclude'], $geoIn['mode']);
+            }
+        }
         $edit = $result['id'] !== null ? ['promo_edit' => $result['id']] : [];
         if ($house) {
             $edit['promo_house'] = 1;
@@ -124,6 +132,10 @@ switch ($action) {
     case 'complete':
     case 'duplicate':
         [$ok, $msg, $id] = promo_campaign_action($pdo, $userId, (int) ($_POST['campaign_id'] ?? 0), $action);
+        if ($ok && $action === 'duplicate' && $id) {
+            require_once __DIR__ . '/../app/ad-geo.php';
+            adgeo_copy($pdo, (int) ($_POST['campaign_id'] ?? 0), (int) $id);   // географія переходить у копію
+        }
         if ($ok && $action === 'duplicate') {
             $back('create', ['ok' => true, 'msgs' => [$msg]], ['promo_edit' => $id]);
         }

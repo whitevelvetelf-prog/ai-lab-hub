@@ -46,6 +46,22 @@ function mp_section_nav(string $active): string
         $html .= '<a class="mp-tab' . ($current ? ' is-active' : '') . '" href="' . mp_e($href) . '"'
             . ($current ? ' aria-current="page"' : '') . '>' . mp_e($label) . '</a>';
     }
+    // Місце відвідувача (app/geo.php): компактний значок «📍 Львів» / «Вказати місце» → geo-location.php.
+    // У рядку вкладок, а не в шапці сайту, тож мобільна шапка не збільшується.
+    try {
+        require_once __DIR__ . '/geo.php';
+        $gpdo = translation_pdo();
+        if (mpg_ready($gpdo)) {
+            $v = geo_visitor($gpdo, auth_user_id());
+            $label = $v['known'] ? geo_visitor_label($gpdo, $v, current_lang(), true) : '';
+            $back = geo_safe_back((string) ($_SERVER['REQUEST_URI'] ?? ''), 'marketplace.php');
+            $html .= '<a class="mp-tab mp-tab--place' . ($active === 'place' ? ' is-active' : '') . '" href="geo-location.php?'
+                . mp_e(http_build_query(['back' => $back])) . '" title="' . mp_e(t('geo_place_title')) . '">'
+                . '<span aria-hidden="true">📍</span><span>' . mp_e($label !== '' ? $label : t('geo_place_set')) . '</span></a>';
+        }
+    } catch (Throwable $e) {
+        error_log('[geo] nav: ' . $e->getMessage());
+    }
     $html .= '</div>';
     if (mp_posting_enabled() || mp_is_staff()) {
         $html .= '<a class="mp-btn mp-btn--primary mp-section-nav__post' . ($active === 'post' ? ' is-active' : '') . '" href="marketplace-post.php">'

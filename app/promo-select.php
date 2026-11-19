@@ -14,6 +14,9 @@ declare(strict_types=1);
  *      спершу платні (вага = ad_creatives.weight × рівномірність бюджету), вільні місця —
  *      власна реклама (internal). Останні ~20 показаних цьому сеансу креативів — у кінці черги.
  *   3. Повні дані лише обраних креативів — другим запитом за id.
+ *   Географія (з 2026-11-19, app/ad-geo.php): у SQL кандидатів — відбір за країною відвідувача (EXISTS / NOT EXISTS
+ *   по ad_campaign_geo; ключ кешу містить країну або «невідомо»), у promo_pick_set — радіус міст у PHP над малим
+ *   набором кампаній з правилами. Ліміти частоти й інші правила відбору не змінювались.
  *
  * Стан сеансу (без персональних даних, у $_SESSION['promo'][відбиток сеансу]):
  *   recent — останні PROMO_RECENT_KEEP показаних креативів (знижений пріоритет);
@@ -23,6 +26,8 @@ declare(strict_types=1);
  * Сирі покази й перегляди в БД більше не пишуться (лише агрегати ad_stats_daily); кліки —
  * як і раніше в ad_events (захист від накрутки).
  */
+
+require_once __DIR__ . '/ad-geo.php';
 
 /** Скільки секунд живе кеш списку кандидатів. */
 const PROMO_CANDIDATES_TTL = 60;
@@ -180,7 +185,7 @@ function promo_cache_gc(): int
  * @param list<string> $mpSections розділи маркетплейсу ([] — не маркетплейс або без розділу)
  * @return list<array<string,mixed>>
  */
-function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, array $mpSections = []): array
+function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array $subcategoryIds, string $lang, string $device, array $mpSections = [], ?string $geoCountry = null): array
 {
     $isMp = promo_placement_is_marketplace($pdo, $placement);
     $cats = array_values(array_unique(array_map('intval', $categoryIds)));
@@ -190,10 +195,14 @@ function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array
     $mp = array_values(array_filter($mpSections, static fn($v) => is_string($v) && promo_mp_section_valid($v)));
     sort($mp);
     $today = promo_today();
-    $key = implode('|', [$placement, implode(',', $cats), implode(',', $subs), $lang, $device, $isMp ? 'mp:' . implode(',', $mp) : '', $today]);
+    // Країна відвідувача (або «невідомо») — частина ключа: кеш кандидатів 60 с за країною.
+    $geoOn = adgeo_ready($pdo);
+    $geoCountry = $geoCountry !== null && preg_match('/^[A-Z]{2}$/', $geoCountry) === 1 ? $geoCountry : null;
+    $key = implode('|', [$placement, implode(',', $cats), implode(',', $subs), $lang, $device, $isMp ? 'mp:' . implode(',', $mp) : '', $today,
+        $geoOn ? 'geo:' . ($geoCountry ?? '?') . ':' . adgeo_default_mode() : '']);
 
-    return promo_cache_remember($key, PROMO_CANDIDATES_TTL, static function () use ($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today): array {
-        [$sql, $params] = promo_candidates_sql($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today);
+    return promo_cache_remember($key, PROMO_CANDIDATES_TTL, static function () use ($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today, $geoOn, $geoCountry): array {
+        [$sql, $params] = promo_candidates_sql($pdo, $placement, $cats, $subs, $lang, $device, $mp, $isMp, $today, $geoOn, $geoCountry);
 
         try {
             $stmt = $pdo->prepare($sql);
@@ -216,6 +225,7 @@ function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array
                 'balance' => (int) $r['balance'],
                 'weight' => max(0, (int) ($r['weight'] ?? 1)),
                 'house_rules' => $r['house_rules'] ?? null,
+                'has_geo' => !empty($r['has_geo']),
             ];
         }
 
@@ -231,7 +241,7 @@ function promo_candidates(PDO $pdo, string $placement, array $categoryIds, array
  * @param list<string> $mp
  * @return array{0:string,1:array<string,mixed>}
  */
-function promo_candidates_sql(PDO $pdo, string $placement, array $cats, array $subs, string $lang, string $device, array $mp, bool $isMp, string $today): array
+function promo_candidates_sql(PDO $pdo, string $placement, array $cats, array $subs, string $lang, string $device, array $mp, bool $isMp, string $today, bool $geoOn = false, ?string $geoCountry = null): array
 {
     $params = [':lang' => $lang, ':dev' => $device, ':today1' => $today, ':today2' => $today, ':today3' => $today];
     $plNames = [];
@@ -256,11 +266,14 @@ function promo_candidates_sql(PDO $pdo, string $placement, array $cats, array $s
     }
     $house = promo_house_columns($pdo);
     $houseCols = $house ? ', cr.weight, c.house_rules' : '';
+    // Географія (app/ad-geo.php): попередній відбір за країною відвідувача; радіус міст — у promo_pick_set.
+    $geoCols = $geoOn ? ', ' . adgeo_has_geo_sql() : '';
+    $geoCond = $geoOn ? adgeo_candidates_sql($geoCountry, $params) : '';
 
     // Індекси: ad_campaigns (format, status, …) / (status, campaign_type, start_date, end_date),
     // ad_creatives (campaign_id, status), ad_targets (campaign_id, placement, …), ad_stats_daily (campaign_id, stat_date).
     $sql = "SELECT cr.id, cr.campaign_id, c.campaign_type, c.total_budget, c.spent, c.end_date,
-                   COALESCE(b.balance, 0) AS balance{$houseCols}
+                   COALESCE(b.balance, 0) AS balance{$houseCols}{$geoCols}
             FROM ad_campaigns c
             JOIN ad_creatives cr ON cr.campaign_id = c.id AND cr.status = 'approved'
             LEFT JOIN ad_balances b ON b.user_id = c.user_id
@@ -289,6 +302,7 @@ function promo_candidates_sql(PDO $pdo, string $placement, array $cats, array $s
                       AND (t.language IS NULL OR t.language = :lang)
                       AND (t.device IS NULL OR t.device = :dev)
               )
+              {$geoCond}
               AND " . promo_rules_sql($cats, $subs) . '
             LIMIT ' . PROMO_CANDIDATES_MAX;
 
@@ -443,7 +457,13 @@ function promo_pick_set(PDO $pdo, string $placement, array $categoryIds, array $
         $subcategoryIds = array_values(array_unique(array_merge($subcategoryIds, $ps)));
     }
 
-    $rows = promo_candidates($pdo, $placement, $categoryIds, $subcategoryIds, $lang, $device, $isMp ? (array) ($page['mp'] ?? []) : []);
+    // Місце відвідувача ($page['geo'] — готовий об'єкт geo_visitor(); інакше визначаємо тут). Від мови не залежить.
+    $visitor = is_array($page['geo'] ?? null) ? $page['geo']
+        : geo_visitor($pdo, function_exists('auth_user_id') ? auth_user_id() : null);
+    $rows = promo_candidates($pdo, $placement, $categoryIds, $subcategoryIds, $lang, $device, $isMp ? (array) ($page['mp'] ?? []) : [],
+        !empty($visitor['known']) ? (string) $visitor['country_code'] : null);
+    // Радіус міст і режими soft/strict — у PHP лише для кампаній з правилами географії.
+    $rows = adgeo_filter_rows($pdo, $rows, $visitor);
     if ($rows === []) {
         return [];
     }

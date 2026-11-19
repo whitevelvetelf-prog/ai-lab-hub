@@ -55,6 +55,12 @@ function promo_cabinet_render(PDO $pdo, array $user): void
     $campaignsSt->execute([':u' => $userId]);
     $campaigns = $campaignsSt->fetchAll();
     $totals = promo_campaign_totals($pdo, $userId);
+    // Географія показу (app/ad-geo.php): підсумок у списку й блок у майстрі.
+    require_once __DIR__ . '/ad-geo.php';
+    $geoReady = adgeo_ready($pdo) && mpg_ready($pdo);
+    $geoIds = array_map(static fn($c) => (int) $c['id'], $campaigns);
+    $geoRules = $geoReady ? adgeo_rules($pdo, $geoIds) : [];
+    $geoModes = $geoReady ? adgeo_modes($pdo, $geoIds) : [];
     $balance = promo_balance($pdo, $userId);
     $balanceCur = promo_balance_currency($pdo, $userId);
     $rates = promo_rate_card($pdo);
@@ -269,6 +275,7 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         <td data-label="<?= pc_e(promo_tr('col_campaign')) ?>">
                                             <strong><?= pc_e($c['name'] ?: ('#' . $cid)) ?></strong>
                                             <span class="pc-muted"><?= pc_e(promo_tr('model_' . ($c['pricing_model'] ?: 'none'))) ?><?php if ($c['start_date']): ?> · <?= pc_e($c['start_date']) ?><?= $c['end_date'] ? ' — ' . pc_e($c['end_date']) : '' ?><?php endif; ?></span>
+                                            <?php if ($geoReady): ?><span class="pc-muted"><?= pc_e(t('adgeo_col')) ?>: <?= pc_e(adgeo_summary($pdo, $cid, $lang, $geoRules[$cid] ?? [], $geoModes[$cid] ?? null)) ?></span><?php endif; ?>
                                         </td>
                                         <td data-label="<?= pc_e(promo_tr('col_status')) ?>">
                                             <?php
@@ -309,6 +316,9 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                             <?php endif; ?>
                                             <?php if (in_array($c['status'], PROMO_PLACES_EDITABLE, true)): ?>
                                             <a class="pc-btn pc-btn--small" href="account.php?promo_tab=campaigns&amp;promo_places=<?= $cid ?>#acc-promo"><?= pc_e(promo_tr('act_places')) ?></a>
+                                            <?php endif; ?>
+                                            <?php if ($geoReady && $c['status'] !== 'completed'): ?>
+                                            <a class="pc-btn pc-btn--small" href="ad-geo.php?campaign=<?= $cid ?>"><?= pc_e(t('adgeo_act')) ?></a>
                                             <?php endif; ?>
                                             <?php
                                             $actions = [];
@@ -564,6 +574,10 @@ function promo_cabinet_render(PDO $pdo, array $user): void
                                         </div>
                                         <?php endif; ?>
                                     </div>
+                                    <?php if ($geoReady): ?>
+                                    <?= adgeo_form_html($pdo, $editing !== null ? (int) $editing['id'] : null, $lang) ?>
+                                    <p class="pc-muted"><?= pc_e(t('adgeo_new_note')) ?> <?= pc_e(t('adgeo_page_note')) ?></p>
+                                    <?php endif; ?>
                                 </fieldset>
 
                                 <!-- 4. Бюджет і графік -->

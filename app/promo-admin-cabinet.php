@@ -118,6 +118,21 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                      . (promo_house_columns($pdo) ? " AND c.house_key IS NULL AND NOT EXISTS (SELECT 1 FROM ad_creatives cr WHERE cr.campaign_id = c.id AND cr.creative_type = 'card')" : '')
                      . ' ORDER BY c.id DESC')->fetchAll()
     ));
+    // Географія показу (app/ad-geo.php): підсумок і посилання на редагування в списках кампаній.
+    require_once __DIR__ . '/ad-geo.php';
+    $geoOn = adgeo_ready($pdo) && mpg_ready($pdo);
+    $geoIds = array_merge(array_map(static fn($c) => (int) $c['id'], $allCampaigns), array_map(static fn($c) => (int) $c['id'], $house));
+    $geoRules = $geoOn ? adgeo_rules($pdo, $geoIds) : [];
+    $geoModes = $geoOn ? adgeo_modes($pdo, $geoIds) : [];
+    $geoLang = current_lang();
+    $geoCell = static function (int $cid) use ($pdo, $geoOn, $geoRules, $geoModes, $geoLang): string {
+        if (!$geoOn) {
+            return '';
+        }
+
+        return '<span class="pc-muted">Географія: ' . pc_e(adgeo_summary($pdo, $cid, $geoLang, $geoRules[$cid] ?? [], $geoModes[$cid] ?? null))
+            . ' · <a href="ad-geo.php?campaign=' . $cid . '">змінити</a></span>';
+    };
     $reports = promo_admin_reports($pdo);
     $newReports = array_sum(array_map(static fn($r) => (int) $r['new_count'], $reports));
 
@@ -369,13 +384,14 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                             <?php if ($allCampaigns === []): ?>
                             <p class="pc-empty">Відеокампаній ще немає (чернетки рекламодавців тут не показуються).</p>
                             <?php else: ?>
+                            <?php if ($geoOn): ?><p class="pc-muted"><a href="admin-ad-geo-check.php">Перевірка таргетингу</a> — які кампанії пройдуть географічний фільтр для заданого місця відвідувача.</p><?php endif; ?>
                             <div class="pc-table-wrap">
                                 <table class="pc-table">
                                     <thead><tr><th>Кампанія</th><th>Власник</th><th>Статус</th><th>Витрачено</th><th>Покази / кліки / пропуски · CTR</th><th>Пропуск вікна</th><th>Дії</th></tr></thead>
                                     <tbody>
                                     <?php foreach ($allCampaigns as $c): $cid = (int) $c['id']; ?>
                                     <tr>
-                                        <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= $c['campaign_type'] === 'internal' ? 'власна реклама' : strtoupper((string) $c['pricing_model']) ?></span></td>
+                                        <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= $c['campaign_type'] === 'internal' ? 'власна реклама' : strtoupper((string) $c['pricing_model']) ?></span><?= $geoCell($cid) ?></td>
                                         <td data-label="Власник"><?= $c['campaign_type'] === 'internal' ? 'AI LAB HUB' : pc_e($c['user_email']) ?><?php if ($c['campaign_type'] !== 'internal'): ?><span class="pc-muted">баланс <?= pc_e(promo_money($c['balance'], $c['balance_currency'] ?: PROMO_CURRENCY)) ?></span><?php endif; ?></td>
                                         <td data-label="Статус"><?= $badge((string) $c['status']) ?><?php if ($c['stop_reason'] && in_array($c['status'], ['paused', 'completed'], true)): ?><span class="pc-muted"><?= pc_e($stopUk[$c['stop_reason']] ?? $c['stop_reason']) ?></span><?php endif; ?></td>
                                         <td data-label="Витрачено"><?= pc_e(promo_money($c['spent'], $c['currency'])) ?><?= $c['total_budget'] !== null ? ' / ' . pc_e(promo_money($c['total_budget'], $c['currency'])) : '' ?></td>
@@ -1071,7 +1087,7 @@ function promo_admin_cabinet_render(PDO $pdo, array $user): void
                                     <tbody>
                                     <?php foreach ($house as $c): $cid = (int) $c['id']; ?>
                                     <tr>
-                                        <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= pc_e((string) $c['start_date']) ?><?= $c['end_date'] ? ' — ' . pc_e($c['end_date']) : '' ?></span></td>
+                                        <td data-label="Кампанія">#<?= $cid ?> <?= pc_e($c['name']) ?><span class="pc-muted"><?= pc_e((string) $c['start_date']) ?><?= $c['end_date'] ? ' — ' . pc_e($c['end_date']) : '' ?></span><?= $geoCell($cid) ?></td>
                                         <td data-label="Статус"><?= $badge((string) $c['status']) ?></td>
                                         <td data-label="Покази / кліки / пропуски · CTR"><?= (int) $c['impressions'] ?> / <?= (int) $c['clicks'] ?> / <?= (int) ($c['skips'] ?? 0) ?> · <?= pc_e(promo_ctr((int) $c['clicks'], (int) $c['impressions'])) ?></td>
                                         <td data-label="Дії" class="pc-actions">

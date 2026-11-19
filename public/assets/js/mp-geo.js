@@ -5,12 +5,14 @@
  *                        ЛИШЕ вибором з підказки; будь-яке редагування тексту його скидає (вільний текст не приймається).
  *   [data-geo-form]    — перемикає секції за форматом (data-geo-show="online" / "offline hybrid").
  *   [data-geo-near]    — геолокація браузера лише після натискання; координати йдуть POST-ом на
- *                        mp-geo-suggest.php (near=1), сервер повертає найближче місто й нічого не зберігає.
+ *                        geo-suggest.php (near=1), сервер повертає найближче місто (до 100 км) й нічого не зберігає.
+ *                        Якщо у формі є [data-geo-src], після «Поблизу» туди пишеться 'browser' (джерело вибору).
+ *   Підказки — geo-suggest.php (працює й тоді, коли Marketplace закрито: кабінет рекламодавця, вибір місця).
  */
 (function () {
     'use strict';
 
-    var ENDPOINT = '/mp-geo-suggest.php';
+    var ENDPOINT = '/geo-suggest.php';
 
     function initPicker(root) {
         if (root.dataset.geoReady) { return; }
@@ -75,6 +77,8 @@
 
         input.addEventListener('input', function () {
             hidden.value = '';   // текст змінено — попередній вибір недійсний
+            var src = input.form && input.form.querySelector('[data-geo-src]');
+            if (src) { src.value = 'user'; }
             clearTimeout(timer);
             timer = setTimeout(query, 250);
         });
@@ -150,7 +154,12 @@
                     .then(function (r) { return r.ok ? r.json() : { place: null }; })
                     .then(function (d) {
                         btn.disabled = false;
-                        if (d.place && picker && picker.geoChoose) { picker.geoChoose(d.place); say(''); }
+                        if (d.place && picker && picker.geoChoose) {
+                            picker.geoChoose(d.place);
+                            say('');
+                            var src = btn.form && btn.form.querySelector('[data-geo-src]');
+                            if (src) { src.value = 'browser'; }
+                        }
                         else { say(btn.dataset.msgFail || ''); }
                     })
                     .catch(function () { btn.disabled = false; say(btn.dataset.msgFail || ''); });
