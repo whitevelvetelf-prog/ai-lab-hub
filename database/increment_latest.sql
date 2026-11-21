@@ -1,284 +1,233 @@
 SET NAMES utf8mb4;
 
 -- =====================================================================
--- AI LAB HUB — партія 2026-11-19: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps) — українська мова, тварини.
--- + 6 нових продуктів і 0 прив'язок наявних (функцію звірено на офіційних сайтах 2026-11-19).
+-- AI LAB HUB — партія 2026-11-21: «Українські додатки» / «Ukrainian Apps» (slug ukrainian-apps) — стоматологія й лабораторії до 10.
+-- + 7 нових продуктів і 2 прив'язки наявних (функцію звірено на офіційних сайтах 2026-11-21).
 -- Якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються.
--- Тексти UA/EN — за офіційними сайтами, звірено 2026-11-19.
--- Пропущено: UAnimals, Zootovary (403), «Є-Мова» (домен не знайдено).
+-- Тексти UA/EN — за офіційними сайтами, звірено 2026-11-21.
+-- Прив'язки: Клініка Віва (стоматологічні центри VIVA), Добробут (4 стоматології) — ua-dental.
+-- Пропущено: medlab.ua (магазин обладнання, не лабораторія), Into-Sana (багатопрофільна лікарня), Dentify (403), Люмі-Дент (російська).
 -- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
 -- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
---   Горох — українські словники — ua-language (новий)
---   СЛОВНИК.ua — ua-language (новий)
---   Ukrainian Lessons — ua-language (новий)
---   Animal-ID — ua-pets (новий)
---   Happy Paw — ua-pets (новий)
---   PetChoice — ua-pets (новий)
+--   DentArt — ua-dental (новий)
+--   MistoDent — ua-dental (новий)
+--   Cliniccards — ua-dental (новий)
+--   VitaLab — ua-labs (новий)
+--   ДНК-Лабораторія — ua-labs (новий)
+--   Hemo Medika — ua-labs (новий)
+--   Діасервіс — ua-labs (новий)
+--   Клініка Віва — ua-dental (наявний, прив'язка)
+--   Добробут — ua-dental (наявний, прив'язка)
 -- =====================================================================
 
 SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
 SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'ukrainian-apps' LIMIT 1);
-
--- Горох — українські словники
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'goroh.pp.ua' OR LOWER(`name`) = 'горох — українські словники')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Горох — українські словники', NULL, 'https://goroh.pp.ua', NULL, NULL, 'Українські словники онлайн: тлумачний (508 тис. слів), словозміна, синоніми, рими, етимологія, переклад і ігри.', 'Ukrainian dictionaries online: explanatory (508k words), inflection, synonyms, rhymes, etymology, translation and games.', 'Горох — публічна електронна бібліотека українських словників. Тлумачний словник на 508 тисяч слів, словозміна й орфографія, фонетична транскрипція, рими, синоніми, переклад вісьмома мовами, частотний словник на корпусі 260 млн слів, етимологія, фразеологія, морфеміка, анаграми й розділ типових помилок слововживання. Є ігри Alias і Wordle та Telegram-бот @goroh_bot. Безкоштовно з рекламою; рекламу можна вимкнути за підпискою.', 'Goroh is a public online library of Ukrainian dictionaries. It has an explanatory dictionary of 508,000 words, inflection and spelling, phonetic transcription, rhymes, synonyms, translation into eight languages, a frequency dictionary built on a 260-million-word corpus, etymology, phraseology, morphemes, anagrams and a section on common usage errors. There are Alias and Wordle games and the @goroh_bot Telegram bot. Free with ads; an ad-free subscription is available.', 'Тлумачний словник на 508 тис. слів
-Словозміна й синоніми
-Етимологія та фразеологія
-Типові помилки слововживання
-Telegram-бот та ігри', 'Explanatory dictionary of 508k words
-Inflection and synonyms
-Etymology and phraseology
-Common usage errors
-Telegram bot and games', 'Усім, хто пише й говорить українською, вивчає мову чи переходить на українську.', 'Anyone writing and speaking Ukrainian, learning the language or switching to it.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'goroh.pp.ua' OR LOWER(`name`) = 'горох — українські словники') ORDER BY `id` LIMIT 1);
+-- DentArt
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dent-art.com.ua' OR LOWER(`name`) = 'dentart')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'DentArt', NULL, 'https://dent-art.com.ua', NULL, NULL, 'Стоматологічна клініка в Києві з 2010 року: вузькі спеціалісти, КТ і 3D-сканування, онлайн-консультація.', 'Dental clinic in Kyiv since 2010: specialist dentists, CT and 3D scanning, online consultation.', 'DentArt («Дент Арт») — приватна стоматологічна клініка в Києві, що працює з 2010 року. Кожен лікар веде свою спеціалізацію: терапія й ендодонтія під мікроскопом, пародонтологія, ортопедія (коронки, вініри, протезування на імплантатах за цифровими протоколами), ортодонтія з брекетами й елайнерами, хірургія та імплантація, гнатологія, дитяча стоматологія. Для діагностики — КТ щелеп, телерентгенограма й внутрішньоротове 3D-сканування. На першій консультації пацієнт отримує план лікування й кошторис за етапами; візити допомагає організувати куратор. Можна почати з онлайн-консультації, якщо ви за кордоном або маєте мало часу.', 'DentArt is a private dental clinic in Kyiv operating since 2010. Each dentist works in their own specialty: microscope-assisted endodontics and restorative care, periodontology, prosthodontics (crowns, veneers, implant-supported prosthetics using digital protocols), orthodontics with braces and aligners, surgery and implants, gnathology and paediatric dentistry. Diagnostics include jaw CT, cephalometric X-rays and intraoral 3D scanning. At the first consultation the patient gets a treatment plan and a cost estimate by stage, and a personal coordinator helps arrange visits. You can start with an online consultation if you are abroad or short on time.', 'Вузькі спеціалісти з усіх напрямків
+КТ і 3D-сканування
+План і кошторис за етапами
+Куратор пацієнта
+Онлайн-консультація', 'Specialists in every field
+CT and 3D scanning
+Treatment plan and estimate by stage
+Personal patient coordinator
+Online consultation', 'Дорослим і дітям у Києві, а також українцям за кордоном, які планують лікування зубів.', 'Adults and children in Kyiv, and Ukrainians abroad planning dental treatment.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dent-art.com.ua' OR LOWER(`name`) = 'dentart') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-language' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-dental' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian dictionaries online: explanatory (508k words), inflection, synonyms, rhymes, etymology, translation and games.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Goroh is a public online library of Ukrainian dictionaries. It has an explanatory dictionary of 508,000 words, inflection and spelling, phonetic transcription, rhymes, synonyms, translation into eight languages, a frequency dictionary built on a 260-million-word corpus, etymology, phraseology, morphemes, anagrams and a section on common usage errors. There are Alias and Wordle games and the @goroh_bot Telegram bot. Free with ads; an ad-free subscription is available.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Explanatory dictionary of 508k words
-Inflection and synonyms
-Etymology and phraseology
-Common usage errors
-Telegram bot and games', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone writing and speaking Ukrainian, learning the language or switching to it.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Без реклами', 'Ad-free', 0.00, 'one_time', 'Підписка без реклами; ціна — на сайті.', 'Ad-free subscription; price on the website.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Без реклами' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Ad-free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Ad-free subscription; price on the website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- СЛОВНИК.ua
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slovnyk.ua' OR LOWER(`name`) = 'словник.ua')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'СЛОВНИК.ua', NULL, 'https://slovnyk.ua', NULL, NULL, 'Онлайн-словник української: СУМ, орфографія, наголоси, звертання, транслітерація й «Помічник» проти суржику.', 'Online Ukrainian dictionary: SUM, spelling, stress marks, forms of address, transliteration and an anti-surzhyk helper.', 'СЛОВНИК.ua — онлайн-словник української мови. Тлумачний словник на основі 11-томного СУМ (з дозволу Інституту мовознавства ім. О. О. Потебні) і доповнення користувачів, понад 260 тисяч словоформ, звертання (2600+ імен), офіційна й неофіційні транслітерації, пошук за правописом 2019 року, інструмент наголосів (бета) і «Помічник» — понад 700 слів-суржиків із правильними відповідниками. Безкоштовно.', 'SLOVNYK.ua is an online Ukrainian dictionary. It has an explanatory dictionary based on the 11-volume SUM (with permission from the Potebnia Institute of Linguistics) plus user additions, over 260,000 word forms, forms of address (2,600+ names), official and unofficial transliteration, search in the 2019 orthography, a stress-marking tool (beta) and a Helper with 700+ surzhyk words and their correct equivalents. Free.', 'Тлумачний словник (СУМ)
-260+ тис. словоформ
-Правопис 2019
-Наголоси й транслітерація
-Помічник проти суржику', 'Explanatory dictionary (SUM)
-260k+ word forms
-2019 orthography
-Stress marks and transliteration
-Anti-surzhyk helper', 'Усім, хто пише й говорить українською, вивчає мову чи переходить на українську.', 'Anyone writing and speaking Ukrainian, learning the language or switching to it.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'slovnyk.ua' OR LOWER(`name`) = 'словник.ua') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-language' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online Ukrainian dictionary: SUM, spelling, stress marks, forms of address, transliteration and an anti-surzhyk helper.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'SLOVNYK.ua is an online Ukrainian dictionary. It has an explanatory dictionary based on the 11-volume SUM (with permission from the Potebnia Institute of Linguistics) plus user additions, over 260,000 word forms, forms of address (2,600+ names), official and unofficial transliteration, search in the 2019 orthography, a stress-marking tool (beta) and a Helper with 700+ surzhyk words and their correct equivalents. Free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Explanatory dictionary (SUM)
-260k+ word forms
-2019 orthography
-Stress marks and transliteration
-Anti-surzhyk helper', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone writing and speaking Ukrainian, learning the language or switching to it.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Ukrainian Lessons
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ukrainianlessons.com' OR LOWER(`name`) = 'ukrainian lessons')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Ukrainian Lessons', NULL, 'https://www.ukrainianlessons.com', NULL, NULL, 'Вивчення української для іноземців: подкаст, міні-уроки, безкоштовний онлайн-підручник, робочі зошити й картки.', 'Learn Ukrainian as a foreign language: podcast, mini-lessons, a free online textbook, workbooks and flashcards.', 'Ukrainian Lessons — проєкт викладачки Анни Огойко для тих, хто вивчає українську як іноземну. Подкаст Ukrainian Lessons Podcast, 60 міні-уроків «5 Minute Ukrainian», блог як безкоштовний цифровий підручник, стартовий набір зі 100 слів із картками Anki, а також книжки: граматичний зошит «Ого!» A1, «500+ Ukrainian Verbs», «1000 Most Useful Ukrainian Words», прописи й розмовник. Подкаст і блог безкоштовні, преміум-доступ (транскрипти, вправи, картки) і книжки — платні. Сайт англійською.', 'Ukrainian Lessons is a project by teacher Anna Ohoiko for people learning Ukrainian as a foreign language. It offers the Ukrainian Lessons Podcast, 60 “5 Minute Ukrainian” mini-lessons, a blog that works as a free digital textbook, a starter kit of 100 words with Anki flashcards, and books: the “Ogo!” A1 grammar workbook, “500+ Ukrainian Verbs”, “1000 Most Useful Ukrainian Words”, a handwriting book and a phrasebook. The podcast and blog are free; premium membership (transcripts, exercises, flashcards) and books are paid. The site is in English.', 'Подкаст для вивчення української
-60 міні-уроків
-Безкоштовний онлайн-підручник
-Робочі зошити й книжки
-Картки Anki', 'Ukrainian learning podcast
-60 mini-lessons
-Free online textbook
-Workbooks and books
-Anki flashcards', 'Іноземцям і всім, хто вивчає українську з нуля чи хоче підтягнути рівень.', 'Foreigners and anyone learning Ukrainian from scratch or improving their level.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'ukrainianlessons.com' OR LOWER(`name`) = 'ukrainian lessons') ORDER BY `id` LIMIT 1);
-INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-language' LIMIT 1);
-INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Learn Ukrainian as a foreign language: podcast, mini-lessons, a free online textbook, workbooks and flashcards.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Ukrainian Lessons is a project by teacher Anna Ohoiko for people learning Ukrainian as a foreign language. It offers the Ukrainian Lessons Podcast, 60 “5 Minute Ukrainian” mini-lessons, a blog that works as a free digital textbook, a starter kit of 100 words with Anki flashcards, and books: the “Ogo!” A1 grammar workbook, “500+ Ukrainian Verbs”, “1000 Most Useful Ukrainian Words”, a handwriting book and a phrasebook. The podcast and blog are free; premium membership (transcripts, exercises, flashcards) and books are paid. The site is in English.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Ukrainian learning podcast
-60 mini-lessons
-Free online textbook
-Workbooks and books
-Anki flashcards', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Foreigners and anyone learning Ukrainian from scratch or improving their level.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Dental clinic in Kyiv since 2010: specialist dentists, CT and 3D scanning, online consultation.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'DentArt is a private dental clinic in Kyiv operating since 2010. Each dentist works in their own specialty: microscope-assisted endodontics and restorative care, periodontology, prosthodontics (crowns, veneers, implant-supported prosthetics using digital protocols), orthodontics with braces and aligners, surgery and implants, gnathology and paediatric dentistry. Diagnostics include jaw CT, cephalometric X-rays and intraoral 3D scanning. At the first consultation the patient gets a treatment plan and a cost estimate by stage, and a personal coordinator helps arrange visits. You can start with an online consultation if you are abroad or short on time.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Specialists in every field
+CT and 3D scanning
+Treatment plan and estimate by stage
+Personal patient coordinator
+Online consultation', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Adults and children in Kyiv, and Ukrainians abroad planning dental treatment.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Animal-ID
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'animal-id.net' OR LOWER(`name`) = 'animal-id')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Animal-ID', NULL, 'https://animal-id.net', NULL, NULL, 'Реєстрація тварин і пошук за мікрочипом, QR-нашийники, карта ветклінік і притулків; застосунок для iPhone та Android.', 'Pet registration and microchip lookup, QR tags, a vet and shelter map; iPhone and Android app.', 'Animal-ID — сервіс реєстрації домашніх тварин із офісом у Дрогобичі. Пошук тварини за номером мікрочипа, персоналізовані QR-адресники, мікрочипи й сканери, карта ветклінік і притулків, програма для притулків і перепис безпритульних тварин. Базова реєстрація безкоштовна довічно, преміум-захист — платний. Є застосунок для iPhone та Android.', 'Animal-ID is a pet registration service with an office in Drohobych, Ukraine. It offers microchip lookup, personalised QR tags, microchips and scanners, a map of vets and shelters, shelter software and stray animal censuses. Basic registration is free for life; premium protection is paid. There is an iPhone and Android app.', 'Пошук за мікрочипом
-Безкоштовна реєстрація тварини
-QR-адресники
-Карта ветклінік і притулків
-Застосунок для iPhone та Android', 'Microchip lookup
-Free pet registration
-QR tags
-Vet and shelter map
-iPhone and Android app', 'Власникам котів і собак, волонтерам і всім, хто допомагає тваринам.', 'Cat and dog owners, volunteers and anyone helping animals.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'animal-id.net' OR LOWER(`name`) = 'animal-id') ORDER BY `id` LIMIT 1);
+-- MistoDent
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mistodent.com.ua' OR LOWER(`name`) = 'mistodent')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'MistoDent', NULL, 'https://www.mistodent.com.ua', NULL, NULL, 'Мережа цифрових стоматологій у Харкові, Львові, Ужгороді, Варшаві й Кракові; лікування частинами з monobank.', 'Digital dentistry network in Kharkiv, Lviv, Uzhhorod, Warsaw and Krakow; pay in instalments with monobank.', 'MistoDent — мережа стоматологічних центрів у Харкові, Львові, Ужгороді, Варшаві та Кракові, що працює за принципами цифрової стоматології. Послуги: комплексна цифрова діагностика, пародонтологія, лікування карієсу й каналів під мікроскопом, ортодонтія з брекетами й елайнерами, коронки й вініри, імплантація, відбілювання, дитяча стоматологія та лікування під наркозом. Понад 17 тисяч пацієнтів щороку. Лікування можна оплатити частинами через monobank. Записатися — через форму на сайті або в месенджері.', 'MistoDent is a network of dental centres in Kharkiv, Lviv, Uzhhorod, Warsaw and Krakow built around digital dentistry. Services include comprehensive digital diagnostics, periodontology, microscope-assisted caries and root canal treatment, orthodontics with braces and aligners, crowns and veneers, implants, whitening, paediatric dentistry and treatment under general anaesthesia. Over 17,000 patients a year. Treatment can be paid in instalments via monobank. Book through the website form or a messenger.', 'Цифрова діагностика
+Клініки в Україні та Польщі
+Дитяча стоматологія й наркоз
+Елайнери та брекети
+Оплата частинами з monobank', 'Digital diagnostics
+Clinics in Ukraine and Poland
+Paediatric dentistry and anaesthesia
+Aligners and braces
+Instalments with monobank', 'Пацієнтам у Харкові, Львові, Ужгороді та українцям у Польщі, яким потрібне лікування зубів.', 'Patients in Kharkiv, Lviv, Uzhhorod and Ukrainians in Poland who need dental care.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'mistodent.com.ua' OR LOWER(`name`) = 'mistodent') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-pets' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-dental' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Pet registration and microchip lookup, QR tags, a vet and shelter map; iPhone and Android app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Animal-ID is a pet registration service with an office in Drohobych, Ukraine. It offers microchip lookup, personalised QR tags, microchips and scanners, a map of vets and shelters, shelter software and stray animal censuses. Basic registration is free for life; premium protection is paid. There is an iPhone and Android app.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Microchip lookup
-Free pet registration
-QR tags
-Vet and shelter map
-iPhone and Android app', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cat and dog owners, volunteers and anyone helping animals.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Базова реєстрація безкоштовна довічно.', 'Basic registration is free for life.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Basic registration is free for life.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Digital dentistry network in Kharkiv, Lviv, Uzhhorod, Warsaw and Krakow; pay in instalments with monobank.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'MistoDent is a network of dental centres in Kharkiv, Lviv, Uzhhorod, Warsaw and Krakow built around digital dentistry. Services include comprehensive digital diagnostics, periodontology, microscope-assisted caries and root canal treatment, orthodontics with braces and aligners, crowns and veneers, implants, whitening, paediatric dentistry and treatment under general anaesthesia. Over 17,000 patients a year. Treatment can be paid in instalments via monobank. Book through the website form or a messenger.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Digital diagnostics
+Clinics in Ukraine and Poland
+Paediatric dentistry and anaesthesia
+Aligners and braces
+Instalments with monobank', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Patients in Kharkiv, Lviv, Uzhhorod and Ukrainians in Poland who need dental care.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- Happy Paw
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'happypaw.ua' OR LOWER(`name`) = 'happy paw')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Happy Paw', NULL, 'https://happypaw.ua', NULL, NULL, 'Благодійний фонд допомоги безпритульним тваринам: лікування, опіка, прилаштування, загублені й знайдені тварини.', 'Charity foundation for stray animals: treatment, guardianship, adoption and lost & found pets.', 'Happy Paw — благодійний фонд допомоги безпритульним тваринам. На сайті можна взяти тварину чи прилаштувати знайдену, повідомити про загублену або знайдену тварину, стати опікуном тварини чи притулку дистанційно, підтримати лікування тяжкохворих тварин і переглянути звіти фонду. Користуватися сайтом безкоштовно, пожертви — добровільні.', 'Happy Paw is a charity foundation helping stray animals. On the website you can adopt an animal or rehome one you found, report a lost or found pet, become a remote guardian of an animal or a shelter, support treatment of seriously ill animals and read the foundation’s reports. The site is free to use; donations are voluntary.', 'Взяти тварину з притулку
-Загублені й знайдені тварини
-Дистанційна опіка
-Допомога тяжкохворим тваринам
-Звіти фонду', 'Adopt a shelter animal
-Lost and found pets
-Remote guardianship
-Help for seriously ill animals
-Foundation reports', 'Власникам котів і собак, волонтерам і всім, хто допомагає тваринам.', 'Cat and dog owners, volunteers and anyone helping animals.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'happypaw.ua' OR LOWER(`name`) = 'happy paw') ORDER BY `id` LIMIT 1);
+-- Cliniccards
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cliniccards.com/ua' OR LOWER(`name`) = 'cliniccards')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Cliniccards', NULL, 'https://cliniccards.com/ua', NULL, NULL, 'CRM для стоматологічних клінік: картки пацієнтів, розклад, плани лікування, КТ онлайн, фінанси й eHealth.', 'CRM for dental clinics: patient records, schedule, treatment plans, online CT viewing, finances and eHealth.', 'Cliniccards — система управління стоматологічною клінікою, якою користуються клініки Києва, Львова, Чернівців та інших міст. Тут ведуть медичні картки пацієнтів, інтерактивний розклад і онлайн-запис, зрозумілі пацієнтові плани й етапи лікування. КТ та інші діагностичні дані (фото, файли, скани) зберігаються й переглядаються онлайн у хронологічному порядку. Є облік матеріалів і препаратів, модуль задач, понад 40 фінансових та операційних звітів, P&L і розрахунок зарплат, а також реєстрація в системі eHealth. Безкоштовна версія — для збереження й обміну картками пацієнтів; повний функціонал для клініки коштує 70 доларів на місяць за кожного запрошеного спеціаліста.', 'Cliniccards is a dental clinic management system used by clinics in Kyiv, Lviv, Chernivtsi and other cities. It holds patient medical records, an interactive schedule with online booking, and treatment plans and stages that patients can understand. CT scans and other diagnostic data (photos, files, scans) are stored and viewed online in chronological order. It also offers inventory of materials and drugs, a tasks module, over 40 financial and operational reports, P&L and payroll, and registration in the Ukrainian eHealth system. The free version covers storing and sharing patient cards; the full clinic feature set costs $70 per month for each invited specialist.', 'Медичні картки пацієнтів
+Розклад і онлайн-запис
+Перегляд КТ онлайн
+Понад 40 звітів, P&L і зарплати
+Реєстрація в eHealth', 'Patient medical records
+Schedule and online booking
+Online CT viewer
+40+ reports, P&L and payroll
+eHealth registration', 'Власникам і лікарям стоматологічних клінік, адміністраторам.', 'Dental clinic owners, dentists and front-desk staff.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'cliniccards.com/ua' OR LOWER(`name`) = 'cliniccards') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-pets' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-dental' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Charity foundation for stray animals: treatment, guardianship, adoption and lost & found pets.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Happy Paw is a charity foundation helping stray animals. On the website you can adopt an animal or rehome one you found, report a lost or found pet, become a remote guardian of an animal or a shelter, support treatment of seriously ill animals and read the foundation’s reports. The site is free to use; donations are voluntary.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Adopt a shelter animal
-Lost and found pets
-Remote guardianship
-Help for seriously ill animals
-Foundation reports', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cat and dog owners, volunteers and anyone helping animals.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'CRM for dental clinics: patient records, schedule, treatment plans, online CT viewing, finances and eHealth.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Cliniccards is a dental clinic management system used by clinics in Kyiv, Lviv, Chernivtsi and other cities. It holds patient medical records, an interactive schedule with online booking, and treatment plans and stages that patients can understand. CT scans and other diagnostic data (photos, files, scans) are stored and viewed online in chronological order. It also offers inventory of materials and drugs, a tasks module, over 40 financial and operational reports, P&L and payroll, and registration in the Ukrainian eHealth system. The free version covers storing and sharing patient cards; the full clinic feature set costs $70 per month for each invited specialist.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Patient medical records
+Schedule and online booking
+Online CT viewer
+40+ reports, P&L and payroll
+eHealth registration', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Dental clinic owners, dentists and front-desk staff.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'month', 'Збереження фото й файлів до 10 МБ, обмін картками й етапами лікування.', 'Photo and file storage up to 10 MB, sharing patient cards and treatment stages.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Photo and file storage up to 10 MB, sharing patient cards and treatment stages.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Для клінік', 'For Clinics', 70.00, 'month', 'За кожного спеціаліста: розклад, фінанси, плани лікування, звіти й зарплати.', 'Per specialist: scheduling, finances, treatment plans, reports and payroll.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Для клінік' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'For Clinics', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Per specialist: scheduling, finances, treatment plans, reports and payroll.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
--- PetChoice
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'petchoice.ua' OR LOWER(`name`) = 'petchoice')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'PetChoice', NULL, 'https://petchoice.ua', NULL, NULL, 'Одеський інтернет-зоомагазин: корм, здоров''я, догляд, амуніція; доставка Новою поштою й питання ветеринару.', 'Odesa-based online pet shop: food, health, grooming, accessories; Nova Poshta delivery and free vet questions.', 'PetChoice — інтернет-зоомагазин з Одеси. Товари для котів, собак, рибок, птахів і гризунів: харчування, здоров''я, догляд і гігієна, амуніція й аксесуари, речі для дому й подорожей. Доставка Новою поштою або кур''єром, безкоштовно від 1500 грн; оплата карткою, Приват24 або готівкою. Можна безкоштовно поставити питання ветеринару онлайн.', 'PetChoice is an online pet shop from Odesa. It sells products for cats, dogs, fish, birds and rodents: food, health, grooming and hygiene, accessories, and items for home and travel. Delivery by Nova Poshta or courier, free from UAH 1,500; payment by card, Privat24 or cash. You can ask a vet a question online for free.', 'Товари для котів, собак та інших тварин
-Харчування й здоров''я
-Доставка, безкоштовно від 1500 грн
-Питання ветеринару онлайн
-Акції', 'Products for cats, dogs and other pets
-Food and health
-Delivery, free from UAH 1,500
-Ask a vet online
-Deals', 'Власникам котів і собак, волонтерам і всім, хто допомагає тваринам.', 'Cat and dog owners, volunteers and anyone helping animals.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'petchoice.ua' OR LOWER(`name`) = 'petchoice') ORDER BY `id` LIMIT 1);
+-- VitaLab
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vitalab.com.ua' OR LOWER(`name`) = 'vitalab')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'VitaLab', NULL, 'https://vitalab.com.ua', NULL, NULL, 'Українська медична лабораторія з акредитацією ISO 15189: 22 пункти, замовлення, оплата й результати онлайн.', 'Ukrainian medical laboratory accredited to ISO 15189: 22 sites, online ordering, payment and results.', 'VitaLab — сучасна українська медична лабораторія, акредитована за міжнародним стандартом ISO 15189:2022. Працює 22 лабораторні центри й пункти забору, можна викликати медсестру додому чи в офіс. На сайті — каталог аналізів і пакетів, кошик, онлайн-оплата та результати в особистому кабінеті. Є знижки військовим, ВПО й пенсіонерам, регулярні акції на чекапи, а також лабораторні дослідження в Німеччині. Понад 400 тисяч досліджень і 90 тисяч пацієнтів на рік.', 'VitaLab is a modern Ukrainian medical laboratory accredited to the international ISO 15189:2022 standard. It runs 22 laboratory centres and collection points, and you can call a nurse to your home or office. The website has a catalogue of tests and packages, a cart, online payment and results in a personal account. There are discounts for military personnel, internally displaced people and pensioners, regular check-up promotions, and lab testing in Germany. Over 400,000 tests and 90,000 patients a year.', 'Акредитація ISO 15189:2022
+22 пункти забору
+Замовлення й оплата онлайн
+Результати в кабінеті
+Виклик медсестри додому', 'ISO 15189:2022 accreditation
+22 collection points
+Online ordering and payment
+Results in your account
+Nurse home visits', 'Усім, хто здає аналізи й хоче замовити та оплатити їх онлайн.', 'Anyone taking lab tests who wants to order and pay for them online.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'vitalab.com.ua' OR LOWER(`name`) = 'vitalab') ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-pets' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Odesa-based online pet shop: food, health, grooming, accessories; Nova Poshta delivery and free vet questions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'PetChoice is an online pet shop from Odesa. It sells products for cats, dogs, fish, birds and rodents: food, health, grooming and hygiene, accessories, and items for home and travel. Delivery by Nova Poshta or courier, free from UAH 1,500; payment by card, Privat24 or cash. You can ask a vet a question online for free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Products for cats, dogs and other pets
-Food and health
-Delivery, free from UAH 1,500
-Ask a vet online
-Deals', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Cat and dog owners, volunteers and anyone helping animals.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Ukrainian medical laboratory accredited to ISO 15189: 22 sites, online ordering, payment and results.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'VitaLab is a modern Ukrainian medical laboratory accredited to the international ISO 15189:2022 standard. It runs 22 laboratory centres and collection points, and you can call a nurse to your home or office. The website has a catalogue of tests and packages, a cart, online payment and results in a personal account. There are discounts for military personnel, internally displaced people and pensioners, regular check-up promotions, and lab testing in Germany. Over 400,000 tests and 90,000 patients a year.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'ISO 15189:2022 accreditation
+22 collection points
+Online ordering and payment
+Results in your account
+Nurse home visits', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone taking lab tests who wants to order and pay for them online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- ДНК-Лабораторія
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dnk-lab.com.ua' OR LOWER(`name`) = 'днк-лабораторія')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'ДНК-Лабораторія', NULL, 'https://www.dnk-lab.com.ua', NULL, NULL, 'Київська лабораторія з п''ятьма пунктами забору: прайс аналізів, результати онлайн, безкоштовне питання фахівцю, УЗД.', 'Kyiv laboratory with five collection points: test price list, online results, free questions to a specialist, ultrasound.', 'ДНК-Лабораторія — медична лабораторія в Києві з пунктами забору біля метро Дорогожичі, Позняки, Шулявська, на Оболоні й Троєщині. На сайті є прайс-лист досліджень, видача результатів через онлайн-сервіс із можливістю завантажити бланк, норми аналізів і правила підготовки. Можна безкоштовно поставити питання фахівцю онлайн. Окремо — ультразвукова діагностика: УЗД органів, еластографія, доплер судин, ехокардіографія. Військовим — знижка 15% на будь-які обстеження.', 'DNK-Laboratoriya is a medical laboratory in Kyiv with collection points near Dorohozhychi, Pozniaky and Shuliavska metro stations, in Obolon and Troieshchyna. The website has a test price list, an online service for getting results with a downloadable report, reference ranges and preparation rules. You can ask a specialist a question online for free. It also offers ultrasound: organ scans, elastography, vascular Doppler and echocardiography. Military personnel get 15% off any tests.', 'П''ять пунктів забору в Києві
+Результати онлайн
+Безкоштовне питання фахівцю
+УЗД і доплер
+Знижка 15% військовим', 'Five collection points in Kyiv
+Online results
+Free questions to a specialist
+Ultrasound and Doppler
+15% off for military', 'Киянам, які здають аналізи й хочуть отримати результати онлайн.', 'Kyiv residents taking lab tests who want their results online.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'dnk-lab.com.ua' OR LOWER(`name`) = 'днк-лабораторія') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Kyiv laboratory with five collection points: test price list, online results, free questions to a specialist, ultrasound.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'DNK-Laboratoriya is a medical laboratory in Kyiv with collection points near Dorohozhychi, Pozniaky and Shuliavska metro stations, in Obolon and Troieshchyna. The website has a test price list, an online service for getting results with a downloadable report, reference ranges and preparation rules. You can ask a specialist a question online for free. It also offers ultrasound: organ scans, elastography, vascular Doppler and echocardiography. Military personnel get 15% off any tests.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Five collection points in Kyiv
+Online results
+Free questions to a specialist
+Ultrasound and Doppler
+15% off for military', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Kyiv residents taking lab tests who want their results online.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Hemo Medika
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hemomedika.com.ua' OR LOWER(`name`) = 'hemo medika')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Hemo Medika', NULL, 'https://hemomedika.com.ua', NULL, NULL, 'Мережа медичних лабораторій: 115 відділень у понад 82 містах, замовлення аналізів і результати в додатку.', 'Medical laboratory network: 115 branches in 82+ cities, test ordering and results in the app.', 'Hemo Medika — українська мережа медичних лабораторій із 115 відділеннями в понад 82 містах. На сайті можна знайти аналіз, оформити замовлення й зареєструвати профіль за номером телефону, щоб переглядати результати на будь-якому пристрої. Для швидкої перевірки достатньо ввести номер телефону — і отримати інформацію про результати останніх аналізів. Мобільний додаток Hemo Medika дає доступ до особистого кабінету 24/7.', 'Hemo Medika is a Ukrainian network of medical laboratories with 115 branches in more than 82 cities. On the website you can find a test, place an order and register a profile with your phone number to view results on any device. For a quick check, enter your phone number to get information about your latest test results. The Hemo Medika mobile app gives 24/7 access to your personal account.', '115 відділень у 82+ містах
+Замовлення аналізів онлайн
+Результати за номером телефону
+Мобільний додаток
+Кабінет 24/7', '115 branches in 82+ cities
+Order tests online
+Results by phone number
+Mobile app
+24/7 personal account', 'Усім, хто здає аналізи в Україні, зокрема в невеликих містах.', 'Anyone taking lab tests in Ukraine, including in smaller towns.', 'web,mobile', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'hemomedika.com.ua' OR LOWER(`name`) = 'hemo medika') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Medical laboratory network: 115 branches in 82+ cities, test ordering and results in the app.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Hemo Medika is a Ukrainian network of medical laboratories with 115 branches in more than 82 cities. On the website you can find a test, place an order and register a profile with your phone number to view results on any device. For a quick check, enter your phone number to get information about your latest test results. The Hemo Medika mobile app gives 24/7 access to your personal account.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '115 branches in 82+ cities
+Order tests online
+Results by phone number
+Mobile app
+24/7 personal account', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone taking lab tests in Ukraine, including in smaller towns.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
+SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
+
+-- Діасервіс
+SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'diaservis.ua' OR LOWER(`name`) = 'діасервіс')), 1, 0);
+INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Діасервіс', NULL, 'https://diaservis.ua', NULL, NULL, 'Медична компанія з 69 філіями: аналізи з онлайн-оплатою (−10%), виїзд лабораторної бригади додому, лікарі.', 'Medical company with 69 branches: lab tests with online payment (10% off), home sample collection, doctors.', 'ДІАСЕРВІС — українська медична компанія з 69 філіями по всій країні; багато пунктів забору — у Дніпрі та Дніпропетровській області. Основа — лабораторні аналізи в пунктах забору; на сайті видно завантаженість кожного відділення. Замовлення можна оплатити онлайн і отримати 10% знижки та обслуговування без черги. Є виїзд лабораторної бригади додому, скринінг здоров''я 40+, консультації лікарів, діагностика, реабілітація й сімейні амбулаторії в Запоріжжі.', 'DIASERVIS is a Ukrainian medical company with 69 branches across the country, many of its collection points in Dnipro and the Dnipropetrovsk region. Its core is lab testing at collection points; the website shows how busy each branch is. Orders can be paid online for a 10% discount and no-queue service. It also offers home sample collection, the national 40+ health screening, doctor consultations, diagnostics, rehabilitation and family clinics in Zaporizhzhia.', '69 філій
+Завантаженість відділень онлайн
+−10% при онлайн-оплаті
+Виїзд лаборанта додому
+Скринінг здоров''я 40+', '69 branches
+Live branch occupancy
+10% off with online payment
+Home sample collection
+40+ health screening', 'Усім, хто здає аналізи, зокрема мешканцям Дніпра й Запоріжжя.', 'Anyone taking lab tests, especially in Dnipro and Zaporizhzhia.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-21 00:00:00' FROM DUAL WHERE @new = 1;
+SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'diaservis.ua' OR LOWER(`name`) = 'діасервіс') ORDER BY `id` LIMIT 1);
+INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-labs' LIMIT 1);
+INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Medical company with 69 branches: lab tests with online payment (10% off), home sample collection, doctors.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'DIASERVIS is a Ukrainian medical company with 69 branches across the country, many of its collection points in Dnipro and the Dnipropetrovsk region. Its core is lab testing at collection points; the website shows how busy each branch is. Orders can be paid online for a 10% discount and no-queue service. It also offers home sample collection, the national 40+ health screening, doctor consultations, diagnostics, rehabilitation and family clinics in Zaporizhzhia.', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', '69 branches
+Live branch occupancy
+10% off with online payment
+Home sample collection
+40+ health screening', 'manual' FROM DUAL WHERE @new = 1;
+INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone taking lab tests, especially in Dnipro and Zaporizhzhia.', 'manual' FROM DUAL WHERE @new = 1;
 INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Ціна: див. сайт', 'Price: see website', 0.00, 'one_time', 'Актуальні ціни — на офіційному сайті.', 'Current prices are on the official website.' FROM DUAL WHERE @new = 1;
 SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Ціна: див. сайт' ORDER BY `id` DESC LIMIT 1), NULL);
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Price: see website', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Current prices are on the official website.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
 
 -- Прив'язки наявних продуктів (за назвою, без id)
-
-
--- =====================================================================
--- AI LAB HUB — партія 2026-11-19: «Розважальні» / «Entertainment» (slug entertainment) — меми.
--- + 2 нових продуктів і 0 прив'язок наявних (функцію звірено на офіційних сайтах 2026-11-19).
--- Якщо продукт із такою адресою чи назвою вже є — лише прив'язка, тексти не змінюються.
--- Тексти UA/EN — за офіційними сайтами, звірено 2026-11-19.
--- Пропущено: VEED (сторінка мем-генератора 404), Mematic (сторінка порожня, App Store 404).
--- Без фіксованих id: @new рахується ДО INSERT, @pid — за нормалізованою адресою або назвою.
--- Застосування: phpMyAdmin → БД → «Импорт». Повторний запуск безпечний.
---   Make a Meme — memes (новий)
---   Flixier — memes (новий)
--- =====================================================================
-
-SET @uid = (SELECT `id` FROM `users` WHERE `email` = 'whitevelvetelf@gmail.com' LIMIT 1);
-SET @cat = (SELECT `id` FROM `categories` WHERE `slug` = 'entertainment' LIMIT 1);
-
--- Make a Meme
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'makeameme.org' OR LOWER(`name`) = 'make a meme')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Make a Meme', NULL, 'https://makeameme.org', NULL, NULL, 'Безкоштовний онлайн-конструктор мемів: тисячі шаблонів або своє фото, підписи, 50+ шрифтів і AI-генератор.', 'Free online meme maker: thousands of templates or your own photo, captions, 50+ fonts and an AI meme generator.', 'Make a Meme — безкоштовний сайт для створення мемів. Можна завантажити власне зображення або вибрати шаблон із великої бібліотеки (знаменитості, ігри, спорт та інші), додати верхній і нижній підпис, назву, вибрати шрифт (понад 50), колір тексту й обведення та опублікувати мем. Є AI-генератор мемів і розділ порожніх шаблонів. Реєстрація безкоштовна.', 'Make a Meme is a free website for making memes. You can upload your own image or pick a template from a large library (celebrities, gaming, sports and more), add top and bottom captions and a title, choose a font (50+), text colour and outline, and publish the meme. There is an AI meme generator and a blank templates section. Registration is free.', 'Бібліотека шаблонів мемів
-Власне фото
-50+ шрифтів
-AI-генератор мемів
-Публікація мемів', 'Meme template library
-Upload your own image
-50+ fonts
-AI meme generator
-Publish memes', 'Усім, хто робить меми для соцмереж і чатів.', 'Anyone making memes for social media and chats.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'makeameme.org' OR LOWER(`name`) = 'make a meme') ORDER BY `id` LIMIT 1);
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'клініка віва' AND `status` = 'published' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'memes' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-dental' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Free online meme maker: thousands of templates or your own photo, captions, 50+ fonts and an AI meme generator.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Make a Meme is a free website for making memes. You can upload your own image or pick a template from a large library (celebrities, gaming, sports and more), add top and bottom captions and a title, choose a font (50+), text colour and outline, and publish the meme. There is an AI meme generator and a blank templates section. Registration is free.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Meme template library
-Upload your own image
-50+ fonts
-AI meme generator
-Publish memes', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone making memes for social media and chats.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', 'Безкоштовно.', 'Free.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Free.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Flixier
-SET @new = IF(NOT EXISTS (SELECT 1 FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flixier.com/tools/meme-generator' OR LOWER(`name`) = 'flixier')), 1, 0);
-INSERT INTO `products` (`name`, `logo_url`, `official_url`, `internal_registration_url`, `affiliate_url`, `short_description`, `short_description_en`, `full_description`, `full_description_en`, `main_features`, `main_features_en`, `target_audience`, `target_audience_en`, `platform`, `skill_level`, `status`, `is_archived`, `partnership_status`, `created_by`, `created_at`) SELECT 'Flixier', NULL, 'https://flixier.com/tools/meme-generator', NULL, NULL, 'Онлайн-відеоредактор із конструктором мемів: відео, GIF і картинки, 1000+ шрифтів, анімація тексту й AI-підписи.', 'Online video editor with a meme maker: video, GIF and image memes, 1,000+ fonts, text animation and AI captions.', 'Flixier — відеоредактор у браузері з окремим конструктором мемів. Мем можна зробити з відео, GIF чи зображення: завантажити з пристрою, хмари чи за посиланням, додати текст (понад 1000 шрифтів, кольори, фони, анімація), обрізати й вирізати кадри, згенерувати підписи за допомогою AI. Експорт у відео чи GIF і публікація просто в Instagram, TikTok, YouTube, Facebook. Безкоштовний план — 720p із водяним знаком; платні — від $19 за місце на місяць.', 'Flixier is a browser-based video editor with a dedicated meme maker. You can make a meme from video, GIF or an image — upload from your device, cloud storage or a link — add text (1,000+ fonts, colours, backgrounds, animation), trim and cut frames, and generate captions with AI. Export as video or GIF and publish straight to Instagram, TikTok, YouTube and Facebook. The free plan exports 720p with a watermark; paid plans start at $19 per seat per month.', 'Меми з відео, GIF і картинок
-1000+ шрифтів і анімація тексту
-AI-підписи до мемів
-Експорт у відео чи GIF
-Публікація в соцмережі', 'Video, GIF and image memes
-1,000+ fonts and text animation
-AI meme captions
-Export to video or GIF
-Publish to social media', 'Усім, хто робить меми для соцмереж і чатів.', 'Anyone making memes for social media and chats.', 'web', 'none', 'published', 0, 'found', @uid, '2026-11-19 00:00:00' FROM DUAL WHERE @new = 1;
-SET @pid = (SELECT `id` FROM `products` WHERE (LOWER(TRIM(TRAILING '/' FROM REPLACE(REPLACE(REPLACE(REPLACE(`official_url`, 'https://www.', ''), 'http://www.', ''), 'https://', ''), 'http://', ''))) = 'flixier.com/tools/meme-generator' OR LOWER(`name`) = 'flixier') ORDER BY `id` LIMIT 1);
+SET @pid = (SELECT `id` FROM `products` WHERE LOWER(`name`) = 'добробут' AND `status` = 'published' ORDER BY `id` LIMIT 1);
 INSERT IGNORE INTO `product_categories` (`product_id`, `category_id`) SELECT @pid, @cat FROM DUAL WHERE @pid IS NOT NULL AND @cat IS NOT NULL;
-SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'memes' LIMIT 1);
+SET @sub = (SELECT `id` FROM `subcategories` WHERE `category_id` = @cat AND `slug` = 'ua-dental' LIMIT 1);
 INSERT IGNORE INTO `product_subcategories` (`product_id`, `subcategory_id`) SELECT @pid, @sub FROM DUAL WHERE @pid IS NOT NULL AND @sub IS NOT NULL;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'short_description', 'en', 'Online video editor with a meme maker: video, GIF and image memes, 1,000+ fonts, text animation and AI captions.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'full_description', 'en', 'Flixier is a browser-based video editor with a dedicated meme maker. You can make a meme from video, GIF or an image — upload from your device, cloud storage or a link — add text (1,000+ fonts, colours, backgrounds, animation), trim and cut frames, and generate captions with AI. Export as video or GIF and publish straight to Instagram, TikTok, YouTube and Facebook. The free plan exports 720p with a watermark; paid plans start at $19 per seat per month.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'main_features', 'en', 'Video, GIF and image memes
-1,000+ fonts and text animation
-AI meme captions
-Export to video or GIF
-Publish to social media', 'manual' FROM DUAL WHERE @new = 1;
-INSERT IGNORE INTO `product_translations` (`product_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @pid, 'target_audience', 'en', 'Anyone making memes for social media and chats.', 'manual' FROM DUAL WHERE @new = 1;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Free', 'Free', 0.00, 'free', '10 хв експорту на місяць, 720p, водяний знак.', '10 min export per month, 720p, watermark.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Free' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Free', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', '10 min export per month, 720p, watermark.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Starter', 'Starter', 19.00, 'month', 'За місце: 60 хв експорту, 1080p, без водяного знака.', 'Per seat: 60 min export, 1080p, no watermark.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Starter' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Starter', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Per seat: 60 min export, 1080p, no watermark.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT INTO `pricing_plans` (`product_id`, `plan_name`, `plan_name_en`, `price`, `period`, `description`, `description_en`) SELECT @pid, 'Creator', 'Creator', 39.00, 'month', 'За місце: необмежений експорт, 4K.', 'Per seat: unlimited exports, 4K.' FROM DUAL WHERE @new = 1;
-SET @plan = IF(@new = 1, (SELECT `id` FROM `pricing_plans` WHERE `product_id` = @pid AND `plan_name` = 'Creator' ORDER BY `id` DESC LIMIT 1), NULL);
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'plan_name', 'en', 'Creator', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-INSERT IGNORE INTO `pricing_plan_translations` (`plan_id`, `field_name`, `lang`, `translated_text`, `source`) SELECT @plan, 'description', 'en', 'Per seat: unlimited exports, 4K.', 'manual' FROM DUAL WHERE @plan IS NOT NULL;
-
--- Прив'язки наявних продуктів (за назвою, без id)
