@@ -52,7 +52,7 @@ echo "== CSV\n";
 $csv = catalog_fill_csv(catalog_fill_rows($syn + [4 => ['cat_id' => 3, 'cat_name' => '=HYPERLINK("x")', 'sub_id' => 31, 'sub_name' => 'Кома, "лапки"', 'published' => 5]], 10), 10);
 check(str_starts_with($csv, "\xEF\xBB\xBF"), 'UTF-8 з BOM');
 check(mb_check_encoding($csv, 'UTF-8'), 'валідний UTF-8');
-$lines = array_map('str_getcsv', preg_split('/\r?\n/', trim(substr($csv, 3))));
+$lines = array_map(static fn(string $l): array => str_getcsv($l, ',', '"', ''), preg_split('/\r?\n/', trim(substr($csv, 3))));
 check($lines[0] === ['Категорія', 'Підкатегорія', 'ID підкатегорії', 'Опубліковано', 'Мета', 'Не вистачає'], 'заголовок');
 check(count($lines) === 6 && $lines[1] === ['Альфа', 'а1', '12', '0', '10', '10'], 'рядки в порядку таблиці');
 $bad = array_values(array_filter($lines, static fn($l) => $l[2] === '31'))[0] ?? [];
