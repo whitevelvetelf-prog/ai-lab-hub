@@ -45,9 +45,9 @@
     }
 }
 
-/* ===== Випадаюче меню (десктоп, коли navigator.share недоступний) ===== */
+/* ===== Випадаюче меню (ПК; на сенсорних — нативне вікно) ===== */
 .share-menu {
-    position: absolute;
+    position: fixed;
     z-index: 10000;
     min-width: 200px;
     padding: 8px;

@@ -6,8 +6,8 @@
  * location — вони вже коректні на кожній сторінці (назва продукту,
  * категорії тощо — те саме, що й у <title>).
  *
- * Мобільні / браузери з navigator.share → нативне вікно поділитися.
- * Десктоп без підтримки → власне випадаюче меню (копіювати посилання,
+ * Сенсорні пристрої з navigator.share → нативне вікно поділитися.
+ * ПК (миша) → завжди власне випадаюче меню (копіювати посилання,
  * Telegram, Facebook, WhatsApp, Twitter/X, email).
  *
  * Тексти надає app/footer.php:
@@ -192,10 +192,31 @@
         }
     });
 
+    // Меню позиціоноване відносно вікна (fixed) — при прокрутці/ресайзі закриваємо.
+    window.addEventListener('scroll', closeMenu, { passive: true });
+    window.addEventListener('resize', closeMenu);
+
+    /* Нативне вікно — лише на сенсорних пристроях. На ПК (Chrome/Edge на
+       Windows) navigator.share теж існує, але системне вікно Windows часто
+       відмовляє (NotAllowedError) або нічого не показує — тому там завжди
+       власне меню. Якщо нативне вікно все ж впало не через скасування
+       користувачем — теж відкриваємо меню. */
+    function useNativeShare() {
+        if (!navigator.share) {
+            return false;
+        }
+        var mq = window.matchMedia;
+        return !!(mq && mq('(pointer: coarse)').matches && !mq('(any-pointer: fine)').matches);
+    }
+
     function handleShareClick(btn) {
         var data = shareData();
-        if (navigator.share) {
-            navigator.share({ title: data.title, text: data.text, url: data.url }).catch(function () {});
+        if (useNativeShare()) {
+            navigator.share({ title: data.title, text: data.text, url: data.url }).catch(function (err) {
+                if (!err || err.name !== 'AbortError') {
+                    openMenu(btn);
+                }
+            });
             return;
         }
         openMenu(btn);
