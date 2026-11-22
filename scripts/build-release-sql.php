@@ -269,6 +269,14 @@ $idx .= "\n## 3. Старі окремі пакети (уже застосова
     . "P4 публікує `php scripts/mp-publish-promos.php --slug=platform-post-free --emit-sql` (SQL для phpMyAdmin). Деталі — `docs/PROMO_LISTINGS.md`.\n";
 file_put_contents("{$outDir}/INDEX.md", $idx);
 fwrite(STDOUT, "OK INDEX.md\n");
+// Шаблони серверного config/marketplace.local.php етапів A/B (джерело в git: config/hosting/).
+foreach (['A', 'B'] as $st) {
+    $src = "{$root}/config/hosting/marketplace.config.HOSTING.stage{$st}.php";
+    if (is_file($src)) {
+        copy($src, "{$outDir}/marketplace.config.HOSTING.stage{$st}.php");
+        fwrite(STDOUT, "OK marketplace.config.HOSTING.stage{$st}.php\n");
+    }
+}
 
 // CHECKSUMS.txt — sha256 усіх файлів hosting-upload/ (крім самого CHECKSUMS.txt).
 $lines = [];
