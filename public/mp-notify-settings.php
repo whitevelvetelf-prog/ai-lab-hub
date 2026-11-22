@@ -39,6 +39,11 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
     $action = (string) ($_POST['action'] ?? '');
     if ($action === 'email') {
         msg_set_email_pref($pdo, $uid, ($_POST['email_new_message'] ?? '') === '1');
+        if (($_POST['return'] ?? '') === 'account') {   // перемикач у кабінеті (account.php, блок «Повідомлення»)
+            $_SESSION['account_flash'] = t('msg_settings_saved');
+            header('Location: account.php#acc-messages', true, 303);   // фіксована адреса з якорем (mpb_redirect якорів не приймає)
+            exit;
+        }
         mpb_flash('ok', t('msg_settings_saved'));
     } elseif ($action === 'unblock') {
         msg_unblock($pdo, $uid, (int) ($_POST['user_id'] ?? 0));

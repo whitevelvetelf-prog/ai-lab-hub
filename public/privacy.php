@@ -140,6 +140,13 @@ require_once __DIR__ . '/../app/translations.php';
         <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_youtube'), ENT_QUOTES) ?></p>
         <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_cookies_none'), ENT_QUOTES) ?> <a href="privacy.php#cookies" data-cc-open><?= htmlspecialchars(t('cc_settings'), ENT_QUOTES) ?></a></p>
 
+        <?php /* ЧЕРНЕТКА: пункт про повідомлення між користувачами потребує перевірки юристом. Текст — legal_privacy_msg_* (переклад UA/EN). */ ?>
+        <h2 class="legal-heading" id="messages"><?= htmlspecialchars(t('legal_privacy_msg_h'), ENT_QUOTES) ?></h2>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_msg_store'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_msg_access'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_msg_email'), ENT_QUOTES) ?></p>
+        <p class="stub__text"><?= htmlspecialchars(t('legal_privacy_msg_delete'), ENT_QUOTES) ?></p>
+
         <p class="stub__text legal-updated"><?= htmlspecialchars(t('legal_privacy_updated'), ENT_QUOTES) ?></p>
     </main>
 

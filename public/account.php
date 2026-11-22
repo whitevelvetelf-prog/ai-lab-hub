@@ -1282,6 +1282,10 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                 white-space: nowrap;
             }
         }
+        .acc-msg-email { margin: 14px 0 0; }
+        .acc-msg-email__label { display: flex; gap: 10px; align-items: center; min-height: 44px; margin: 0 0 6px; cursor: pointer; }
+        .acc-msg-email__label input { width: 22px; height: 22px; flex: none; }
+        .acc-msg-email__hint { margin: 8px 0 0; font-size: 0.85rem; color: rgba(255, 255, 255, 0.75); }
     </style>
     <?php include __DIR__ . '/../app/header.php'; ?>
 </head>
@@ -1363,6 +1367,46 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                     </div>
                 </div>
             </div>
+
+            <?php
+            // «Повідомлення» Marketplace (чат mp-messages.php): лічильник непрочитаних і перемикач листів. Лише коли функцію ввімкнено.
+            $accMsgOn = false;
+            try {
+                require_once __DIR__ . '/../app/marketplace.php';
+                if (mp_config()['messaging_enabled'] === true) {
+                    require_once __DIR__ . '/../app/mp-messages.php';
+                    $accMsgOn = msg_enabled($pdo);
+                }
+            } catch (Throwable) {
+                $accMsgOn = false;
+            }
+            if ($accMsgOn):
+                $accMsgUnread = msg_unread_total($pdo, (int) $user['id']);
+                $accMsgEmail = msg_email_pref($pdo, (int) $user['id']); ?>
+            <div class="accordion" id="acc-messages">
+                <button type="button" class="accordion__header" aria-expanded="false" aria-controls="acc-messages-panel">
+                    <span class="accordion__title"><?= htmlspecialchars(t('msg_title'), ENT_QUOTES) ?><?= msg_header_badge_html() ?></span>
+                    <span class="accordion__chevron" aria-hidden="true">&#9662;</span>
+                </button>
+                <div class="accordion__panel" id="acc-messages-panel">
+                    <div class="accordion__panel-inner">
+                        <p class="empty-state"><?= htmlspecialchars(t('msg_account_text'), ENT_QUOTES) ?>
+                            <?= htmlspecialchars($accMsgUnread > 0 ? sprintf(t('msg_account_unread'), $accMsgUnread) : t('msg_account_none'), ENT_QUOTES) ?></p>
+                        <div class="btn-row"><a class="btn btn--primary btn--small" href="mp-messages.php"><?= htmlspecialchars(t('msg_account_open'), ENT_QUOTES) ?></a></div>
+                        <form method="post" action="mp-notify-settings.php" class="acc-msg-email">
+                            <?= mp_csrf_field() ?>
+                            <input type="hidden" name="action" value="email">
+                            <input type="hidden" name="return" value="account">
+                            <label class="acc-msg-email__label"><input type="checkbox" name="email_new_message" value="1"<?= $accMsgEmail ? ' checked' : '' ?>>
+                                <span><?= htmlspecialchars(t('msg_email_toggle_long'), ENT_QUOTES) ?></span></label>
+                            <button class="btn btn--ghost btn--small" type="submit"><?= htmlspecialchars(t('msg_save'), ENT_QUOTES) ?></button>
+                            <p class="acc-msg-email__hint"><?= htmlspecialchars(t('msg_email_hint'), ENT_QUOTES) ?><?php if (msg_cfg('messaging_email_enabled') !== true): ?> <?= htmlspecialchars(t('msg_email_site_off'), ENT_QUOTES) ?><?php endif; ?></p>
+                        </form>
+                        <p class="acc-msg-email__hint"><a class="section__link" href="mp-notify-settings.php"><?= htmlspecialchars(t('msg_account_settings'), ENT_QUOTES) ?></a></p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
 
             <?php donhist_account_render($pdo, $user); ?>
 
