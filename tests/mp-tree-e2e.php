@@ -41,6 +41,12 @@ function check(bool $cond, string $label): void
 }
 
 /** @return array{code:int,loc:string,body:string} */
+// Токен CSRF форми входу (login.php перевіряє його з 2026-11-11).
+function csrf_in(string $html): string
+{
+    return preg_match('/name="csrf" value="([^"]+)"/', $html, $m) === 1 ? $m[1] : '';
+}
+
 function http(string $jar, string $url, ?array $post = null, bool $mobile = false): array
 {
     $ch = curl_init($url);
@@ -227,7 +233,7 @@ try {
     check(str_contains($sA, 'marketplace-offer.php?id=' . $en . '"'), 'англомовне оголошення видно в «Послугах» при інтерфейсі українською');
 
     echo "Подача: вибір блока\n";
-    http($jarU, "$base/login.php", ['email' => "tree-user-{$stamp}@example.test", 'password' => $pass]);
+    http($jarU, "$base/login.php", ['email' => "tree-user-{$stamp}@example.test", 'password' => $pass, 'csrf' => csrf_in(http($jarU, "$base/login.php")['body'])]);
     $r = http($jarU, "$base/marketplace-post.php");
     check($r['code'] === 200 && str_contains($r['body'], 'href="listing-post.php?type=job"') && str_contains($r['body'], 'href="marketplace-post.php?block=goods"'), 'крок 1: картки блоків');
     $r = http($jarU, "$base/marketplace-post.php?block=service");
@@ -248,7 +254,7 @@ try {
     check($r['code'] === 301 && str_ends_with($r['loc'], 'marketplace-category.php?id=' . $solution['id']), 'marketplace-solutions.php → блок «Готові рішення»');
 
     echo "Admin: назва й порядок, скидання кешу\n";
-    http($jarAdm, "$base/login.php", ['email' => "tree-admin-{$stamp}@example.test", 'password' => $pass]);
+    http($jarAdm, "$base/login.php", ['email' => "tree-admin-{$stamp}@example.test", 'password' => $pass, 'csrf' => csrf_in(http($jarAdm, "$base/login.php")['body'])]);
     $page = http($jarAdm, "$base/mp-categories.php");
     check($page['code'] === 200 && str_contains($page['body'], 'Категорії Marketplace'), 'mp-categories.php відкривається для admin');
     check(http($jar, "$base/mp-categories.php")['code'] === 404, 'mp-categories.php для гостя — 404');

@@ -37,6 +37,12 @@ function check(bool $cond, string $label): void
 }
 
 /** @return array{code:int,loc:string,body:string,head:string} */
+// Токен CSRF форми входу (login.php перевіряє його з 2026-11-11).
+function csrf_in(string $html): string
+{
+    return preg_match('/name="csrf" value="([^"]+)"/', $html, $m) === 1 ? $m[1] : '';
+}
+
 function http(string $jar, string $url, ?array $post = null, array $headers = []): array
 {
     $ch = curl_init($url);
@@ -181,7 +187,7 @@ try {
     check($r['code'] === 404 && !str_contains($r['body'], '<svg'), 'немає ні файла, ні запису: 404, не заглушка');
 
     echo "Автор — кабінет\n";
-    http($jarAuthor, "$base/login.php", ['email' => $authorEmail, 'password' => $pass]);
+    http($jarAuthor, "$base/login.php", ['email' => $authorEmail, 'password' => $pass, 'csrf' => csrf_in(http($jarAuthor, "$base/login.php")['body'])]);
     $r = http($jarAuthor, "$base/marketplace-my.php?tab=active");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['live']['thumb'])), '«Мої оголошення» → «Активні»: мініатюра');
     check($galOk($r['body'], $L['live']['file']), '«Мої оголошення»: мініатюра відкриває перегляд фото (оверлей)');
@@ -191,7 +197,7 @@ try {
     check($r['code'] === 200 && header_of($r, 'Content-Type') === 'image/jpeg', 'автор бачить фото свого pending: 200');
 
     echo "Admin — черга модерації, контакти, перевірка зображень\n";
-    http($jarAdm, "$base/login.php", ['email' => $admEmail, 'password' => $pass]);
+    http($jarAdm, "$base/login.php", ['email' => $admEmail, 'password' => $pass, 'csrf' => csrf_in(http($jarAdm, "$base/login.php")['body'])]);
     $r = http($jarAdm, "$base/mp-moderation.php?id={$L['pending']['id']}");
     check($r['code'] === 200 && str_contains($r['body'], $src($L['pending']['thumb'])), 'mp-moderation.php: мініатюра pending');
     check($galOk($r['body'], $L['pending']['file']), 'mp-moderation.php: фото відкривається оверлеєм, без target=_blank');

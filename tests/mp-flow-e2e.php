@@ -38,6 +38,12 @@ function check(bool $cond, string $label): void
 }
 
 /** HTTP-запит без автоматичних редіректів. @return array{code:int,loc:string,body:string} */
+// Токен CSRF форми входу (login.php перевіряє його з 2026-11-11).
+function csrf_in(string $html): string
+{
+    return preg_match('/name="csrf" value="([^"]+)"/', $html, $m) === 1 ? $m[1] : '';
+}
+
 function http(string $jar, string $url, ?array $post = null): array
 {
     $ch = curl_init($url);
@@ -121,7 +127,7 @@ try {
     $r = http($jarA, "$base/listing-post.php?type=job");
     check($r['code'] === 401 && str_contains($r['body'], 'login.php?next=listing-post.php%3Ftype%3Djob'), 'форма для гостя: 401 і посилання входу з next');
     $r = http($jarA, "$base/login.php?next=" . rawurlencode('listing-post.php?type=job'));
-    $r = http($jarA, "$base/login.php", ['email' => "  $email", 'password' => $pass]);
+    $r = http($jarA, "$base/login.php", ['email' => "  $email", 'password' => $pass, 'csrf' => csrf_in($r['body'])]);
     check($r['code'] === 302 && $r['loc'] === 'listing-post.php?type=job', 'після входу — повернення на форму (' . $r['loc'] . ')');
     check(str_contains($r['head'], 'SameSite=Lax') && preg_match('/expires=/i', $r['head']) === 1, 'кукі сесії: SameSite=Lax, постійна (expires)');
     $r = http($jarA, "$base/http-open-redirect-test");   // шум
@@ -232,7 +238,7 @@ try {
         ->execute([':id' => $bid, ':t' => "E2E Дошка {$stamp}"]);
 
     echo "Admin: черга модерації\n";
-    $r = http($jarAdm, "$base/login.php", ['email' => $admEmail, 'password' => $pass]);
+    $r = http($jarAdm, "$base/login.php", ['email' => $admEmail, 'password' => $pass, 'csrf' => csrf_in(http($jarAdm, "$base/login.php")['body'])]);
     $r = http($jarAdm, "$base/account.php?ladm_tab=mod");
     $b = $r['body'];
     check(str_contains($b, '#' . $lid . ' · Вакансія') && str_contains($b, htmlspecialchars($title, ENT_QUOTES)), '«Модерація»: вакансію видно');
