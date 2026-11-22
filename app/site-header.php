@@ -48,6 +48,10 @@ require_once __DIR__ . '/marketplace.php';
         <a class="site-nav__link" href="account.php"><?= htmlspecialchars(t('nav_account'), ENT_QUOTES) ?></a>
         <?php if ($msgOn): ?>
         <a class="site-nav__link site-nav__link--msg" href="mp-messages.php"><?= htmlspecialchars(t('msg_title'), ENT_QUOTES) ?><?= $msgBadge ?></a>
+        <?php $msgUnreadJs = __DIR__ . '/../public/assets/js/msg-unread.js'; // значок оновлюється без перезавантаження (30 с, пауза на прихованій вкладці) ?>
+        <script src="/assets/js/msg-unread.js?v=<?= is_file($msgUnreadJs) ? (int) filemtime($msgUnreadJs) : 0 ?>" defer
+                data-url="/mp-messages-unread.php" data-interval="<?= (int) (mp_config()['msg_unread_poll_seconds'] ?? 30) ?>"
+                data-aria="<?= htmlspecialchars(t('msg_unread_aria'), ENT_QUOTES) ?>"></script>
         <?php endif; ?>
         <?php if (basename((string) ($_SERVER['SCRIPT_NAME'] ?? '')) === 'account.php'): // навігація кабінету: «Блог» для всіх залогінених ролей ?>
         <a class="site-nav__link" href="blog.php" data-nav-blog><?= htmlspecialchars(t('footer_blog'), ENT_QUOTES) ?></a>

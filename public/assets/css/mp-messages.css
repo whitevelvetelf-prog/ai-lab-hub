@@ -111,3 +111,137 @@
 }
 .msg-body .visually-hidden { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .msg-actions { margin-top: 16px; }
+
+/* =====================================================================
+   Чат «Повідомлення» (2026-11-22): список ліворуч + розмова праворуч; телефон — список → розмова з «Назад».
+   Кольори — лише наявні: #00032c, #2116ad, білий, напівпрозорий білий, #5b8cff (фокус, як у решті сайту).
+   ===================================================================== */
+.msg-chat {
+    display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 16px;
+    max-width: 1200px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-left)) 16px max(16px, env(safe-area-inset-right));
+    height: calc(100dvh - var(--header-h, 72px) - var(--footer-h, 72px) - 8px); min-height: 480px;
+}
+.msg-chat__list, .msg-chat__main {
+    min-width: 0; min-height: 0; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+}
+.msg-chat__list { overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; }
+.msg-chat__main { display: flex; flex-direction: column; overflow: hidden; }
+.msg-chat__list-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; }
+.msg-chat__h1 { margin: 0; font-size: 1.35rem; font-weight: 800; }
+.msg-chat__settings {
+    display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 12px;
+    color: #ffffff; text-decoration: none; font-size: 1.2rem; background: rgba(255, 255, 255, 0.08);
+}
+.msg-chat__settings:hover, .msg-chat__settings:focus-visible { background: rgba(255, 255, 255, 0.16); }
+.msg-chat .msg-tabs { margin: 0 0 10px; gap: 6px; }
+.msg-chat .msg-tabs .mp-tab { min-height: 36px; padding: 6px 12px; font-size: 0.88rem; }
+.msg-chat__fresh { margin: 0 0 8px; font-size: 0.88rem; }
+.msg-chat__fresh a { color: #ffffff; font-weight: 700; }
+.msg-chat__empty { font-size: 0.92rem; }
+.msg-chat .msg-item { margin: 0 0 6px; }
+.msg-chat .msg-item__link { min-height: 60px; padding: 10px; border-radius: 12px; }
+.msg-chat .msg-item.is-current .msg-item__link { background: linear-gradient(135deg, rgba(33, 22, 173, 0.85), rgba(33, 22, 173, 0.55)); border-color: rgba(255, 255, 255, 0.5); }
+.msg-chat .msg-thumb { width: 44px; height: 44px; }
+.msg-chat .msg-item__side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.msg-chat .msg-item__side .msg-badge { margin: 0; }
+.msg-badge[hidden] { display: none; }
+.msg-chat__placeholder { margin: auto; padding: 24px; text-align: center; color: rgba(255, 255, 255, 0.75); }
+.msg-chat__placeholder-icon { font-size: 2.4rem; margin: 0 0 8px; opacity: 0.6; }
+
+.msg-pane { display: flex; flex-direction: column; min-height: 0; height: 100%; }
+.msg-pane__head {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; flex: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.14); background: linear-gradient(135deg, rgba(0, 3, 44, 0.6), rgba(33, 22, 173, 0.45));
+}
+.msg-pane__back {
+    display: none; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; border-radius: 12px;
+    color: #ffffff; text-decoration: none; font-size: 1.2rem; font-weight: 700;
+}
+.msg-pane__back-text { font-size: 0.95rem; }
+.msg-pane__listing { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; color: #ffffff; text-decoration: none; }
+.msg-thumb--sm { width: 40px !important; height: 40px !important; }
+.msg-pane__titles { min-width: 0; }
+.msg-pane__title { display: block; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-pane__meta { display: block; font-size: 0.8rem; color: rgba(255, 255, 255, 0.75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-pane > .mp-alert, .msg-pane > .mp-flash { margin: 8px 12px 0; }
+.msg-pane__scroll { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.msg-pane__notice { margin: 8px 12px 12px; }
+.msg-pane .msg-details { margin: 0; padding: 0 12px 8px; flex: none; }
+.msg-pane .msg-details:not([open]) { display: none; }   /* відкривається з меню «⋯» */
+
+.msg-menu { position: relative; flex: none; }
+.msg-menu__btn {
+    list-style: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+    border-radius: 12px; cursor: pointer; font-size: 1.4rem; line-height: 1; color: #ffffff; background: rgba(255, 255, 255, 0.08);
+}
+.msg-menu__btn::-webkit-details-marker { display: none; }
+.msg-menu__list {
+    position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 220px; padding: 6px;
+    border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.2); background: #00032c; box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+.msg-menu__list form { margin: 0; }
+.msg-menu__item {
+    display: flex; align-items: center; width: 100%; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 10px;
+    background: transparent; color: #ffffff; font: inherit; font-size: 0.95rem; text-align: left; text-decoration: none; cursor: pointer;
+}
+.msg-menu__item:hover, .msg-menu__item:focus-visible { background: rgba(255, 255, 255, 0.1); }
+
+/* Повідомлення: вкладення й «Прочитано» */
+.msg-bubble__text { display: block; }
+.msg-bubble__foot { display: flex; justify-content: flex-end; align-items: baseline; gap: 8px; margin-top: 4px; }
+.msg-bubble__foot .msg-bubble__time { margin: 0; }
+.msg-read { font-size: 0.72rem; opacity: 0.65; white-space: nowrap; }
+.msg-read::before { content: "✓ "; }
+.msg-read.is-read { opacity: 0.9; font-weight: 700; }
+.msg-read.is-read::before { content: "✓✓ "; }
+.msg-att { display: block; margin: 2px 0 6px; color: inherit; text-decoration: none; }
+.msg-att--img img { display: block; max-width: min(320px, 100%); max-height: 320px; border-radius: 12px; object-fit: cover; background: rgba(255, 255, 255, 0.1); }
+.msg-att--file {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.25); background: rgba(255, 255, 255, 0.06);
+}
+.msg-row--mine .msg-att--file { border-color: rgba(33, 22, 173, 0.3); background: rgba(33, 22, 173, 0.08); }
+.msg-att__icon { flex: none; padding: 4px 6px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; background: #2116ad; color: #ffffff; }
+.msg-att__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.msg-att__size { flex: none; font-size: 0.75rem; opacity: 0.7; }
+
+/* Поле вводу в чаті: не sticky (панель сама прокручується), з кнопкою вкладення */
+.msg-pane .msg-compose { position: static; margin: 0; flex: none; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); }
+.msg-compose__attach {
+    flex: none; display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px;
+    border-radius: 12px; cursor: pointer; font-size: 1.25rem; background: rgba(255, 255, 255, 0.08);
+}
+.msg-compose__attach:hover { background: rgba(255, 255, 255, 0.16); }
+.msg-compose__attach:focus-within { box-shadow: 0 0 0 2px #5b8cff; }
+.msg-compose__file {
+    display: inline-flex; align-items: center; gap: 6px; max-width: 100%; margin: 0 0 6px; padding: 4px 4px 4px 10px;
+    border-radius: 999px; font-size: 0.82rem; background: rgba(255, 255, 255, 0.12);
+}
+.msg-compose__file[hidden] { display: none; }
+.msg-compose__file > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msg-compose__file-x {
+    flex: none; width: 28px; height: 28px; border: 0; border-radius: 999px; cursor: pointer;
+    background: rgba(255, 255, 255, 0.16); color: #ffffff; font-size: 1rem; line-height: 1;
+}
+.msg-compose__send-icon { display: none; }
+
+@media (max-width: 768px) {
+    .msg-chat { display: block; height: auto; min-height: 0; padding: 12px max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right)); }
+    .msg-chat__list, .msg-chat__main { border: 0; border-radius: 0; background: transparent; }
+    .msg-chat__list { overflow: visible; padding: 0; }
+    .msg-chat__main { display: none; overflow: visible; }
+    .msg-chat--open { padding-top: 0; }
+    .msg-chat--open .msg-chat__list { display: none; }
+    .msg-chat--open .msg-chat__main { display: block; margin: 0 calc(-1 * max(16px, env(safe-area-inset-left))) 0 calc(-1 * max(16px, env(safe-area-inset-right))); }
+    .msg-pane { height: auto; min-height: calc(100dvh - var(--header-h, 56px)); }
+    .msg-pane__head { position: sticky; top: var(--header-h, 56px); z-index: 6; background: #00032c; }
+    .msg-pane__back { display: inline-flex; }
+    .msg-pane__back-text { display: none; }
+    .msg-pane__scroll { overflow: visible; flex: 1 0 auto; }
+    .msg-pane .msg-compose { position: sticky; bottom: 0; background: rgba(0, 3, 44, 0.96); }
+    .msg-compose__send { padding-left: 12px; padding-right: 12px; }
+    .msg-compose__send-text { display: none; }
+    .msg-compose__send-icon { display: inline; font-size: 1.1rem; }
+}
+.msg-chat--single { grid-template-columns: minmax(0, 1fr); max-width: 900px; }

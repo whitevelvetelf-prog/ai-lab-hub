@@ -5,10 +5,11 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — Marketplace: нові повідомлення розмови (JSON) для сторінки mp-thread.php.
  *
- *   GET mp-messages-poll.php?c=N&since=ID   → {ok, messages:[…до 50], last_id, readonly}
+ *   GET mp-messages-poll.php?c=N&since=ID   → {ok, messages:[…до 50, з row_html], last_id, readonly, peer_read}
+ *   peer_read — останнє повідомлення, яке прочитав співрозмовник (позначка «Прочитано» під своїми).
  *
  * Лише учасник розмови (перевірка на кожен запит; чужа → 404). ETag = останнє повідомлення + стан «лише читання»;
- * If-None-Match збігається → 304 без тіла. Ліміт частоти: не частіше 1 запиту на 4 с на розмову в сесії (429)
+ * If-None-Match збігається → 304 без тіла. Ліміт частоти: не частіше 1 запиту на 3 с на розмову в сесії (429)
  * і добовий IP-ліміт ip_limit_poll. Повертає лише нові повідомлення й позначає їх прочитаними.
  */
 
@@ -45,7 +46,7 @@ if ($role === null) {
 // Частота: сесія (на розмову) + IP за добу.
 $key = 'msg_poll_' . $convId;
 $now = microtime(true);
-if (isset($_SESSION[$key]) && $now - (float) $_SESSION[$key] < 4.0) {
+if (isset($_SESSION[$key]) && $now - (float) $_SESSION[$key] < 3.0) {
     header('Retry-After: 5');
     $fail(429, 'rate');
 }
@@ -58,7 +59,8 @@ if (!mpb_is_staff() && !mpb_ip_hit($pdo, 'msg_poll', (int) msg_cfg('ip_limit_pol
 $listing = msg_listing($pdo, (int) $conv['listing_id']);
 $readonly = msg_is_readonly($conv, $listing);
 $lastId = msg_last_id($pdo, $convId);
-$etag = '"m' . $convId . '-' . $lastId . '-' . $since . '-' . ($readonly ? 1 : 0) . '"';
+$peer = msg_peer_read_id($pdo, $conv, $role);
+$etag = '"m' . $convId . '-' . $lastId . '-' . $since . '-' . ($readonly ? 1 : 0) . '-' . $peer . '"';
 header('ETag: ' . $etag);
 $given = (string) ($_SERVER['HTTP_IF_NONE_MATCH'] ?? '');
 if ($given !== '' && hash_equals($etag, trim($given))) {
@@ -70,4 +72,5 @@ $rows = $lastId > $since ? msg_messages($pdo, $conv, $role, $uid, $since, MSG_PO
 if ($rows !== []) {
     msg_mark_read($pdo, $convId, msg_state_uid($role, $uid), (int) end($rows)['id']);
 }
-echo json_encode(['ok' => true, 'messages' => $rows, 'last_id' => $lastId, 'readonly' => $readonly], JSON_UNESCAPED_UNICODE);
+$rows = array_map(static fn(array $m): array => $m + ['row_html' => msg_row_html($m, $peer)], $rows);
+echo json_encode(['ok' => true, 'messages' => $rows, 'last_id' => $lastId, 'readonly' => $readonly, 'peer_read' => $peer], JSON_UNESCAPED_UNICODE);
