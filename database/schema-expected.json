@@ -1,0 +1,817 @@
+{
+    "comment": "Очікувана схема після hosting-upload/marketplace-ALL-04-28 (scripts/build-release-sql.php). Згенеровано scripts/schema-check.php --write-expected.",
+    "generated": "2026-11-22 06:35",
+    "collation": "utf8mb4_unicode_ci",
+    "tables": {
+        "ad_campaign_geo": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "campaign_id": "int unsigned",
+                "mode": "varchar(7)",
+                "place_id": "int unsigned",
+                "place_type": "varchar(10)",
+                "country_code": "char(2)",
+                "radius_km": "smallint unsigned",
+                "is_active": "tinyint(1)",
+                "created_at": "timestamp"
+            },
+            "indexes": {
+                "idx_campaign": "(campaign_id)",
+                "idx_campaign_mode_cc": "(campaign_id,is_active,mode,country_code,place_type)",
+                "idx_cc_active": "(country_code,is_active)",
+                "idx_place": "(place_id)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_campaign_mode_place": "UNIQUE (campaign_id,mode,place_id)"
+            }
+        },
+        "ad_campaign_geo_settings": {
+            "new": true,
+            "columns": {
+                "campaign_id": "int unsigned",
+                "match_mode": "varchar(6)",
+                "updated_at": "timestamp"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (campaign_id)"
+            }
+        },
+        "geo_place_names": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "place_id": "int unsigned",
+                "lang": "varchar(5)",
+                "name": "varchar(200)",
+                "is_primary": "tinyint(1)"
+            },
+            "indexes": {
+                "idx_lang_name": "(lang,name)",
+                "idx_name": "(name)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_place_lang_name": "UNIQUE (place_id,lang,name)"
+            }
+        },
+        "geo_place_sections": {
+            "new": true,
+            "columns": {
+                "place_id": "int unsigned"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (place_id)"
+            }
+        },
+        "geo_places": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "geoname_id": "int unsigned",
+                "type": "varchar(10)",
+                "country_code": "char(2)",
+                "parent_id": "int unsigned",
+                "lat": "decimal(9,6)",
+                "lon": "decimal(9,6)",
+                "population": "int unsigned",
+                "timezone": "varchar(40)"
+            },
+            "indexes": {
+                "idx_country_type": "(country_code,type)",
+                "idx_lat_lon": "(lat,lon)",
+                "idx_parent": "(parent_id)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_geoname": "UNIQUE (geoname_id)"
+            }
+        },
+        "mp_admin_access_log": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "admin_id": "int unsigned",
+                "conversation_id": "int unsigned",
+                "action": "varchar(30)",
+                "reason": "varchar(300)",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_conv": "(conversation_id)",
+                "idx_created": "(created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_appeals": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "user_id": "int unsigned",
+                "decision_status": "varchar(20)",
+                "text": "text",
+                "source": "varchar(10)",
+                "status": "varchar(20)",
+                "admin_comment": "varchar(1000)",
+                "created_by": "int unsigned",
+                "created_at": "datetime",
+                "resolved_at": "datetime",
+                "resolved_by": "int unsigned"
+            },
+            "indexes": {
+                "idx_listing": "(listing_id)",
+                "idx_status_created": "(status,created_at)",
+                "idx_user": "(user_id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_categories": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "section": "varchar(20)",
+                "parent_id": "int unsigned",
+                "slug": "varchar(80)",
+                "icon": "varchar(60)",
+                "sort_order": "int",
+                "is_active": "tinyint(1)",
+                "is_draft": "tinyint(1)"
+            },
+            "indexes": {
+                "idx_parent": "(parent_id)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_section_slug": "UNIQUE (section,slug)"
+            }
+        },
+        "mp_category_translations": {
+            "new": true,
+            "columns": {
+                "category_id": "int unsigned",
+                "lang": "varchar(10)",
+                "name": "varchar(150)",
+                "is_auto": "tinyint(1)"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (category_id,lang)"
+            }
+        },
+        "mp_claims": {
+            "new": true,
+            "columns": {
+                "id": "bigint unsigned",
+                "listing_id": "int unsigned",
+                "user_id": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_listing": "(listing_id,created_at)",
+                "idx_user": "(user_id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_complaints": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "reporter_id": "int unsigned",
+                "reporter_email": "varchar(190)",
+                "reason": "varchar(30)",
+                "note": "text",
+                "claimant_name": "varchar(200)",
+                "claimant_contact": "varchar(300)",
+                "infringed_work": "text",
+                "evidence_url": "varchar(500)",
+                "evidence_file": "varchar(80)",
+                "good_faith": "tinyint(1)",
+                "ip_hash": "char(64)",
+                "status": "varchar(20)",
+                "admin_note": "varchar(1000)",
+                "counter_text": "text",
+                "counter_evidence_url": "varchar(500)",
+                "counter_at": "datetime",
+                "created_at": "datetime",
+                "updated_at": "datetime",
+                "resolved_at": "datetime",
+                "resolved_by": "int unsigned"
+            },
+            "indexes": {
+                "idx_ip_created": "(ip_hash,created_at)",
+                "idx_listing": "(listing_id)",
+                "idx_reporter_created": "(reporter_id,created_at)",
+                "idx_status_created": "(status,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_contact_reveals": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "user_id": "int unsigned",
+                "created_at": "datetime",
+                "ip_hash": "char(64)"
+            },
+            "indexes": {
+                "idx_listing_created": "(listing_id,created_at)",
+                "idx_user_created": "(user_id,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_conversation_state": {
+            "new": true,
+            "columns": {
+                "conversation_id": "int unsigned",
+                "user_id": "int unsigned",
+                "last_read_message_id": "int unsigned",
+                "hidden_up_to_message_id": "int unsigned",
+                "is_muted": "tinyint(1)"
+            },
+            "indexes": {
+                "idx_user": "(user_id)",
+                "PRIMARY": "UNIQUE (conversation_id,user_id)"
+            }
+        },
+        "mp_conversations": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_source": "varchar(20)",
+                "listing_id": "int unsigned",
+                "buyer_id": "int unsigned",
+                "seller_user_id": "int unsigned",
+                "status": "varchar(10)",
+                "last_message_id": "int unsigned",
+                "last_message_at": "datetime",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_buyer_last": "(buyer_id,last_message_at)",
+                "idx_seller_last": "(seller_user_id,last_message_at)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_listing_buyer": "UNIQUE (listing_source,listing_id,buyer_id)"
+            }
+        },
+        "mp_email_verifications": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "email": "varchar(190)",
+                "token_hash": "char(64)",
+                "created_at": "datetime",
+                "expires_at": "datetime",
+                "verified_at": "datetime",
+                "next_path": "varchar(300)"
+            },
+            "indexes": {
+                "idx_token_hash": "(token_hash)",
+                "idx_user": "(user_id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_favorites": {
+            "new": true,
+            "columns": {
+                "user_id": "int unsigned",
+                "listing_id": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_listing": "(listing_id)",
+                "PRIMARY": "UNIQUE (user_id,listing_id)"
+            }
+        },
+        "mp_files": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "original_name": "varchar(255)",
+                "stored_name": "varchar(255)",
+                "mime": "varchar(100)",
+                "size_bytes": "bigint unsigned",
+                "sha256": "char(64)",
+                "scan_status": "varchar(20)",
+                "uploaded_by": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_sha": "(sha256)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_form_drafts": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "form_key": "varchar(40)",
+                "title": "varchar(200)",
+                "data_json": "mediumtext",
+                "created_at": "datetime",
+                "updated_at": "datetime"
+            },
+            "indexes": {
+                "idx_mp_form_drafts_updated": "(updated_at)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_mp_form_drafts_user_form": "UNIQUE (user_id,form_key)"
+            }
+        },
+        "mp_listing_categories": {
+            "new": true,
+            "columns": {
+                "listing_id": "int unsigned",
+                "category_id": "int unsigned"
+            },
+            "indexes": {
+                "idx_category": "(category_id)",
+                "PRIMARY": "UNIQUE (listing_id,category_id)"
+            }
+        },
+        "mp_listing_photos": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "file_name": "varchar(80)",
+                "thumb_name": "varchar(80)",
+                "sort_order": "int",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_listing_sort": "(listing_id,sort_order)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_listing_places": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "place_id": "int unsigned",
+                "radius_km": "smallint unsigned",
+                "sort_order": "tinyint unsigned"
+            },
+            "indexes": {
+                "idx_place": "(place_id)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_listing_place": "UNIQUE (listing_id,place_id)"
+            }
+        },
+        "mp_listing_stats_daily": {
+            "new": true,
+            "columns": {
+                "listing_id": "int unsigned",
+                "day": "date",
+                "views": "int unsigned",
+                "clicks": "int unsigned"
+            },
+            "indexes": {
+                "idx_day": "(day)",
+                "PRIMARY": "UNIQUE (listing_id,day)"
+            }
+        },
+        "mp_listing_tags": {
+            "new": true,
+            "columns": {
+                "listing_id": "int unsigned",
+                "tag": "varchar(40)",
+                "is_active": "tinyint(1)"
+            },
+            "indexes": {
+                "idx_tag": "(tag)",
+                "PRIMARY": "UNIQUE (listing_id,tag)"
+            }
+        },
+        "mp_listing_translations": {
+            "new": true,
+            "columns": {
+                "listing_id": "int unsigned",
+                "lang": "varchar(10)",
+                "title": "varchar(200)",
+                "short_desc": "varchar(500)",
+                "full_desc": "text",
+                "features": "text",
+                "for_whom": "text",
+                "is_auto": "tinyint(1)",
+                "updated_at": "datetime"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (listing_id,lang)"
+            }
+        },
+        "mp_listing_views_daily": {
+            "new": true,
+            "columns": {
+                "listing_id": "int unsigned",
+                "stat_date": "date",
+                "views": "int unsigned"
+            },
+            "indexes": {
+                "idx_stat_date": "(stat_date)",
+                "PRIMARY": "UNIQUE (listing_id,stat_date)"
+            }
+        },
+        "mp_listings": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "section": "varchar(20)",
+                "seller_id": "int unsigned",
+                "status": "varchar(20)",
+                "pricing_model": "varchar(20)",
+                "price_amount": "decimal(10,2)",
+                "currency": "char(3)",
+                "delivery_type": "varchar(20)",
+                "delivery_url": "varchar(500)",
+                "file_id": "int unsigned",
+                "license": "varchar(40)",
+                "cover_image": "varchar(255)",
+                "source_lang": "varchar(10)",
+                "platform": "varchar(100)",
+                "skill_level": "varchar(30)",
+                "claims_count": "int unsigned",
+                "created_by": "int unsigned",
+                "moderated_by": "int unsigned",
+                "moderated_at": "datetime",
+                "published_at": "datetime",
+                "created_at": "datetime",
+                "updated_at": "datetime",
+                "price_type": "varchar(20)",
+                "is_remote": "tinyint(1)",
+                "city": "varchar(120)",
+                "expires_at": "datetime",
+                "views_count": "int unsigned",
+                "reject_reason": "varchar(500)",
+                "rules_accepted_at": "datetime",
+                "contact_name": "varchar(100)",
+                "contact_phone": "varchar(40)",
+                "contact_telegram": "varchar(80)",
+                "contact_email": "varchar(190)",
+                "rules_version": "varchar(20)",
+                "company_name": "varchar(150)",
+                "country": "char(2)",
+                "offer_lang": "varchar(10)",
+                "details": "text",
+                "slug": "varchar(140)",
+                "free_until": "date",
+                "link_check_status": "varchar(20)",
+                "link_check_json": "text",
+                "link_checked_at": "datetime",
+                "expiry_notified_at": "datetime",
+                "report_sent_at": "datetime",
+                "work_format": "varchar(10)",
+                "service_scope": "varchar(10)",
+                "primary_place_id": "int unsigned",
+                "country_code": "char(2)",
+                "lat": "decimal(9,6)",
+                "lon": "decimal(9,6)",
+                "service_radius_km": "smallint unsigned",
+                "price_usd": "decimal(12,2)",
+                "post_form": "varchar(10)",
+                "salary_min_usd": "decimal(12,2)",
+                "salary_max_usd": "decimal(12,2)",
+                "ai_generated_media": "tinyint(1)",
+                "usage_terms": "varchar(20)",
+                "usage_terms_note": "varchar(200)",
+                "reject_code": "varchar(20)",
+                "status_changed_at": "datetime",
+                "contact_mode": "varchar(16)"
+            },
+            "indexes": {
+                "idx_city": "(city)",
+                "idx_country_lang": "(country,offer_lang)",
+                "idx_geo_format_country": "(work_format,country_code)",
+                "idx_geo_lat_lon": "(lat,lon)",
+                "idx_price": "(price_type,price_amount)",
+                "idx_price_usd": "(price_usd)",
+                "idx_primary_place": "(primary_place_id)",
+                "idx_section_status": "(section,status,published_at)",
+                "idx_section_status_exp": "(section,status,expires_at)",
+                "idx_seller": "(seller_id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_message_emails": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "conversation_id": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_conv_user": "(conversation_id,user_id,created_at)",
+                "idx_user_created": "(user_id,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_message_reports": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "conversation_id": "int unsigned",
+                "message_id": "int unsigned",
+                "reporter_id": "int unsigned",
+                "reason": "varchar(20)",
+                "note": "varchar(500)",
+                "snapshot": "mediumtext",
+                "status": "varchar(10)",
+                "handled_by": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_conv": "(conversation_id)",
+                "idx_status": "(status,id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_messages": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "conversation_id": "int unsigned",
+                "sender_id": "int unsigned",
+                "sender_label": "varchar(40)",
+                "body": "text",
+                "is_system": "tinyint(1)",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_conv_id": "(conversation_id,id)",
+                "idx_sender_created": "(sender_id,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_moderation_log": {
+            "new": true,
+            "columns": {
+                "id": "bigint unsigned",
+                "listing_id": "int unsigned",
+                "actor_id": "int unsigned",
+                "action": "varchar(30)",
+                "note": "varchar(500)",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_listing": "(listing_id)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_notifications": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "listing_id": "int unsigned",
+                "event": "varchar(30)",
+                "params": "text",
+                "created_at": "datetime",
+                "read_at": "datetime",
+                "emailed_at": "datetime"
+            },
+            "indexes": {
+                "idx_listing_event": "(listing_id,event)",
+                "idx_user_created": "(user_id,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_notify_prefs": {
+            "new": true,
+            "columns": {
+                "user_id": "int unsigned",
+                "email_new_message": "tinyint(1)",
+                "last_email_at": "datetime"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (user_id)"
+            }
+        },
+        "mp_rate_limits": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "key_hash": "char(64)",
+                "action": "varchar(30)",
+                "window_start": "datetime",
+                "hits": "int unsigned"
+            },
+            "indexes": {
+                "idx_window": "(window_start)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_key_action_window": "UNIQUE (key_hash,action,window_start)"
+            }
+        },
+        "mp_reports": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "listing_id": "int unsigned",
+                "reporter_id": "int unsigned",
+                "reason": "varchar(30)",
+                "note": "varchar(500)",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (id)",
+                "uq_listing_reporter": "UNIQUE (listing_id,reporter_id)"
+            }
+        },
+        "mp_saved_searches": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "title": "varchar(150)",
+                "params": "varchar(1000)",
+                "params_hash": "char(64)",
+                "notify_email": "tinyint(1)",
+                "is_active": "tinyint(1)",
+                "last_seen_at": "datetime",
+                "last_notified_at": "datetime",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_notify": "(notify_email,is_active)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_user_params": "UNIQUE (user_id,params_hash)"
+            }
+        },
+        "mp_sellers": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "display_name": "varchar(150)",
+                "slug": "varchar(100)",
+                "website_url": "varchar(500)",
+                "is_platform": "tinyint(1)",
+                "is_verified": "tinyint(1)",
+                "status": "varchar(20)",
+                "created_at": "datetime",
+                "bio": "varchar(500)",
+                "logo": "varchar(255)",
+                "page_public": "tinyint(1)"
+            },
+            "indexes": {
+                "idx_user": "(user_id)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_slug": "UNIQUE (slug)"
+            }
+        },
+        "mp_user_blocks": {
+            "new": true,
+            "columns": {
+                "blocker_id": "int unsigned",
+                "blocked_id": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_blocked": "(blocked_id)",
+                "PRIMARY": "UNIQUE (blocker_id,blocked_id)"
+            }
+        },
+        "mp_user_flags": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "flag": "varchar(30)",
+                "until_at": "datetime",
+                "note": "varchar(300)",
+                "created_by": "int unsigned",
+                "is_active": "tinyint(1)",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_created": "(created_at)",
+                "idx_user_flag": "(user_id,flag,is_active)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "mp_user_prefs": {
+            "new": true,
+            "columns": {
+                "user_id": "int unsigned",
+                "country_code": "char(2)",
+                "place_id": "int unsigned",
+                "radius_km": "smallint unsigned",
+                "units": "varchar(2)",
+                "listing_langs": "varchar(100)",
+                "show_online": "tinyint(1)",
+                "updated_at": "timestamp"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (user_id)"
+            }
+        },
+        "mp_user_sanctions": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "user_id": "int unsigned",
+                "action": "varchar(20)",
+                "days": "int unsigned",
+                "note": "varchar(1000)",
+                "actor_id": "int unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_user_created": "(user_id,created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "search_index": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "product_id": "int unsigned",
+                "lang": "varchar(5)",
+                "field_type": "varchar(16)",
+                "token": "varchar(64)",
+                "weight": "tinyint unsigned"
+            },
+            "indexes": {
+                "idx_search_product": "(product_id)",
+                "idx_search_token": "(token,product_id,field_type,weight)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "search_index_state": {
+            "new": true,
+            "columns": {
+                "product_id": "int unsigned",
+                "content_hash": "char(32)",
+                "indexed_at": "datetime"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (product_id)"
+            }
+        },
+        "search_log": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "query": "varchar(200)",
+                "lang": "varchar(5)",
+                "results_count": "smallint unsigned",
+                "created_at": "datetime"
+            },
+            "indexes": {
+                "idx_search_log_created": "(created_at)",
+                "PRIMARY": "UNIQUE (id)"
+            }
+        },
+        "search_query_overrides": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "scope": "varchar(20)",
+                "query_norm": "varchar(60)",
+                "status": "varchar(10)",
+                "sort_order": "smallint",
+                "label_uk": "varchar(60)",
+                "label_en": "varchar(60)",
+                "updated_at": "datetime"
+            },
+            "indexes": {
+                "PRIMARY": "UNIQUE (id)",
+                "uq_scope_query": "UNIQUE (scope,query_norm)"
+            }
+        },
+        "search_query_stats": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "scope": "varchar(20)",
+                "query_norm": "varchar(60)",
+                "stat_date": "date",
+                "hits": "int unsigned"
+            },
+            "indexes": {
+                "idx_scope_date": "(scope,stat_date)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_scope_query_date": "UNIQUE (scope,query_norm,stat_date)"
+            }
+        },
+        "search_synonyms": {
+            "new": true,
+            "columns": {
+                "id": "int unsigned",
+                "group_id": "int unsigned",
+                "word": "varchar(100)",
+                "created_at": "timestamp"
+            },
+            "indexes": {
+                "idx_search_synonym_word": "(word)",
+                "PRIMARY": "UNIQUE (id)",
+                "uq_search_synonym": "UNIQUE (group_id,word)"
+            }
+        },
+        "users": {
+            "new": false,
+            "columns": {
+                "warnings_count": "int unsigned",
+                "posting_banned_until": "datetime",
+                "blocked_at": "datetime"
+            },
+            "indexes": []
+        }
+    }
+}

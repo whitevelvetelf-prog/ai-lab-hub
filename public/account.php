@@ -1741,6 +1741,14 @@ usort($mergedRequests, static fn(array $a, array $b): int => strtotime($a['sort_
                                 <ul class="section__hint" style="margin:4px 0 10px;padding-left:18px;">
                                     <li>Донати: <?= $dnState['configured'] ? 'налаштовано' : '<strong>не налаштовано</strong>' ?>
                                         · <a href="account.php#acc-donate">Кабінет → Донати</a></li>
+                                    <?php if (auth_role() === 'admin'):
+                                        // Налаштування конфігів — лише «налаштовано / не налаштовано / вимкнено», без значень (app/config-status.php).
+                                        require_once __DIR__ . '/../app/config-status.php';
+                                        foreach (config_status($pdo) as $cs):
+                                            if ($cs['group'] === 'Донати') { continue; } ?>
+                                    <li><?= e($cs['group'] . ' — ' . $cs['name']) ?>:
+                                        <?= $cs['state'] === 'missing' ? '<strong>не налаштовано</strong>' : e(config_status_label($cs['state'])) ?><?= $cs['hint'] !== '' ? ' <span class="section__hint">(' . e($cs['hint']) . ')</span>' : '' ?></li>
+                                    <?php endforeach; endif; ?>
                                 </ul>
                                 <?= donate_status_warning_html($pdo) ?>
                             </div>

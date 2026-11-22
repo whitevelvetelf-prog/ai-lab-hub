@@ -180,6 +180,10 @@ $images = Get-RelativeFiles -Dir 'public/assets/images' -Filter '*' -Recurse |
     Where-Object { $_ -notin $imageExcludes -and $_ -notmatch '^public/assets/images/logos/' -and $_ -notmatch '^public/assets/images/ads/uploads/' -and $_ -notmatch '^public/assets/images/marketplace/covers/' }
 $files.AddRange([string[]] $images)
 
+# One-off diagnostics public/_*.php (e.g. _session-check.php, _check-env.php) never ship: they were run once on the
+# server and deleted there; a full build must not put them back.
+$files = @($files | Where-Object { $_ -notmatch '^public/_[^/]+\.php$' })
+
 # Marketplace: explicit exclusion unless -IncludeMarketplace (files stay on disk, only kept out of the zip).
 $marketplacePatterns = @(
     '^public/mp-[^/]+\.php$',

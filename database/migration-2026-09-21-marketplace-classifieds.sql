@@ -161,6 +161,11 @@ SELECT 'board', s.slug, s.sort_order FROM (
 ) s
 WHERE NOT EXISTS (
   SELECT 1 FROM mp_categories c WHERE c.section = 'board' AND c.slug = s.slug
+)
+-- Повторний запуск після дерева категорій (№ 18, 2026-11-06): категорії дошки вже переїхали в блоки — не створювати
+-- їх знову в 'board' (блок 'goods' з'являється лише в № 18).
+AND NOT EXISTS (
+  SELECT 1 FROM mp_categories g WHERE g.section = 'goods' AND g.slug = 'goods'
 );
 
 INSERT INTO mp_category_translations (category_id, lang, name)
