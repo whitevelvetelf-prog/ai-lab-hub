@@ -257,7 +257,7 @@ if ($listingParam > 0) {
                 <label class="visually-hidden" for="msgBody"><?= mp_e(t('msg_placeholder')) ?></label>
                 <span class="msg-compose__file" id="msgFileChip" hidden><span id="msgFileName"></span>
                     <button type="button" class="msg-compose__file-x" id="msgFileClear" aria-label="<?= mp_e(t('msg_attach_remove')) ?>">×</button></span>
-                <textarea id="msgBody" name="body" rows="3" maxlength="<?= $maxLen ?>" autocomplete="off" enterkeyhint="send" placeholder="<?= mp_e(t('msg_placeholder_chat')) ?>"><?= mp_e($draft) ?></textarea>
+                <textarea id="msgBody" name="body" rows="3" maxlength="<?= $maxLen ?>" autocomplete="off" enterkeyhint="send" placeholder="<?= mp_e(t('msg_placeholder_chat')) ?>" data-placeholder-touch="<?= mp_e(t('msg_placeholder')) ?>"><?= mp_e($draft) ?></textarea>
                 <span class="msg-compose__error" id="msgError" role="alert" hidden></span>
             </div>
             <button class="mp-btn mp-btn--primary" type="submit"><?= mp_e(t('msg_send')) ?></button>

@@ -14,6 +14,7 @@ declare(strict_types=1);
  *                      «Зняти» (is_active = 0).
  *   log              — журнал повного перегляду розмов (mp_admin_access_log). ЛИШЕ admin.
  * Повний перегляд розмови — тільки кнопкою з обов'язковою причиною: запис у журнал, доступ на 10 хв у сесії.
+ * Вкладення (міграція № 30) — посилання на mp-attachment.php (admin/employee: лише розмови зі скаргою або з записаною причиною).
  */
 
 require_once __DIR__ . '/../app/auth.php';
@@ -122,6 +123,9 @@ $renderMsg = static function (array $m, ?int $buyer, ?int $seller) use ($pdo): s
     }
 
     return '<li class="msg-row"><div class="msg-bubble"><span class="msg-bubble__label">' . mp_e($who) . ' · ' . mp_e((string) $m['created_at']) . '</span>'
+        . (!empty($m['attachment_name']) ? '<a class="msg-att msg-att--file" href="mp-attachment.php?m=' . (int) $m['id'] . '" target="_blank" rel="noopener">'
+            . '<span class="msg-att__icon" aria-hidden="true">' . ((string) ($m['attachment_mime'] ?? '') === 'application/pdf' ? 'PDF' : 'IMG') . '</span>'
+            . '<span class="msg-att__name">' . mp_e((string) $m['attachment_name']) . '</span></a>' : '')
         . nl2br(htmlspecialchars((string) $m['body'], ENT_QUOTES | ENT_SUBSTITUTE), false) . '</div></li>';
 };
 
@@ -135,7 +139,8 @@ if ($viewId > 0) {
         mpb_redirect('mp-message-reports.php');
     }
     $listing = msg_listing($pdo, (int) $conv['listing_id']);
-    $st = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at FROM mp_messages WHERE conversation_id = :c ORDER BY id LIMIT 2000');
+    $st = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at' . (msg_chat_ready($pdo) ? ', attachment_name, attachment_mime' : '')
+        . ' FROM mp_messages WHERE conversation_id = :c ORDER BY id LIMIT 2000');
     $st->execute([':c' => $viewId]);
     msg_open(t('msg_rep_view_title'), '');
     echo '<div class="mp-page mp-page--narrow"><p><a class="mp-back" href="mp-message-reports.php">← ' . mp_e(t('msg_reports_title')) . '</a></p>'

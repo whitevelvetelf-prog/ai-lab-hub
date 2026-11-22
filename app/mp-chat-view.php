@@ -125,7 +125,7 @@ function msg_chat_pane(PDO $pdo, array $conv, string $role, int $uid, string $ba
                         <span class="msg-compose__file" id="msgFileChip" hidden><span id="msgFileName"></span>
                             <button type="button" class="msg-compose__file-x" id="msgFileClear" aria-label="<?= $h('msg_attach_remove') ?>">×</button></span>
                         <textarea id="msgBody" name="body" rows="1" maxlength="<?= $maxLen ?>" autocomplete="off" autocorrect="on" spellcheck="true"
-                                  enterkeyhint="send" placeholder="<?= $h('msg_placeholder_chat') ?>"><?= mp_e($draft) ?></textarea>
+                                  enterkeyhint="send" placeholder="<?= $h('msg_placeholder_chat') ?>" data-placeholder-touch="<?= $h('msg_placeholder') ?>"><?= mp_e($draft) ?></textarea>
                         <span class="msg-compose__error" id="msgError" role="alert" hidden></span>
                     </div>
                     <button class="mp-btn mp-btn--primary msg-compose__send" type="submit" aria-label="<?= $h('msg_send') ?>"><span class="msg-compose__send-text"><?= $h('msg_send') ?></span><span class="msg-compose__send-icon" aria-hidden="true">➤</span></button>

@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  * Файл лежить ПОЗА коренем сайту (app/mp-messages.php → msg_attach_dir()), прямої адреси немає. Доступ:
  *   - учасник розмови (покупець, автор; для оголошень платформи — employee/admin скриньки платформи) — msg_access();
- *   - employee/admin поза скринькою платформи — ЛИШЕ якщо на цю розмову є скарга (розгляд у CRM mp-message-reports.php);
+ *   - employee/admin поза скринькою платформи — ЛИШЕ якщо на цю розмову є скарга (розгляд у CRM mp-message-reports.php)
+ *     або відкрито повний перегляд із записаною причиною (mp_admin_access_log, 10 хв у сесії);
  *   - усі інші, неіснуюче чи вимкнене → 404 (без підказки, що файл існує).
  * Зображення — inline (перекодовані GD при завантаженні), PDF — лише як завантаження (attachment), ніколи не в сторінці сайту.
  * nosniff, CSP sandbox, приватний кеш. Тільки GET/HEAD.
@@ -44,7 +45,8 @@ $allowed = msg_access($conv, $uid) !== null;
 if (!$allowed && mp_is_staff()) {
     $rep = $pdo->prepare('SELECT 1 FROM mp_message_reports WHERE conversation_id = :c LIMIT 1');
     $rep->execute([':c' => (int) $conv['id']]);
-    $allowed = $rep->fetchColumn() !== false;
+    $allowed = $rep->fetchColumn() !== false
+        || (int) ($_SESSION['msg_admin_view'][(int) $conv['id']] ?? 0) > time();   // повний перегляд із записаною причиною (журнал)
 }
 $path = $allowed ? msg_attach_abs((string) $row['attachment_path']) : null;
 $mime = (string) $row['attachment_mime'];

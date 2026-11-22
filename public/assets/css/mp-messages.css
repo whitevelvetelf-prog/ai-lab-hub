@@ -118,8 +118,9 @@
    ===================================================================== */
 .msg-chat {
     display: grid; grid-template-columns: minmax(280px, 360px) minmax(0, 1fr); gap: 16px;
-    max-width: 1200px; margin: 0 auto; padding: 16px max(16px, env(safe-area-inset-left)) 16px max(16px, env(safe-area-inset-right));
-    height: calc(100dvh - var(--header-h, 72px) - var(--footer-h, 72px) - 8px); min-height: 480px;
+    width: 100%; min-width: 0; box-sizing: border-box;   /* body — flex-колонка: без width блок розтягується по довгих назвах */
+    max-width: 1200px; margin: 0 auto; padding: 12px max(16px, env(safe-area-inset-left)) 12px max(16px, env(safe-area-inset-right));
+    height: calc(100dvh - var(--header-h, 72px) - var(--footer-h, 72px) - 8px); min-height: 300px;
 }
 .msg-chat__list, .msg-chat__main {
     min-width: 0; min-height: 0; border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 16px;
@@ -239,7 +240,7 @@
     .msg-pane__back { display: inline-flex; }
     .msg-pane__back-text { display: none; }
     .msg-pane__scroll { overflow: visible; flex: 1 0 auto; }
-    .msg-pane .msg-compose { position: sticky; bottom: 0; background: rgba(0, 3, 44, 0.96); }
+    .msg-pane .msg-compose { position: sticky; bottom: 0; background: #00032c; }
     .msg-compose__send { padding-left: 12px; padding-right: 12px; }
     .msg-compose__send-text { display: none; }
     .msg-compose__send-icon { display: inline; font-size: 1.1rem; }

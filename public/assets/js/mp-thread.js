@@ -35,6 +35,10 @@
     var busy = false;
     var sending = false;
     var touchOnly = window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+    if (touchOnly && textarea.dataset.placeholderTouch) {   // на телефоні Enter — новий рядок: коротка підказка без «Enter — надіслати»
+        textarea.placeholder = textarea.dataset.placeholderTouch;
+        textarea.setAttribute('enterkeyhint', 'enter');
+    }
 
     function innerScroll() {
         return scroller && scroller.scrollHeight > scroller.clientHeight + 2 && getComputedStyle(scroller).overflowY !== 'visible';
