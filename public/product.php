@@ -151,6 +151,8 @@ function plan_price(array $plan): string
 $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
 if ($product === false) {
     social_og_off();   // неіснуючий продукт — без превʼю
+    // Справжній 404 (раніше 200 «Продукт не знайдено», soft 404); сторінка для людей та сама.
+    http_response_code(404);
 }
 
 ?>
@@ -160,6 +162,7 @@ if ($product === false) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI LAB HUB — <?= htmlspecialchars($pageTitle, ENT_QUOTES) ?></title>
+    <?php if ($product === false): ?><meta name="robots" content="noindex, nofollow"><?php endif; ?>
     <style>
         *,
         *::before,

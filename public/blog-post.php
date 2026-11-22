@@ -26,6 +26,10 @@ $pageLang = current_lang();
 $article = $slug !== '' ? blog_load_article($slug, $pageLang, auth_has_role('employee', 'admin')) : null;
 // Перекладу цією мовою ще немає — показуємо оригінал із позначкою.
 $translationPending = $article !== null && $article['lang'] !== $pageLang;
+if ($article === null) {
+    // Неіснуюча стаття (чи чернетка для гостя) — справжній 404 (раніше 200, soft 404); сторінка для людей та сама.
+    http_response_code(404);
+}
 
 if ($article !== null) {
     // Перегляд статті — у спільну аналітику (page_views, тип 'article').
@@ -111,6 +115,7 @@ if ($article !== null) {
         <script type="application/ld+json"><?= json_encode($articleLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
     <?php else: social_og_off(); /* неіснуюча стаття — без превʼю (app/social.php) */ ?>
         <title><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?> — AI LAB HUB</title>
+        <meta name="robots" content="noindex, nofollow">
     <?php endif; ?>
     <style>
         *,
