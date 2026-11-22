@@ -351,6 +351,8 @@ if ($category !== false) {
         : 'Додатки й сервіси категорії «' . $pageTitle . '» на AI LAB HUB: описи, ціни й посилання.']);
 } else {
     social_og_off();
+    // Неіснуюча категорія — справжній 404 (раніше 200 «Категорію не знайдено», soft 404); сторінка для людей та сама.
+    http_response_code(404);
 }
 
 ?>
@@ -360,6 +362,7 @@ if ($category !== false) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI LAB HUB — <?= htmlspecialchars($pageTitle, ENT_QUOTES) ?></title>
+    <?php if ($category === false): ?><meta name="robots" content="noindex, nofollow"><?php endif; ?>
     <style>
         *,
         *::before,

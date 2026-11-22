@@ -233,6 +233,9 @@ if ($catPath === '') {
     $cat = page($catPath);
     check($cat['code'] === 200 && preg_match('~<h1[\s>]~i', $cat['body']) === 1 && !soft404($cat['body']), "Сторінка категорії ({$catPath}): 200 і заголовок",
         soft404($cat['body']) ? 'HTTP ' . $cat['code'] . ', але сторінка «не знайдено» (мʼякий 404)' : why($cat));
+    // Неіснуюча категорія — справжній 404, а не «м'який» 200 «Категорію не знайдено» (виправлено 2026-11-22).
+    $miss = page('category.php?id=987654321');
+    check($miss['code'] === 404, 'Неіснуюча категорія (category.php?id=987654321): 404', 'HTTP ' . $miss['code'] . ($miss['code'] === 200 ? ' — мʼякий 404' : ''));
     preg_match('~href="(?:/)?(catalog\.php\?subcategory=\d+)~', $cat['body'], $m);
     $subPath = $m[1] ?? '';
     if ($subPath === '') {
