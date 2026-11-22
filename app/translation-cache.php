@@ -80,6 +80,8 @@ function google_translate_batch(array $texts, string $targetLang, string $source
     if ($texts === []) {
         return [];
     }
+    // Лічильник спроб звернення до API за запит (тести перевіряють, що сторінки з готовими перекладами його не викликають).
+    $GLOBALS['translation_api_calls'] = (int) ($GLOBALS['translation_api_calls'] ?? 0) + 1;
 
     $apiKey = translation_api_key();
     if ($apiKey === '' || $apiKey === 'YOUR_API_KEY_HERE') {

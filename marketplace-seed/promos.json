@@ -1,0 +1,112 @@
+{
+    "_about": "Оголошення самої платформи в Marketplace (продавець ailabhub, is_platform). Обробляє scripts/mp-seed-promos.php: --dry-run (за замовчуванням), --apply, --emit-sql. Змінні {…} підставляються з коду й налаштувань; речення з ненайденою змінною прибирається. Тексти написано вручну (uk — оригінал, en — переклад вручну, is_auto=0). Деталі: docs/PROMO_LISTINGS.md.",
+    "seller_slug": "ailabhub",
+    "listings": [
+        {
+            "slug": "platform-free-materials",
+            "code": "P1",
+            "section": "other",
+            "category_slug": "other",
+            "status": "published",
+            "ref": "mp-free-materials",
+            "checks": {
+                "min_platform_solutions": 5,
+                "all_platform_solutions_licensed": true,
+                "all_platform_solutions_free": true,
+                "code": [["public/get.php", "if (!auth_check()) {"]]
+            },
+            "examples": ["Шаблон баг-репорту з прикладами", "Чекліст ручного тестування сайту", "Скрипт Python: перевірка посилань на сайті"],
+            "uk": {
+                "title": "Безкоштовні шаблони, чеклісти й скрипти: потрібен лише акаунт",
+                "short_desc": "Готові шаблони, чеклісти, інструкції й невеликі скрипти для роботи з додатками та сайтами. Усе від AI LAB HUB і безкоштовно. Щоб завантажити файли, створіть безкоштовний акаунт.",
+                "full_desc": "Ми зібрали готові матеріали, які економлять час: {EXAMPLES}. Біля кожного матеріалу вказано ліцензію, тож ви знаєте, як його можна використовувати. Завантажувати файли можуть зареєстровані користувачі: створіть безкоштовний акаунт і користуйтеся без оплати. Нові матеріали ми додаємо поступово.",
+                "features": ["Безкоштовні матеріали без оплати за завантаження", "Завантаження файлів після створення акаунта", "Ліцензію вказано біля кожного матеріалу", "Нові матеріали додаються поступово"],
+                "for_whom": "Власникам сайтів, початківцям у тестуванні, тим, хто працює з додатками й автоматизацією."
+            },
+            "en": {
+                "title": "Free templates, checklists and scripts: just create an account",
+                "short_desc": "Ready-to-use templates, checklists, guides and small scripts for working with apps and websites. All from AI LAB HUB and all free. Create a free account to download the files.",
+                "full_desc": "We have put together ready-made materials that save time: {EXAMPLES}. The license is shown next to each material, so you know how you can use it. Registered users can download the files: create a free account and use them at no cost. We add new materials gradually.",
+                "features": ["Free materials, no charge for downloads", "Downloads available after creating an account", "License shown next to each material", "New materials added gradually"],
+                "for_whom": "Website owners, testing beginners, and anyone working with apps and automation."
+            }
+        },
+        {
+            "slug": "platform-account-benefits",
+            "code": "P2",
+            "section": "other",
+            "category_slug": "other",
+            "status": "published",
+            "ref": "mp-account-benefits",
+            "checks": {
+                "code": [["public/mp-contact.php", "if (!auth_check()) {"], ["public/mp-contact.php", "mpv_is_verified($pdo"], ["public/mp-favorite.php", "mpb_require_login()"]]
+            },
+            "uk": {
+                "title": "Акаунт відкриває контакти авторів і вибране",
+                "short_desc": "Безкоштовний акаунт дозволяє зберігати оголошення у вибране й бачити контакти їхніх авторів після підтвердження пошти. Реєстрація проста й безкоштовна.",
+                "full_desc": "Контакти авторів оголошень ми показуємо лише зареєстрованим користувачам із підтвердженою поштою. Так ми захищаємо авторів від масового збору контактів. Створіть безкоштовний акаунт, підтвердьте пошту, і ви зможете зв'язуватися з авторами. А вибране допоможе зберегти оголошення, щоб повернутися до них пізніше.",
+                "features": ["Вибране: зберігайте оголошення, щоб повернутися пізніше", "Контакти авторів після входу й підтвердження пошти", "Безкоштовно"],
+                "for_whom": "Тим, хто шукає виконавців, навчання, роботу чи готові рішення."
+            },
+            "en": {
+                "title": "An account unlocks author contacts and favorites",
+                "short_desc": "A free account lets you save listings to favorites and see the authors' contact details once your email is confirmed. Signing up is simple and free.",
+                "full_desc": "We show listing authors' contacts only to registered users with a confirmed email. This protects authors from mass scraping of contact details. Create a free account, confirm your email, and you can get in touch with authors. Favorites let you keep listings to come back to later.",
+                "features": ["Favorites: save listings to come back later", "Author contacts after sign-in and email confirmation", "Free"],
+                "for_whom": "Anyone looking for service providers, learning, jobs or ready-made solutions."
+            }
+        },
+        {
+            "slug": "platform-advertise",
+            "code": "P3",
+            "section": "service",
+            "category_slug": "ads-promotion",
+            "status": "skip",
+            "skip_reason": "На живому сайті вже є оголошення «Розміщення реклами на AI LAB HUB» (Послуги → AI-консультації, від акаунта власника, не is_platform). Друге таке оголошення було б дублікатом. Крім того, у підкатегорії «Реклама та просування» стоїть is_draft = 1, а вбудовані місця реклами на живому сайті вимкнено (лише спливаюче вікно), тож функцію «Вибір місць показу» з тексту прибрано.",
+            "ref": "mp-advertise",
+            "checks": {
+                "code": [["public/advertise.php", "?start=1"], ["public/promo-rules.php", "promo"], ["app/promo-i18n.php", "'moderation_note'"]]
+            },
+            "uk": {
+                "title": "Рекламуйте свій додаток чи послугу на AI LAB HUB",
+                "short_desc": "Створіть акаунт, відкрийте кабінет рекламодавця й запустіть показ свого додатка, сервісу чи послуги. Умови й правила реклами описані на сторінці «Реклама на сайті».",
+                "full_desc": "Розкажіть про свій додаток, сервіс, курс чи послугу відвідувачам AI LAB HUB. Щоб почати, створіть акаунт і відкрийте кабінет рекламодавця: там ви створюєте кампанію, поповнюєте баланс і стежите за статистикою. Перед запуском ознайомтеся з правилами реклами та умовами на сторінці «Реклама на сайті». Ми не обіцяємо конкретних охоплень, але покажемо вашу рекламу тим, хто користується сайтом.",
+                "features": ["Кабінет рекламодавця для створення кампанії", "Правила реклами описані заздалегідь", "Реклама перевіряється перед показом"],
+                "for_whom": "Авторам додатків і сервісів, викладачам, виконавцям послуг."
+            },
+            "en": {
+                "title": "Advertise your app or service on AI LAB HUB",
+                "short_desc": "Create an account, open the advertiser dashboard and start promoting your app, service or offer. Terms and ad rules are on the \"Advertise\" page.",
+                "full_desc": "Tell AI LAB HUB visitors about your app, service, course or offer. To get started, create an account and open the advertiser dashboard, where you set up a campaign, top up your balance and follow the statistics. Before launching, read the ad rules and terms on the \"Advertise\" page. We do not promise specific reach, but your ad will be shown to people using the site.",
+                "features": ["Advertiser dashboard for creating campaigns", "Ad rules published in advance", "Ads are reviewed before showing"],
+                "for_whom": "App and service authors, teachers, service providers."
+            }
+        },
+        {
+            "slug": "platform-post-free",
+            "code": "P4",
+            "section": "other",
+            "category_slug": "other",
+            "status": "draft",
+            "publish_requires": {"posting_enabled": true, "free_until_matches": true},
+            "ref": "mp-post",
+            "checks": {
+                "code": [["public/marketplace-post.php", "mpv_require_verified($pdo, $userId)"], ["public/listing-post.php", "mpv_require_verified($pdo, $userId)"], ["app/marketplace-board.php", "function mpb_extend("], ["app/listing.php", "function lst_extend("]]
+            },
+            "uk": {
+                "title": "Розмістіть оголошення безкоштовно до {FREE_UNTIL}",
+                "short_desc": "Вакансія, курс, послуга чи готове рішення: подайте оголошення й отримуйте звернення від відвідувачів. Розміщення безкоштовне до {FREE_UNTIL}. Для подачі потрібен акаунт із підтвердженою поштою.",
+                "full_desc": "Оберіть блок, опишіть пропозицію, додайте фото й вкажіть, як з вами зв'язатися. Кожне оголошення проходить перевірку модерацією: ми прагнемо розглянути його протягом {REVIEW_HOURS} годин. Оголошення діє {LISTING_DAYS} днів, і його можна продовжити. Розміщення безкоштовне до {FREE_UNTIL}.",
+                "features": ["Безкоштовне розміщення до {FREE_UNTIL}", "Модерація перед публікацією", "Оголошення діє {LISTING_DAYS} днів з можливістю продовження", "Для подачі потрібен акаунт із підтвердженою поштою"],
+                "for_whom": "Роботодавцям, викладачам, виконавцям послуг і авторам матеріалів."
+            },
+            "en": {
+                "title": "Post your listing for free until {FREE_UNTIL}",
+                "short_desc": "A job, course, service or ready-made solution: post a listing and get responses from visitors. Posting is free until {FREE_UNTIL}. An account with a confirmed email is required.",
+                "full_desc": "Choose a category, describe your offer, add photos and say how people can reach you. Every listing is reviewed by moderators before publication: we aim to review it within {REVIEW_HOURS} hours. A listing stays active for {LISTING_DAYS} days and can be extended. Posting is free until {FREE_UNTIL}.",
+                "features": ["Free posting until {FREE_UNTIL}", "Moderation before publication", "Active for {LISTING_DAYS} days, can be extended", "Account with confirmed email required"],
+                "for_whom": "Employers, teachers, service providers and content authors."
+            }
+        }
+    ]
+}

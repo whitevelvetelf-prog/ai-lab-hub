@@ -200,12 +200,14 @@ function mpb_flash_html(): string
  * Початок HTML-сторінки: <head>, шапка сайту і (якщо задано $nav) навігація розділу — app/mp-section-nav.php.
  * Закривати mpb_close().
  */
-function mpb_open(string $title, bool $noindex = true, ?string $nav = null): void
+/** $robots — інше значення meta robots замість noindex, nofollow (напр. 'noindex, follow' для оголошень платформи). */
+function mpb_open(string $title, bool $noindex = true, ?string $nav = null, ?string $robots = null): void
 {
     $lang = current_lang();
+    $robots ??= $noindex ? 'noindex, nofollow' : null;
     echo "<!DOCTYPE html>\n<html lang=\"" . mp_e($lang) . "\">\n<head>\n<meta charset=\"utf-8\">\n"
         . "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
-        . ($noindex ? "<meta name=\"robots\" content=\"noindex, nofollow\">\n" : '')
+        . ($robots !== null ? '<meta name="robots" content="' . mp_e($robots) . "\">\n" : '')
         . '<title>' . mp_e($title) . ' — ' . mp_e(t('title_marketplace')) . "</title>\n";
     include __DIR__ . '/header.php';
     echo "\n<link rel=\"stylesheet\" href=\"/assets/css/site-nav.css\">\n"
@@ -418,7 +420,7 @@ function mpb_select_sql(?PDO $pdo = null): string
 
     return "SELECT l.id, l.section, l.post_form, l.cover_image, l.status, l.seller_id, l.price_type, l.price_amount, l.currency, l.is_remote, l.city,{$geo}
                    l.published_at, l.expires_at, l.created_at, l.views_count, l.source_lang, l.reject_reason,
-                   s.display_name AS seller_name, s.user_id AS seller_user_id,
+                   s.display_name AS seller_name, s.user_id AS seller_user_id, COALESCE(s.is_platform, 0) AS seller_is_platform,
                    COALESCE(NULLIF(tc.title, ''), ts.title)           AS title,
                    COALESCE(NULLIF(tc.short_desc, ''), ts.short_desc) AS short_desc,
                    COALESCE(NULLIF(tc.full_desc, ''), ts.full_desc)   AS full_desc,

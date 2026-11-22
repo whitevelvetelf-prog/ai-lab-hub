@@ -260,7 +260,13 @@ foreach ($data as $k => $f) {
 $idx .= "\n## 3. Старі окремі пакети (уже застосовані на проді)\n\n`marketplace-geo/15…17`, `marketplace-tree/18…19`, `marketplace-messaging/22…23`, `geo-ads/24…25` — ті самі\n"
     . "міграції, що й у консолідованому пакеті; окремо імпортувати не потрібно.\n\n"
     . "## 4. Код\n\n`RELEASE_MANIFEST.txt` — шлях, розмір і sha256 кожного файла архіву коду (`scripts/build-deploy.ps1 -IncludeMarketplace`).\n"
-    . "`marketplace.config.HOSTING.stageA.php` / `stageB.php` — шаблони серверного `config/marketplace.local.php` (див. `docs/RELEASE_STAGE_A.md`).\n";
+    . "`marketplace.config.HOSTING.stageA.php` / `stageB.php` — шаблони серверного `config/marketplace.local.php` (див. `docs/RELEASE_STAGE_A.md`).\n"
+    . "\n## 5. Оголошення платформи (після пакета, міграцій категорій № 18–19 і релізу етапу A)\n\n"
+    . "| Порядок | Файл | Призначення |\n|---|---|---|\n"
+    . "| 1 | `database/migration-2026-11-22-mp-platform-promos-ui.sql` (№ 29) | EN-написи кнопки «Create an account» / «Open your dashboard» |\n"
+    . "| 2 | код: `app/mp-platform-promo.php`, `app/mpb-offer.php`, `app/mpb-card.php`, `app/marketplace-board.php`, `app/acquisition.php`, `app/promo-house.php`, `app/translations.php`, `app/translation-cache.php` | кнопка, позначка, noindex, ref mp-… |\n"
+    . "| 3 | `promos-seed.sql` (`php scripts/mp-seed-promos.php --emit-sql`) | P1, P2 — published, P4 — draft; ідемпотентно, з умовами |\n\n"
+    . "P4 публікує `php scripts/mp-publish-promos.php --slug=platform-post-free --emit-sql` (SQL для phpMyAdmin). Деталі — `docs/PROMO_LISTINGS.md`.\n";
 file_put_contents("{$outDir}/INDEX.md", $idx);
 fwrite(STDOUT, "OK INDEX.md\n");
 

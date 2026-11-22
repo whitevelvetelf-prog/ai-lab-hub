@@ -452,8 +452,9 @@ function promo_house_report_html(PDO $pdo): string
         "SELECT cr.*, c.name AS campaign_name FROM ad_creatives cr JOIN ad_campaigns c ON c.id = cr.campaign_id
          WHERE c.campaign_type = 'internal' AND cr.creative_type = 'card' ORDER BY c.id, cr.id"
     )->fetchAll();
+    $mp = promo_platform_listing_refs_html($pdo);
     if ($rows === []) {
-        return '';
+        return $mp;
     }
     $stats = promo_house_variant_stats($pdo, $rows);
     $h = '<h3 class="pc-h3">Власна реклама за варіантами (за весь час)</h3><div class="pc-table-wrap"><table class="pc-table"><thead><tr>'
@@ -466,5 +467,35 @@ function promo_house_report_html(PDO $pdo): string
             . '<td data-label="Кампаній">' . $s['campaigns'] . '</td><td data-label="Оголошень">' . $s['listings'] . '</td></tr>';
     }
 
-    return $h . '</tbody></table></div><p class="pc-muted">«Створено» — перша кампанія чи оголошення користувача після переходу з варіанта (параметр ref у сесії). Власна реклама не входить у витрати рекламодавців.</p>';
+    return $h . '</tbody></table></div><p class="pc-muted">«Створено» — перша кампанія чи оголошення користувача після переходу з варіанта (параметр ref у сесії). Власна реклама не входить у витрати рекламодавців.</p>' . $mp;
+}
+
+/**
+ * Реєстрації з оголошень платформи в Marketplace (кнопка «Створити акаунт», ref=mp-…; app/mp-platform-promo.php):
+ * ad_house_signups.ref_code LIKE 'mp-%' і оголошення, створені після такого переходу (mp_listings.acquisition_ref).
+ * Порожньо, якщо таких ще немає.
+ */
+function promo_platform_listing_refs_html(PDO $pdo): string
+{
+    try {
+        $rows = $pdo->query(
+            "SELECT r.ref_code, COUNT(*) AS signups,
+                    (SELECT COUNT(*) FROM mp_listings l WHERE l.acquisition_ref = r.ref_code) AS listings
+             FROM ad_house_signups r WHERE r.ref_code LIKE 'mp-%' GROUP BY r.ref_code ORDER BY r.ref_code"
+        )->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Throwable $e) {
+        return '';
+    }
+    if ($rows === []) {
+        return '';
+    }
+    $e = static fn(mixed $v): string => htmlspecialchars((string) $v, ENT_QUOTES);
+    $h = '<h3 class="pc-h3">Реєстрації з оголошень платформи в Marketplace (ref mp-…)</h3><div class="pc-table-wrap"><table class="pc-table"><thead><tr>'
+        . '<th>ref</th><th>Реєстрацій</th><th>Оголошень створено</th></tr></thead><tbody>';
+    foreach ($rows as $r) {
+        $h .= '<tr><td data-label="ref"><strong>' . $e($r['ref_code']) . '</strong></td><td data-label="Реєстрацій">' . (int) $r['signups']
+            . '</td><td data-label="Оголошень">' . (int) $r['listings'] . '</td></tr>';
+    }
+
+    return $h . '</tbody></table></div>';
 }

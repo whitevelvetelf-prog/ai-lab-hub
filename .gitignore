@@ -82,4 +82,5 @@
 /database/*-dump*.sql
 /backups/
 # Стартові матеріали Marketplace (у git не зберігаються з 2026-10-06).
-/marketplace-seed/
+/marketplace-seed/*
+!/marketplace-seed/promos.json

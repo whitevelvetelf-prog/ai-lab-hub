@@ -42,12 +42,20 @@ if (!$isLive) {
 $usageText = mpl_usage_text($board);
 $statusKey = ['pending' => 'mpb_st_pending', 'draft' => 'mpb_st_pending', 'published' => 'mpb_st_published', 'rejected' => 'mpb_st_rejected', 'archived' => 'mpb_st_archived', 'expired' => 'mpb_st_expired'];
 $reasons = array_combine(MPB_REPORT_REASONS, array_map(static fn(string $r): string => t('mpb_reason_' . $r), MPB_REPORT_REASONS));
+// Оголошення самої платформи (продавець is_platform, кнопка на сторінку сайту) — app/mp-platform-promo.php.
+$platformCta = null;
+$isPlatformSeller = (int) ($board['seller_is_platform'] ?? 0) === 1;   // контактів у платформи немає: без «Показати контакт» і «Написати»
+if ($isPlatformSeller) {
+    require_once __DIR__ . '/mp-platform-promo.php';
+    $platformCta = mpp_listing_cta($pdo, $bid, $lang);
+}
 
-mpb_open((string) $board['title'], !$isLive, 'home');
+mpb_open((string) $board['title'], !$isLive, 'home', $platformCta !== null && $isLive ? 'noindex, follow' : null);
 ?>
     <div class="mp-page mp-page--narrow">
         <?= mpt_crumbs(mpt_offer_crumbs($pdo, $bid, (string) $board['section'], (string) $board['title'])) ?>
-        <?php if ((string) $board['section'] === 'solution'): ?><p class="mp-card__tag"><span class="mp-card__tag--author"><?= mp_e(t('mpt_from_author')) ?></span></p><?php endif; ?>
+        <?php if ((int) ($board['seller_is_platform'] ?? 0) === 1): ?><p class="mp-card__tag"><span class="mp-card__tag--platform"><?= mp_e(t('mpt_from_platform')) ?></span></p>
+        <?php elseif ((string) $board['section'] === 'solution'): ?><p class="mp-card__tag"><span class="mp-card__tag--author"><?= mp_e(t('mpt_from_author')) ?></span></p><?php endif; ?>
         <?= mpb_flash_html() ?>
 
         <?php if (!$isLive): ?>
@@ -61,7 +69,9 @@ mpb_open((string) $board['title'], !$isLive, 'home');
 
         <h1 class="mp-title"><?= mp_e($board['title']) ?></h1>
         <?= mpl_ai_badge_html($board) ?>
+        <?php if (!$isPlatformSeller): // угода між сторонами — лише для оголошень користувачів ?>
         <p class="mp-note mp-note--box mp-note--disclaimer" role="note"><?= mp_e(t('mpb_disclaimer')) ?></p>
+        <?php endif; ?>
 
         <?php if ($fallbackLang !== null): ?>
             <p class="mp-note"><?= mp_e(sprintf(t('mp_original_lang'), $langNames[$fallbackLang] ?? strtoupper($fallbackLang))) ?></p>
@@ -98,7 +108,29 @@ mpb_open((string) $board['title'], !$isLive, 'home');
             <?php endif; ?>
         </div>
 
-        <?php if ($isLive && !$isOwner): ?>
+        <?php if ($platformCta !== null): // оголошення платформи: функції, для кого, одна кнопка на сторінку сайту ?>
+            <?php foreach ([[t('product_features_title'), $platformCta['features']], [t('product_audience_title'), $platformCta['for_whom']]] as [$ppHead, $ppText]): ?>
+                <?php if (trim($ppText) !== ''): ?>
+                    <section class="mp-block">
+                        <h2 class="mp-block__title"><?= mp_e($ppHead) ?></h2>
+                        <p class="mp-text mp-text--pre"><?= mp_e($ppText) ?></p>
+                    </section>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        <?php endif; ?>
+
+        <?php if ($isLive && $platformCta !== null): ?>
+            <div class="mp-offer__actions">
+                <a class="mp-btn mp-btn--primary mp-btn--lg" href="<?= mp_e($platformCta['href']) ?>"><?= mp_e($platformCta['label']) ?></a>
+                <?php if ($viewerId !== null): ?>
+                    <form method="post" action="mp-favorite.php">
+                        <?= mp_csrf_field() ?><input type="hidden" name="id" value="<?= $bid ?>">
+                        <button class="mp-btn mp-btn--lg" type="submit"><?= mp_e(t($isFav ? 'mpb_fav_remove' : 'mpb_fav_add')) ?></button>
+                    </form>
+                <?php endif; ?>
+            </div>
+            <?php if ($platformCta['hint'] !== ''): ?><p class="mp-offer__hint"><?= mp_e($platformCta['hint']) ?></p><?php endif; ?>
+        <?php elseif ($isLive && !$isOwner && !$isPlatformSeller): ?>
             <div class="mp-offer__actions">
                 <?php // Режим звʼязку (contact_mode): messages_only — без «Показати контакт», contacts_only — без «Написати автору». ?>
                 <?php if (mp_contacts_visible($pdo, $bid)): ?>

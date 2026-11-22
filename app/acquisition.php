@@ -3,7 +3,8 @@
 declare(strict_types=1);
 
 /**
- * AI LAB HUB — джерело приходу з власної реклами платформи (ref=house-A1 тощо).
+ * AI LAB HUB — джерело приходу з власної реклами платформи (ref=house-A1 тощо) і з оголошень платформи в Marketplace
+ * (ref=mp-free-materials тощо: кнопка «Створити акаунт», app/mp-platform-promo.php).
  *
  * Підключається з app/auth.php: якщо в адресі є ?ref=house-… — зберігаємо в сесії. Коли користувач уперше
  * створює рекламну кампанію чи оголошення, acq_ref_record() записує джерело в acquisition_ref цього запису
@@ -14,7 +15,8 @@ declare(strict_types=1);
  * користувач потім створить кампанію чи оголошення, вони теж зарахуються варіанту.
  */
 
-const ACQ_REF_PATTERN = '/^house-[A-Za-z0-9_-]{1,14}$/';
+// Загалом до 20 символів — як колонка acquisition_ref (mp_listings, ad_campaigns).
+const ACQ_REF_PATTERN = '/^(?:house-[A-Za-z0-9_-]{1,14}|mp-[A-Za-z0-9_-]{1,17})$/';
 
 function acq_ref_capture(): void
 {

@@ -168,6 +168,11 @@ $GLOBALS['TRANSLATIONS'] = [
     'mpt_fmt_offline'                => 'На місці',
     'mpt_from_platform'              => 'Від AI LAB HUB',
     'mpt_from_author'                => 'Від автора',
+    // Оголошення платформи з кнопкою на сторінку сайту (app/mp-platform-promo.php); EN — міграція 2026-11-22-mp-platform-promos-ui.sql
+    'mpp_cta_signup'                 => 'Створити акаунт',
+    'mpp_cta_cabinet'                => 'Відкрити кабінет',
+    'mpp_cta_hint_guest'             => 'Реєстрація безкоштовна. Якщо акаунт уже є, увійдіть.',
+    'mpp_cta_hint_user'              => 'Ви вже увійшли: усе потрібне — у кабінеті.',
     'mpt_pick_block'                 => 'Оберіть розділ, у якому розмістити оголошення.',
     'mpt_block_label'                => 'Розділ',
     'mpt_change_block'               => 'Змінити розділ',

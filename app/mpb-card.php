@@ -33,7 +33,7 @@ $cardDate = !empty($card['published_at']) ? date('d.m.Y', (int) strtotime((strin
         <a class="mp-card__cover mp-card__cover--empty" href="<?= mp_e($cardUrl) ?>" tabindex="-1" aria-hidden="true"></a>
     <?php endif; ?>
     <?php // Порядок — як у формі подачі: назва, короткий опис, ціна, місто; усе, крім назви, одним стилем (.mp-card__info). ?>
-    <?php if ($cardIsSolution): ?>
+    <?php if ($cardIsSolution || (int) ($card['seller_is_platform'] ?? 0) === 1): ?>
         <p class="mp-card__tag"><span class="mp-card__tag--platform"><?= mp_e(t('mpt_from_platform')) ?></span></p>
     <?php elseif ($cardIsAuthorSolution): ?>
         <p class="mp-card__tag"><span class="mp-card__tag--author"><?= mp_e(t('mpt_from_author')) ?></span></p>
