@@ -100,7 +100,7 @@ if ($article !== null) {
         <meta property="og:type" content="article">
         <meta property="og:site_name" content="AI LAB HUB">
         <meta property="og:title" content="<?= htmlspecialchars($article['title'], ENT_QUOTES) ?>">
-        <meta property="og:description" content="<?= htmlspecialchars($article['description'], ENT_QUOTES) ?>">
+        <meta property="og:description" content="<?= htmlspecialchars(social_cut(social_plain((string) $article['description']), 200), ENT_QUOTES) ?>">
         <meta property="og:url" content="<?= htmlspecialchars($canonicalUrl, ENT_QUOTES) ?>">
         <meta property="og:image" content="<?= htmlspecialchars($ogImage, ENT_QUOTES) ?>">
         <meta property="og:locale" content="<?= $article['lang'] === 'en' ? 'en_US' : 'uk_UA' ?>">
@@ -109,7 +109,7 @@ if ($article !== null) {
             <meta property="article:modified_time" content="<?= htmlspecialchars($articleLd['dateModified'], ENT_QUOTES) ?>">
         <?php endif; ?>
         <script type="application/ld+json"><?= json_encode($articleLd, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG) ?></script>
-    <?php else: ?>
+    <?php else: social_og_off(); /* неіснуюча стаття — без превʼю (app/social.php) */ ?>
         <title><?= htmlspecialchars(t('blog_not_found'), ENT_QUOTES) ?> — AI LAB HUB</title>
     <?php endif; ?>
     <style>

@@ -49,6 +49,9 @@ require_once __DIR__ . '/../app/mp-stats.php';
 mpst_count_view($pdo, (int) $offer['id'], null);   // перегляди по днях (статистика для admin)
 
 $cover = mp_cover_url($offer['cover_image'] ?? null);
+// Превʼю посилання (app/social.php): лише опубліковане, коли розділ публічний (інакше теги не додаються взагалі).
+social_og(['title' => (string) $offer['title'] . ' — AI LAB HUB', 'description' => (string) ($offer['short_desc'] ?? ''),
+    'type' => 'article'] + ($cover !== null ? ['image' => $cover, 'image_large' => true] : []));
 $skill = mp_skill_text($offer['skill_level'] ?? null);
 $fallbackLang = (string) $offer['text_lang'] !== $lang ? (string) $offer['text_lang'] : null;
 $langNames = active_languages();

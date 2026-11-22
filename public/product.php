@@ -149,6 +149,9 @@ function plan_price(array $plan): string
 }
 
 $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
+if ($product === false) {
+    social_og_off();   // неіснуючий продукт — без превʼю
+}
 
 ?>
 <!DOCTYPE html>
@@ -609,6 +612,8 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
         <?php
         $shortDescription = localized_product_field($pdo, $product, 'short_description');
         $fullDescription = localized_product_field($pdo, $product, 'full_description');
+        // Превʼю посилання (app/social.php): назва, короткий опис і логотип продукту, якщо він є.
+        social_og(['title' => $product['name'] . ' — AI LAB HUB', 'description' => $shortDescription, 'type' => 'product']);
         $summaryText = $fullDescription !== '' ? $fullDescription : $shortDescription;
         $targetAudience = localized_product_field($pdo, $product, 'target_audience');
         $features = array_values(array_filter(array_map(
@@ -625,6 +630,9 @@ $pageTitle = $product !== false ? $product['name'] : t('product_not_found');
             // Логотип — лише локальний файл із assets/images/logos (CRM-завантаження або іконка з магазину); інакше ініціали.
             $logoRel = ltrim((string) ($product['logo_url'] ?? ''), '/');
             $hasLogo = preg_match('#^assets/images/logos/[A-Za-z0-9._-]+\.(png|jpe?g|webp|svg)$#', $logoRel) === 1 && is_file(__DIR__ . '/' . $logoRel);
+            if ($hasLogo && !str_ends_with($logoRel, '.svg')) {
+                social_og(['image' => '/' . $logoRel]);
+            }
             ?>
             <?php if ($hasLogo): ?>
             <div class="product-head__logo product-head__logo--img"><img src="/<?= htmlspecialchars($logoRel, ENT_QUOTES) ?>" alt="" width="64" height="64"></div>

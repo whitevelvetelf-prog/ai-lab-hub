@@ -1422,6 +1422,45 @@ require_once __DIR__ . '/ai-statement.php';   // «Як ми використо�
             padding: 0 8px;
         }
     }
+    /* Соцмережі (app/social.php): круглі кнопки-значки. На телефоні — у тому ж рядку, що «Підтримати» і «▲»,
+       висотою 40 px, як ці кнопки, тож висота підвалу не зростає. */
+    .site-footer__social {
+        display: flex;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .site-footer__social-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: rgba(255, 255, 255, 0.85);
+        transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .site-footer__social-link:hover,
+    .site-footer__social-link:focus-visible {
+        color: #ffffff;
+        border-color: #ffffff;
+    }
+
+    @media (max-width: 640px) {
+        .site-footer__social {
+            flex: 0 0 auto;
+            gap: 6px;
+        }
+
+        .site-footer__social-link {
+            width: 40px;
+            height: 40px;
+        }
+    }
 </style>
 
 <footer class="site-footer" id="siteFooter">
@@ -1456,6 +1495,9 @@ require_once __DIR__ . '/ai-statement.php';   // «Як ми використо�
             <li><a href="advertise.php"><?= htmlspecialchars(t('footer_advertise'), ENT_QUOTES) ?></a></li>
             <li><a href="promo-rules.php"><?= htmlspecialchars(t('footer_promo_rules'), ENT_QUOTES) ?></a></li>
         </ul>
+
+        <?php if (!function_exists('social_footer_html')) { require_once __DIR__ . '/social.php'; } ?>
+        <?= social_footer_html() /* соцмережі з config/social.php; порожні посилання приховано */ ?>
 
         <a class="site-footer__support" href="/donate.php">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>

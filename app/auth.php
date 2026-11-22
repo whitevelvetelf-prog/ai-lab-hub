@@ -50,6 +50,10 @@ if (session_status() === PHP_SESSION_NONE) {
 // Джерело приходу з власної реклами (?ref=house-…) — для звіту «скільки кампаній/оголошень принесла».
 require_once __DIR__ . '/acquisition.php';
 
+// Превʼю посилань (Open Graph / Twitter Card): буфер виводу, теги дописуються перед </head> (app/social.php).
+require_once __DIR__ . '/social.php';
+social_meta_begin();
+
 /** ID поточного користувача або null. */
 function auth_user_id(): ?int
 {

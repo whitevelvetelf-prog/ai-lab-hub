@@ -62,6 +62,12 @@ if ($live) {
 }
 
 $ld = lst_jsonld($row);
+// Превʼю посилання (app/social.php): лише живе оголошення компанії.
+if ($live) {
+    social_og(['title' => (string) $row['title'] . ' — AI LAB HUB', 'description' => (string) ($row['short_desc'] ?? ''), 'type' => 'article']);
+} else {
+    social_og_off();
+}
 $type = (string) $row['section'];
 $facts = lst_facts($row);
 $row += mpl_listing_extras($pdo, $id);   // AI-медіа (п. 4.5)

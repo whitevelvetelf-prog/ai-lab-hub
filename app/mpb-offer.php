@@ -29,6 +29,14 @@ if ($isLive) {
 }
 
 $photos = $board['photos'];
+// Превʼю посилання (app/social.php): живе оголошення — назва, короткий опис і перше фото; інакше без превʼю.
+if ($isLive) {
+    $ogPhoto = $photos !== [] ? mpb_photo_url((string) $photos[0]['file_name']) : null;
+    social_og(['title' => (string) $board['title'] . ' — AI LAB HUB', 'description' => (string) ($board['short_desc'] ?? ''), 'type' => 'article']
+        + ($ogPhoto !== null ? ['image' => $ogPhoto, 'image_large' => true] : []));
+} else {
+    social_og_off();
+}
 $fallbackLang = (string) $board['text_lang'] !== $lang ? (string) $board['text_lang'] : null;
 $langNames = active_languages();
 $isFav = $viewerId !== null && $isLive && mpb_is_favorite($pdo, $viewerId, $bid);

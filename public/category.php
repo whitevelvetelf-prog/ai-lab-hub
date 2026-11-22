@@ -344,6 +344,14 @@ $subcategoryIcons = [
 ];
 
 $pageTitle = $category !== false ? localized_name($category) : t('category_not_found');
+// Превʼю посилання (app/social.php). Неіснуюча категорія — без превʼю.
+if ($category !== false) {
+    social_og(['title' => $pageTitle . ' — AI LAB HUB', 'description' => current_lang() === 'en'
+        ? 'Apps and AI tools in the “' . $pageTitle . '” category on AI LAB HUB: descriptions, pricing and links.'
+        : 'Додатки й сервіси категорії «' . $pageTitle . '» на AI LAB HUB: описи, ціни й посилання.']);
+} else {
+    social_og_off();
+}
 
 ?>
 <!DOCTYPE html>
