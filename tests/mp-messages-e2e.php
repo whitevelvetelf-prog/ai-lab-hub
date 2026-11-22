@@ -167,18 +167,18 @@ try {
     check(str_contains($f['headers'], 'no-store') && str_contains($f['headers'], 'X-Robots-Tag: noindex') && str_contains($f['body'], 'noindex, nofollow'), 'заголовки no-store і noindex');
     check(str_contains($f['body'], 'data-promo-suppress'), 'без реклами (тиша promo на приватній сторінці)');
     $r = http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($f['body']), 'action' => 'start', 'listing' => $lBoth, 'body' => "Добрий день! $secret"]);
-    preg_match('/id=(\d+)/', $r['loc'], $m);
+    preg_match('/(?:[?&]c|id)=(\d+)/', $r['loc'], $m);
     $conv = (int) ($m[1] ?? 0);
     $convIds[] = $conv;
     check($r['code'] === 303 && $conv > 0, 'перше повідомлення → розмова створена');
     $again = http($jB, "$base/mp-thread.php?listing=$lBoth");
-    check($again['code'] === 303 && str_contains($again['loc'], "id=$conv"), 'повторне «Написати» веде в ту саму розмову');
+    check($again['code'] === 303 && preg_match('/(?:[?&]c|id)=' . $conv . '$/', $again['loc']) === 1, 'повторне «Написати» веде в ту саму розмову');
     $hs = http($jS, "$base/marketplace.php");
     check(preg_match('/class="msg-badge"[^>]*>1</', $hs['body']) === 1, 'автор: значок непрочитаних у шапці = 1');
     check(str_contains($hs['body'], 'Повідомлення (1)'), 'автор: «Повідомлення (1)» у меню Marketplace');
     $inbox = http($jS, "$base/mp-messages.php?tab=unread");
-    check(str_contains($inbox['body'], "mp-thread.php?id=$conv") && str_contains($inbox['body'], "MSG both $tag"), 'автор: розмова у «Непрочитані» з назвою оголошення');
-    $th = http($jS, "$base/mp-thread.php?id=$conv");
+    check(preg_match('/data-conv="' . $conv . '"/', $inbox['body']) === 1 && str_contains($inbox['body'], "MSG both $tag"), 'автор: розмова у «Непрочитані» з назвою оголошення');
+    $th = http($jS, "$base/mp-messages.php?c=$conv");
     check($th['code'] === 200 && str_contains($th['body'], $secret), 'автор відкрив розмову й бачить повідомлення');
     $hs = http($jS, "$base/marketplace.php");
     check(!str_contains($hs['body'], 'class="msg-badge"'), 'після прочитання значка немає (кеш скинуто)');
@@ -191,7 +191,7 @@ try {
     $pj = json_decode($p['body'], true);
     check($p['code'] === 200 && count($pj['messages'] ?? []) === 2 && ($pj['messages'][1]['mine'] ?? true) === false, 'покупець отримує відповідь опитуванням');
     check(str_contains($p['headers'], 'no-store'), 'опитування: no-store');
-    check(http($jB, "$base/mp-messages-poll.php?c=$conv&since=0")['code'] === 429, 'частіше ніж раз на 4 с → 429');
+    check(http($jB, "$base/mp-messages-poll.php?c=$conv&since=0")['code'] === 429, 'частіше ніж раз на 3 с → 429');
     sleep(5);
     $last = (int) ($pj['last_id'] ?? 0);
     $p2 = http($jB, "$base/mp-messages-poll.php?c=$conv&since=$last");
@@ -212,9 +212,9 @@ try {
     check(http($jE, "$base/mp-thread.php?id=$conv")['code'] === 404, 'співробітник не бачить розмову користувачів без процедури перегляду');
 
     echo "5. Екранування HTML і посилання\n";
-    $th = http($jB, "$base/mp-thread.php?id=$conv");
+    $th = http($jB, "$base/mp-messages.php?c=$conv");
     http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($th['body']), 'action' => 'send', 'id' => $conv, 'body' => $markup]);
-    $page = http($jS, "$base/mp-thread.php?id=$conv")['body'];
+    $page = http($jS, "$base/mp-messages.php?c=$conv")['body'];
     check(!str_contains($page, $rawMarkup) && !str_contains($page, $rawAttr) && str_contains($page, $escMarkup), 'HTML у тексті виводиться як текст');
     check(preg_match('~<a class="msg-link" href="https://evil\.example/a[^"<>]*" target="_blank" rel="noopener noreferrer nofollow ugc">~', $page) === 1, 'посилання з rel="noopener noreferrer nofollow ugc"');
     check(str_contains($page, 'class="msg-ext"'), 'позначка зовнішнього посилання');
@@ -247,7 +247,7 @@ try {
     if ($platformListing > 0) {
         $f = http($jB, "$base/mp-thread.php?listing=$platformListing");
         $r = http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($f['body']), 'action' => 'start', 'listing' => $platformListing, 'body' => "Питання до платформи $tag"]);
-        preg_match('/id=(\d+)/', $r['loc'], $m);
+        preg_match('/(?:[?&]c|id)=(\d+)/', $r['loc'], $m);
         $pconv = (int) ($m[1] ?? 0);
         $convIds[] = $pconv;
         $pc = msg_conversation($pdo, $pconv);
@@ -263,7 +263,7 @@ try {
         $row->execute([':c' => $pconv]);
         $row = $row->fetch(PDO::FETCH_ASSOC);
         check($row !== false && $row['sender_id'] === null && $row['sender_label'] === 'AI LAB HUB', 'відповідь платформи: sender_id NULL, підпис «AI LAB HUB»');
-        check(str_contains(http($jB, "$base/mp-thread.php?id=$pconv")['body'], 'AI LAB HUB'), 'покупець бачить підпис «AI LAB HUB»');
+        check(str_contains(http($jB, "$base/mp-messages.php?c=$pconv")['body'], 'AI LAB HUB'), 'покупець бачить підпис «AI LAB HUB»');
         $lg = $pdo->prepare("SELECT COUNT(*) FROM mp_admin_access_log WHERE conversation_id = :c AND action = 'platform_reply' AND admin_id = :a");
         $lg->execute([':c' => $pconv, ':a' => $employee['id']]);
         check((int) $lg->fetchColumn() === 1, 'хто відповів — у журналі доступу');
@@ -294,10 +294,16 @@ try {
     }
     check($res === ['ok', 'ok', 'msg_err_newconv_day'], 'молодий акаунт: ≤3 нових розмов на добу (' . implode(',', $res) . ')');
     $ins = $pdo->prepare('INSERT INTO mp_messages (conversation_id, sender_id, body) VALUES (:c, :u, :b)');
-    for ($i = 0; $i < 30; $i++) {
+    for ($i = 0; $i < (int) msg_cfg('msg_per_minute'); $i++) {
         $ins->execute([':c' => $conv, ':u' => $buyer['id'], ':b' => "flood $i"]);
     }
-    $th = http($jB, "$base/mp-thread.php?id=$conv");
+    $th = http($jB, "$base/mp-messages.php?c=$conv");
+    check(jerr(http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($th['body']), 'action' => 'send', 'id' => $conv, 'body' => 'ще одне'], ['Accept: application/json'])) === 'msg_err_minute', '> msg_per_minute за хвилину → відмова');
+    $old = $pdo->prepare("INSERT INTO mp_messages (conversation_id, sender_id, body, created_at) VALUES (:c, :u, :b, NOW() - INTERVAL 10 MINUTE)");
+    $pdo->prepare("UPDATE mp_messages SET created_at = NOW() - INTERVAL 10 MINUTE WHERE conversation_id = :c AND body LIKE 'flood %'")->execute([':c' => $conv]);
+    for ($i = (int) msg_cfg('msg_per_minute'); $i < (int) msg_cfg('msg_per_hour'); $i++) {
+        $old->execute([':c' => $conv, ':u' => $buyer['id'], ':b' => "flood $i"]);
+    }
     check(jerr(http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($th['body']), 'action' => 'send', 'id' => $conv, 'body' => 'ще одне'], ['Accept: application/json'])) === 'msg_err_hour', '> msg_per_hour за годину → відмова');
     $pdo->prepare("DELETE FROM mp_messages WHERE conversation_id = :c AND body LIKE 'flood %'")->execute([':c' => $conv]);
 
@@ -323,9 +329,9 @@ try {
     check(str_contains(http($jA, "$base/mp-message-reports.php?tab=suspicious")['body'], '#' . $sus['id']), 'видно у вкладці «Підозріла активність»');
 
     echo "10. Блокування\n";
-    $th = http($jS, "$base/mp-thread.php?id=$conv");
+    $th = http($jS, "$base/mp-messages.php?c=$conv");
     http($jS, "$base/mp-thread.php", ['csrf' => csrf_of($th['body']), 'action' => 'block', 'id' => $conv]);
-    $tb = http($jB, "$base/mp-thread.php?id=$conv");
+    $tb = http($jB, "$base/mp-messages.php?c=$conv");
     $r = http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($tb['body']), 'action' => 'send', 'id' => $conv, 'body' => 'після блокування'], ['Accept: application/json']);
     $rj = json_decode($r['body'], true);
     check(($rj['error'] ?? '') === 'msg_err_not_accepting' && str_contains($rj['message'] ?? '', 'не приймає повідомлень'), 'заблокований: «Цей користувач не приймає повідомлень»');
@@ -335,7 +341,7 @@ try {
     check(!msg_is_blocked_by($pdo, $seller['id'], $buyer['id']), 'блок знято');
 
     echo "11. Скарга, знімок, журнал доступу\n";
-    $th = http($jS, "$base/mp-thread.php?id=$conv");
+    $th = http($jS, "$base/mp-messages.php?c=$conv");
     http($jS, "$base/mp-thread.php", ['csrf' => csrf_of($th['body']), 'action' => 'report', 'id' => $conv, 'reason' => 'harassment', 'note' => 'тест', 'message_id' => 0]);
     $rp = $pdo->prepare('SELECT id, snapshot FROM mp_message_reports WHERE conversation_id = :c AND reporter_id = :u');
     $rp->execute([':c' => $conv, ':u' => $seller['id']]);
@@ -357,13 +363,13 @@ try {
     check(str_contains(http($jA, "$base/mp-message-reports.php?tab=log")['body'], 'Перевірка скарги на образи'), 'admin бачить журнал доступу');
     http($jE, "$base/mp-message-reports.php", ['csrf' => csrf_of($page['body']), 'report_id' => (int) $rp['id'], 'action' => 'restrict', 'days' => 1, 'note' => 'тест']);
     check(msg_flag($pdo, $buyer['id'], MSG_FLAG_RESTRICT) !== null, '«Обмежити надсилання» → прапор msg_restricted');
-    $tb = http($jB, "$base/mp-thread.php?id=$conv");
+    $tb = http($jB, "$base/mp-messages.php?c=$conv");
     check(jerr(http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($tb['body']), 'action' => 'send', 'id' => $conv, 'body' => 'обмежено?'], ['Accept: application/json'])) === 'msg_err_restricted', 'обмежений користувач не може писати');
     $pdo->prepare('UPDATE mp_user_flags SET is_active = 0 WHERE user_id = :u')->execute([':u' => $buyer['id']]);
 
     echo "12. Листи (лише посилання, без тексту)\n";
     msg_set_email_pref($pdo, $seller['id'], true);
-    $tb = http($jB, "$base/mp-thread.php?id=$conv");
+    $tb = http($jB, "$base/mp-messages.php?c=$conv");
     clearstatcache();
     $before = is_file($mailLog) ? (int) filesize($mailLog) : 0;
     http($jB, "$base/mp-thread.php", ['csrf' => csrf_of($tb['body']), 'action' => 'send', 'id' => $conv, 'body' => "Лист? $secret-2"]);
@@ -384,7 +390,7 @@ try {
     $pdo->prepare("UPDATE mp_listings SET status = 'archived', status_changed_at = NOW() - INTERVAL 10 DAY WHERE id = :id")->execute([':id' => $lBoth]);
     check(!msg_is_readonly(msg_conversation($pdo, $conv), msg_listing($pdo, $lBoth)), 'закрито 10 днів тому — ще можна відповідати');
     $pdo->prepare('UPDATE mp_listings SET status_changed_at = NOW() - INTERVAL 20 DAY WHERE id = :id')->execute([':id' => $lBoth]);
-    $tb = http($jB, "$base/mp-thread.php?id=$conv");
+    $tb = http($jB, "$base/mp-messages.php?c=$conv");
     check(str_contains($tb['body'], 'лише для читання') && !str_contains($tb['body'], 'name="action" value="send"'), 'закрито > 14 днів → лише читання');
     check(http($jO, "$base/mp-thread.php?listing=$lBoth")['code'] === 403, 'з закритого оголошення нову розмову не почати');
     $pdo->prepare('UPDATE mp_conversations SET last_message_at = NOW() - INTERVAL 400 DAY, created_at = NOW() - INTERVAL 400 DAY WHERE id = :c')->execute([':c' => $conv]);
