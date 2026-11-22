@@ -371,7 +371,9 @@ SELECT " . $q($m['section']) . ", 'ad', @sid, " . $q($m['status']) . ", 'free', 
    1, NULL, 'online', 'worldwide', " . $q($m['slug']) . ', NULL, NULL, NULL, '
         . ($published ? "NOW(), NOW() + INTERVAL {$days} DAY" : 'NULL, NULL') . ', NOW()
 FROM DUAL WHERE @ok';
-    $sql[] = 'SET @lid := IF(ROW_COUNT() = 1, LAST_INSERT_ID(), NULL)';
+    // Не ROW_COUNT(): імпорт phpMyAdmin виконує між запитами службові запити й скидає його (2026-11-22 оголошення
+    // створилися без текстів). @ok істинне лише коли дубліката не було, тож знайдений за slug запис — щойно створений.
+    $sql[] = 'SET @lid := (SELECT l.id FROM mp_listings l WHERE @ok AND l.seller_id = @sid AND l.slug = ' . $q($m['slug']) . ' ORDER BY l.id DESC LIMIT 1)';
     foreach (['uk', 'en'] as $lang) {
         $t = $p[$lang];
         $sql[] = 'INSERT IGNORE INTO mp_listing_translations (listing_id, lang, title, short_desc, full_desc, features, for_whom, is_auto)

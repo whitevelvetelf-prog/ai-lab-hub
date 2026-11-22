@@ -66,7 +66,9 @@ if ($emit) {
         . "WHERE l.slug = " . $q($slug) . " AND l.post_form = 'ad' AND l.status = 'draft'"
         . ($free !== null ? "\n  AND (SELECT setting_value FROM site_settings WHERE setting_key = 'marketplace_free_until') = " . $q((string) $free)
             . "\n  AND " . $q((string) $free) . ' >= CURDATE()' : '') . ";\n";
-    echo "SET @n := ROW_COUNT();\n";
+    // Не ROW_COUNT() (імпорт phpMyAdmin його скидає): опубліковано й ще немає запису platform_publish.
+    echo "SET @n := (SELECT COUNT(*) FROM mp_listings l WHERE l.slug = " . $q($slug) . " AND l.status = 'published'\n"
+        . "  AND NOT EXISTS (SELECT 1 FROM mp_moderation_log g WHERE g.listing_id = l.id AND g.action = 'platform_publish'));\n";
     echo "INSERT INTO mp_moderation_log (listing_id, actor_id, action, note)\n"
         . "SELECT l.id, NULL, 'platform_publish', " . $q("публікація оголошення платформи {$m['code']} ({$slug})") . " FROM mp_listings l\n"
         . "WHERE @n = 1 AND l.slug = " . $q($slug) . " AND l.status = 'published' LIMIT 1;\n";
