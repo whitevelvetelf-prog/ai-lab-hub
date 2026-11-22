@@ -22,7 +22,10 @@ declare(strict_types=1);
  *    rel="noopener noreferrer nofollow ugc" з позначкою; НЕ перекладається, НЕ передається жодним зовнішнім сервісам,
  *    не пишеться в журнали (error_log — лише id), не потрапляє в пошук, популярні запити чи статистику;
  *  - усі запити — prepared statements; іменовані параметри не повторюються (ATTR_EMULATE_PREPARES = false).
- *  - єдині DELETE — msg_retention_cleanup() (строк зберігання) і зняття блокування користувачем (mp_user_blocks).
+ *  - єдині DELETE — msg_retention_cleanup() (строк зберігання, разом із файлами вкладень) і зняття блокування
+ *    користувачем (mp_user_blocks);
+ *  - чат (міграція № 30, 2026-11-22): вкладення jpg/png/webp/pdf ≤ 5 МБ поза webroot (віддає public/mp-attachment.php),
+ *    read_at і позначка «Прочитано», ліміт msg_per_minute, сповіщення — одна точка notify_new_message().
  */
 
 require_once __DIR__ . '/marketplace-board.php';
@@ -37,6 +40,10 @@ const MSG_FLAG_NEWCONV = 'msg_newconv_limited';   // автопрапор: ти�
 const MSG_PAGE_SIZE = 50;
 const MSG_THREAD_LIMIT = 200;                     // скільки останніх повідомлень показує сторінка розмови
 const MSG_POLL_MAX = 50;
+// Вкладення (міграція № 30): лише зображення й PDF, реальний тип за вмістом (finfo), до 5 МБ, одне на повідомлення.
+const MSG_ATTACH_TYPES = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp', 'application/pdf' => 'pdf'];
+const MSG_ATTACH_MAX_BYTES = 5 * 1024 * 1024;
+const MSG_ATTACH_PATH_RE = '~^\d{4}/\d{2}/[a-f0-9]{32}\.(?:jpg|png|webp|pdf)$~';
 
 // =========================================================================
 // Увімкнення, конфіг
@@ -66,6 +73,26 @@ function msg_ready(PDO $pdo): bool
                 $pdo->query('SELECT contact_mode FROM mp_listings LIMIT 1');
                 $ready = true;
             }
+        } catch (Throwable) {
+            $ready = false;
+        }
+    }
+
+    return $ready;
+}
+
+/**
+ * Міграція № 30 (чат): вкладення й read_at у mp_messages, reported_user_id у скаргах. Без неї чат працює як раніше:
+ * поле вкладення приховано, позначки «Прочитано» немає (вона тоді з mp_conversation_state — див. msg_peer_read_id).
+ */
+function msg_chat_ready(PDO $pdo): bool
+{
+    static $ready = null;
+    if ($ready === null) {
+        try {
+            $pdo->query('SELECT attachment_path, read_at FROM mp_messages LIMIT 0');
+            $pdo->query('SELECT reported_user_id FROM mp_message_reports LIMIT 0');
+            $ready = true;
         } catch (Throwable) {
             $ready = false;
         }
@@ -440,6 +467,13 @@ function msg_mark_read(PDO $pdo, int $convId, int $stateUid, int $messageId): vo
 {
     if ($messageId > 0) {
         msg_state_set($pdo, $convId, $stateUid, 'last_read_message_id', $messageId);
+        if (msg_chat_ready($pdo)) {
+            // read_at — лише чужим повідомленням (свої читач не «читає»); платформа (0) читає повідомлення покупця.
+            $who = $stateUid === MSG_PLATFORM_UID ? 'sender_id IS NOT NULL' : '(sender_id IS NULL OR sender_id <> :me)';
+            $params = [':c' => $convId, ':m' => $messageId] + ($stateUid === MSG_PLATFORM_UID ? [] : [':me' => $stateUid]);
+            $pdo->prepare("UPDATE mp_messages SET read_at = NOW() WHERE conversation_id = :c AND id <= :m AND read_at IS NULL AND is_system = 0 AND $who")
+                ->execute($params);
+        }
         if ($stateUid !== MSG_PLATFORM_UID) {
             unset($_SESSION['msg_unread_cache']);
         }
@@ -588,10 +622,10 @@ function msg_preview(string $body, int $len = 90): string
  * Перевірка нового повідомлення від звичайного користувача. Повертає '' (можна) або ключ помилки t().
  * $isNewConv — це перше повідомлення нової розмови.
  */
-function msg_check_send(PDO $pdo, int $userId, string $body, bool $isNewConv): string
+function msg_check_send(PDO $pdo, int $userId, string $body, bool $isNewConv, bool $hasAttachment = false): string
 {
     $len = mb_strlen($body);
-    if ($len < 1) {
+    if ($len < 1 && !$hasAttachment) {
         return 'msg_err_empty';
     }
     if ($len > max(1, (int) msg_cfg('msg_max_len'))) {
@@ -615,6 +649,12 @@ function msg_check_send(PDO $pdo, int $userId, string $body, bool $isNewConv): s
             return 'msg_err_newconv_day';
         }
     }
+    // Частота: не більше msg_per_minute за хвилину (захист від флуду) і msg_per_hour за годину.
+    $st = $pdo->prepare('SELECT COUNT(*) FROM mp_messages WHERE sender_id = :u AND created_at > (NOW() - INTERVAL 1 MINUTE)');
+    $st->execute([':u' => $userId]);
+    if ((int) $st->fetchColumn() >= max(1, (int) msg_cfg('msg_per_minute'))) {
+        return 'msg_err_minute';
+    }
     $st = $pdo->prepare('SELECT COUNT(*) FROM mp_messages WHERE sender_id = :u AND created_at > (NOW() - INTERVAL 1 HOUR)');
     $st->execute([':u' => $userId]);
     if ((int) $st->fetchColumn() >= (int) msg_cfg('msg_per_hour')) {
@@ -627,7 +667,7 @@ function msg_check_send(PDO $pdo, int $userId, string $body, bool $isNewConv): s
     $st = $pdo->prepare('SELECT body FROM mp_messages WHERE sender_id = :u ORDER BY id DESC LIMIT ' . $repeat);
     $st->execute([':u' => $userId]);
     $last = $st->fetchAll(PDO::FETCH_COLUMN);
-    if (count($last) >= $repeat) {
+    if ($body !== '' && count($last) >= $repeat) {
         $same = true;
         foreach ($last as $b) {
             if (mb_strtolower(trim((string) $b)) !== mb_strtolower($body)) {
@@ -654,6 +694,184 @@ function msg_check_send(PDO $pdo, int $userId, string $body, bool $isNewConv): s
     }
 
     return '';
+}
+
+// =========================================================================
+// Вкладення (міграція № 30)
+// =========================================================================
+
+/**
+ * Тека вкладень — ПОЗА коренем сайту (www/public): прямої адреси файлу немає, віддає лише public/mp-attachment.php
+ * з перевіркою участі в розмові. Типово — поруч із фото оголошень (<батьківська тека photo_dir>/messages; на adm.tools
+ * /home/<user>/marketplace-files/messages). Заборону виконання PHP через php_flag/engine у .htaccess adm.tools не
+ * підтримує (500), тому захист — місце поза webroot + «Require all denied» + лише перекодовані зображення / PDF
+ * з власними розширеннями й випадковими іменами.
+ */
+function msg_attach_dir(): string
+{
+    $dir = trim((string) msg_cfg('msg_attach_dir'));
+    if ($dir === '') {
+        $dir = dirname(rtrim((string) mp_config()['photo_dir'], '/\\')) . '/messages';
+    }
+    $dir = rtrim($dir, '/\\');
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+        throw new RuntimeException('Cannot create attachment dir');
+    }
+    if (!is_file($dir . '/.htaccess')) {
+        @file_put_contents($dir . '/.htaccess', "# Вкладення повідомлень: лише через public/mp-attachment.php\nRequire all denied\n");
+    }
+
+    return $dir;
+}
+
+/** Абсолютний шлях до наявного файлу вкладення за відносним іменем із БД (лише MSG_ATTACH_PATH_RE) або null. */
+function msg_attach_abs(?string $rel): ?string
+{
+    if ($rel === null || preg_match(MSG_ATTACH_PATH_RE, $rel) !== 1) {
+        return null;
+    }
+    try {
+        $path = msg_attach_dir() . '/' . $rel;
+    } catch (Throwable) {
+        return null;
+    }
+
+    return is_file($path) ? $path : null;
+}
+
+/**
+ * Перевірка файлу з форми (поле attachment) без збереження. null — файла немає.
+ * Реальний тип — за вмістом (finfo), розширення має відповідати типу; зображення — ще й getimagesize; PDF — підпис %PDF-.
+ *
+ * @return array{tmp:string,mime:string,ext:string,size:int,name:string}|string|null  масив, ключ помилки t() або null
+ */
+function msg_attach_inspect(?array $file): array|string|null
+{
+    if ($file === null || is_array($file['name'] ?? null)) {
+        return $file === null ? null : 'msg_err_file_upload';
+    }
+    $err = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
+    if ($err === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+    if ($err === UPLOAD_ERR_INI_SIZE || $err === UPLOAD_ERR_FORM_SIZE) {
+        return 'msg_err_file_size';
+    }
+    $tmp = (string) ($file['tmp_name'] ?? '');
+    if ($err !== UPLOAD_ERR_OK || !is_uploaded_file($tmp)) {
+        return 'msg_err_file_upload';
+    }
+    $size = (int) filesize($tmp);
+    if ($size <= 0) {
+        return 'msg_err_file_type';
+    }
+    if ($size > MSG_ATTACH_MAX_BYTES) {
+        return 'msg_err_file_size';
+    }
+    $name = mp_clean_filename((string) ($file['name'] ?? ''));
+    $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    $ext = $ext === 'jpeg' ? 'jpg' : $ext;
+    $mime = mp_real_mime($tmp);
+    if (!isset(MSG_ATTACH_TYPES[$mime]) || MSG_ATTACH_TYPES[$mime] !== $ext) {
+        return 'msg_err_file_type';
+    }
+    if ($mime === 'application/pdf') {
+        $head = (string) @file_get_contents($tmp, false, null, 0, 5);
+        if ($head !== '%PDF-') {
+            return 'msg_err_file_type';
+        }
+    } else {
+        $dims = @getimagesize($tmp);
+        if ($dims === false || $dims[0] < 1 || $dims[1] < 1 || $dims[0] * $dims[1] > 40_000_000) {
+            return 'msg_err_file_type';
+        }
+    }
+
+    return ['tmp' => $tmp, 'mime' => $mime, 'ext' => $ext, 'size' => $size, 'name' => mb_substr($name !== '' ? $name : 'file.' . $ext, 0, 160)];
+}
+
+/**
+ * Зберігає перевірений файл під випадковим ім'ям рік/місяць/<32 hex>.<ext>. Зображення перекодовуються через GD
+ * (прибирає EXIF/GPS і будь-що вбудоване; довша сторона ≤ 2000 px), PDF переміщується як є (віддається лише
+ * як завантаження, не відкривається в сторінці сайту).
+ *
+ * @param array{tmp:string,mime:string,ext:string,size:int,name:string} $f
+ * @return array{path:string,name:string,mime:string,size:int}
+ */
+function msg_attach_store(array $f): array
+{
+    $sub = date('Y') . '/' . date('m');
+    $dir = msg_attach_dir() . '/' . $sub;
+    if (!is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+        throw new RuntimeException('Cannot create attachment subdir');
+    }
+    $rel = $sub . '/' . bin2hex(random_bytes(16)) . '.' . $f['ext'];
+    $abs = msg_attach_dir() . '/' . $rel;
+    if ($f['mime'] === 'application/pdf') {
+        if (!move_uploaded_file($f['tmp'], $abs)) {
+            throw new RuntimeException('Cannot move attachment');
+        }
+    } else {
+        $img = match ($f['mime']) {
+            'image/jpeg' => @imagecreatefromjpeg($f['tmp']),
+            'image/png'  => @imagecreatefrompng($f['tmp']),
+            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($f['tmp']) : false,
+            default      => false,
+        };
+        if (!$img instanceof \GdImage) {
+            throw new RuntimeException('Cannot decode attachment image');
+        }
+        if ($f['mime'] === 'image/jpeg' && function_exists('exif_read_data')) {
+            $rot = match ((int) (@exif_read_data($f['tmp'])['Orientation'] ?? 1)) { 3 => 180, 6 => -90, 8 => 90, default => 0 };
+            if ($rot !== 0 && ($r = imagerotate($img, $rot, 0)) instanceof \GdImage) {
+                $img = $r;
+            }
+        }
+        $img = mpb_gd_fit($img, 2000);
+        $ok = match ($f['ext']) {
+            'png'  => imagepng($img, $abs, 6),
+            'webp' => function_exists('imagewebp') ? imagewebp($img, $abs, 85) : false,
+            default => imagejpeg(mpb_gd_flatten($img), $abs, 86),
+        };
+        if (!$ok) {
+            @unlink($abs);
+            throw new RuntimeException('Cannot write attachment image');
+        }
+    }
+    @chmod($abs, 0644);
+    clearstatcache(true, $abs);
+
+    return ['path' => $rel, 'name' => $f['name'], 'mime' => $f['mime'], 'size' => (int) filesize($abs)];
+}
+
+function msg_attach_delete(?string $rel): void
+{
+    $abs = msg_attach_abs($rel);
+    if ($abs !== null) {
+        @unlink($abs);
+    }
+}
+
+/** Вкладення з $_FILES['attachment'] (null — немає або міграцію № 30 не застосовано). */
+function msg_attach_from_request(PDO $pdo): array|string|null
+{
+    if (!msg_chat_ready($pdo)) {
+        return null;
+    }
+
+    return msg_attach_inspect(isset($_FILES['attachment']) && is_array($_FILES['attachment']) ? $_FILES['attachment'] : null);
+}
+
+/** Розмір файлу для людини: «340 КБ», «1,2 МБ». */
+function msg_human_size(int $bytes): string
+{
+    $uk = current_lang() === 'uk';
+    if ($bytes < 1024 * 1024) {
+        return max(1, (int) round($bytes / 1024)) . ($uk ? ' КБ' : ' KB');
+    }
+    $mb = number_format($bytes / 1048576, 1, $uk ? ',' : '.', '');
+
+    return $mb . ($uk ? ' МБ' : ' MB');
 }
 
 // =========================================================================
@@ -699,7 +917,7 @@ function msg_find_conversation(PDO $pdo, int $listingId, int $buyerId): ?int
  * Перше повідомлення: створює розмову (або бере наявну) і додає текст.
  * @return array{status:string,conv_id:?int}  status: ok | <ключ помилки t()>
  */
-function msg_start(PDO $pdo, int $userId, array $listing, string $body): array
+function msg_start(PDO $pdo, int $userId, array $listing, string $body, ?array $attach = null): array
 {
     $body = msg_clean_body($body);
     $err = msg_can_start($pdo, $userId, $listing);
@@ -710,26 +928,31 @@ function msg_start(PDO $pdo, int $userId, array $listing, string $body): array
     if ($existing !== null) {
         $conv = msg_conversation($pdo, $existing);
 
-        return $conv === null ? ['status' => 'msg_err_save', 'conv_id' => null] : msg_send_in_conv($pdo, $conv, 'buyer', $userId, $body);
+        return $conv === null ? ['status' => 'msg_err_save', 'conv_id' => null] : msg_send_in_conv($pdo, $conv, 'buyer', $userId, $body, $attach);
     }
     $lock = 'mp_msg_' . $userId;
     if (!mpb_lock($pdo, $lock)) {
         return ['status' => 'mpb_rate_limited', 'conv_id' => null];
     }
     try {
-        $err = msg_check_send($pdo, $userId, $body, true);
+        $err = msg_check_send($pdo, $userId, $body, true, $attach !== null);
         if ($err !== '') {
             return ['status' => $err, 'conv_id' => null];
+        }
+        $stored = msg_store_or_null($attach);
+        if ($stored === false) {
+            return ['status' => 'msg_err_file_upload', 'conv_id' => null];
         }
         $pdo->beginTransaction();
         try {
             $pdo->prepare("INSERT INTO mp_conversations (listing_source, listing_id, buyer_id, seller_user_id, status) VALUES ('mp', :l, :b, :s, 'open')")
                 ->execute([':l' => $listing['id'], ':b' => $userId, ':s' => $listing['seller_user_id']]);
             $convId = (int) $pdo->lastInsertId();
-            $msgId = msg_insert($pdo, $convId, $userId, null, $body, false);
+            $msgId = msg_insert($pdo, $convId, $userId, null, $body, false, $stored);
             $pdo->commit();
         } catch (PDOException $e) {
             $pdo->rollBack();
+            msg_attach_delete($stored['path'] ?? null);
             if ((int) ($e->errorInfo[1] ?? 0) === 1062) {   // паралельний запит уже створив розмову
                 $id = msg_find_conversation($pdo, $listing['id'], $userId);
 
@@ -747,11 +970,36 @@ function msg_start(PDO $pdo, int $userId, array $listing, string $body): array
     return ['status' => 'ok', 'conv_id' => $convId];
 }
 
-/** Вставка повідомлення + оновлення last_message_* розмови. Повертає id повідомлення. */
-function msg_insert(PDO $pdo, int $convId, ?int $senderId, ?string $label, string $body, bool $system): int
+/**
+ * Зберігає перевірене вкладення: null — вкладення немає; false — не вдалося записати (помилка вже в журналі, без імені файлу).
+ * @return array{path:string,name:string,mime:string,size:int}|false|null
+ */
+function msg_store_or_null(?array $attach): array|false|null
 {
-    $pdo->prepare('INSERT INTO mp_messages (conversation_id, sender_id, sender_label, body, is_system) VALUES (:c, :s, :l, :b, :y)')
-        ->execute([':c' => $convId, ':s' => $senderId, ':l' => $label, ':b' => $body, ':y' => $system ? 1 : 0]);
+    if ($attach === null) {
+        return null;
+    }
+    try {
+        return msg_attach_store($attach);
+    } catch (Throwable $e) {
+        error_log('[messages] attachment store failed: ' . get_class($e));
+
+        return false;
+    }
+}
+
+/** Вставка повідомлення (+ вкладення, якщо є) + оновлення last_message_* розмови. Повертає id повідомлення. */
+function msg_insert(PDO $pdo, int $convId, ?int $senderId, ?string $label, string $body, bool $system, ?array $stored = null): int
+{
+    if ($stored !== null) {
+        $pdo->prepare('INSERT INTO mp_messages (conversation_id, sender_id, sender_label, body, is_system, attachment_path, attachment_name, attachment_mime, attachment_size)
+                       VALUES (:c, :s, :l, :b, :y, :ap, :an, :am, :az)')
+            ->execute([':c' => $convId, ':s' => $senderId, ':l' => $label, ':b' => $body, ':y' => $system ? 1 : 0,
+                ':ap' => $stored['path'], ':an' => $stored['name'], ':am' => $stored['mime'], ':az' => $stored['size']]);
+    } else {
+        $pdo->prepare('INSERT INTO mp_messages (conversation_id, sender_id, sender_label, body, is_system) VALUES (:c, :s, :l, :b, :y)')
+            ->execute([':c' => $convId, ':s' => $senderId, ':l' => $label, ':b' => $body, ':y' => $system ? 1 : 0]);
+    }
     $id = (int) $pdo->lastInsertId();
     $pdo->prepare('UPDATE mp_conversations SET last_message_id = :m, last_message_at = NOW() WHERE id = :c')->execute([':m' => $id, ':c' => $convId]);
 
@@ -764,7 +1012,7 @@ function msg_insert(PDO $pdo, int $convId, ?int $senderId, ?string $label, strin
  *
  * @return array{status:string,conv_id:?int,message_id?:int}
  */
-function msg_send_in_conv(PDO $pdo, array $conv, string $role, int $userId, string $body): array
+function msg_send_in_conv(PDO $pdo, array $conv, string $role, int $userId, string $body, ?array $attach = null): array
 {
     $convId = (int) $conv['id'];
     $body = msg_clean_body($body);
@@ -774,10 +1022,14 @@ function msg_send_in_conv(PDO $pdo, array $conv, string $role, int $userId, stri
     }
     if ($role === 'platform') {
         $len = mb_strlen($body);
-        if ($len < 1 || $len > max(1, (int) msg_cfg('msg_max_len'))) {
-            return ['status' => $len < 1 ? 'msg_err_empty' : 'msg_err_long', 'conv_id' => $convId];
+        if (($len < 1 && $attach === null) || $len > max(1, (int) msg_cfg('msg_max_len'))) {
+            return ['status' => $len > 0 ? 'msg_err_long' : 'msg_err_empty', 'conv_id' => $convId];
         }
-        $msgId = msg_insert($pdo, $convId, null, MSG_PLATFORM_LABEL, $body, false);
+        $stored = msg_store_or_null($attach);
+        if ($stored === false) {
+            return ['status' => 'msg_err_file_upload', 'conv_id' => $convId];
+        }
+        $msgId = msg_insert($pdo, $convId, null, MSG_PLATFORM_LABEL, $body, false, $stored);
         msg_mark_read($pdo, $convId, MSG_PLATFORM_UID, $msgId);
         msg_access_log($pdo, $userId, $convId, 'platform_reply', 'shared inbox');
         msg_after_message($pdo, $convId, $msgId, 'platform');
@@ -796,11 +1048,15 @@ function msg_send_in_conv(PDO $pdo, array $conv, string $role, int $userId, stri
         return ['status' => 'mpb_rate_limited', 'conv_id' => $convId];
     }
     try {
-        $err = msg_check_send($pdo, $userId, $body, false);
+        $err = msg_check_send($pdo, $userId, $body, false, $attach !== null);
         if ($err !== '') {
             return ['status' => $err, 'conv_id' => $convId];
         }
-        $msgId = msg_insert($pdo, $convId, $userId, null, $body, false);
+        $stored = msg_store_or_null($attach);
+        if ($stored === false) {
+            return ['status' => 'msg_err_file_upload', 'conv_id' => $convId];
+        }
+        $msgId = msg_insert($pdo, $convId, $userId, null, $body, false, $stored);
         msg_mark_read($pdo, $convId, $userId, $msgId);
     } finally {
         mpb_unlock($pdo, $lock);
@@ -848,14 +1104,32 @@ function msg_check_suspicious(PDO $pdo, int $userId): void
     }
 }
 
-/** Після нового повідомлення: розмова знову видима відправнику (якщо ховав) і листи отримувачам. */
+/** Після нового повідомлення: скинути кеш лічильника й сповістити отримувача. */
 function msg_after_message(PDO $pdo, int $convId, int $msgId, string $senderRole): void
 {
     unset($_SESSION['msg_unread_cache']);
-    try {
-        msg_notify_email($pdo, $convId, $msgId, $senderRole);
-    } catch (Throwable $e) {
-        error_log('[messages] email notify failed: conv=' . $convId . ' ' . get_class($e));
+    notify_new_message($pdo, $convId, $msgId, $senderRole);
+}
+
+/**
+ * Єдина точка сповіщень про нове повідомлення. Канали — у MSG_NOTIFY_CHANNELS; кожен ізольований (помилка одного не
+ * зупиняє інші й не ламає надсилання). Зараз лише email (msg_notify_email). Додати PWA-push або Telegram-бота пізніше:
+ * написати функцію msg_notify_<канал>(PDO, int $convId, int $msgId, string $senderRole): void (ті самі правила —
+ * без тексту повідомлення, лише якщо не прочитано, з власним лімітом частоти) і додати її назву в масив.
+ */
+const MSG_NOTIFY_CHANNELS = ['msg_notify_email'];
+
+function notify_new_message(PDO $pdo, int $convId, int $msgId, string $senderRole): void
+{
+    foreach (MSG_NOTIFY_CHANNELS as $fn) {
+        if (!function_exists($fn)) {
+            continue;
+        }
+        try {
+            $fn($pdo, $convId, $msgId, $senderRole);
+        } catch (Throwable $e) {
+            error_log('[messages] notify ' . $fn . ' failed: conv=' . $convId . ' ' . get_class($e));
+        }
     }
 }
 
@@ -870,7 +1144,8 @@ function msg_after_message(PDO $pdo, int $convId, int $msgId, string $senderRole
 function msg_messages(PDO $pdo, array $conv, string $role, int $viewerId, int $sinceId = 0, int $limit = MSG_THREAD_LIMIT): array
 {
     $limit = max(1, min(MSG_THREAD_LIMIT, $limit));
-    $st = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at FROM mp_messages
+    $att = msg_chat_ready($pdo) ? ', attachment_path, attachment_name, attachment_mime, attachment_size' : '';
+    $st = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at' . $att . ' FROM mp_messages
                          WHERE conversation_id = :c AND id > :s ORDER BY id DESC LIMIT ' . $limit);
     $st->execute([':c' => (int) $conv['id'], ':s' => $sinceId]);
     $rows = array_reverse($st->fetchAll(PDO::FETCH_ASSOC));
@@ -894,11 +1169,67 @@ function msg_render_row(PDO $pdo, array $conv, string $role, int $viewerId, arra
     $label = $system ? '' : ($fromPlatform ? MSG_PLATFORM_LABEL : ($mine ? t('msg_you') : msg_user_label($pdo, (int) $r['sender_id'])));
     $ts = strtotime((string) $r['created_at']) ?: time();
 
+    $attach = null;
+    if (!empty($r['attachment_path']) && preg_match(MSG_ATTACH_PATH_RE, (string) $r['attachment_path']) === 1) {
+        $isPdf = (string) $r['attachment_mime'] === 'application/pdf';
+        $attach = ['url' => 'mp-attachment.php?m=' . (int) $r['id'], 'kind' => $isPdf ? 'pdf' : 'image',
+            'name' => (string) ($r['attachment_name'] ?? ''), 'size' => msg_human_size((int) ($r['attachment_size'] ?? 0))];
+    }
+
     return [
         'id' => (int) $r['id'], 'mine' => $mine, 'label' => $label, 'platform' => $fromPlatform,
         'html' => msg_body_html((string) $r['body']), 'time' => date(current_lang() === 'uk' ? 'd.m.Y H:i' : 'Y-m-d H:i', $ts),
-        'iso' => date('c', $ts), 'system' => $system,
+        'iso' => date('c', $ts), 'system' => $system, 'attach' => $attach,
     ];
+}
+
+/**
+ * Останнє повідомлення, яке прочитав співрозмовник (для позначки «Прочитано» під своїми повідомленнями).
+ * Покупець бачить стан автора (або скриньки платформи, user_id 0); автор і платформа — стан покупця.
+ */
+function msg_peer_read_id(PDO $pdo, array $conv, string $role): int
+{
+    if ($role === 'buyer') {
+        $peer = $conv['seller_user_id'] !== null ? (int) $conv['seller_user_id'] : MSG_PLATFORM_UID;
+    } elseif ($role === 'admin') {
+        return 0;
+    } else {
+        $peer = (int) $conv['buyer_id'];
+    }
+
+    return msg_state($pdo, (int) $conv['id'], $peer)['last_read_message_id'];
+}
+
+/** HTML одного повідомлення (бульбашка). Текст і назва файлу екрановані; спільне для сторінки й JS (поле html_row). */
+function msg_row_html(array $m, int $peerRead = 0): string
+{
+    $cls = 'msg-row' . ($m['mine'] ? ' msg-row--mine' : '') . ($m['system'] ? ' msg-row--system' : '') . ($m['platform'] ? ' msg-row--platform' : '');
+    $h = '<li class="' . $cls . '" data-id="' . (int) $m['id'] . '"><div class="msg-bubble">';
+    if ($m['label'] !== '') {
+        $h .= '<span class="msg-bubble__label">' . mp_e($m['label']) . '</span>';
+    }
+    if (is_array($m['attach'] ?? null)) {
+        $a = $m['attach'];
+        if ($a['kind'] === 'image') {
+            $h .= '<a class="msg-att msg-att--img" href="' . mp_e($a['url']) . '" target="_blank" rel="noopener">'
+                . '<img src="' . mp_e($a['url']) . '" alt="' . mp_e($a['name']) . '" loading="lazy"></a>';
+        } else {
+            $h .= '<a class="msg-att msg-att--file" href="' . mp_e($a['url']) . '" rel="noopener" download>'
+                . '<span class="msg-att__icon" aria-hidden="true">PDF</span><span class="msg-att__name">' . mp_e($a['name']) . '</span>'
+                . '<span class="msg-att__size">' . mp_e($a['size']) . '</span></a>';
+        }
+    }
+    if ($m['html'] !== '') {
+        $h .= '<span class="msg-bubble__text">' . $m['html'] . '</span>';
+    }
+    $h .= '<span class="msg-bubble__foot"><time class="msg-bubble__time" datetime="' . mp_e($m['iso']) . '">' . mp_e($m['time']) . '</time>';
+    if ($m['mine'] && !$m['system']) {
+        $read = $peerRead >= (int) $m['id'];
+        $h .= '<span class="msg-read' . ($read ? ' is-read' : '') . '" data-read-label="' . mp_e(t('msg_read')) . '" data-sent-label="' . mp_e(t('msg_sent')) . '">'
+            . mp_e($read ? t('msg_read') : t('msg_sent')) . '</span>';
+    }
+
+    return $h . '</span></div></li>';
 }
 
 /** id останнього повідомлення розмови (0 — немає). */
@@ -943,7 +1274,8 @@ function msg_inbox_query(PDO $pdo, string $mode, int $userId, string $tab, int $
     $sql = "SELECT c.*, COALESCE(s.last_read_message_id, 0) AS last_read, COALESCE(s.hidden_up_to_message_id, 0) AS hidden_up_to,
                    COALESCE(s.is_muted, 0) AS muted,
                    (SELECT COUNT(*) FROM mp_messages m WHERE m.conversation_id = c.id AND m.id > COALESCE(s.last_read_message_id, 0) AND $unreadCond) AS unread,
-                   lm.body AS last_body, lm.sender_id AS last_sender_id, lm.is_system AS last_system
+                   lm.body AS last_body, lm.sender_id AS last_sender_id, lm.is_system AS last_system"
+        . (msg_chat_ready($pdo) ? ', lm.attachment_name AS last_attach' : ', NULL AS last_attach') . "
             FROM mp_conversations c
             LEFT JOIN mp_conversation_state s ON s.conversation_id = c.id AND s.user_id = :su
             LEFT JOIN mp_messages lm ON lm.id = c.last_message_id
@@ -968,7 +1300,9 @@ function msg_inbox_query(PDO $pdo, string $mode, int $userId, string $tab, int $
         $rows[] = [
             'id' => (int) $c['id'], 'listing' => $listing, 'role' => $role,
             'counterpart' => $role === 'buyer' && $c['seller_user_id'] === null ? MSG_PLATFORM_LABEL : msg_user_label($pdo, $otherId),
-            'preview' => (int) $c['last_system'] === 1 ? t('msg_system_note') : msg_preview((string) $c['last_body']),
+            'preview' => (int) $c['last_system'] === 1 ? t('msg_system_note')
+                : (trim((string) $c['last_body']) === '' && !empty($c['last_attach']) ? '📎 ' . msg_preview((string) $c['last_attach'], 60) : msg_preview((string) $c['last_body'])),
+            'last_message_id' => (int) $c['last_message_id'],
             'last_mine' => $mode === 'platform' ? $c['last_sender_id'] === null : ($c['last_sender_id'] !== null && (int) $c['last_sender_id'] === $userId),
             'time' => (string) $c['last_message_at'], 'unread' => (int) $c['unread'], 'muted' => (int) $c['muted'] === 1, 'readonly' => $readonly,
         ];
@@ -1065,11 +1399,15 @@ function msg_report(PDO $pdo, array $conv, string $role, int $userId, string $re
             $messageId = null;
         }
     }
-    $snap = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at FROM mp_messages WHERE conversation_id = :c ORDER BY id DESC LIMIT 30');
+    $ready = msg_chat_ready($pdo);
+    $snap = $pdo->prepare('SELECT id, sender_id, sender_label, body, is_system, created_at' . ($ready ? ', attachment_name, attachment_mime' : '')
+        . ' FROM mp_messages WHERE conversation_id = :c ORDER BY id DESC LIMIT 30');
     $snap->execute([':c' => (int) $conv['id']]);
     $rows = array_reverse($snap->fetchAll(PDO::FETCH_ASSOC));
-    $pdo->prepare('INSERT INTO mp_message_reports (conversation_id, message_id, reporter_id, reason, note, snapshot) VALUES (:c, :m, :u, :r, :n, :s)')
-        ->execute([
+    $reported = msg_counterpart_id($conv, $role);   // на кого: співрозмовник автора скарги (null — платформа)
+    $pdo->prepare('INSERT INTO mp_message_reports (conversation_id, message_id, reporter_id, reason, note, snapshot' . ($ready ? ', reported_user_id' : '') . ')
+                   VALUES (:c, :m, :u, :r, :n, :s' . ($ready ? ', :ru' : '') . ')')
+        ->execute(($ready ? [':ru' => $reported] : []) + [
             ':c' => (int) $conv['id'], ':m' => $messageId, ':u' => $userId, ':r' => $reason,
             ':n' => trim($note) !== '' ? mb_substr(trim($note), 0, 500) : null,
             ':s' => json_encode(['buyer_id' => (int) $conv['buyer_id'], 'seller_user_id' => $conv['seller_user_id'] !== null ? (int) $conv['seller_user_id'] : null,
@@ -1140,7 +1478,9 @@ function msg_notify_email(PDO $pdo, int $convId, int $msgId, string $senderRole)
         return;
     }
     $recipient = $senderRole === 'buyer' ? ($conv['seller_user_id'] !== null ? (int) $conv['seller_user_id'] : null) : (int) $conv['buyer_id'];
-    if ($recipient === null || !msg_email_pref($pdo, $recipient) || msg_state($pdo, $convId, $recipient)['is_muted'] === 1) {
+    $rstate = $recipient !== null ? msg_state($pdo, $convId, $recipient) : null;
+    // Лише якщо отримувач увімкнув листи, не вимкнув сповіщення цієї розмови й ще не прочитав це повідомлення.
+    if ($recipient === null || !msg_email_pref($pdo, $recipient) || $rstate['is_muted'] === 1 || $rstate['last_read_message_id'] >= $msgId) {
         return;
     }
     $min = max(1, (int) msg_cfg('msg_email_min_minutes'));
@@ -1206,6 +1546,11 @@ function msg_retention_cleanup(PDO $pdo, ?int $days = null): array
             break;
         }
         $in = implode(',', $ids);   // лише цілі числа з БД
+        if (msg_chat_ready($pdo)) {   // файли вкладень — до видалення рядків
+            foreach ($pdo->query("SELECT attachment_path FROM mp_messages WHERE conversation_id IN ($in) AND attachment_path IS NOT NULL")->fetchAll(PDO::FETCH_COLUMN) as $rel) {
+                msg_attach_delete((string) $rel);
+            }
+        }
         $pdo->beginTransaction();
         $total['messages'] += $pdo->exec("DELETE FROM mp_messages WHERE conversation_id IN ($in)") ?: 0;
         $pdo->exec("DELETE FROM mp_conversation_state WHERE conversation_id IN ($in)");

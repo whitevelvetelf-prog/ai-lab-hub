@@ -75,7 +75,8 @@ function mp_config(): array
             'messaging_secret'   => '',
             'messages_retention_days' => 365,
             'msg_max_len'        => 2000,
-            'msg_per_hour'       => 30,
+            'msg_per_minute'     => 20,
+            'msg_per_hour'       => 300,
             'msg_new_conv_per_day' => 10,
             'msg_new_conv_per_day_young' => 3,
             'msg_young_days'     => 7,
@@ -83,13 +84,15 @@ function mp_config(): array
             'msg_repeat_max'     => 3,
             'msg_stop_phrases'   => [],
             'msg_readonly_after_days' => 14,
-            'msg_poll_seconds'   => 20,
+            'msg_poll_seconds'   => 5,
+            'msg_unread_poll_seconds' => 30,
             'msg_suspicious_targets' => 5,
             'msg_suspicious_hours' => 24,
             'msg_email_min_minutes' => 30,
             'msg_email_max_per_day' => 5,
             'ip_limit_msg'       => 400,
-            'ip_limit_poll'      => 20000,
+            'ip_limit_poll'      => 40000,
+            'msg_attach_dir'     => '',
         ];
         $cfg = $defaults;
         // config/marketplace.php — базові значення; config/marketplace.local.php (не в git) — локальне перевизначення.
