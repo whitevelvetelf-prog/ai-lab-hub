@@ -862,6 +862,21 @@ function msg_attach_from_request(PDO $pdo): array|string|null
     return msg_attach_inspect(isset($_FILES['attachment']) && is_array($_FILES['attachment']) ? $_FILES['attachment'] : null);
 }
 
+/**
+ * Атрибут data-emoji для форми повідомлення: написи панелі емодзі (assets/js/mp-thread.js будує кнопку 😊 і панель).
+ * Емодзі — звичайні символи Unicode в тексті повідомлення (utf8mb4): без картинок, без змін у БД чи на сервері.
+ */
+function msg_emoji_attr(): string
+{
+    $labels = [];
+    foreach (['msg_emoji' => 'button', 'msg_emoji_recent' => 'recent', 'msg_emoji_smileys' => 'smileys', 'msg_emoji_gestures' => 'gestures',
+                 'msg_emoji_hearts' => 'hearts', 'msg_emoji_work' => 'work', 'msg_emoji_symbols' => 'symbols'] as $key => $id) {
+        $labels[$id] = t($key);
+    }
+
+    return ' data-emoji="' . htmlspecialchars((string) json_encode($labels, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"';
+}
+
 /** Розмір файлу для людини: «340 КБ», «1,2 МБ». */
 function msg_human_size(int $bytes): string
 {

@@ -243,7 +243,7 @@ if ($listingParam > 0) {
         <p class="msg-safety" role="note"><?= mp_e(t('msg_safety')) ?></p>
         <p class="msg-note"><?= mp_e(t('msg_start_hint')) ?></p>
         <form class="msg-compose msg-compose--start" method="post" action="mp-thread.php" id="msg-compose" enctype="multipart/form-data" autocomplete="off"
-              data-max-file="<?= MSG_ATTACH_MAX_BYTES ?>" data-err-size="<?= mp_e(t('msg_err_file_size')) ?>" data-err-type="<?= mp_e(t('msg_err_file_type')) ?>">
+              data-max-file="<?= MSG_ATTACH_MAX_BYTES ?>" data-err-size="<?= mp_e(t('msg_err_file_size')) ?>" data-err-type="<?= mp_e(t('msg_err_file_type')) ?>"<?= msg_emoji_attr() ?>>
             <?= mp_csrf_field() ?>
             <input type="hidden" name="action" value="start">
             <input type="hidden" name="listing" value="<?= (int) $listing['id'] ?>">

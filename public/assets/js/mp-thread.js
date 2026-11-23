@@ -206,6 +206,134 @@
     textarea.addEventListener('input', resize);
     textarea.addEventListener('focus', function () { if (!innerScroll()) { setTimeout(scrollToEnd, 300); } });
 
+    // Панель емодзі (кнопка 😊 ліворуч від поля). Емодзі — звичайні символи в тексті; «Нещодавні» — у localStorage.
+    (function emojiPanel() {
+        var labels;
+        try { labels = JSON.parse(form.dataset.emoji || 'null'); } catch (e) { labels = null; }
+        var field = form.querySelector('.msg-compose__field');
+        if (!labels || !field) { return; }
+        var SETS = {
+            smileys: '😀 😃 😄 😁 😆 😅 😂 🤣 😊 🙂 😉 😍 🥰 😘 😋 😎 🤓 🤩 🥳 😇 🤗 🤭 🤫 🤔 🤨 😐 😏 🙄 😬 😌 😴 😮 😲 😳 🥺 😢 😭 😤 😡 🤯 😱 🤒 🤧 😷',
+            gestures: '👍 👎 👌 ✌️ 🤞 🤝 👏 🙌 👐 🙏 💪 👋 ✋ 🤙 👉 👈 👆 👇 ☝️ ✍️ 🫶 🤷 🙋 🙅 🙆 🤦',
+            hearts: '❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 💕 💞 💖 💗 💯 ✨ 🔥 ⭐ 🌟 💫 🎉 🎊 🎁 🎂 🌹 🌸 🌻 ☀️ 🌈 ☕ 🍕 🍰',
+            work: '✅ ❌ ⚠️ ❗ ❓ 💬 📩 📧 📞 📱 💻 🖥️ 📦 🚚 📍 📅 ⏰ ⏳ 💰 💵 💳 🧾 📄 📎 📌 📊 📈 🔗 🔒 🔑 🛠️ ⚙️ 🤖 🧪 💡 📝 📷 🎬 🎨 🎵 🏠 🇺🇦',
+            symbols: '👀 🙈 💤 🆗 🆕 🆓 🔝 ➡️ ⬅️ ⬆️ ⬇️ 🔄 ✔️ ☑️ ➕ ➖ ✖️ 💲 ⭕ 🚫 ⛔ 🟢 🟡 🔴 ⚪ ⚫ 🔵 🟣'
+        };
+        var LS = 'alh_emoji_recent';
+        var order = ['recent', 'smileys', 'gestures', 'hearts', 'work', 'symbols'];
+        var icons = { recent: '🕘', smileys: '😊', gestures: '👍', hearts: '❤️', work: '💼', symbols: '✔️' };
+        var recent = [];
+        try { recent = JSON.parse(window.localStorage.getItem(LS) || '[]'); } catch (e) { recent = []; }
+        if (!Array.isArray(recent)) { recent = []; }
+        recent = recent.filter(function (s) { return typeof s === 'string' && s.length <= 16; }).slice(0, 24);
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'msg-compose__emoji';
+        btn.setAttribute('aria-label', labels.button);
+        btn.title = labels.button;
+        btn.setAttribute('aria-expanded', 'false');
+        btn.setAttribute('aria-controls', 'msgEmojiPanel');
+        btn.textContent = '😊';
+        field.parentNode.insertBefore(btn, field);
+
+        var panel = document.createElement('div');
+        panel.className = 'msg-emoji';
+        panel.id = 'msgEmojiPanel';
+        panel.setAttribute('role', 'dialog');
+        panel.setAttribute('aria-label', labels.button);
+        panel.hidden = true;
+        var tabs = document.createElement('div');
+        tabs.className = 'msg-emoji__tabs';
+        tabs.setAttribute('role', 'tablist');
+        var grid = document.createElement('div');
+        grid.className = 'msg-emoji__grid';
+        grid.setAttribute('role', 'tabpanel');
+        panel.appendChild(tabs);
+        panel.appendChild(grid);
+        form.appendChild(panel);
+        var current = recent.length ? 'recent' : 'smileys';
+        var caret = null;   // позиція курсора в полі (на телефоні поле втрачає фокус, коли тиснуть на панель)
+        ['keyup', 'click', 'select', 'input'].forEach(function (ev) {
+            textarea.addEventListener(ev, function () { caret = [textarea.selectionStart, textarea.selectionEnd]; });
+        });
+
+        function list(id) { return id === 'recent' ? recent : SETS[id].split(' '); }
+        function render() {
+            tabs.textContent = '';
+            order.forEach(function (id) {
+                if (id === 'recent' && !recent.length) { return; }
+                var t = document.createElement('button');
+                t.type = 'button';
+                t.className = 'msg-emoji__tab' + (id === current ? ' is-active' : '');
+                t.setAttribute('role', 'tab');
+                t.setAttribute('aria-selected', id === current ? 'true' : 'false');
+                t.setAttribute('aria-label', labels[id]);
+                t.title = labels[id];
+                t.textContent = icons[id];
+                t.dataset.set = id;
+                tabs.appendChild(t);
+            });
+            grid.textContent = '';
+            grid.setAttribute('aria-label', labels[current]);
+            list(current).forEach(function (em) {
+                var b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'msg-emoji__item';
+                b.textContent = em;
+                b.dataset.emoji = em;
+                grid.appendChild(b);
+            });
+            grid.scrollTop = 0;
+        }
+        function open() {
+            render();
+            panel.hidden = false;
+            btn.setAttribute('aria-expanded', 'true');
+            document.addEventListener('pointerdown', outside, true);
+        }
+        function close(focusBtn) {
+            if (panel.hidden) { return; }
+            panel.hidden = true;
+            btn.setAttribute('aria-expanded', 'false');
+            document.removeEventListener('pointerdown', outside, true);
+            if (focusBtn) { btn.focus(); }
+        }
+        function outside(e) { if (!panel.contains(e.target) && e.target !== btn) { close(false); } }
+        function insert(em) {
+            var max = parseInt(textarea.getAttribute('maxlength') || '0', 10);
+            if (max > 0 && textarea.value.length + em.length > max) { return; }
+            var len = textarea.value.length;
+            var s = caret ? Math.min(caret[0], len) : len;   // поле ще не чіпали — в кінець тексту
+            var e = caret ? Math.min(caret[1], len) : len;
+            textarea.setRangeText(em, s, e, 'end');
+            caret = [textarea.selectionStart, textarea.selectionEnd];
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            if (!touchOnly) { textarea.focus(); }   // на телефоні не відкриваємо клавіатуру — панель лишається видимою
+            recent = [em].concat(recent.filter(function (x) { return x !== em; })).slice(0, 24);
+            try { window.localStorage.setItem(LS, JSON.stringify(recent)); } catch (err) { /* без «Нещодавніх» */ }
+        }
+
+        btn.addEventListener('click', function () { if (panel.hidden) { open(); } else { close(false); } });
+        tabs.addEventListener('click', function (e) {
+            var t = e.target.closest('[data-set]');
+            if (!t) { return; }
+            current = t.dataset.set;
+            render();
+            var active = tabs.querySelector('.is-active');
+            if (active) { active.focus(); }
+        });
+        grid.addEventListener('click', function (e) {
+            var b = e.target.closest('[data-emoji]');
+            if (b) { insert(b.dataset.emoji); }
+        });
+        panel.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { e.preventDefault(); close(true); }
+        });
+        textarea.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(false); } });
+        form.addEventListener('submit', function () { close(false); });
+    })();
+
     // Меню «⋯» → «Поскаржитися»: відкрити форму скарги.
     document.querySelectorAll('[data-open-report]').forEach(function (a) {
         a.addEventListener('click', function (e) {

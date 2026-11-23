@@ -109,7 +109,7 @@ function msg_chat_pane(PDO $pdo, array $conv, string $role, int $uid, string $ba
                 <form class="msg-compose" method="post" action="mp-thread.php" id="msg-compose" enctype="multipart/form-data" autocomplete="off"
                       data-poll="mp-messages-poll.php?c=<?= $convId ?>" data-interval="<?= $pollSec ?>" data-last="<?= $lastId ?>"
                       data-error="<?= $h('msg_err_network') ?>" data-max="<?= $maxLen ?>" data-max-file="<?= MSG_ATTACH_MAX_BYTES ?>"
-                      data-err-size="<?= $h('msg_err_file_size') ?>" data-err-type="<?= $h('msg_err_file_type') ?>">
+                      data-err-size="<?= $h('msg_err_file_size') ?>" data-err-type="<?= $h('msg_err_file_type') ?>"<?= msg_emoji_attr() ?>>
                     <?= mp_csrf_field() ?>
                     <input type="hidden" name="action" value="send">
                     <input type="hidden" name="id" value="<?= $convId ?>">
