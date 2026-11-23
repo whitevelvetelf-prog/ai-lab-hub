@@ -10,7 +10,7 @@
  *   Приймаються лише https-адреси самої мережі (facebook.com, instagram.com, t.me, youtube.com, linkedin.com,
  *   x.com / twitter.com, tiktok.com) — app/social.php. Порядок ключів = порядок кнопок.
  * og_image — шлях від public/ до зображення 1200×630 (PNG/JPG) для превʼю, напр. '/assets/images/og-default.png'.
- *   Порожньо або файла немає — /logo.png (512×512) і картка «summary». Зараз такого зображення на сайті НЕМАЄ.
+ *   Порожньо або файла немає — /logo.png (512×512) і картка «summary». Зараз: /assets/images/og-default.png (логотип + назва, 2026-11-23).
  */
 
 return [
@@ -23,5 +23,5 @@ return [
         'x'         => '',
         'tiktok'    => '',
     ],
-    'og_image' => '',
+    'og_image' => '/assets/images/og-default.png',
 ];
