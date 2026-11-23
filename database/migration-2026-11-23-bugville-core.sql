@@ -97,6 +97,23 @@ CREATE TABLE IF NOT EXISTS bv_players (
     PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Журнал нагород акаунтів (крок 2): одна спроба — не більше одного запису (UNIQUE attempt_id), тож повторне
+-- надсилання чи повторне зарахування балів не дає. Підсумки гравця — сума по журналу. Гостям нічого не пишеться.
+CREATE TABLE IF NOT EXISTS bv_reward_log (
+    id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id       INT UNSIGNED NOT NULL,
+    attempt_id    INT UNSIGNED NOT NULL,
+    mission_id    INT UNSIGNED NOT NULL,
+    xp            SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    stars         TINYINT UNSIGNED  NOT NULL DEFAULT 0,
+    coins         SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+    source        VARCHAR(16)  NOT NULL DEFAULT 'play',
+    created_at    DATETIME     NOT NULL,
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_attempt (attempt_id),
+    KEY idx_user (user_id, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Контроль (очікуване — у дужках):
 --   SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
---     AND TABLE_NAME IN ('bv_mission_variants','bv_attempts','bv_seen_variants','bv_exam_items','bv_strings','bv_players');  -- 6
+--     AND TABLE_NAME IN ('bv_mission_variants','bv_attempts','bv_seen_variants','bv_exam_items','bv_strings','bv_players','bv_reward_log');  -- 7

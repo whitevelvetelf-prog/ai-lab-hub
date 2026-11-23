@@ -90,6 +90,12 @@ function bv_attempt_start(PDO $pdo, int $missionId, array $ctx, string $kind = '
     if ($mission === null || !bv_valid_kind($kind)) {
         return ['ok' => false, 'error' => 'not_found'];
     }
+    $who = $ctx['user_id'] !== null ? 'u:' . $ctx['user_id'] : 'g:' . (string) bv_session_hash($ctx['guest_key']);
+    $ipHash = bv_ip_hash((string) $ctx['ip']);
+    if (!bv_rate_hit($pdo, 'bv_start_p', $who, (int) bv_cfg('bugville_starts_per_min_player'))
+        || ($ipHash !== null && !bv_rate_hit($pdo, 'bv_start_ip', $ipHash, (int) bv_cfg('bugville_starts_per_min_ip')))) {
+        return ['ok' => false, 'error' => 'rate_limited'];
+    }
     $picked = bv_pick_variant($pdo, $mission, $ctx['user_id'], $ctx['lang']);
     if ($picked === null) {
         return ['ok' => false, 'error' => 'no_variant'];

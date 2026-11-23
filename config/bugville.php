@@ -15,6 +15,14 @@ return [
     // Зарахування гостьових спроб після входу: не більше за один вхід і на акаунт за добу.
     'bugville_credit_max_per_login' => 20,
     'bugville_credit_max_per_day' => 50,
+    // Запусків місій за хвилину (кожен запуск створює спробу): на гравця / сесію і на IP.
+    'bugville_starts_per_min_player' => 60,
+    'bugville_starts_per_min_ip' => 1200,
+    // Нагорода за правильну відповідь — ПОПЕРЕДНЬО, до правил з основного завдання (XP, монети; зірки — з перевірки).
+    'bugville_reward_xp' => 30,
+    'bugville_reward_coins' => 0,
+    // Демо-місія 900001 (зразковий генератор) для локальної перевірки API; на хостингу — false.
+    'bugville_demo' => false,
     // Строк дії токена спроби (хв) і скільки годин зберігати незараховані спроби гостей (не менше 24).
     'bugville_attempt_ttl_minutes' => 120,
     'bugville_guest_attempt_keep_hours' => 24,
