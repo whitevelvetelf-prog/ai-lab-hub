@@ -613,6 +613,10 @@ function msg_body_html(string $body): string
 /** Короткий фрагмент для списку розмов (звичайний текст, без посилань). */
 function msg_preview(string $body, int $len = 90): string
 {
+    $sticker = msg_sticker_id($body);
+    if ($sticker !== null) {
+        return '🐱 ' . msg_sticker_label($sticker);
+    }
     $one = preg_replace('/\s+/u', ' ', $body) ?? $body;
 
     return mb_strlen($one) > $len ? mb_substr($one, 0, $len - 1) . '…' : $one;
@@ -863,16 +867,66 @@ function msg_attach_from_request(PDO $pdo): array|string|null
 }
 
 /**
- * Атрибут data-emoji для форми повідомлення: написи панелі емодзі (assets/js/mp-thread.js будує кнопку 😊 і панель).
- * Емодзі — звичайні символи Unicode в тексті повідомлення (utf8mb4): без картинок, без змін у БД чи на сервері.
+ * Стікери «Еля» (2026-11-23): PNG 512×512 у public/assets/stickers/elya/<id>.png (SVG-джерела там само, генератор —
+ * tools/stickers/elya-stickers.mjs). У БД стікер — звичайний текст повідомлення «[[sticker:elya/<id>]]»: без міграції
+ * таблиць; сторінка показує замість нього картинку з підписом мовою сторінки й кнопками «Копіювати» / «Поділитися».
+ * Невідомий id — показується як звичайний текст.
+ */
+const MSG_STICKERS = ['hello', 'thanks', 'agreed', 'ok', 'paid', 'sent', 'received', 'wait', 'thinking',
+    'question', 'wow', 'love', 'haha', 'sorry', 'working', 'call', 'bye', 'sleepy'];
+const MSG_STICKER_DIR = '/assets/stickers/elya/';
+
+/** id стікера, якщо повідомлення — рівно один стікер, інакше null. */
+function msg_sticker_id(string $body): ?string
+{
+    if (preg_match('~^\[\[sticker:elya/([a-z]{2,12})\]\]$~', trim($body), $m) !== 1) {
+        return null;
+    }
+
+    return in_array($m[1], MSG_STICKERS, true) ? $m[1] : null;
+}
+
+function msg_sticker_body(string $id): string
+{
+    return '[[sticker:elya/' . $id . ']]';
+}
+
+function msg_sticker_label(string $id): string
+{
+    return t('msg_sticker_' . $id);
+}
+
+/** Стікер у розмові: картинка, підпис, «Копіювати» (PNG у буфер) і «Поділитися» (системне меню) — assets/js/mp-thread.js. */
+function msg_sticker_html(string $id): string
+{
+    $label = msg_sticker_label($id);
+    $src = MSG_STICKER_DIR . $id . '.png';
+
+    return '<figure class="msg-sticker" data-sticker-src="' . mp_e($src) . '" data-sticker-name="' . mp_e('elya-' . $id . '.png') . '" data-sticker-label="' . mp_e($label) . '">'
+        . '<img src="' . mp_e($src) . '" width="160" height="160" alt="' . mp_e(sprintf(t('msg_sticker_alt'), $label)) . '" loading="lazy" decoding="async">'
+        . '<figcaption class="msg-sticker__label">' . mp_e($label) . '</figcaption>'
+        . '<span class="msg-sticker__acts">'
+        . '<button type="button" class="msg-sticker__btn" data-sticker-copy data-done="' . mp_e(t('msg_sticker_copied')) . '" data-done-link="' . mp_e(t('msg_sticker_link_copied')) . '">'
+        . '<span aria-hidden="true">⧉</span> ' . mp_e(t('msg_sticker_copy')) . '</button>'
+        . '<button type="button" class="msg-sticker__btn" data-sticker-share data-done-link="' . mp_e(t('msg_sticker_link_copied')) . '">'
+        . '<span aria-hidden="true">↗</span> ' . mp_e(t('msg_sticker_share')) . '</button>'
+        . '</span></figure>';
+}
+
+/**
+ * Атрибут data-emoji для форми повідомлення: написи панелі емодзі й стікерів (assets/js/mp-thread.js будує кнопку 😊 і панель).
+ * Емодзі — звичайні символи Unicode в тексті повідомлення (utf8mb4); стікер — маркер msg_sticker_body().
  */
 function msg_emoji_attr(): string
 {
     $labels = [];
     foreach (['msg_emoji' => 'button', 'msg_emoji_recent' => 'recent', 'msg_emoji_smileys' => 'smileys', 'msg_emoji_gestures' => 'gestures',
-                 'msg_emoji_hearts' => 'hearts', 'msg_emoji_work' => 'work', 'msg_emoji_symbols' => 'symbols'] as $key => $id) {
+                 'msg_emoji_hearts' => 'hearts', 'msg_emoji_work' => 'work', 'msg_emoji_symbols' => 'symbols', 'msg_stickers' => 'stickers',
+                 'msg_sticker_send' => 'stickerSend'] as $key => $id) {
         $labels[$id] = t($key);
     }
+    $labels['stickerDir'] = MSG_STICKER_DIR;
+    $labels['stickerList'] = array_map(static fn(string $id): array => ['id' => $id, 'label' => msg_sticker_label($id)], MSG_STICKERS);
 
     return ' data-emoji="' . htmlspecialchars((string) json_encode($labels, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8') . '"';
 }
@@ -1191,9 +1245,11 @@ function msg_render_row(PDO $pdo, array $conv, string $role, int $viewerId, arra
             'name' => (string) ($r['attachment_name'] ?? ''), 'size' => msg_human_size((int) ($r['attachment_size'] ?? 0))];
     }
 
+    $sticker = $system ? null : msg_sticker_id((string) $r['body']);
+
     return [
-        'id' => (int) $r['id'], 'mine' => $mine, 'label' => $label, 'platform' => $fromPlatform,
-        'html' => msg_body_html((string) $r['body']), 'time' => date(current_lang() === 'uk' ? 'd.m.Y H:i' : 'Y-m-d H:i', $ts),
+        'id' => (int) $r['id'], 'mine' => $mine, 'label' => $label, 'platform' => $fromPlatform, 'sticker' => $sticker,
+        'html' => $sticker !== null ? '' : msg_body_html((string) $r['body']), 'time' => date(current_lang() === 'uk' ? 'd.m.Y H:i' : 'Y-m-d H:i', $ts),
         'iso' => date('c', $ts), 'system' => $system, 'attach' => $attach,
     ];
 }
@@ -1218,7 +1274,8 @@ function msg_peer_read_id(PDO $pdo, array $conv, string $role): int
 /** HTML одного повідомлення (бульбашка). Текст і назва файлу екрановані; спільне для сторінки й JS (поле html_row). */
 function msg_row_html(array $m, int $peerRead = 0): string
 {
-    $cls = 'msg-row' . ($m['mine'] ? ' msg-row--mine' : '') . ($m['system'] ? ' msg-row--system' : '') . ($m['platform'] ? ' msg-row--platform' : '');
+    $cls = 'msg-row' . ($m['mine'] ? ' msg-row--mine' : '') . ($m['system'] ? ' msg-row--system' : '') . ($m['platform'] ? ' msg-row--platform' : '')
+        . (!empty($m['sticker']) ? ' msg-row--sticker' : '');
     $h = '<li class="' . $cls . '" data-id="' . (int) $m['id'] . '"><div class="msg-bubble">';
     if ($m['label'] !== '') {
         $h .= '<span class="msg-bubble__label">' . mp_e($m['label']) . '</span>';
@@ -1234,7 +1291,9 @@ function msg_row_html(array $m, int $peerRead = 0): string
                 . '<span class="msg-att__size">' . mp_e($a['size']) . '</span></a>';
         }
     }
-    if ($m['html'] !== '') {
+    if (!empty($m['sticker'])) {
+        $h .= msg_sticker_html((string) $m['sticker']);
+    } elseif ($m['html'] !== '') {
         $h .= '<span class="msg-bubble__text">' . $m['html'] . '</span>';
     }
     $h .= '<span class="msg-bubble__foot"><time class="msg-bubble__time" datetime="' . mp_e($m['iso']) . '">' . mp_e($m['time']) . '</time>';

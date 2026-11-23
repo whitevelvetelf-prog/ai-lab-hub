@@ -151,17 +151,18 @@
     }
 
     // --- Надсилання ----------------------------------------------------------------------------------
-    form.addEventListener('submit', function (e) {
-        if (!window.fetch || !window.FormData) { return; }   // без fetch — звичайний POST
-        e.preventDefault();
+    // sticker — маркер стікера: надсилається окремим повідомленням, набраний текст і файл лишаються в полі.
+    function send(sticker) {
         if (sending) { return; }
-        var body = textarea.value.trim();
-        if (!body && !hasFile()) { textarea.focus(); return; }
         sending = true;
         button.disabled = true;
         showError('');
         var data = new FormData(form);
         if (sinceInput) { data.set('since', String(lastId)); }
+        if (sticker) {
+            data.set('body', sticker);
+            data.delete('attachment');
+        }
         fetch(form.getAttribute('action'), { method: 'POST', body: data, credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
             .then(function (r) { return r.json().catch(function () { return { ok: false }; }); })
             .then(function (j) {
@@ -169,15 +170,17 @@
                 button.disabled = false;
                 if (j && j.ok && j.redirect) { window.location.href = j.redirect; return; }
                 if (j && j.ok) {
-                    textarea.value = '';
-                    clearFile();
-                    resize();
+                    if (!sticker) {
+                        textarea.value = '';
+                        clearFile();
+                        resize();
+                    }
                     append(j.messages || []);
                     markRead(j.peer_read);
                     scrollToEnd();
                     etag = null;
                     schedule(interval);
-                    textarea.focus();
+                    if (!touchOnly || !sticker) { textarea.focus(); }
                 } else if (j && j.verify_url) {
                     window.location.href = j.verify_url;
                 } else {
@@ -189,6 +192,12 @@
                 button.disabled = false;
                 showError(form.dataset.error);
             });
+    }
+    form.addEventListener('submit', function (e) {
+        if (!window.fetch || !window.FormData) { return; }   // без fetch — звичайний POST
+        e.preventDefault();
+        if (!textarea.value.trim() && !hasFile()) { textarea.focus(); return; }
+        send(null);
     });
 
     // Enter — надіслати; Shift+Enter — новий рядок.
@@ -220,8 +229,9 @@
             symbols: '👀 🙈 💤 🆗 🆕 🆓 🔝 ➡️ ⬅️ ⬆️ ⬇️ 🔄 ✔️ ☑️ ➕ ➖ ✖️ 💲 ⭕ 🚫 ⛔ 🟢 🟡 🔴 ⚪ ⚫ 🔵 🟣'
         };
         var LS = 'alh_emoji_recent';
-        var order = ['recent', 'smileys', 'gestures', 'hearts', 'work', 'symbols'];
-        var icons = { recent: '🕘', smileys: '😊', gestures: '👍', hearts: '❤️', work: '💼', symbols: '✔️' };
+        var stickers = Array.isArray(labels.stickerList) && labels.stickerDir ? labels.stickerList : [];
+        var order = ['recent', 'stickers', 'smileys', 'gestures', 'hearts', 'work', 'symbols'];
+        var icons = { recent: '🕘', stickers: '🐱', smileys: '😊', gestures: '👍', hearts: '❤️', work: '💼', symbols: '✔️' };
         var recent = [];
         try { recent = JSON.parse(window.localStorage.getItem(LS) || '[]'); } catch (e) { recent = []; }
         if (!Array.isArray(recent)) { recent = []; }
@@ -252,7 +262,7 @@
         panel.appendChild(tabs);
         panel.appendChild(grid);
         form.appendChild(panel);
-        var current = recent.length ? 'recent' : 'smileys';
+        var current = recent.length ? 'recent' : (stickers.length ? 'stickers' : 'smileys');
         var caret = null;   // позиція курсора в полі (на телефоні поле втрачає фокус, коли тиснуть на панель)
         ['keyup', 'click', 'select', 'input'].forEach(function (ev) {
             textarea.addEventListener(ev, function () { caret = [textarea.selectionStart, textarea.selectionEnd]; });
@@ -262,7 +272,7 @@
         function render() {
             tabs.textContent = '';
             order.forEach(function (id) {
-                if (id === 'recent' && !recent.length) { return; }
+                if ((id === 'recent' && !recent.length) || (id === 'stickers' && !stickers.length)) { return; }
                 var t = document.createElement('button');
                 t.type = 'button';
                 t.className = 'msg-emoji__tab' + (id === current ? ' is-active' : '');
@@ -276,6 +286,27 @@
             });
             grid.textContent = '';
             grid.setAttribute('aria-label', labels[current]);
+            grid.classList.toggle('msg-emoji__grid--stickers', current === 'stickers');
+            if (current === 'stickers') {
+                stickers.forEach(function (s) {
+                    var b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'msg-emoji__sticker';
+                    b.dataset.sticker = s.id;
+                    b.title = s.label;
+                    b.setAttribute('aria-label', (labels.stickerSend || '%s').replace('%s', s.label));
+                    var img = document.createElement('img');
+                    img.src = labels.stickerDir + s.id + '.png';
+                    img.alt = '';
+                    img.width = 72;
+                    img.height = 72;
+                    img.loading = 'lazy';
+                    b.appendChild(img);
+                    grid.appendChild(b);
+                });
+                grid.scrollTop = 0;
+                return;
+            }
             list(current).forEach(function (em) {
                 var b = document.createElement('button');
                 b.type = 'button';
@@ -324,6 +355,12 @@
             if (active) { active.focus(); }
         });
         grid.addEventListener('click', function (e) {
+            var st = e.target.closest('[data-sticker]');
+            if (st) {   // стікер — одразу окремим повідомленням (як у месенджерах)
+                close(false);
+                send('[[sticker:elya/' + st.dataset.sticker + ']]');
+                return;
+            }
             var b = e.target.closest('[data-emoji]');
             if (b) { insert(b.dataset.emoji); }
         });
@@ -373,4 +410,99 @@
     resize();
     if (log) { scrollToEnd(); }
     schedule(interval);
+})();
+
+/*
+ * Стікери «Еля» в розмові: «Копіювати» — PNG у буфер обміну (Clipboard API; не вийшло — посилання на картинку),
+ * «Поділитися» — системне меню з файлом PNG (Web Share API Level 2; без файлів — посилання; без Web Share — копія посилання).
+ * Працює й у розмові лише для читання (без форми). Картинка кешується при наведенні / дотику, щоб share() лишався в межах жесту.
+ */
+(function () {
+    'use strict';
+    var cache = {};
+    function blobOf(src) {
+        if (!cache[src]) {
+            cache[src] = fetch(src, { credentials: 'same-origin' }).then(function (r) {
+                if (!r.ok) { throw new Error('sticker ' + r.status); }
+                return r.blob();
+            }).then(function (b) { cache[src].blob = b; return b; });
+            cache[src].catch(function () { delete cache[src]; });
+        }
+        return cache[src];
+    }
+    function flash(btn, text) {
+        if (!text) { return; }
+        if (!btn.dataset.orig) { btn.dataset.orig = btn.innerHTML; }
+        btn.textContent = text;
+        btn.classList.add('is-done');
+        clearTimeout(btn._t);
+        btn._t = setTimeout(function () { btn.innerHTML = btn.dataset.orig; btn.classList.remove('is-done'); }, 2000);
+    }
+    function copyText(text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) { return navigator.clipboard.writeText(text); }
+        return new Promise(function (ok, fail) {
+            var ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            var done = false;
+            try { done = document.execCommand('copy'); } catch (e) { done = false; }
+            document.body.removeChild(ta);
+            if (done) { ok(); } else { fail(new Error('copy')); }
+        });
+    }
+    function copyLink(abs, btn) {
+        copyText(abs).then(function () { flash(btn, btn.dataset.doneLink); }).catch(function () { /* немає доступу до буфера */ });
+    }
+    function info(fig) {
+        var src = fig.getAttribute('data-sticker-src') || '';
+        return { src: src, abs: new URL(src, window.location.href).href, name: fig.getAttribute('data-sticker-name') || 'sticker.png',
+            label: fig.getAttribute('data-sticker-label') || '' };
+    }
+    function warm(e) {
+        var fig = e.target.closest && e.target.closest('.msg-sticker');
+        if (fig) { blobOf(info(fig).src); }
+    }
+    document.addEventListener('pointerover', warm, { passive: true });
+    document.addEventListener('touchstart', warm, { passive: true });
+    document.addEventListener('focusin', warm);
+
+    document.addEventListener('click', function (e) {
+        var btn = e.target.closest && e.target.closest('[data-sticker-copy], [data-sticker-share]');
+        if (!btn) { return; }
+        var fig = btn.closest('.msg-sticker');
+        if (!fig) { return; }
+        var s = info(fig);
+        if (btn.hasAttribute('data-sticker-copy')) {
+            if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+                var item;
+                try { item = new ClipboardItem({ 'image/png': blobOf(s.src) }); } catch (err) { item = null; }
+                if (item) {
+                    navigator.clipboard.write([item]).then(function () { flash(btn, btn.dataset.done); })
+                        .catch(function () { copyLink(s.abs, btn); });
+                    return;
+                }
+            }
+            copyLink(s.abs, btn);
+            return;
+        }
+        // Поділитися
+        if (!navigator.share) { copyLink(s.abs, btn); return; }
+        var shareWith = function (blob) {
+            var file = null;
+            try { file = new File([blob], s.name, { type: 'image/png' }); } catch (err) { file = null; }
+            if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+                return navigator.share({ files: [file], title: s.label });
+            }
+            return navigator.share({ title: s.label, url: s.abs });
+        };
+        var p = blobOf(s.src);
+        (p.blob ? shareWith(p.blob) : p.then(shareWith)).catch(function (err) {
+            if (err && err.name === 'AbortError') { return; }   // користувач закрив меню
+            copyLink(s.abs, btn);
+        });
+    });
 })();
