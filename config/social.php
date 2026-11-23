@@ -15,7 +15,7 @@
 
 return [
     'social_links' => [
-        'facebook'  => '[ВСТАВТЕ ПОСИЛАННЯ]',   // напр. https://www.facebook.com/<сторінка>
+        'facebook'  => 'https://www.facebook.com/groups/1676395060737562',   // група AI LAB HUB
         'instagram' => '',
         'telegram'  => '',
         'youtube'   => '',
