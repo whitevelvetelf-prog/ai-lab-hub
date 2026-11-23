@@ -146,6 +146,7 @@ function bv_gen_vending_boundary(PDO $pdo, BvRng $rng, array $p, string $lang): 
         'answer' => ['type' => 'single', 'correct' => $correct],
         'explain' => ['text' => "Правило: від {$min} до {$max} грн включно. «{$badText}» порушує правило на межі діапазону — "
             . 'саме на межах такі поломки трапляються найчастіше.'],
+        'hint' => ['text' => "Перевірте рядки з {$min} і {$max} грн та сусідні з ними значення."],
     ];
 }
 
@@ -196,7 +197,7 @@ function bv_build_variant(PDO $pdo, array $mission, ?int $variantId, ?string $se
         $gen = $fn($pdo, new BvRng($seed), (array) ($mission['generator_json'] ?? []), $lang);
     }
     if ($mode === 'generator') {
-        return ['payload' => $gen['payload'], 'answer' => $gen['answer'], 'explain' => $gen['explain'],
+        return ['payload' => $gen['payload'], 'answer' => $gen['answer'], 'explain' => $gen['explain'], 'hint' => (array) ($gen['hint'] ?? []),
             'key' => 'g:' . bv_fingerprint($gen['params'] ?? $gen['payload'])];
     }
     $row = $variantId !== null ? bv_pool_row($pdo, $variantId) : null;
@@ -209,9 +210,11 @@ function bv_build_variant(PDO $pdo, array $mission, ?int $variantId, ?string $se
         'explain' => (array) json_decode((string) ($row['explain_json'] ?? '[]'), true),
         'key' => 'v:' . (int) $row['id'],
     ];
+    $v['hint'] = ['text' => (string) ($v['explain']['hint'] ?? '')];   // підказка пулу — у explain_json.hint
+    unset($v['explain']['hint']);
     if ($mode === 'mixed') {
         $params = (array) ($gen['params'] ?? []);
-        foreach (['payload', 'answer', 'explain'] as $k) {
+        foreach (['payload', 'answer', 'explain', 'hint'] as $k) {
             $v[$k] = bv_fill($v[$k], $params);
         }
     }

@@ -9,6 +9,7 @@ declare(strict_types=1);
  * Дії (поле action):
  *   state        — хто грає (гість / акаунт 16+), мінімальний вік, підсумки акаунта; зарахування сеансу, якщо щойно ввійшли.
  *   start        — {mission} → {token, scene}: лише сцена, без відповіді й параметрів поломки.
+ *   hint         — {token} → підказка (безкоштовна, лише знижує зірки: максимум 2).
  *   check        — {token, answer} → результат, розбір побаченого варіанта; акаунт → earned + saved, гість → would_earn.
  *   confirm_age  — {confirm: true} для того, хто ввійшов: «мені виповнилося N років» → зарахування гостьового сеансу.
  * Помилки: 400 bad_request / bad_answer, 401 auth_required, 403 cross_site / csrf, 404 not_found, 405, 410 expired,
@@ -98,6 +99,18 @@ switch ($action) {
             bv_api_out(['ok' => false, 'error' => $r['error']], $r['error'] === 'rate_limited' ? 429 : 404);
         }
         bv_api_out(['ok' => true, 'token' => $r['token'], 'scene' => $r['scene']] + $who);
+
+    case 'hint':
+        $token = is_string($in['token'] ?? null) ? $in['token'] : '';
+        if ($token === '') {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        $r = bv_attempt_hint($pdo, $token, $ctx);
+        if (!$r['ok']) {
+            $codes = ['rate_limited' => 429, 'not_found' => 404, 'forbidden' => 404, 'already_checked' => 409];
+            bv_api_out(['ok' => false, 'error' => $r['error'] === 'forbidden' ? 'not_found' : $r['error']], $codes[$r['error']] ?? 400);
+        }
+        bv_api_out(['ok' => true, 'hint' => $r['hint']] + $who);
 
     case 'check':
         $token = is_string($in['token'] ?? null) ? $in['token'] : '';

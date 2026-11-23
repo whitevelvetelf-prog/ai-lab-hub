@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS bv_attempts (
     finished_at   DATETIME     NULL,
     score         SMALLINT UNSIGNED NULL,
     stars         TINYINT UNSIGNED  NULL,
+    hint_used     TINYINT(1)   NOT NULL DEFAULT 0,
     used          TINYINT(1)   NOT NULL DEFAULT 0,
     credited      TINYINT(1)   NOT NULL DEFAULT 0,
     credited_at   DATETIME     NULL,
@@ -97,9 +98,10 @@ CREATE TABLE IF NOT EXISTS bv_players (
     PRIMARY KEY (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Журнал нагород акаунтів (крок 2): одна спроба — не більше одного запису (UNIQUE attempt_id), тож повторне
--- надсилання чи повторне зарахування балів не дає. Підсумки гравця — сума по журналу. Гостям нічого не пишеться.
-CREATE TABLE IF NOT EXISTS bv_reward_log (
+-- Журнал нагород акаунтів (bv_xp_log, крок 2; назва з основного завдання): одна спроба — не більше одного запису (UNIQUE attempt_id), тож повторне
+-- надсилання чи повторне зарахування балів не дає. Пишуться ПРИРІСТ XP, зірок і монет (за покращення результату місії),
+-- тож підсумки гравця = сума журналу, а найкращі зірки місії = сума її зірок. Гостям нічого не пишеться.
+CREATE TABLE IF NOT EXISTS bv_xp_log (
     id            INT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id       INT UNSIGNED NOT NULL,
     attempt_id    INT UNSIGNED NOT NULL,
@@ -116,4 +118,10 @@ CREATE TABLE IF NOT EXISTS bv_reward_log (
 
 -- Контроль (очікуване — у дужках):
 --   SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE()
---     AND TABLE_NAME IN ('bv_mission_variants','bv_attempts','bv_seen_variants','bv_exam_items','bv_strings','bv_players','bv_reward_log');  -- 7
+--     AND TABLE_NAME IN ('bv_mission_variants','bv_attempts','bv_seen_variants','bv_exam_items','bv_strings','bv_players','bv_xp_log');  -- 7
+
+-- hint_used у bv_attempts: якщо таблицю створено ранішою редакцією цього файлу (лише локально) — додати за перевіркою.
+SET @db = DATABASE();
+SET @s = (SELECT IF(COUNT(*) = 0, 'ALTER TABLE bv_attempts ADD COLUMN hint_used TINYINT(1) NOT NULL DEFAULT 0 AFTER ip_hash', 'DO 0')
+  FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = @db AND TABLE_NAME = 'bv_attempts' AND COLUMN_NAME = 'hint_used');
+PREPARE st FROM @s; EXECUTE st; DEALLOCATE PREPARE st;

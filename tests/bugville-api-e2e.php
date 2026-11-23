@@ -130,16 +130,20 @@ try {
     $tokens[] = $g2 = (string) ($st2['json']['token'] ?? '');
     check($attempt($g1)['variant_key'] !== $attempt($g2)['variant_key'], 'повторний запуск — інший варіант');
     $c1 = $api(['action' => 'check', 'token' => $g1, 'answer' => $answerFor($g1, true)], $csrf)['json'];
-    check(($c1['correct'] ?? null) === true && ($c1['saved'] ?? null) === false && ($c1['would_earn']['xp'] ?? 0) === 30
-        && ($c1['would_earn']['stars'] ?? 0) === 3 && !isset($c1['earned']), 'гість, правильно: would_earn +30 XP, 3 зірки; не збережено');
+    check(($c1['correct'] ?? null) === true && ($c1['saved'] ?? null) === false && ($c1['stars'] ?? 0) === 3 && ($c1['would_earn']['xp'] ?? 0) === 20
+        && ($c1['would_earn']['stars'] ?? 0) === 3 && ($c1['would_earn']['coins'] ?? -1) === 0 && !isset($c1['earned']),
+        'гість, перша спроба без підказки: 3 зірки, would_earn +20 XP, монет гостям немає; не збережено');
     check(is_string($c1['explain'] ?? null) && str_contains($c1['explain'], 'грн') && count($c1['correct_ids'] ?? []) === 1, 'розбір побаченого варіанта і правильний id — лише після перевірки');
     $c1b = $api(['action' => 'check', 'token' => $g1, 'answer' => $answerFor($g1, true)], $csrf)['json'];
     check(($c1b['repeat'] ?? null) === true && ($c1b['awarded'] ?? null) === false, 'повторне надсилання — repeat, без балів');
     $c2 = $api(['action' => 'check', 'token' => $g2, 'answer' => $answerFor($g2, false)], $csrf)['json'];
     check(($c2['correct'] ?? null) === false && ($c2['would_earn']['xp'] ?? -1) === 0, 'гість, неправильно: would_earn 0');
     $tokens[] = $g3 = (string) ($api(['action' => 'start', 'mission' => BV_DEMO_MISSION], $csrf)['json']['token'] ?? '');
+    $h = $api(['action' => 'hint', 'token' => $g3], $csrf);
+    check($h['code'] === 200 && str_contains((string) ($h['json']['hint'] ?? ''), 'грн') && (int) $attempt($g3)['hint_used'] === 1, 'підказка: текст варіанта, hint_used = 1');
+    check($api(['action' => 'hint', 'token' => $g1], $csrf)['code'] === 409, 'підказка після відповіді — 409');
     $a1 = $attempt($g1);
-    $guestRewards = $pdo->query('SELECT COUNT(*) FROM bv_reward_log WHERE attempt_id IN (' . (int) $a1['id'] . ',' . (int) $attempt($g2)['id'] . ')')->fetchColumn();
+    $guestRewards = $pdo->query('SELECT COUNT(*) FROM bv_xp_log WHERE attempt_id IN (' . (int) $a1['id'] . ',' . (int) $attempt($g2)['id'] . ')')->fetchColumn();
     check($a1['user_id'] === null && strlen((string) $a1['session_hash']) === 64 && (int) $guestRewards === 0, 'у БД: спроба без користувача, лише хеш сесії, нагород немає');
     check($api(['action' => 'check', 'token' => str_repeat('Z', 43), 'answer' => 'x'], $csrf)['code'] === 404, 'чужий / неіснуючий токен → 404');
 
@@ -160,26 +164,27 @@ try {
 
     echo "4. Підтвердження віку → зарахування сеансу\n";
     $ca = $api(['action' => 'confirm_age', 'confirm' => true], $csrf)['json'];
-    check(($ca['age_confirmed'] ?? null) === true && ($ca['credited']['credited'] ?? 0) === 2 && ($ca['credited']['xp'] ?? 0) === 30,
-        'зараховано 2 завершені спроби сеансу (+30 XP)');
-    check(($ca['totals']['xp'] ?? 0) === 30 && ($ca['totals']['stars'] ?? 0) === 3, 'підсумки акаунта з журналу: 30 XP, 3 зірки');
+    check(($ca['age_confirmed'] ?? null) === true && ($ca['credited']['credited'] ?? 0) === 2 && ($ca['credited']['xp'] ?? 0) === 20,
+        'зараховано 2 завершені спроби сеансу (+20 XP)');
+    check(($ca['totals'] ?? []) === ['xp' => 20, 'stars' => 3, 'coins' => 10], 'підсумки акаунта: 20 XP, 3 зірки, 10 монет (5 + 5 за три зірки)');
     $a1 = $attempt($g1);
     check((int) $a1['user_id'] === $u['id'] && (int) $a1['credited'] === 1 && $attempt($g3)['user_id'] === null, 'завершені — на акаунті; незавершена ще чекає');
     $seen = $pdo->prepare('SELECT COUNT(*) FROM bv_seen_variants WHERE user_id = :u');
     $seen->execute([':u' => $u['id']]);
     check((int) $seen->fetchColumn() === 2, 'бачені варіанти сеансу перенесено в акаунт');
     $s2 = $api(['action' => 'state'], $csrf)['json'];
-    check(!isset($s2['credited']) && ($s2['totals']['xp'] ?? 0) === 30, 'повторний запит нічого не зараховує вдруге');
+    check(!isset($s2['credited']) && ($s2['totals']['xp'] ?? 0) === 20, 'повторний запит нічого не зараховує вдруге');
     $c3 = $api(['action' => 'check', 'token' => $g3, 'answer' => $answerFor($g3, true)], $csrf)['json'];
-    check(($c3['saved'] ?? null) === true && ($c3['earned']['xp'] ?? 0) === 30 && ($c3['totals']['xp'] ?? 0) === 60, 'незавершена гостьова — зарахована при перевірці: 60 XP');
+    check(($c3['saved'] ?? null) === true && ($c3['stars'] ?? 0) === 1 && ($c3['earned']['xp'] ?? -1) === 0 && ($c3['totals']['xp'] ?? 0) === 20
+        && (int) $attempt($g3)['user_id'] === $u['id'], 'незавершена гостьова — зарахована при перевірці; третя спроба = 1 зірка, гірше за найкращий результат — +0');
     $tokens[] = $u1 = (string) ($api(['action' => 'start', 'mission' => BV_DEMO_MISSION], $csrf)['json']['token'] ?? '');
     check((int) $attempt($u1)['user_id'] === $u['id'] && $attempt($u1)['session_hash'] === null, 'нова спроба акаунта — одразу на акаунті');
     $c4 = $api(['action' => 'check', 'token' => $u1, 'answer' => $answerFor($u1, true)], $csrf)['json'];
     $c4b = $api(['action' => 'check', 'token' => $u1, 'answer' => $answerFor($u1, true)], $csrf)['json'];
-    check(($c4['totals']['xp'] ?? 0) === 90 && ($c4b['repeat'] ?? null) === true && ($c4b['totals']['xp'] ?? 0) === 90, 'акаунт: +30, повтор того самого токена — 90 без змін');
-    $log = $pdo->prepare('SELECT COUNT(*) FROM bv_reward_log WHERE user_id = :u');
+    check(($c4['totals']['xp'] ?? 0) === 20 && ($c4b['repeat'] ?? null) === true && ($c4b['totals']['xp'] ?? 0) === 20, 'повтор місії й повтор токена не накручують XP');
+    $log = $pdo->prepare('SELECT COUNT(*) FROM bv_xp_log WHERE user_id = :u');
     $log->execute([':u' => $u['id']]);
-    check((int) $log->fetchColumn() === 3, 'у журналі нагород рівно 3 записи (по одному на правильну спробу)');
+    check((int) $log->fetchColumn() === 1, 'у журналі нагород 1 запис — лише перше (найкраще) проходження');
 
     echo "5. Функції зарахування: два акаунти, ліміти\n";
     $_SESSION = [];
@@ -198,8 +203,8 @@ try {
     bv_confirm_age($pdo, $third['id']);
     $t0 = $_SESSION['bv_guest']['tokens'][0];
     $hash = bv_session_hash($_SESSION['bv_guest']['key']);
-    check(bv_credit_one($pdo, $other['id'], $attempt($t0), $hash) === true, 'перший акаунт зарахував спробу');
-    check(bv_credit_one($pdo, $third['id'], $attempt($t0), $hash) === false && (int) $attempt($t0)['user_id'] === $other['id'],
+    check(bv_credit_one($pdo, $other['id'], $attempt($t0), $hash) !== null, 'перший акаунт зарахував спробу');
+    check(bv_credit_one($pdo, $third['id'], $attempt($t0), $hash) === null && (int) $attempt($t0)['user_id'] === $other['id'],
         'другий акаунт ту саму спробу не отримає');
     $_SESSION = [];
     $ctxG = bv_ctx(null);
@@ -230,11 +235,47 @@ try {
     }
     check($codes === ['ok', 'ok', 'ok', 'rate_limited'], 'ліміт запусків місій за хвилину');
     $GLOBALS['bv_cfg_override'] = [];
+
+    echo "6. Зірки, XP і монети (MAIN_TASK, розділ 6)\n";
+    $mid = 990101;
+    bv_register_mission(['id' => $mid, 'variant_mode' => 'generator', 'generator_key' => 'vending_boundary', 'generator_json' => []]);
+    $play = static function (array $user, bool $right, bool $hint = false) use ($pdo, $mid, $answerFor, &$tokens): array {
+        $ctx = ['user_id' => $user['id'], 'guest_key' => null, 'ip' => '', 'lang' => 'uk'];
+        $t = bv_attempt_start($pdo, $mid, $ctx)['token'];
+        $tokens[] = $t;
+        if ($hint) {
+            bv_attempt_hint($pdo, $t, $ctx);
+        }
+
+        return bv_check_and_reward($pdo, $t, $answerFor($t, $right), $ctx);
+    };
+    $x = $mkUser('x');
+    $y = $mkUser('y');
+    $z = $mkUser('z');
+    foreach ([$x, $y, $z] as $p) {
+        bv_confirm_age($pdo, $p['id']);
+    }
+    $r = $play($x, true, true);
+    check($r['stars'] === 2 && $r['earned'] === ['xp' => 15, 'stars' => 2, 'coins' => 5], 'перша спроба з підказкою: 2 зірки, 15 XP, 5 монет');
+    $r = $play($x, true);
+    check($r['stars'] === 2 && $r['earned'] === ['xp' => 0, 'stars' => 0, 'coins' => 0], 'друга спроба: 2 зірки — не краще, нагорода 0');
+    $play($y, false);
+    $r = $play($y, true);
+    check($r['stars'] === 2 && ($r['earned']['xp'] ?? 0) === 15, 'спершу помилка, потім правильно (друга спроба): 2 зірки, 15 XP');
+    $play($z, false);
+    $play($z, false);
+    $r = $play($z, true);
+    check($r['stars'] === 1 && $r['earned'] === ['xp' => 10, 'stars' => 1, 'coins' => 5], 'третя спроба: 1 зірка, 10 XP, 5 монет');
+    check(bv_totals($pdo, $x['id']) === ['xp' => 15, 'stars' => 2, 'coins' => 5], 'підсумки: найкращий результат місії, без подвоєння');
+    $GLOBALS['bv_cfg_override'] = ['bugville_reward_improvement_only' => false];
+    $r = $play($x, true);
+    check(($r['earned']['xp'] ?? 0) === 10, 'з improvement_only = false повтор знову дає нагороду (перемикач у config працює)');
+    $GLOBALS['bv_cfg_override'] = [];
 } finally {
     $GLOBALS['bv_cfg_override'] = [];
     if ($users !== []) {
         $in = implode(',', $users);
-        $pdo->exec("DELETE FROM bv_reward_log WHERE user_id IN ($in)");
+        $pdo->exec("DELETE FROM bv_xp_log WHERE user_id IN ($in)");
         $pdo->exec("DELETE FROM bv_seen_variants WHERE user_id IN ($in)");
         $pdo->exec("DELETE FROM bv_players WHERE user_id IN ($in)");
         $pdo->exec("DELETE FROM bv_attempts WHERE user_id IN ($in)");

@@ -7,7 +7,8 @@ declare(strict_types=1);
  *
  * Хто грає «з акаунтом»: увійшов І підтвердив вік (bv_players.age_confirmed_at). Інакше — як гість:
  * нічого не зберігається, після місії — «що заробили б» (would_earn).
- * Нагорода = запис у bv_reward_log (UNIQUE attempt_id) — тож одна спроба не дає балів двічі.
+ * Нагорода = запис приросту в bv_xp_log (UNIQUE attempt_id) — тож одна спроба не дає балів двічі; за повтор місії —
+ * лише покращення найкращого результату (config bugville_reward_improvement_only).
  * Зарахування гостьових спроб: лише токени з $_SESSION['bv_guest']['tokens'] цієї сесії; атомарно
  *   UPDATE … WHERE token = ? AND user_id IS NULL AND credited = 0 AND session_hash = ?
  * (друга спроба зарахувати ту саму спробу — 0 рядків, тож двом акаунтам не дістанеться); ліміти — на вхід і на добу.
@@ -56,33 +57,80 @@ function bv_request_ctx(PDO $pdo, ?int $loggedUserId, string $lang = 'uk'): arra
 
 // ---------- Нагороди -----------------------------------------------------------------------------------------------
 
-/** Нагорода за результат (ПОПЕРЕДНІ правила до основного завдання). @return array{xp:int, stars:int, coins:int} */
-function bv_reward_for(int $score, int $stars): array
+/**
+ * Повна нагорода місії за зірки (MAIN_TASK, розділ 6): XP = base + per_extra_star × (зірки − 1); монети = 5 (+5 за 3 зірки).
+ * $account = false (гість) → монет немає. @return array{xp:int, stars:int, coins:int}
+ */
+function bv_reward_for(int $stars, bool $account = true): array
 {
-    $ok = $score > 0;
+    if ($stars <= 0) {
+        return ['xp' => 0, 'stars' => 0, 'coins' => 0];
+    }
+    $coins = (int) bv_cfg('bugville_coins_mission') + ($stars >= 3 ? (int) bv_cfg('bugville_coins_three_stars_bonus') : 0);
 
-    return ['xp' => $ok ? max(0, (int) bv_cfg('bugville_reward_xp')) : 0, 'stars' => $ok ? $stars : 0,
-        'coins' => $ok ? max(0, (int) bv_cfg('bugville_reward_coins')) : 0];
+    return ['xp' => (int) bv_cfg('bugville_xp_mission_base') + (int) bv_cfg('bugville_xp_per_extra_star') * ($stars - 1),
+        'stars' => $stars, 'coins' => $account ? max(0, $coins) : 0];
 }
 
-/** Записує нагороду спроби в журнал (раз на спробу). true — записано зараз. */
-function bv_award(PDO $pdo, int $userId, int $attemptId, int $missionId, array $reward, string $source = 'play'): bool
+/** Приріст нагороди при переході від найкращих $best зірок до $stars (лише покращення, якщо так у config). */
+function bv_reward_delta(int $stars, int $best, bool $account = true): array
 {
-    if ($reward['xp'] <= 0 && $reward['stars'] <= 0 && $reward['coins'] <= 0) {
-        return false;
+    if (bv_cfg('bugville_reward_improvement_only') === false) {
+        return bv_reward_for($stars, $account);
     }
-    $st = $pdo->prepare('INSERT IGNORE INTO bv_reward_log (user_id, attempt_id, mission_id, xp, stars, coins, source, created_at)
-                         VALUES (:u, :a, :m, :xp, :st, :c, :src, :t)');
-    $st->execute([':u' => $userId, ':a' => $attemptId, ':m' => $missionId, ':xp' => $reward['xp'], ':st' => $reward['stars'],
-        ':c' => $reward['coins'], ':src' => $source, ':t' => bv_now()]);
+    if ($stars <= $best) {
+        return ['xp' => 0, 'stars' => 0, 'coins' => 0];
+    }
+    $new = bv_reward_for($stars, $account);
+    $old = bv_reward_for($best, $account);
 
-    return $st->rowCount() === 1;
+    return ['xp' => $new['xp'] - $old['xp'], 'stars' => $new['stars'] - $old['stars'], 'coins' => $new['coins'] - $old['coins']];
+}
+
+/** Найкращі зірки акаунта за місію = сума приростів зірок у журналі. */
+function bv_best_stars(PDO $pdo, int $userId, int $missionId): int
+{
+    $st = $pdo->prepare('SELECT COALESCE(SUM(stars), 0) FROM bv_xp_log WHERE user_id = :u AND mission_id = :m');
+    $st->execute([':u' => $userId, ':m' => $missionId]);
+
+    return (int) $st->fetchColumn();
+}
+
+/**
+ * Нагорода спроби акаунту: приріст відносно найкращого результату місії → bv_xp_log (UNIQUE attempt_id: раз на спробу).
+ * @return array{xp:int, stars:int, coins:int} записаний приріст (нулі — нічого не записано)
+ */
+function bv_award_attempt(PDO $pdo, int $userId, array $attempt, string $source = 'play'): array
+{
+    $zero = ['xp' => 0, 'stars' => 0, 'coins' => 0];
+    $delta = bv_reward_delta((int) $attempt['stars'], bv_best_stars($pdo, $userId, (int) $attempt['mission_id']));
+    if ($delta['xp'] <= 0 && $delta['stars'] <= 0 && $delta['coins'] <= 0) {
+        return $zero;
+    }
+    $st = $pdo->prepare('INSERT IGNORE INTO bv_xp_log (user_id, attempt_id, mission_id, xp, stars, coins, source, created_at)
+                         VALUES (:u, :a, :m, :xp, :st, :c, :src, :t)');
+    $st->execute([':u' => $userId, ':a' => (int) $attempt['id'], ':m' => (int) $attempt['mission_id'], ':xp' => $delta['xp'],
+        ':st' => $delta['stars'], ':c' => $delta['coins'], ':src' => $source, ':t' => bv_now()]);
+
+    return $st->rowCount() === 1 ? $delta : $zero;
+}
+
+/** Гість: «що заробили б» — приріст відносно найкращого результату цієї місії в сесії (без монет). */
+function bv_guest_would_earn(int $missionId, int $stars): array
+{
+    $best = (int) ($_SESSION['bv_guest']['best'][$missionId] ?? 0);
+    $delta = bv_reward_delta($stars, $best, false);
+    if ($stars > $best) {
+        $_SESSION['bv_guest']['best'][$missionId] = $stars;
+    }
+
+    return $delta;
 }
 
 /** @return array{xp:int, stars:int, coins:int} */
 function bv_totals(PDO $pdo, int $userId): array
 {
-    $st = $pdo->prepare('SELECT COALESCE(SUM(xp),0), COALESCE(SUM(stars),0), COALESCE(SUM(coins),0) FROM bv_reward_log WHERE user_id = :u');
+    $st = $pdo->prepare('SELECT COALESCE(SUM(xp),0), COALESCE(SUM(stars),0), COALESCE(SUM(coins),0) FROM bv_xp_log WHERE user_id = :u');
     $st->execute([':u' => $userId]);
     [$xp, $stars, $coins] = array_map('intval', $st->fetch(PDO::FETCH_NUM) ?: [0, 0, 0]);
 
@@ -108,28 +156,28 @@ function bv_credit_room(PDO $pdo, int $userId): int
 }
 
 /**
- * Зараховує ОДНУ завершену гостьову спробу акаунту (атомарно) і пише нагороду. true — зараховано.
- * $attempt — рядок bv_attempts; $sessionHash — хеш гостя цієї сесії.
+ * Зараховує ОДНУ завершену гостьову спробу акаунту (атомарно) і пише нагороду (приріст).
+ * $attempt — рядок bv_attempts; $sessionHash — хеш гостя цієї сесії. Повертає нагороду або null (не зараховано).
+ * @return array{xp:int, stars:int, coins:int}|null
  */
-function bv_credit_one(PDO $pdo, int $userId, array $attempt, ?string $sessionHash): bool
+function bv_credit_one(PDO $pdo, int $userId, array $attempt, ?string $sessionHash): ?array
 {
     if ($sessionHash === null || bv_credit_room($pdo, $userId) <= 0) {
-        return false;
+        return null;
     }
     $st = $pdo->prepare('UPDATE bv_attempts SET user_id = :u, credited = 1, credited_at = :t
                          WHERE id = :id AND user_id IS NULL AND credited = 0 AND used = 1 AND session_hash = :s');
     $st->execute([':u' => $userId, ':t' => bv_now(), ':id' => (int) $attempt['id'], ':s' => $sessionHash]);
     if ($st->rowCount() !== 1) {
-        return false;
+        return null;
     }
     $_SESSION['bv_credit_login']['n'] = (int) ($_SESSION['bv_credit_login']['n'] ?? 0) + 1;
-    bv_award($pdo, $userId, (int) $attempt['id'], (int) $attempt['mission_id'],
-        bv_reward_for((int) $attempt['score'], (int) $attempt['stars']), 'credit');
+    $reward = bv_award_attempt($pdo, $userId, $attempt, 'credit');
     if (!empty($attempt['variant_key'])) {
         bv_mark_seen($pdo, (int) $attempt['mission_id'], $userId, (string) $attempt['variant_key']);
     }
 
-    return true;
+    return $reward;
 }
 
 /**
@@ -157,8 +205,8 @@ function bv_credit_guest_session(PDO $pdo, int $userId): array
             $keep[] = (string) $a['token'];
             continue;
         }
-        if (bv_credit_one($pdo, $userId, $a, $hash)) {
-            $r = bv_reward_for((int) $a['score'], (int) $a['stars']);
+        $r = bv_credit_one($pdo, $userId, $a, $hash);
+        if ($r !== null) {
             $out['credited']++;
             $out['xp'] += $r['xp'];
             $out['stars'] += $r['stars'];
@@ -187,7 +235,6 @@ function bv_check_and_reward(PDO $pdo, string $token, mixed $given, array $ctx):
     $st = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
     $st->execute([':t' => $token]);
     $a = (array) $st->fetch(PDO::FETCH_ASSOC);
-    $reward = bv_reward_for((int) ($r['score'] ?? 0), (int) ($r['stars'] ?? 0));
     $r['saved'] = false;
     if ($r['repeat']) {
         $r['saved'] = $a['user_id'] !== null;
@@ -195,23 +242,26 @@ function bv_check_and_reward(PDO $pdo, string $token, mixed $given, array $ctx):
         return $r;
     }
     $uid = $ctx['user_id'];
+    $earned = null;
     if ($uid !== null && $a['user_id'] === null) {   // почато гостем, перевірено вже з акаунтом
-        if (bv_credit_one($pdo, (int) $uid, $a, bv_session_hash($_SESSION['bv_guest']['key'] ?? null))) {
+        $earned = bv_credit_one($pdo, (int) $uid, $a, bv_session_hash($_SESSION['bv_guest']['key'] ?? null));
+        if ($earned !== null) {
             $_SESSION['bv_guest']['tokens'] = array_values(array_diff((array) ($_SESSION['bv_guest']['tokens'] ?? []), [$token]));
-            $r['saved'] = true;
-            $r['earned'] = $reward;
         } else {
-            $r['would_earn'] = $reward;
+            $r['would_earn'] = bv_guest_would_earn((int) $a['mission_id'], (int) $a['stars']);
             $r['credit_limit'] = true;
         }
     } elseif ($a['user_id'] !== null) {
-        bv_award($pdo, (int) $a['user_id'], (int) $a['id'], (int) $a['mission_id'], $reward);
-        $r['saved'] = true;
-        $r['earned'] = $reward;
+        $earned = bv_award_attempt($pdo, (int) $a['user_id'], $a);
     } else {
-        $r['would_earn'] = $reward;   // гість: «+30 XP, 3 зірки — зареєструйтесь (16+), щоб зберегти»
+        // гість: «+20 XP, 3 зірки — зареєструйтесь (16+), щоб зберегти»; монет гостям немає
+        $r['would_earn'] = bv_guest_would_earn((int) $a['mission_id'], (int) $a['stars']);
     }
-    $r['awarded'] = $r['saved'] && $r['correct'];
+    if ($earned !== null) {
+        $r['saved'] = true;
+        $r['earned'] = $earned;
+    }
+    $r['awarded'] = $r['saved'] && $r['correct'] && $earned !== null && $earned['xp'] > 0;
 
     return $r;
 }

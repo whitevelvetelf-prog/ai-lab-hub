@@ -18,9 +18,19 @@ return [
     // Запусків місій за хвилину (кожен запуск створює спробу): на гравця / сесію і на IP.
     'bugville_starts_per_min_player' => 60,
     'bugville_starts_per_min_ip' => 1200,
-    // Нагорода за правильну відповідь — ПОПЕРЕДНЬО, до правил з основного завдання (XP, монети; зірки — з перевірки).
-    'bugville_reward_xp' => 30,
-    'bugville_reward_coins' => 0,
+    // Нагороди (docs/bugville/MAIN_TASK.md, розділ 6). Зірки: 3 — з першої спроби без підказки, 2 — з підказкою або з
+    // другої спроби, 1 — пізніше. XP місії = base + per_extra_star × (зірки − 1). Монети — лише акаунтам.
+    'bugville_xp_mission_base' => 10,
+    'bugville_xp_per_extra_star' => 5,
+    'bugville_coins_mission' => 5,
+    'bugville_coins_three_stars_bonus' => 5,
+    // Повтор місії: нагорода лише за покращення найкращого результату (різниця), щоб повтори не стали «фермою балів».
+    'bugville_reward_improvement_only' => true,
+    // Іспит рівня (крок «Іспити»): прохідний бал, %; повтор не раніше ніж через N хвилин; нагорода.
+    'bugville_exam_pass_percent' => 70,
+    'bugville_exam_retry_minutes' => 60,
+    'bugville_exam_xp' => 50,
+    'bugville_exam_coins' => 30,
     // Демо-місія 900001 (зразковий генератор) для локальної перевірки API; на хостингу — false.
     'bugville_demo' => false,
     // Строк дії токена спроби (хв) і скільки годин зберігати незараховані спроби гостей (не менше 24).

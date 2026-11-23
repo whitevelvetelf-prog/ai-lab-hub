@@ -118,6 +118,62 @@ function bv_attempt_start(PDO $pdo, int $missionId, array $ctx, string $kind = '
     return ['ok' => true, 'token' => $token, 'scene' => $scene];
 }
 
+// ---------- Зірки й підказка -------------------------------------------------------------------------------------
+
+/**
+ * Зірки за правильну відповідь (MAIN_TASK, розділ 6): 3 — перша спроба місії без підказки; 2 — з підказкою або друга
+ * спроба; 1 — третя й далі. «Спроба» — завершена перевірка цієї місії тим самим гравцем (акаунт або сесія гостя).
+ */
+function bv_stars_for(PDO $pdo, array $attempt): int
+{
+    if ($attempt['user_id'] !== null) {
+        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE user_id = :w AND mission_id = :m AND used = 1 AND id <> :id');
+        $st->execute([':w' => (int) $attempt['user_id'], ':m' => (int) $attempt['mission_id'], ':id' => (int) $attempt['id']]);
+    } else {
+        // той самий гість: усі спроби його сесії, і ще не зараховані, і вже зараховані акаунту після входу
+        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE session_hash = :w AND mission_id = :m AND used = 1 AND id <> :id');
+        $st->execute([':w' => (string) $attempt['session_hash'], ':m' => (int) $attempt['mission_id'], ':id' => (int) $attempt['id']]);
+    }
+    $before = (int) $st->fetchColumn();
+    if ($before === 0 && (int) ($attempt['hint_used'] ?? 0) === 0) {
+        return 3;
+    }
+
+    return $before <= 1 ? 2 : 1;
+}
+
+/**
+ * Підказка до спроби: безкоштовна, лише знижує зірки (hint_used = 1). Текст — з варіанта ('hint'), інакше загальний.
+ * Ті самі перевірки власника й строку, що й у відповіді; після відповіді підказка не потрібна.
+ * @return array{ok:bool, hint?:string, error?:string}
+ */
+function bv_attempt_hint(PDO $pdo, string $token, array $ctx): array
+{
+    if (!bv_check_rate_ok($pdo, $ctx)) {
+        return ['ok' => false, 'error' => 'rate_limited'];
+    }
+    $st = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
+    $st->execute([':t' => $token]);
+    $a = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$a) {
+        return ['ok' => false, 'error' => 'not_found'];
+    }
+    $owner = $a['user_id'] !== null
+        ? ($ctx['user_id'] !== null && (int) $a['user_id'] === (int) $ctx['user_id'])
+        : (bv_session_hash($ctx['guest_key'] ?? ($_SESSION['bv_guest']['key'] ?? null)) === $a['session_hash']);
+    $mission = bv_mission((int) $a['mission_id']);
+    if (!$owner || $mission === null) {
+        return ['ok' => false, 'error' => 'forbidden'];
+    }
+    if ((int) $a['used'] === 1) {
+        return ['ok' => false, 'error' => 'already_checked'];
+    }
+    $v = bv_build_variant($pdo, $mission, $a['variant_id'] !== null ? (int) $a['variant_id'] : null, $a['seed'], (string) $a['lang']);
+    $pdo->prepare('UPDATE bv_attempts SET hint_used = 1 WHERE id = :id')->execute([':id' => (int) $a['id']]);
+
+    return ['ok' => true, 'hint' => (string) ($v['hint']['text'] ?? 'Подивіться уважно на межі: найменше й найбільше значення.')];
+}
+
 // ---------- Перевірка відповіді ---------------------------------------------------------------------------------
 
 /** Чи відповідь ($given — public id або число) збігається з answer (internal id) через карту спроби. */
@@ -205,7 +261,7 @@ function bv_attempt_check(PDO $pdo, string $token, mixed $given, array $ctx): ar
         return ['ok' => false, 'error' => 'bad_answer'];
     }
     $score = $ok ? 100 : 0;
-    $stars = $ok ? 3 : 0;
+    $stars = $ok ? bv_stars_for($pdo, $a) : 0;
     $upd = $pdo->prepare('UPDATE bv_attempts SET used = 1, finished_at = :f, score = :sc, stars = :stars WHERE id = :id AND used = 0');
     $upd->execute([':f' => bv_now(), ':sc' => $score, ':stars' => $stars, ':id' => (int) $a['id']]);
     $first = $upd->rowCount() === 1;
