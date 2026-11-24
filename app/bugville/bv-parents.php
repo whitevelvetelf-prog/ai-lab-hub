@@ -24,7 +24,8 @@ function bv_parents_html(string $md): string
 {
     $out = [];
     $list = false;
-    foreach (preg_split('/\R/', $md) as $line) {
+    // /u обовʼязковий: без нього \R ловить байт 0x85, що є всередині кириличних літер (напр. «х» = D1 85), і рве слова.
+    foreach (preg_split('/\R/u', $md) as $line) {
         $line = rtrim($line);
         $inline = static fn(string $s) => preg_replace('/\*\*(.+?)\*\*/u', '<strong>$1</strong>', htmlspecialchars($s, ENT_QUOTES, 'UTF-8'));
         if (str_starts_with($line, '- ')) {

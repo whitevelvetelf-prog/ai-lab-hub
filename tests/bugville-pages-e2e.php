@@ -99,6 +99,8 @@ try {
     $html = bv_parents_html("# Заголовок\n\n- <script>x</script>\n\nТекст **жирний**");
     check(str_contains($html, '&lt;script&gt;') && str_contains($html, '<strong>жирний</strong>') && str_contains($html, '<ul>'),
         'Markdown «Для батьків» екранується');
+    $cyr = bv_parents_html("Хлопчик ходить пішки до школи");   // «х» = D1 85: без /u \R рвав би рядок
+    check($cyr === '<p>Хлопчик ходить пішки до школи</p>', 'кириличний рядок із «х» не розривається');
 
     echo "Сторінки\n";
     $map = http($jar, $base . '/bugville.php');
