@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 /**
  * AI LAB HUB — щоденне обслуговування гри «Багвіль»: видаляє гостьові незараховані спроби, старші за 24 год
- * (єдиний DELETE гри, app/bugville/bv-attempts.php → bv_cleanup_guest_attempts). Журнал — cron_runs.
+ * (app/bugville/bv-attempts.php → bv_cleanup_guest_attempts). Журнал — cron_runs.
  *   php /home/gu621051/ailabhub-directory.com/www/cron/bugville-daily.php
  * Лише CLI. На хостинг і в розклад — лише після погодження власника.
  */

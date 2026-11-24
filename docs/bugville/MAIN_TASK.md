@@ -128,7 +128,7 @@
 
 Структура файлів як у плані: `public/bugville.php`, `bugville-mission.php?m=…`, `bugville-exam.php`, `bv-api.php`, `app/bugville/bv-core.php`, `bv-variants.php`, `bv-attempts.php`, `bv-exam.php`, `assets/js/bugville.js`, `public/crm-bugville.php`.
 
-Міграція № 33 і подальші: лише `CREATE TABLE IF NOT EXISTS` і `ADD COLUMN` за перевіркою, без `FOREIGN KEY`, `utf8mb4_unicode_ci`, без `DROP`/`TRUNCATE`. **Замість ENUM використовуй VARCHAR** із перевіркою в PHP. Єдиний дозволений DELETE: гостьові спроби без зарахування старші за 24 години.
+Міграція № 33 і подальші: лише `CREATE TABLE IF NOT EXISTS` і `ADD COLUMN` за перевіркою, без `FOREIGN KEY`, `utf8mb4_unicode_ci`, без `DROP`/`TRUNCATE`. **Замість ENUM використовуй VARCHAR** із перевіркою в PHP. Дозволені лише два DELETE: гостьові спроби без зарахування старші за 24 години (`bv_cleanup_guest_attempts`) і всі ігрові дані одного акаунта на запит гравця (`bv_delete_player_data`, `tools/bugville-delete-player.php`; рішення власника 2026-11-24). Нова таблиця з `user_id` додається в `BV_PLAYER_TABLES`.
 
 Основні таблиці (мінімум полів, решту додай за потреби): `bv_chapters` (slug, order, access VARCHAR 'free'/'paid', status), `bv_levels`, `bv_missions` (slug, level_id, order, type, variant_mode, generator_key, generator_json, status), `bv_mission_variants`, `bv_attempts`, `bv_seen_variants`, `bv_exam_items`, `bv_progress` (user_id, mission_id, stars, best_score), `bv_xp_log`, `bv_wallet` (user_id, coins), `bv_ranks`, `bv_badges`, `bv_user_badges`, `bv_words`, `bv_user_words`, `bv_workshop_items`, `bv_user_items`, `bv_streaks`, `bv_certificates`. Усі тексти із полем `lang`. Контент Етапу 1 як ідемпотентний сид (скрипт або `INSERT ... WHERE NOT EXISTS` за slug), що перезапускається без дублів.
 
@@ -147,7 +147,7 @@
 ## 15. Приватність
 
 - Гості: без імені, лише хеш сесії в `bv_attempts` для захисту, видалення незарахованих через добу.
-- Зареєстровані: прогрес, XP, монети, значки, звання, чарівні слова, предмети. Нічого з цього не потрапляє в журнали, пошук, статистику й зовнішні сервіси.
+- Зареєстровані: прогрес, XP, монети, значки, звання, чарівні слова, предмети; на запит гравця всі ці дані видаляються (`tools/bugville-delete-player.php`). Нічого з цього не потрапляє в журнали, пошук, статистику й зовнішні сервіси.
 - Без сторонніх скриптів, аналітики, трекерів і зовнішніх шрифтів.
 - Перелік для Політики конфіденційності в звіті: які дані зберігаються, строки.
 

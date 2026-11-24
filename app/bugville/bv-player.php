@@ -265,3 +265,60 @@ function bv_check_and_reward(PDO $pdo, string $token, mixed $given, array $ctx):
 
     return $r;
 }
+
+// ---------- Видалення даних гравця на його запит (другий і останній дозволений DELETE гри) ------------------------
+
+/**
+ * Таблиці гри з даними гравця (поле user_id). Включно з майбутніми з MAIN_TASK §11: доки таблиці немає, її пропущено.
+ * Нова таблиця bv_* з user_id ОБОВ'ЯЗКОВО додається сюди (tests/bugville-delete-tests.php це перевіряє).
+ * Порядок: спершу похідні дані (журнали, прогрес), наприкінці bv_players (підтвердження віку).
+ */
+const BV_PLAYER_TABLES = [
+    'bv_xp_log', 'bv_attempts', 'bv_seen_variants',
+    'bv_progress', 'bv_wallet', 'bv_user_badges', 'bv_user_words', 'bv_user_items', 'bv_streaks', 'bv_certificates',
+    'bv_players',
+];
+
+/**
+ * Видаляє всі ігрові дані одного акаунта (запит гравця через «Контакти», Політика конфіденційності, розділ «Багвіль»).
+ * Сам акаунт сайту (users) не чіпає. Зараховані гостьові спроби вже мають user_id акаунта — видаляються теж.
+ * Одна транзакція: або все, або нічого. $dryRun = true — лише порахувати рядки.
+ * Лічильники лімітів у mp_rate_limits (sha256 від 'u:<id>') не видаляються тут: їх прибирає mpb_rate_cleanup() за 3 доби.
+ * @return array<string, int|null> таблиця → рядків (null — таблиці ще немає)
+ */
+function bv_delete_player_data(PDO $pdo, int $userId, bool $dryRun = false): array
+{
+    if ($userId <= 0) {
+        throw new InvalidArgumentException('user_id must be positive');
+    }
+    $exists = [];
+    foreach (BV_PLAYER_TABLES as $t) {
+        try {
+            $pdo->query("SELECT 1 FROM $t LIMIT 0");
+            $exists[$t] = true;
+        } catch (Throwable) {
+            $exists[$t] = false;
+        }
+    }
+    $out = [];
+    $pdo->beginTransaction();
+    try {
+        foreach (BV_PLAYER_TABLES as $t) {
+            if (!$exists[$t]) {
+                $out[$t] = null;
+                continue;
+            }
+            $st = $pdo->prepare($dryRun ? "SELECT COUNT(*) FROM $t WHERE user_id = :u" : "DELETE FROM $t WHERE user_id = :u");
+            $st->execute([':u' => $userId]);
+            $out[$t] = $dryRun ? (int) $st->fetchColumn() : $st->rowCount();
+        }
+        $dryRun ? $pdo->rollBack() : $pdo->commit();
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        throw $e;
+    }
+
+    return $out;
+}

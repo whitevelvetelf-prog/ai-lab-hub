@@ -9,7 +9,8 @@ declare(strict_types=1);
  * Гість: user_id = null; спроба прив'язана до session_hash = sha256(випадковий ключ гостя з $_SESSION['bv_guest']),
  * а не до id сесії PHP (він змінюється при вході — інакше після входу не вийде зарахувати сеанс).
  * Нагороди (XP, зірки, монети…) рахує лише сервер; бали тут попередні: 100 / 0, зірки 3 / 0 — правила з основного завдання.
- * Єдиний DELETE гри — bv_cleanup_guest_attempts() (гостьові незараховані спроби, старші за 24 год).
+ * DELETE гри лише два: bv_cleanup_guest_attempts() (гостьові незараховані спроби, старші за 24 год) і
+ * bv_delete_player_data() у bv-player.php (усі дані акаунта на запит гравця).
  */
 
 require_once __DIR__ . '/bv-variants.php';
@@ -270,7 +271,7 @@ function bv_attempt_check(PDO $pdo, string $token, mixed $given, array $ctx): ar
         'explain' => $explain, 'correct_ids' => $correctIds];
 }
 
-// ---------- Прибирання (єдиний DELETE гри) ----------------------------------------------------------------------
+// ---------- Прибирання гостьових спроб (перший із двох DELETE гри) ---------------------------------------------
 
 /** Видаляє гостьові незараховані спроби, старші за bugville_guest_attempt_keep_hours (не менше 24). Повертає кількість. */
 function bv_cleanup_guest_attempts(PDO $pdo): int
