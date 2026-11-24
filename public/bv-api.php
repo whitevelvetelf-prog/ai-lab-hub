@@ -12,6 +12,10 @@ declare(strict_types=1);
  *   hint         — {token} → підказка (безкоштовна, лише знижує зірки: максимум 2).
  *   check        — {token, answer} → результат, розбір побаченого варіанта; акаунт → earned + saved, гість → would_earn.
  *   confirm_age  — {confirm: true} для того, хто ввійшов: «мені виповнилося N років» → зарахування гостьового сеансу.
+ *   exam_state   — {exam} → доступність, складено, грамота, повтор (для всіх).
+ *   exam_start   — {exam} → {token, tasks: [{n, scene, answered}]}; незавершений іспит продовжується (лише акаунт 16+).
+ *   exam_answer  — {token, n, answer} → прийнято (правильність — лише в підсумку).
+ *   exam_finish  — {token} → бал, складено, розбори, нагорода й грамота за перше складання.
  * Помилки: 400 bad_request / bad_answer, 401 auth_required, 403 cross_site / csrf, 404 not_found, 405, 410 expired,
  *          429 rate_limited, 503 unavailable (таблиці гри не створено).
  */
@@ -20,6 +24,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
+require_once __DIR__ . '/../app/bugville/bv-exam.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -125,6 +130,55 @@ switch ($action) {
         }
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
+        }
+        bv_api_out($r + $who);
+
+    // ---------- Іспити (крок 4): лише акаунт із підтвердженим віком; гість і акаунт без 16+ — 403 ----------
+    case 'exam_state':
+    case 'exam_start':
+        $exam = filter_var($in['exam'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+        if ($exam === false || bv_exam_level((int) $exam) === null) {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        if ($action === 'exam_state') {
+            bv_api_out(['ok' => true] + $who + bv_exam_status($pdo, $ctx['user_id'] !== null ? (int) $ctx['user_id'] : null, (int) $exam));
+        }
+        if ($ctx['user_id'] === null) {
+            bv_api_out(['ok' => false, 'error' => 'auth_required'] + $who, 403);
+        }
+        $r = bv_exam_start($pdo, (int) $exam, $ctx);
+        if (!$r['ok']) {
+            $codes = ['rate_limited' => 429, 'cooldown' => 409, 'exam_unavailable' => 404, 'not_found' => 404];
+            bv_api_out($r + $who, $codes[$r['error']] ?? 400);
+        }
+        bv_api_out($r + $who);
+
+    case 'exam_answer':
+    case 'exam_finish':
+        if ($ctx['user_id'] === null) {
+            bv_api_out(['ok' => false, 'error' => 'auth_required'] + $who, 403);
+        }
+        $token = is_string($in['token'] ?? null) ? $in['token'] : '';
+        if ($token === '') {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        if ($action === 'exam_answer') {
+            $n = filter_var($in['n'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 50]]);
+            $answer = $in['answer'] ?? null;
+            if ($n === false || !(is_string($answer) || is_int($answer) || is_float($answer) || is_array($answer))) {
+                bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+            }
+            $r = bv_exam_answer($pdo, $token, (int) $n, $answer, $ctx);
+        } else {
+            $r = bv_exam_finish($pdo, $token, $ctx);
+        }
+        if (!$r['ok']) {
+            $codes = ['rate_limited' => 429, 'not_found' => 404, 'expired' => 410, 'bad_answer' => 400, 'auth_required' => 403,
+                'already_answered' => 409, 'already_finished' => 409];
+            bv_api_out(['ok' => false, 'error' => $r['error']], $codes[$r['error']] ?? 400);
+        }
+        if ($action === 'exam_finish') {
+            $r['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
         }
         bv_api_out($r + $who);
 

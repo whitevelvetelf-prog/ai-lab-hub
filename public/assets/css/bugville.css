@@ -166,6 +166,30 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 .bv-age { border-color: var(--bv-brand); }
 .bv-age p { margin-top: 0; }
 
+/* Іспит і грамота */
+.bv-badge.is-ok { background: var(--bv-good-bg); color: var(--bv-good); }
+.bv-link44 { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; font-weight: 600; }
+.bv-exam-results { padding-left: 20px; margin: 0; }
+.bv-exam-results li { margin: 0 0 10px; }
+.bv-exam-results li.is-right strong { color: var(--bv-good); }
+.bv-exam-results li.is-wrong strong { color: var(--bv-bad); }
+.bv-exam-results p { margin: 2px 0 0; }
+.bv-cert {
+    margin: 0 0 16px; padding: 32px 20px; text-align: center; background: #fff;
+    border: 6px double var(--bv-brand); border-radius: var(--bv-radius);
+}
+.bv-cert__kicker { margin: 0; font-weight: 700; color: var(--bv-brand); letter-spacing: .08em; text-transform: uppercase; font-size: 14px; }
+.bv-cert__title { margin: 4px 0 12px; font-size: 40px; }
+.bv-cert__name { margin: 8px 0; font-size: 28px; font-weight: 800; overflow-wrap: anywhere; }
+.bv-cert__date { color: var(--bv-muted); margin-top: 16px; }
+.bv-cert__note { font-size: 13px; color: var(--bv-muted); margin-bottom: 0; }
+@media print {
+    .bv-top, .bv-foot, .bv-noprint, .bv-skip, .bv-toast { display: none !important; }
+    body.bv { background: #fff; }
+    .bv-main { max-width: none; padding: 0; }
+    .bv-cert { border-color: #2116ad; page-break-inside: avoid; }
+}
+
 /* Сторінка для батьків */
 .bv-prose h2 { font-size: 20px; margin: 20px 0 8px; }
 .bv-prose ul { padding-left: 20px; }

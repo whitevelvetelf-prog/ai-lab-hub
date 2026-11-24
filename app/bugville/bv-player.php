@@ -274,7 +274,7 @@ function bv_check_and_reward(PDO $pdo, string $token, mixed $given, array $ctx):
  * Порядок: спершу похідні дані (журнали, прогрес), наприкінці bv_players (підтвердження віку).
  */
 const BV_PLAYER_TABLES = [
-    'bv_xp_log', 'bv_attempts', 'bv_seen_variants',
+    'bv_xp_log', 'bv_exam_tasks', 'bv_attempts', 'bv_seen_variants',
     'bv_progress', 'bv_wallet', 'bv_user_badges', 'bv_user_words', 'bv_user_items', 'bv_streaks', 'bv_certificates',
     'bv_players',
 ];

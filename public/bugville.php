@@ -11,6 +11,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
+require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
 
@@ -37,6 +38,16 @@ try {
 }
 
 $world = bv_world();
+$examStatus = [];
+foreach ($world as $ch) {
+    foreach ($ch['levels'] as $lv) {
+        try {
+            $examStatus[$lv['id']] = bv_exam_status($pdo, $saveId, bv_exam_id((int) $lv['id']));
+        } catch (Throwable $e) {
+            error_log('[bugville] exam status: ' . get_class($e));   // таблиць іспитів ще немає (міграція № 34)
+        }
+    }
+}
 $ch1Missions = array_filter(bv_world_missions(), static fn($m) => $m['chapter'] === 1);
 $ch1Done = $ch1Missions !== [] && count(array_filter($ch1Missions, static fn($m) => ($stars[$m['id']] ?? 0) > 0)) === count($ch1Missions);
 
@@ -120,9 +131,17 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
                             </li>
                         <?php endforeach; ?>
                     </ol>
+                    <?php $ex = $examStatus[$lv['id']] ?? null; ?>
                     <p class="bv-level__exam">
-                        <span class="bv-badge">Іспит рівня — скоро</span>
-                        <?php if ($saveId === null): ?><span class="bv-muted">Іспити — для акаунтів від <?= bv_min_age() ?> років.</span><?php endif; ?>
+                        <?php if ($ex === null || !$ex['enabled']): ?>
+                            <span class="bv-badge">Іспит рівня — готується</span>
+                        <?php elseif ($ex['passed']): ?>
+                            <span class="bv-badge is-ok">✓ Іспит складено</span>
+                            <?php if ($ex['certificate'] !== null): ?><a class="bv-link44" href="bugville-certificate.php?c=<?= bv_h($ex['certificate']) ?>">Грамота</a><?php endif; ?>
+                        <?php else: ?>
+                            <a class="bv-btn bv-btn--small bv-btn--ghost" href="bugville-exam.php?e=<?= (int) $lv['id'] ?>">Іспит рівня</a>
+                            <?php if ($saveId === null): ?><span class="bv-muted">Іспити — для акаунтів від <?= bv_min_age() ?> років.</span><?php endif; ?>
+                        <?php endif; ?>
                     </p>
                 </article>
             <?php endforeach; ?>

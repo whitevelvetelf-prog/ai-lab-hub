@@ -58,6 +58,242 @@
         });
     }
 
+    // ---------- Друк грамоти ----------
+    document.querySelectorAll('[data-print]').forEach(function (b) {
+        b.addEventListener('click', function () { window.print(); });
+    });
+
+    function post(action, data) {
+        var body = Object.assign({ action: action, lang: 'uk' }, data || {});
+        return fetch('bv-api.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': CSRF },
+            body: JSON.stringify(body)
+        }).then(function (r) {
+            return r.json().catch(function () { return { ok: false, error: 'unavailable' }; });
+        }, function () { return { ok: false, error: 'network' }; });
+    }
+
+    // ---------- Іспит (крок 4) ----------
+    var exam = document.getElementById('bv-exam');
+    if (exam) {
+        (function () {
+            var box = document.getElementById('bv-scene');
+            var examId = parseInt(exam.getAttribute('data-exam'), 10);
+            var minAge = exam.getAttribute('data-min-age') || '16';
+            var token = '';
+            var tasks = [];
+            var idx = 0;
+            var busy = false;
+            var EXAM_ERR = {
+                rate_limited: 'Забагато дій за хвилину. Зачекайте трохи.',
+                expired: 'Час на іспит минув. Завершіть його, щоб побачити результат.',
+                exam_unavailable: 'Іспит зараз недоступний.',
+                csrf: 'Сторінка застаріла. Оновіть її.',
+                cross_site: 'Сторінка застаріла. Оновіть її.'
+            };
+
+            function clear() { while (box.firstChild) { box.removeChild(box.firstChild); } box.setAttribute('aria-busy', 'false'); }
+            function btn(text, cls, onClick) {
+                var b = el('button', 'bv-btn' + (cls ? ' ' + cls : ''), text);
+                b.type = 'button';
+                b.addEventListener('click', onClick);
+                return b;
+            }
+            function link(text, href, cls) {
+                var a = el('a', 'bv-btn' + (cls ? ' ' + cls : ''), text);
+                a.href = href;
+                return a;
+            }
+            function localTime(utc) {
+                var d = new Date(String(utc).replace(' ', 'T') + 'Z');
+                return isNaN(d) ? utc : d.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+            }
+
+            function intro(s) {
+                clear();
+                if (!s.age_confirmed) {
+                    box.appendChild(el('p', null, 'Іспити складають гравці з акаунтом від ' + minAge + ' років: так результат і грамота збережуться.'));
+                    var row = el('p', 'bv-actions');
+                    if (s.logged_in) {
+                        row.appendChild(btn('Мені виповнилося ' + minAge + ' років', '', function () {
+                            post('confirm_age', { confirm: true }).then(function (r) {
+                                if (r.ok) { load(); } else { toast('Не вдалося підтвердити'); }
+                            });
+                        }));
+                    } else {
+                        row.appendChild(link('Зареєструватись', exam.getAttribute('data-register') || 'register.php'));
+                        row.appendChild(link('Увійти', exam.getAttribute('data-login') || 'login.php', 'bv-btn--ghost'));
+                    }
+                    box.appendChild(row);
+                    return;
+                }
+                if (s.passed) {
+                    box.appendChild(el('p', 'bv-reward', '✓ Іспит уже складено.'));
+                    if (s.certificate) {
+                        var rowC = el('p', 'bv-actions');
+                        rowC.appendChild(link('Грамота', 'bugville-certificate.php?c=' + encodeURIComponent(s.certificate)));
+                        box.appendChild(rowC);
+                    }
+                    box.appendChild(el('p', 'bv-muted', 'Можна скласти ще раз для тренування; нагорода дається лише за перше складання.'));
+                }
+                if (s.retry_at && !s.open) {
+                    box.appendChild(el('p', null, 'Наступна спроба — після ' + localTime(s.retry_at) + '. Поки що можна потренуватися в місіях.'));
+                    var rowR = el('p', 'bv-actions');
+                    rowR.appendChild(link('До карти', 'bugville.php', 'bv-btn--ghost'));
+                    box.appendChild(rowR);
+                    return;
+                }
+                var rowS = el('p', 'bv-actions');
+                rowS.appendChild(btn(s.open ? 'Продовжити іспит' : 'Почати іспит', '', begin));
+                box.appendChild(rowS);
+            }
+
+            function load() {
+                post('exam_state', { exam: examId }).then(function (s) {
+                    if (!s.ok) { clear(); box.appendChild(el('p', 'bv-msg is-bad', EXAM_ERR[s.error] || 'Іспит зараз недоступний.')); return; }
+                    intro(s);
+                });
+            }
+
+            function begin() {
+                if (busy) { return; }
+                busy = true;
+                post('exam_start', { exam: examId }).then(function (r) {
+                    busy = false;
+                    if (!r.ok) {
+                        if (r.error === 'cooldown') { load(); return; }
+                        toast(EXAM_ERR[r.error] || 'Не вдалося почати іспит');
+                        return;
+                    }
+                    token = r.token;
+                    tasks = r.tasks || [];
+                    idx = 0;
+                    while (idx < tasks.length && tasks[idx].answered) { idx++; }
+                    show();
+                });
+            }
+
+            function show() {
+                clear();
+                if (idx >= tasks.length) { finishView(); return; }
+                var t = tasks[idx];
+                var form = el('form', 'bv-scene');
+                form.noValidate = true;
+                var h = el('h2', 'bv-result__sub', 'Завдання ' + (idx + 1) + ' з ' + tasks.length);
+                h.tabIndex = -1;
+                form.appendChild(h);
+                form.appendChild(el('p', 'bv-scene__text', t.scene.text));
+                if (t.scene.items && t.scene.items.length) {
+                    var ul = el('ul', 'bv-scene__items');
+                    t.scene.items.forEach(function (it) { ul.appendChild(el('li', null, it.text)); });
+                    form.appendChild(ul);
+                }
+                var fs = el('fieldset', 'bv-options');
+                fs.appendChild(el('legend', 'bv-question', t.scene.question || 'Ваша відповідь'));
+                (t.scene.options || []).forEach(function (o, i) {
+                    var lab = el('label', 'bv-option');
+                    var inp = el('input');
+                    inp.type = 'radio';
+                    inp.name = 'bv-answer';
+                    inp.value = o.id;
+                    inp.id = 'bv-e' + idx + '-' + i;
+                    lab.appendChild(inp);
+                    lab.appendChild(el('span', 'bv-option__text', o.text));
+                    fs.appendChild(lab);
+                });
+                if (t.scene.input === 'number') {
+                    var num = el('input', 'bv-input');
+                    num.type = 'text';
+                    num.inputMode = 'numeric';
+                    num.name = 'bv-number';
+                    num.setAttribute('aria-label', t.scene.question || 'Число');
+                    fs.appendChild(num);
+                }
+                form.appendChild(fs);
+                var msg = el('p', 'bv-msg');
+                msg.setAttribute('role', 'alert');
+                var row = el('p', 'bv-actions');
+                var go = el('button', 'bv-btn', idx + 1 < tasks.length ? 'Відповісти й далі' : 'Відповісти');
+                go.type = 'submit';
+                row.appendChild(go);
+                form.appendChild(row);
+                form.appendChild(msg);
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    if (busy) { return; }
+                    var answer = null;
+                    var picked = form.querySelector('input[name="bv-answer"]:checked');
+                    if (picked) { answer = picked.value; }
+                    var n = form.querySelector('input[name="bv-number"]');
+                    if (n && n.value.trim() !== '') { answer = n.value.trim().replace(',', '.'); }
+                    if (answer === null) { msg.textContent = 'Спершу оберіть відповідь.'; return; }
+                    busy = true;
+                    go.disabled = true;
+                    post('exam_answer', { token: token, n: t.n, answer: answer }).then(function (r) {
+                        busy = false;
+                        if (!r.ok && r.error !== 'already_answered') {
+                            go.disabled = false;
+                            if (r.error === 'expired' || r.error === 'already_finished') { idx = tasks.length; show(); return; }
+                            msg.textContent = EXAM_ERR[r.error] || 'Не вдалося зберегти відповідь. Спробуйте ще раз.';
+                            return;
+                        }
+                        idx++;
+                        show();
+                    });
+                });
+                box.appendChild(form);
+                h.focus();
+            }
+
+            function finishView() {
+                box.appendChild(el('p', null, 'Усі завдання виконано. Завершіть іспит, щоб побачити результат.'));
+                var row = el('p', 'bv-actions');
+                row.appendChild(btn('Завершити іспит', '', finish));
+                box.appendChild(row);
+            }
+
+            function finish() {
+                if (busy) { return; }
+                busy = true;
+                post('exam_finish', { token: token }).then(function (r) {
+                    busy = false;
+                    clear();
+                    if (!r.ok) { box.appendChild(el('p', 'bv-msg is-bad', EXAM_ERR[r.error] || 'Не вдалося завершити іспит.')); return; }
+                    var res = el('section', 'bv-result ' + (r.passed ? 'is-good' : 'is-bad'));
+                    var h = el('h2', 'bv-result__title', (r.passed ? '✓ Іспит складено: ' : '✗ Поки не складено: ') + r.score + '%');
+                    h.tabIndex = -1;
+                    res.appendChild(h);
+                    res.appendChild(el('p', null, 'Правильних відповідей: ' + r.right + ' з ' + r.total + '.'));
+                    if (r.earned && r.earned.xp > 0) {
+                        res.appendChild(el('p', 'bv-reward', 'Збережено: +' + r.earned.xp + ' XP, +' + r.earned.coins + ' монет'));
+                    }
+                    var ol = el('ol', 'bv-exam-results');
+                    (r.results || []).forEach(function (t) {
+                        var li = el('li', t.correct ? 'is-right' : 'is-wrong');
+                        li.appendChild(el('strong', null, t.correct ? '✓ правильно' : (t.answered ? '✗ неправильно' : '✗ без відповіді')));
+                        if (t.explain) { li.appendChild(el('p', null, t.explain)); }
+                        ol.appendChild(li);
+                    });
+                    res.appendChild(el('h3', 'bv-result__sub', 'Розбір'));
+                    res.appendChild(ol);
+                    var row = el('p', 'bv-actions');
+                    if (r.certificate) { row.appendChild(link('Грамота', 'bugville-certificate.php?c=' + encodeURIComponent(r.certificate))); }
+                    row.appendChild(link('До карти', 'bugville.php', 'bv-btn--ghost'));
+                    res.appendChild(row);
+                    if (!r.passed && r.retry_at) {
+                        res.appendChild(el('p', 'bv-muted', 'Наступна спроба — після ' + localTime(r.retry_at) + '.'));
+                    }
+                    box.appendChild(res);
+                    h.focus();
+                });
+            }
+
+            load();
+        })();
+    }
+
     // ---------- Місія ----------
     var game = document.getElementById('bv-game');
     if (!game) { return; }
