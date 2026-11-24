@@ -21,7 +21,7 @@ $account = auth_check() ? auth_current_user($pdo) : null;
 if (!bv_pages_visible($account)) {
     bv_not_found();
 }
-bv_load_missions();
+bv_load_missions($pdo);
 
 $saveId = null;
 $stars = [];

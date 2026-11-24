@@ -20,7 +20,7 @@ $account = auth_check() ? auth_current_user($pdo) : null;
 if (!bv_pages_visible($account)) {
     bv_not_found();
 }
-bv_load_missions();
+bv_load_missions($pdo);
 
 $id = filter_var($_GET['m'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
 $all = bv_world_missions();

@@ -12,14 +12,15 @@ require_once __DIR__ . '/bv-world.php';
 
 const BV_DEMO_MISSION = 900001;
 
-function bv_load_missions(): void
+/** $pdo — щоб зареєструвати місії з пулом (pool / mixed); без нього — лише генератори. */
+function bv_load_missions(?PDO $pdo = null): void
 {
     static $done = false;
     if ($done) {
         return;
     }
     $done = true;
-    bv_register_world_missions();
+    bv_register_world_missions($pdo);
     if (bv_cfg('bugville_demo') === true) {
         bv_register_mission(['id' => BV_DEMO_MISSION, 'variant_mode' => 'generator', 'generator_key' => 'vending_boundary',
             'generator_json' => ['min_from' => 1, 'min_to' => 10, 'max_from' => 20, 'max_to' => 100]]);

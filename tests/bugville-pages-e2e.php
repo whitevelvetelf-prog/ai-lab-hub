@@ -26,7 +26,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
-bv_load_missions();
+bv_load_missions($pdo);
 
 $fails = 0;
 $total = 0;

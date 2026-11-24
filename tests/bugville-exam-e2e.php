@@ -24,7 +24,7 @@ $base = rtrim($argv[1] ?? 'http://127.0.0.1:8097', '/');
 $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
-bv_load_missions();
+bv_load_missions($pdo);
 
 $fails = 0;
 $total = 0;

@@ -101,15 +101,36 @@ function bv_world_missions(): array
     return $out;
 }
 
-/** Реєструє місії світу, для яких є генератор (крок «Контент» додасть пули). */
-function bv_register_world_missions(): void
+/** Скільки активних варіантів пулу треба, щоб місія з пулом (pool / mixed) грались (план, розділ 3). */
+const BV_POOL_MIN_ACTIVE = 6;
+
+/**
+ * Реєструє місії світу, в які можна грати: generator — є генератор; pool — ≥ 6 активних варіантів; mixed — є генератор
+ * і ≥ 6 активних варіантів (без $pdo пули не перевіряються). Демо робить 1.5 «Остання монета» чистим генератором.
+ */
+function bv_register_world_missions(?PDO $pdo = null): void
 {
     $gens = bv_generators();
-    foreach (bv_world_missions() as $ms) {
-        if ($ms['generator'] !== null && isset($gens[$ms['generator']])) {
-            bv_register_mission(['id' => $ms['id'], 'variant_mode' => 'generator', 'generator_key' => $ms['generator'],
-                'generator_json' => $ms['generator_json'], 'skill' => $ms['word']]);
+    $active = [];
+    if ($pdo !== null) {
+        try {
+            $active = array_map('intval', $pdo->query("SELECT mission_id, COUNT(*) FROM bv_mission_variants WHERE status = 'active'
+                                                       GROUP BY mission_id")->fetchAll(PDO::FETCH_KEY_PAIR) ?: []);
+        } catch (Throwable) {
+            $active = [];
         }
+    }
+    foreach (bv_world_missions() as $ms) {
+        $hasGen = $ms['generator'] !== null && isset($gens[$ms['generator']]);
+        $hasPool = ($active[$ms['id']] ?? 0) >= BV_POOL_MIN_ACTIVE;
+        $mode = $ms['mode'];
+        if ($hasGen && ($mode === 'generator' || bv_cfg('bugville_demo') === true && $ms['id'] === 105)) {
+            $mode = 'generator';
+        } elseif (!($mode === 'pool' && $hasPool) && !($mode === 'mixed' && $hasGen && $hasPool)) {
+            continue;
+        }
+        bv_register_mission(['id' => $ms['id'], 'variant_mode' => $mode, 'generator_key' => $hasGen ? $ms['generator'] : null,
+            'generator_json' => $ms['generator_json'], 'skill' => $ms['word']]);
     }
 }
 

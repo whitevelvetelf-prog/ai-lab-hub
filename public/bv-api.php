@@ -62,7 +62,7 @@ try {
 } catch (Throwable) {
     bv_api_out(['ok' => false, 'error' => 'unavailable'], 503);
 }
-bv_load_missions();
+bv_load_missions($pdo);
 
 $account = auth_check() ? auth_current_user($pdo) : null;
 $accountId = $account !== null ? (int) $account['id'] : null;
