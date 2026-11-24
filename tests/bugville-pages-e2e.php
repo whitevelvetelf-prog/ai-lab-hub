@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — тест сторінок гри «Багвіль» (крок 3): bugville.php, bugville-mission.php, bugville-parents.php, register.php.
  *   php tests/bugville-pages-e2e.php [http://127.0.0.1:8097]
- * Потрібно локально: міграція № 33, у config/bugville.local.php 'bugville_demo' => true і 'bugville_public' => true.
+ * Потрібно локально: міграції № 33 і 34, сид tools/bugville-seed.php, 'bugville_public' => true у config/bugville.local.php.
  *
  * Перевіряє: коди сторінок (карта, демо-місія, місія «скоро», невідома — 404, «Для батьків» — 404 з маркером);
  * у HTML гри лише власні скрипт і стилі, без реклами, банера згоди, сторонніх доменів і зовнішніх посилань;
@@ -74,7 +74,7 @@ $csrfOf = static fn(string $html) => preg_match('/name="csrf-token" content="([a
     : (preg_match('/name="csrf" value="([a-f0-9]{64})"/', $html, $m2) === 1 ? $m2[1] : '');
 
 if (bv_mission(105) === null || bv_cfg('bugville_public') !== true) {
-    fwrite(STDERR, "set 'bugville_demo' => true and 'bugville_public' => true in config/bugville.local.php\n");
+    fwrite(STDERR, "run php tools/bugville-seed.php and set 'bugville_public' => true in config/bugville.local.php\n");
     exit(2);
 }
 
@@ -89,7 +89,9 @@ try {
     $all = bv_world_missions();
     check(count($all) === 15 && count(array_unique(array_column($all, 'word'))) === 15, '15 місій Глави 1, 15 різних чарівних слів');
     check(array_diff(array_column($all, 'word'), array_keys(BV_WORDS)) === [], 'кожне слово має вимову й значення');
-    check(bv_world_next_playable(101) === 105 && bv_world_next_playable(105) === null, 'наступна місія — лише та, в яку можна грати');
+    check(count(array_filter(array_keys($all), static fn($id) => bv_world_playable($id))) === 15, 'після сиду грабельні всі 15 місій');
+    check(bv_world_next_playable(101) === 102 && bv_world_next_playable(105) === 201 && bv_world_next_playable(305) === null,
+        'наступна місія: 1.1 → 1.2, 1.5 → 2.1, після 3.5 — немає');
     $GLOBALS['bv_cfg_override'] = ['bugville_public' => false];
     check(!bv_pages_visible(null) && !bv_pages_visible(['role' => 'user']) && bv_pages_visible(['role' => 'admin']),
         'без bugville_public сторінки бачить лише admin');
@@ -101,12 +103,13 @@ try {
     echo "Сторінки\n";
     $map = http($jar, $base . '/bugville.php');
     check($map['code'] === 200 && str_contains($map['body'], 'Остання монета'), 'карта 200, є місія 1.5');
-    check(substr_count($map['body'], 'bv-soon') >= 14, 'місії без контенту й глави 2–7 позначені «скоро»');
+    check(substr_count($map['body'], 'class="bv-soon"') === 6, '«скоро» — лише глави 2–7');
+    check(substr_count($map['body'], 'href="bugville-mission.php?m=') === 15, 'на карті 15 посилань на місії');
     $ms = http($jar, $base . '/bugville-mission.php?m=105');
-    check($ms['code'] === 200 && str_contains($ms['body'], 'data-mission="105"'), 'демо-місія 1.5 200, оболонка гри');
-    $soon = http($jar, $base . '/bugville-mission.php?m=101');
-    check($soon['code'] === 200 && str_contains($soon['body'], 'ще готується') && !str_contains($soon['body'], 'id="bv-game"'),
-        'місія 1.1 без контенту — «ще готується», без гри');
+    check($ms['code'] === 200 && str_contains($ms['body'], 'data-mission="105"') && str_contains($ms['body'], 'data-next="bugville-mission.php?m=201"'),
+        'місія 1.5 200, оболонка гри, наступна — 2.1');
+    $m101 = http($jar, $base . '/bugville-mission.php?m=101');
+    check($m101['code'] === 200 && str_contains($m101['body'], 'id="bv-game"') && !str_contains($m101['body'], 'ще готується'), 'місія 1.1 грається');
     check(http($jar, $base . '/bugville-mission.php?m=999')['code'] === 404, 'невідома місія — 404');
     check(http($jar, $base . '/bugville-mission.php?m=abc')['code'] === 404, 'місія не числом — 404');
     check(http($jar, $base . '/bugville-parents.php')['code'] === 404, '«Для батьків» — 404, поки є [ПІДТВЕРДИТИ]');
@@ -143,7 +146,7 @@ try {
     $row = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
     $row->execute([':t' => $st['token']]);
     $a = $row->fetch(PDO::FETCH_ASSOC);
-    $variant = bv_build_variant($pdo, bv_mission(105), null, $a['seed'], 'uk');
+    $variant = bv_build_variant($pdo, bv_mission(105), $a['variant_id'] !== null ? (int) $a['variant_id'] : null, $a['seed'], 'uk');
     $map105 = (array) json_decode((string) $a['opt_map_json'], true);
     $pub = (string) array_search($variant['answer']['correct'], $map105, true);
     $ck = $api($jar, $csrf, ['action' => 'check', 'token' => $st['token'], 'answer' => $pub]);

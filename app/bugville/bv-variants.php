@@ -17,6 +17,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/bv-config.php';
+require_once __DIR__ . '/bv-content.php';
 
 // ---------- Місії -----------------------------------------------------------------------------------------------
 
@@ -75,9 +76,7 @@ function bv_dict(PDO $pdo, string $dict, string $lang, array $fallback = []): ar
 /** @return array<string, callable(PDO, BvRng, array, string): array> */
 function bv_generators(): array
 {
-    return [
-        'vending_boundary' => 'bv_gen_vending_boundary',
-    ];
+    return ['vending_boundary' => 'bv_gen_vending_boundary'] + bv_content_generators();   // контент Етапу 1 — app/bugville/bv-content.php
 }
 
 /**

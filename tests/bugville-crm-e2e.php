@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — тест CRM гри «Багвіль» (крок 5): public/crm-bugville.php + app/bugville/bv-crm.php.
  *   php tests/bugville-crm-e2e.php [http://127.0.0.1:8097]
- * Потрібно локально: міграції № 33 і 34, 'bugville_demo' => true і 'bugville_public' => true; у місії 2.5 (#205) ще
- * не має бути варіантів (тест додає й прибирає свої).
+ * Потрібно локально: міграції № 33 і 34, сид tools/bugville-seed.php, 'bugville_public' => true. Посіяні варіанти 2.5 (#205)
+ * тест на час роботи вимикає й потім повертає; свої варіанти й завдання іспиту прибирає.
  *
  * Перевіряє: лише admin (гість і user — на account.php); перевірку варіанта (JSON, відповідь серед варіантів, розбір,
  * number); збереження лише з CSRF; чернетка не робить місію грабельною, 6 активних — робить (і в грі, і в CRM без
@@ -65,10 +65,13 @@ function csrf_of(string $html): string
 }
 
 const POOL_M = 205;   // 2.5 «Двічі натиснули» (pool)
-if ((int) $pdo->query('SELECT COUNT(*) FROM bv_mission_variants WHERE mission_id = ' . POOL_M)->fetchColumn() > 0) {
-    fwrite(STDERR, "mission 205 already has variants — test skipped to keep them intact\n");
-    exit(2);
-}
+// Посіяні варіанти 2.5 на час тесту вимикаються, а наприкінці отримують свої статуси назад (finally).
+$seeded = array_map('strval', $pdo->query('SELECT id, status FROM bv_mission_variants WHERE mission_id = ' . POOL_M)->fetchAll(PDO::FETCH_KEY_PAIR) ?: []);
+$seededIds = implode(',', array_map('intval', array_keys($seeded)) ?: [0]);
+$maxItem = (int) $pdo->query('SELECT COALESCE(MAX(id), 0) FROM bv_exam_items')->fetchColumn();
+$own = static fn() => array_map('intval', $pdo->query('SELECT id FROM bv_mission_variants WHERE mission_id = ' . POOL_M
+    . " AND id NOT IN ($seededIds) ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
+$pdo->exec("UPDATE bv_mission_variants SET status = 'off' WHERE id IN ($seededIds)");
 
 $tag = bin2hex(random_bytes(3));
 $pass = 'E2e-' . bin2hex(random_bytes(6));
@@ -121,21 +124,22 @@ try {
     $ja = $login($mk('admin'));
     $home = page($ja, $base . '/crm-bugville.php');
     check($home['code'] === 200 && substr_count($home['body'], 'view=mission&amp;m=') === 15, 'admin: 15 місій у списку');
-    check(str_contains($home['body'], 'менше 6 активних варіантів (0)') && str_contains($home['body'], 'немає генератора'), 'попередження «менше 6» і «немає генератора»');
+    check(str_contains($home['body'], 'менше 6 активних варіантів (0)') && str_contains($home['body'], 'Місій із попередженнями: 1 з 15'),
+        'попередження «менше 6» лише в 2.5 (її посіяні варіанти вимкнено на час тесту)');
     check(str_contains(page($ja, $base . '/account.php')['body'], 'crm-bugville.php'), 'посилання «Багвіль» у CRM кабінету адміна');
 
     echo "Варіанти місії 2.5 (пул)\n";
     $mp = page($ja, $base . '/crm-bugville.php?view=mission&m=' . POOL_M);
     $csrf = csrf_of($mp['body']);
     $noCsrf = page($ja, $base . '/crm-bugville.php', ['action' => 'save_variant', 'm' => POOL_M, 'id' => 0] + $variant(1));
-    check(str_contains($noCsrf['body'], 'застаріла') && (int) $pdo->query('SELECT COUNT(*) FROM bv_mission_variants WHERE mission_id = ' . POOL_M)->fetchColumn() === 0,
+    check(str_contains($noCsrf['body'], 'застаріла') && $own() === [],
         'без CSRF — не збережено');
     $draft = page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => 0] + $variant(1, 'duplicate', 'draft'));
     check($draft['code'] === 302 && str_contains($draft['location'], 'preview='), 'чернетку збережено, перехід до перегляду');
     for ($i = 2; $i <= 6; $i++) {
         page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => 0] + $variant($i));
     }
-    $ids = array_map('intval', $pdo->query('SELECT id FROM bv_mission_variants WHERE mission_id = ' . POOL_M . ' ORDER BY id')->fetchAll(PDO::FETCH_COLUMN));
+    $ids = $own();
     check(count($ids) === 6, '6 варіантів збережено');
     check(!str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '5 активних + чернетка — місія ще не грається');
     page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => $ids[0]] + $variant(1));
@@ -146,7 +150,7 @@ try {
     page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => $ids[5]] + $variant(6, 'counting'));
     check(str_contains(page($ja, $base . '/crm-bugville.php')['body'], 'варіанти перевіряють різне'), 'різні навички — попередження');
     page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => $ids[5]] + $variant(6, 'duplicate', 'off'));
-    $left = (int) $pdo->query('SELECT COUNT(*) FROM bv_mission_variants WHERE mission_id = ' . POOL_M)->fetchColumn();
+    $left = count($own());
     $offRow = $pdo->query('SELECT status FROM bv_mission_variants WHERE id = ' . $ids[5])->fetchColumn();
     check($left === 6 && $offRow === 'off', 'статус off — запис лишається (без видалення)');
     $pv = page($ja, $base . '/crm-bugville.php?view=mission&m=' . POOL_M . '&preview=' . $ids[1]);
@@ -172,21 +176,25 @@ try {
     $c2 = csrf_of($ex['body']);
     $r = page($ja, $base . '/crm-bugville.php', ['csrf' => $c2, 'action' => 'save_item', 'id' => 0, 'exam_id' => 9002, 'mission_id' => POOL_M, 'weight' => 99, 'status' => 'active']);
     check(str_contains($r['body'], 'Вага — від 1 до 50'), 'вага 99 — помилка');
-    page($ja, $base . '/crm-bugville.php', ['csrf' => $c2, 'action' => 'save_item', 'id' => 0, 'exam_id' => 9002, 'mission_id' => POOL_M, 'weight' => 15, 'status' => 'active']);
-    $itemIds = array_map('intval', $pdo->query('SELECT id FROM bv_exam_items WHERE exam_id = 9002 AND mission_id = ' . POOL_M)->fetchAll(PDO::FETCH_COLUMN));
-    check(count($itemIds) === 1 && str_contains(preg_replace('/\s+/u', ' ', page($ja, $base . '/crm-bugville.php?view=exams')['body']), 'Пул: 15 / потрібно 15 — іспит увімкнено'),
-        'пул 15 / 15 — іспит увімкнено');
-    page($ja, $base . '/crm-bugville.php', ['csrf' => $c2, 'action' => 'save_item', 'id' => $itemIds[0], 'exam_id' => 9002, 'mission_id' => POOL_M, 'weight' => 15, 'status' => 'off']);
-    check(str_contains(preg_replace('/\s+/u', ' ', page($ja, $base . '/crm-bugville.php?view=exams')['body']), 'Пул: 0 / потрібно 15 — іспит вимкнено'), 'завдання off — пул 0, іспит вимкнено');
+    $flat = static fn() => preg_replace('/\s+/u', ' ', page($ja, $base . '/crm-bugville.php?view=exams')['body']);
+    check(str_contains($flat(), 'Пул: 15 / потрібно 15 — іспит увімкнено'), 'посіяний пул «Пошти»: 15 / 15 — іспит увімкнено');
+    page($ja, $base . '/crm-bugville.php', ['csrf' => $c2, 'action' => 'save_item', 'id' => 0, 'exam_id' => 9002, 'mission_id' => 201, 'weight' => 4, 'status' => 'active']);
+    $itemIds = array_map('intval', $pdo->query("SELECT id FROM bv_exam_items WHERE id > $maxItem")->fetchAll(PDO::FETCH_COLUMN));
+    check(count($itemIds) === 1 && str_contains($flat(), 'Пул: 19 / потрібно 15'), 'додано завдання з вагою 4 — пул 19');
+    page($ja, $base . '/crm-bugville.php', ['csrf' => $c2, 'action' => 'save_item', 'id' => $itemIds[0], 'exam_id' => 9002, 'mission_id' => 201, 'weight' => 4, 'status' => 'off']);
+    check(str_contains($flat(), 'Пул: 15 / потрібно 15') && (int) $pdo->query('SELECT COUNT(*) FROM bv_exam_items WHERE id = ' . $itemIds[0])->fetchColumn() === 1,
+        'завдання off — пул знову 15, запис лишається');
 
     echo "Слова\n";
     $w = page($ja, $base . '/crm-bugville.php?view=words');
     check(substr_count($w['body'], '<td lang="en">') === 15 && str_contains($w['body'], 'бáундері'), '15 слів із вимовою');
 } finally {
-    $pdo->exec('DELETE FROM bv_mission_variants WHERE mission_id = ' . POOL_M);
-    foreach ($itemIds as $id) {
-        $pdo->prepare('DELETE FROM bv_exam_items WHERE id = :id')->execute([':id' => $id]);
+    $pdo->exec('DELETE FROM bv_mission_variants WHERE mission_id = ' . POOL_M . " AND id NOT IN ($seededIds)");   // лише свої
+    $restore = $pdo->prepare('UPDATE bv_mission_variants SET status = :s WHERE id = :id');
+    foreach ($seeded as $id => $status) {
+        $restore->execute([':s' => $status, ':id' => (int) $id]);
     }
+    $pdo->exec("DELETE FROM bv_exam_items WHERE id > $maxItem");
     foreach ($users as $id) {
         $pdo->prepare('DELETE FROM users WHERE id = :u')->execute([':u' => $id]);
     }

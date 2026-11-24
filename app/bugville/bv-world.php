@@ -5,7 +5,8 @@ declare(strict_types=1);
 /**
  * Багвіль — світ гри (крок 3): глави, рівні, місії й чарівні слова Етапу 1 (docs/bugville/MAIN_TASK.md, розділи 4–5).
  * Поки таблиць bv_chapters / bv_levels / bv_missions немає, структура — тут; крок «Контент» перенесе її в ідемпотентний
- * сид БД. Місія грається, лише коли для неї є генератор (bv_generators) або пул: до кроку «Контент» — лише демо.
+ * сид БД. Місія грається, коли є її генератор (app/bugville/bv-content.php), а для pool / mixed — ще й ≥ 6 активних варіантів пулу
+ * (сид tools/bugville-seed.php).
  * Тексти без слова «тестування» (MAIN_TASK, розділ 1); назви — пропозиції, які власниця може змінити.
  */
 
@@ -41,8 +42,12 @@ function bv_world(): array
     if ($world !== null) {
         return $world;
     }
+    // Генератор місії (app/bugville/bv-content.php): generator — уся поломка; mixed — числа для сюжетів пулу; pool — немає.
+    $gen = [101 => 'change_due', 102 => 'zero_qty', 103 => 'over_limit', 104 => 'negative_input', 105 => 'boundary_mix',
+        201 => 'required_field', 202 => 'email_valid', 203 => 'phone_digits', 204 => 'name_length',
+        301 => 'bad_date', 302 => 'duplicate_row', 303 => 'empty_cell', 304 => 'swapped_columns', 305 => 'report_mix'];
     $m = static fn(int $id, string $n, string $title, string $word, string $mode) =>
-        ['id' => $id, 'n' => $n, 'title' => $title, 'word' => $word, 'mode' => $mode, 'generator' => null, 'generator_json' => []];
+        ['id' => $id, 'n' => $n, 'title' => $title, 'word' => $word, 'mode' => $mode, 'generator' => $gen[$id] ?? null, 'generator_json' => []];
     $world = [
         ['id' => 1, 'path' => 'Junior', 'title' => 'Перші поломки', 'access' => 'free', 'status' => 'open', 'levels' => [
             ['id' => 1, 'icon' => 'vending', 'title' => 'Автомат', 'intro' => 'Торговий автомат приймає монети, рахує решту й видає смаколики. Іноді він помиляється.',
@@ -77,12 +82,6 @@ function bv_world(): array
         ['id' => 6, 'path' => 'Senior', 'title' => 'Команда й ризики', 'access' => 'paid', 'status' => 'soon', 'levels' => []],
         ['id' => 7, 'path' => 'Senior', 'title' => 'Якість усього продукту', 'access' => 'paid', 'status' => 'soon', 'levels' => []],
     ];
-    // Демо (лише 'bugville_demo' => true): зразковий генератор межі автомата грається як місія 1.5 «Остання монета».
-    if (bv_cfg('bugville_demo') === true) {
-        $world[0]['levels'][0]['missions'][4]['generator'] = 'vending_boundary';
-        $world[0]['levels'][0]['missions'][4]['generator_json'] = ['min_from' => 1, 'min_to' => 10, 'max_from' => 20, 'max_to' => 100];
-    }
-
     return $world;
 }
 
@@ -106,7 +105,7 @@ const BV_POOL_MIN_ACTIVE = 6;
 
 /**
  * Реєструє місії світу, в які можна грати: generator — є генератор; pool — ≥ 6 активних варіантів; mixed — є генератор
- * і ≥ 6 активних варіантів (без $pdo пули не перевіряються). Демо робить 1.5 «Остання монета» чистим генератором.
+ * і ≥ 6 активних варіантів (без $pdo пули не перевіряються).
  */
 function bv_register_world_missions(?PDO $pdo = null): void
 {
@@ -124,9 +123,10 @@ function bv_register_world_missions(?PDO $pdo = null): void
         $hasGen = $ms['generator'] !== null && isset($gens[$ms['generator']]);
         $hasPool = ($active[$ms['id']] ?? 0) >= BV_POOL_MIN_ACTIVE;
         $mode = $ms['mode'];
-        if ($hasGen && ($mode === 'generator' || bv_cfg('bugville_demo') === true && $ms['id'] === 105)) {
-            $mode = 'generator';
-        } elseif (!($mode === 'pool' && $hasPool) && !($mode === 'mixed' && $hasGen && $hasPool)) {
+        if ($mode === 'generator' && !$hasGen) {
+            continue;
+        }
+        if ($mode !== 'generator' && !($mode === 'pool' && $hasPool) && !($mode === 'mixed' && $hasGen && $hasPool)) {
             continue;
         }
         bv_register_mission(['id' => $ms['id'], 'variant_mode' => $mode, 'generator_key' => $hasGen ? $ms['generator'] : null,

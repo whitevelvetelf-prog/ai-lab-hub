@@ -174,6 +174,12 @@ function bv_crm_preview(PDO $pdo, array $missionDef, ?int $variantId, ?string $s
     if ($mode === 'mixed' && ($missionDef['generator'] === null || !isset(bv_generators()[$missionDef['generator']]))) {
         $mission['variant_mode'] = 'pool';   // без генератора — показуємо як пул, {{плейсхолдери}} лишаються видимими
     }
+    if ($mode === 'mixed' && $variantId === null) {
+        // Лише seed: сюжет пулу обирається детерміновано від seed (той самий seed — той самий варіант).
+        $ids = array_map('intval', $pdo->query("SELECT id FROM bv_mission_variants WHERE mission_id = " . (int) $missionDef['id']
+            . " AND status = 'active' ORDER BY id")->fetchAll(PDO::FETCH_COLUMN));
+        $variantId = $ids === [] ? null : $ids[(new BvRng((string) $seed))->int(0, count($ids) - 1)];
+    }
     $v = bv_build_variant($pdo, $mission, $variantId, $mode === 'pool' ? null : $seed, 'uk');
     if ($v === null) {
         return null;

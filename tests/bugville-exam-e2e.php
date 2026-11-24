@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * AI LAB HUB — тест іспитів «Багвіля» (крок 4): bv-api.php (exam_*), bugville-exam.php, bugville-certificate.php, карта.
  *   php tests/bugville-exam-e2e.php [http://127.0.0.1:8097]
- * Потрібно локально: міграції № 33 і 34, 'bugville_demo' => true і 'bugville_public' => true у config/bugville.local.php.
+ * Потрібно локально: міграції № 33 і 34, сид tools/bugville-seed.php, 'bugville_public' => true у config/bugville.local.php.
  *
  * Перевіряє: замалий пул (< 3 × завдань) — іспит вимкнено; гість і акаунт без 16+ — 403; 5 завдань без відповідей у JSON;
  * продовження — ті самі завдання; повторна відповідь — 409; 4 з 5 → 80%, складено, +50 XP, +30 монет, грамота; повторне
@@ -82,6 +82,9 @@ function right_answer(PDO $pdo, string $token, int $n): string
     $st->execute([':t' => $token, ':n' => $n]);
     $t = $st->fetch(PDO::FETCH_ASSOC);
     $v = bv_build_variant($pdo, bv_mission((int) $t['mission_id']), $t['variant_id'] !== null ? (int) $t['variant_id'] : null, $t['seed'], 'uk');
+    if (($v['answer']['type'] ?? '') === 'number') {
+        return (string) $v['answer']['value'];   // 1.1 — гравець вводить число
+    }
 
     return (string) array_search($v['answer']['correct'], (array) json_decode((string) $t['opt_map_json'], true), true);
 }
@@ -92,6 +95,9 @@ function wrong_answer(PDO $pdo, string $token, int $n): string
     $st->execute([':t' => $token, ':n' => $n]);
     $ids = array_keys((array) json_decode((string) $st->fetchColumn(), true));
     $right = right_answer($pdo, $token, $n);
+    if ($ids === []) {
+        return (string) ((int) $right + 1);   // число: на одиницю більше
+    }
 
     return (string) current(array_filter($ids, static fn($i) => (string) $i !== $right));
 }
@@ -129,23 +135,20 @@ $newJar = static function () use (&$jars): string {
 };
 
 try {
-    $existing = (int) $pdo->query('SELECT COUNT(*) FROM bv_exam_items WHERE exam_id = ' . EXAM)->fetchColumn();
-    if ($existing > 0) {
-        fwrite(STDERR, "bv_exam_items already has rows for exam 9001 — test skipped to keep them intact\n");
-        exit(2);
-    }
-
-    echo "Пул\n";
-    check(!bv_exam_pool($pdo, EXAM)['ok'], 'без завдань у пулі іспит вимкнено');
+    echo "Пул (тестовий іспит 9099, напряму)\n";
+    $GLOBALS['bv_exam_extra'][9099] = ['id' => 99, 'title' => 'Тест', 'missions' => []];
+    check(!bv_exam_pool($pdo, 9099)['ok'], 'без завдань у пулі іспит вимкнено');
     $ins = $pdo->prepare("INSERT INTO bv_exam_items (exam_id, mission_id, lang, weight, status, created_at) VALUES (:e, :m, 'uk', :w, 'active', :t)");
-    $ins->execute([':e' => EXAM, ':m' => 105, ':w' => 14, ':t' => bv_now()]);
+    $ins->execute([':e' => 9099, ':m' => 105, ':w' => 14, ':t' => bv_now()]);
     $itemIds[] = (int) $pdo->lastInsertId();
-    $ins->execute([':e' => EXAM, ':m' => 101, ':w' => 10, ':t' => bv_now()]);   // місія без контенту — не рахується
+    $ins->execute([':e' => 9099, ':m' => 990999, ':w' => 10, ':t' => bv_now()]);   // місії, в яку не можна грати, — не рахується
     $itemIds[] = (int) $pdo->lastInsertId();
-    $p = bv_exam_pool($pdo, EXAM);
+    $p = bv_exam_pool($pdo, 9099);
     check(!$p['ok'] && $p['weight'] === 14 && $p['need'] === 15, 'вага 14 < 15 (місія без контенту не рахується) — вимкнено');
     $pdo->prepare('UPDATE bv_exam_items SET weight = 15 WHERE id = :id')->execute([':id' => $itemIds[0]]);
-    check(bv_exam_pool($pdo, EXAM)['ok'], 'вага 15 = 3 × 5 — іспит увімкнено');
+    check(bv_exam_pool($pdo, 9099)['ok'], 'вага 15 = 3 × 5 — іспит увімкнено');
+    $seeded = bv_exam_pool($pdo, EXAM);
+    check($seeded['ok'] && count($seeded['items']) === 5, 'іспит 9001 після сиду: 5 місій рівня, пул увімкнено');
 
     echo "Доступ\n";
     $g = $newJar();
