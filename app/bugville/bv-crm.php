@@ -8,6 +8,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/bv-exam.php';
+require_once __DIR__ . '/bv-progress.php';
 
 const BV_MIN_POOL_VARIANTS = 6;
 
@@ -242,4 +243,77 @@ function bv_crm_save_exam_item(PDO $pdo, int $id, array $in): array
     }
 
     return [];
+}
+
+// ---------- Звання й значки (MAIN_TASK, розділ 12: редагування порогів звань і значків) ----------------------------
+
+/**
+ * Зберігає назви й пороги звань. $rows: rank_key => ['title' => …, 'min_xp' => …]. Правила: усі наявні звання,
+ * назва 1–80 символів, найнижчий поріг — 0, пороги різні. @return list<string> помилки
+ */
+function bv_crm_save_ranks(PDO $pdo, array $rows): array
+{
+    $known = array_column(bv_ranks($pdo), 'key');
+    $clean = [];
+    foreach ($known as $key) {
+        $r = $rows[$key] ?? null;
+        $title = trim((string) ($r['title'] ?? ''));
+        $min = filter_var($r['min_xp'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 1000000]]);
+        if ($title === '' || mb_strlen($title) > 80 || $min === false) {
+            return ['Кожне звання: назва 1–80 символів і поріг XP — ціле число від 0.'];
+        }
+        $clean[$key] = ['title' => $title, 'min_xp' => (int) $min];
+    }
+    $mins = array_column($clean, 'min_xp');
+    if ($mins === [] || min($mins) !== 0 || count(array_unique($mins)) !== count($mins)) {
+        return ['Найнижчий поріг має бути 0, а пороги — різними.'];
+    }
+    $st = $pdo->prepare("UPDATE bv_ranks SET title = :t, min_xp = :x, updated_at = :u WHERE rank_key = :k AND lang = 'uk'");
+    foreach ($clean as $key => $r) {
+        $st->execute([':t' => $r['title'], ':x' => $r['min_xp'], ':u' => bv_now(), ':k' => $key]);
+    }
+
+    return [];
+}
+
+/** Зберігає назву, опис, поріг і статус значка ({n} у текстах — поріг). @return list<string> помилки */
+function bv_crm_save_badge(PDO $pdo, string $key, array $in): array
+{
+    $st = $pdo->prepare("SELECT param FROM bv_badges WHERE badge_key = :k AND lang = 'uk'");
+    $st->execute([':k' => $key]);
+    $row = $st->fetch(PDO::FETCH_ASSOC);
+    if ($row === false) {
+        return ['Невідомий значок.'];
+    }
+    $title = trim((string) ($in['title'] ?? ''));
+    $desc = trim((string) ($in['description'] ?? ''));
+    $status = (string) ($in['status'] ?? 'active');
+    if ($title === '' || mb_strlen($title) > 80 || $desc === '' || mb_strlen($desc) > 255) {
+        return ['Назва 1–80 і опис 1–255 символів.'];
+    }
+    if (!in_array($status, ['active', 'off'], true)) {
+        return ['Статус — active або off.'];
+    }
+    $param = null;
+    if ($row['param'] !== null) {
+        $param = filter_var($in['param'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1, 'max_range' => 365]]);
+        if ($param === false) {
+            return ['Поріг — ціле число від 1 до 365.'];
+        }
+    }
+    $pdo->prepare("UPDATE bv_badges SET title = :t, description = :d, param = :p, status = :s, updated_at = :u WHERE badge_key = :k AND lang = 'uk'")
+        ->execute([':t' => $title, ':d' => $desc, ':p' => $param, ':s' => $status, ':u' => bv_now(), ':k' => $key]);
+
+    return [];
+}
+
+/** Сирі рядки значків для форми CRM (з {n}, без підстановки). */
+function bv_crm_badges_raw(PDO $pdo): array
+{
+    try {
+        return $pdo->query("SELECT badge_key, title, description, param, status FROM bv_badges WHERE lang = 'uk' ORDER BY sort, badge_key")
+            ->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    } catch (Throwable) {
+        return [];
+    }
 }

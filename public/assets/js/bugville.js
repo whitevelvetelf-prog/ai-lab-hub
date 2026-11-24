@@ -28,6 +28,19 @@
         toast.timer = setTimeout(function () { t.hidden = true; }, 3000);
     }
 
+    /** Новини прогресу акаунта (звання, значки) з відповіді API (r.progress) — елемент або null. */
+    function progressNews(p) {
+        if (!p) { return null; }
+        var lines = [];
+        if (p.rank_up && p.rank) { lines.push('🎖 Нове звання: ' + p.rank.title + '!'); }
+        (p.new_badges || []).forEach(function (b) { lines.push('★ Новий значок: ' + b.title + ' — ' + b.description); });
+        if (!lines.length) { return null; }
+        var box = el('div', 'bv-news');
+        box.setAttribute('role', 'status');
+        lines.forEach(function (t) { box.appendChild(el('p', null, t)); });
+        return box;
+    }
+
     // ---------- Шапка ----------
     var back = document.querySelector('.bv-back');
     if (back) {
@@ -269,6 +282,8 @@
                     if (r.earned && r.earned.xp > 0) {
                         res.appendChild(el('p', 'bv-reward', 'Збережено: +' + r.earned.xp + ' XP, +' + r.earned.coins + ' монет'));
                     }
+                    var newsE = progressNews(r.progress);
+                    if (newsE) { res.appendChild(newsE); }
                     var ol = el('ol', 'bv-exam-results');
                     (r.results || []).forEach(function (t) {
                         var li = el('li', t.correct ? 'is-right' : 'is-wrong');
@@ -528,6 +543,8 @@
             res.appendChild(wc);
         }
         reward(res, r);
+        var newsM = progressNews(r.progress);
+        if (newsM) { res.appendChild(newsM); }
 
         var row = el('p', 'bv-actions');
         var again = el('button', 'bv-btn' + (r.correct && nextUrl ? ' bv-btn--ghost' : ''), r.correct ? 'Ще раз (новий варіант)' : 'Спробувати ще (новий варіант)');

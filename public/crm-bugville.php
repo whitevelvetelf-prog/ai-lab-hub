@@ -68,6 +68,22 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
             exit;
         }
         $view = 'exams';
+    } elseif ($action === 'save_ranks') {
+        $errors = bv_crm_save_ranks($pdo, (array) ($_POST['rank'] ?? []));
+        if ($errors === []) {
+            $_SESSION['bv_crm_flash'] = 'Звання збережено.';
+            header('Location: crm-bugville.php?view=progress');
+            exit;
+        }
+        $view = 'progress';
+    } elseif ($action === 'save_badge') {
+        $errors = bv_crm_save_badge($pdo, (string) ($_POST['key'] ?? ''), $_POST);
+        if ($errors === []) {
+            $_SESSION['bv_crm_flash'] = 'Значок збережено.';
+            header('Location: crm-bugville.php?view=progress');
+            exit;
+        }
+        $view = 'progress';
     } else {
         $errors[] = 'Невідома дія.';
     }
@@ -97,7 +113,7 @@ $adminPanel = static function (array $pv) use ($e): string {
         . ($pv['hint'] !== '' ? '<p><strong>Підказка:</strong> ' . $e($pv['hint']) . '</p>' : '')
         . '<p class="rep__note">Ключ варіанта: ' . $e($pv['key']) . ($pv['seed'] !== null ? ' · seed ' . $e($pv['seed']) : '') . '</p></div>';
 };
-$tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'words' => 'Слова'];
+$tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => 'Звання й значки', 'words' => 'Слова'];
 ?>
 <!DOCTYPE html>
 <html lang="uk">
@@ -281,6 +297,40 @@ $tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'words' => 'Сл
             <button class="rep-btn" type="submit">Додати</button>
         </form>
     <?php endforeach; endforeach; ?>
+
+<?php elseif ($view === 'progress'): $ranks = bv_ranks($pdo); $badgesRaw = bv_crm_badges_raw($pdo); ?>
+    <h2 class="rep__h2">Звання за XP</h2>
+    <p class="rep__note">Звання гравця — найвище, поріг якого не більший за його XP. Найнижчий поріг — 0.</p>
+    <form class="bvc-form" method="post" action="crm-bugville.php">
+        <?= csrf_field() ?><input type="hidden" name="action" value="save_ranks">
+        <div class="rep-table-wrap"><table class="rep-table">
+            <thead><tr><th>Назва</th><th>Від XP</th></tr></thead>
+            <tbody>
+            <?php foreach ($ranks as $r): ?>
+                <tr>
+                    <td><input name="rank[<?= $e($r['key']) ?>][title]" maxlength="80" value="<?= $e($r['title']) ?>" aria-label="Назва звання"></td>
+                    <td><input type="number" min="0" name="rank[<?= $e($r['key']) ?>][min_xp]" value="<?= (int) $r['min_xp'] ?>" aria-label="Поріг XP"></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table></div>
+        <p><button class="rep-btn" type="submit">Зберегти звання</button></p>
+    </form>
+
+    <h2 class="rep__h2">Значки</h2>
+    <p class="rep__note">Умову значка задає код; тут — назва, опис, поріг (де він є; {n} у тексті підставляє поріг) і статус.
+        Вимкнений значок більше не видається, але в тих, хто його вже має, лишається.</p>
+    <?php if ($badgesRaw === []): ?><p class="bvc-warn">Значків немає: виконайте міграцію № 36 і сид tools/bugville-seed.php.</p><?php endif; ?>
+    <?php foreach ($badgesRaw as $b): ?>
+        <form class="bvc-form bvc-inline" method="post" action="crm-bugville.php" style="margin-bottom: 10px">
+            <?= csrf_field() ?><input type="hidden" name="action" value="save_badge"><input type="hidden" name="key" value="<?= $e($b['badge_key']) ?>">
+            <label>Назва <code><?= $e($b['badge_key']) ?></code><input name="title" maxlength="80" value="<?= $e($b['title']) ?>"></label>
+            <label style="flex-basis: 280px">Опис<input name="description" maxlength="255" value="<?= $e($b['description']) ?>"></label>
+            <?php if ($b['param'] !== null): ?><label>Поріг<input type="number" min="1" max="365" name="param" value="<?= (int) $b['param'] ?>"></label><?php endif; ?>
+            <label>Статус<select name="status"><option value="active"<?= $b['status'] === 'active' ? ' selected' : '' ?>>active</option><option value="off"<?= $b['status'] === 'off' ? ' selected' : '' ?>>off</option></select></label>
+            <button class="rep-btn" type="submit">Зберегти</button>
+        </form>
+    <?php endforeach; ?>
 
 <?php elseif ($view === 'words'): ?>
     <div class="rep-table-wrap"><table class="rep-table">

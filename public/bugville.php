@@ -12,6 +12,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
+require_once __DIR__ . '/../app/bugville/bv-progress.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
 
@@ -29,12 +30,25 @@ $totals = ['xp' => 0, 'stars' => 0, 'coins' => 0];
 try {
     $saveId = $account !== null && bv_age_confirmed($pdo, (int) $account['id']) ? (int) $account['id'] : null;
     if ($saveId !== null) {
-        bv_credit_guest_session($pdo, $saveId);   // щойно ввійшли після гри гостем — зарахувати сеанс до показу карти
+        $cr = bv_credit_guest_session($pdo, $saveId);   // щойно ввійшли після гри гостем — зарахувати сеанс до показу карти
+        $credXp = (int) ($cr['xp'] ?? 0);
     }
     $stars = bv_stars_by_mission($pdo, $saveId);
     $totals = $saveId !== null ? bv_totals($pdo, $saveId) : bv_guest_totals();
 } catch (Throwable $e) {
     error_log('[bugville] map progress: ' . get_class($e));
+}
+// Звання, серія, значки (міграція № 36) — лише акаунтам 16+; без таблиць — блок не показується.
+$prog = null;
+if ($saveId !== null) {
+    try {
+        if (($cr['credited'] ?? 0) > 0) {
+            bv_progress_update($pdo, $saveId, $totals['xp'] - $credXp, true);   // значки й серія за зарахований сеанс
+        }
+        $prog = bv_progress_summary($pdo, $saveId);
+    } catch (Throwable $e) {
+        error_log('[bugville] map rank/badges: ' . get_class($e));
+    }
 }
 
 $world = bv_world();
@@ -85,12 +99,39 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
             <div><dt>Зірки</dt><dd><?= (int) $totals['stars'] ?></dd></div>
             <?php if ($saveId !== null): ?><div><dt>Монети</dt><dd><?= (int) $totals['coins'] ?></dd></div><?php endif; ?>
         </dl>
+        <?php if ($prog !== null): $pct = $prog['next'] === null ? 100
+            : (int) round(100 * ($prog['xp'] - $prog['rank']['min_xp']) / max(1, $prog['next']['min_xp'] - $prog['rank']['min_xp'])); ?>
+            <div class="bv-rank">
+                <p class="bv-rank__title">Звання: <strong><?= bv_h($prog['rank']['title']) ?></strong></p>
+                <div class="bv-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<?= $pct ?>"
+                     aria-label="<?= $prog['next'] === null ? 'Найвище звання' : 'До звання «' . bv_h($prog['next']['title']) . '»' ?>"><span style="width: <?= $pct ?>%"></span></div>
+                <p class="bv-muted"><?= $prog['next'] === null ? 'Це найвище звання Глави 1.'
+                    : 'Ще ' . (int) $prog['to_next'] . ' XP до звання «' . bv_h($prog['next']['title']) . '».' ?>
+                    Серія: <?= (int) $prog['streak']['current'] ?> дн. (рекорд <?= (int) $prog['streak']['best'] ?>).</p>
+            </div>
+        <?php endif; ?>
         <?php if ($saveId === null): ?>
             <p class="bv-note"><?= $account === null
                 ? 'Грати можна без реєстрації. Результати цього сеансу зберігаються, лише якщо ввійти в акаунт (від ' . bv_min_age() . ' років).'
-                : 'Щоб зберігати прогрес, підтвердьте вік у будь-якій місії (від ' . bv_min_age() . ' років). Поки що результати лише цього сеансу.' ?></p>
+                : 'Щоб зберігати прогрес, підтвердьте вік у будь-якій місії (від ' . bv_min_age() . ' років). Поки що результати лише цього сеансу.' ?>
+                Звання, значки й щоденна серія — теж для акаунтів.</p>
         <?php endif; ?>
     </section>
+
+    <?php if ($prog !== null && $prog['badges'] !== []): $got = count(array_filter($prog['badges'], static fn($b) => $b['earned'])); ?>
+        <section class="bv-card" aria-labelledby="bv-badges-h">
+            <h2 class="bv-chapter__title" id="bv-badges-h" style="margin-top: 0">Значки: <?= $got ?> з <?= count($prog['badges']) ?></h2>
+            <ul class="bv-badges">
+                <?php foreach ($prog['badges'] as $b): ?>
+                    <li class="bv-badge-item<?= $b['earned'] ? ' is-earned' : '' ?>">
+                        <span class="bv-badge-item__icon" aria-hidden="true"><?= $b['earned'] ? '★' : '☆' ?></span>
+                        <span><strong><?= bv_h($b['title']) ?></strong><br><span class="bv-muted"><?= bv_h($b['description']) ?></span>
+                            <span class="bv-sr"><?= $b['earned'] ? '(отримано)' : '(ще ні)' ?></span></span>
+                    </li>
+                <?php endforeach; ?>
+            </ul>
+        </section>
+    <?php endif; ?>
 
     <?php if ($ch1Done): ?>
         <section class="bv-card bv-reveal" aria-labelledby="bv-reveal-h">

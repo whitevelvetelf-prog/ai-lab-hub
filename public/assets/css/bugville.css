@@ -166,6 +166,24 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 .bv-age { border-color: var(--bv-brand); }
 .bv-age p { margin-top: 0; }
 
+/* Звання, серія, значки */
+.bv-rank { margin: 8px 0 4px; }
+.bv-rank__title { margin: 0 0 6px; }
+.bv-bar { height: 10px; border-radius: 999px; background: #dfe0f2; overflow: hidden; }
+.bv-bar span { display: block; height: 100%; background: var(--bv-brand); border-radius: 999px; }
+.bv-rank .bv-muted { margin: 6px 0 0; font-size: 14px; }
+.bv-badges { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.bv-badge-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--bv-line); background: #f7f7fb; }
+.bv-badge-item .bv-muted { font-size: 14px; }
+.bv-badge-item__icon { flex: 0 0 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font-size: 20px; background: #e6e6ef; color: #8a8ca8; }
+.bv-badge-item.is-earned { background: #fff; border-color: var(--bv-brand); }
+.bv-badge-item.is-earned .bv-badge-item__icon { background: var(--bv-brand); color: #f2c94c; }
+.bv-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.bv-news { margin: 10px 0 0; padding: 10px 12px; border-radius: 12px; background: #fff7df; border: 1px solid #f0dc9a; }
+.bv-news p { margin: 0; }
+.bv-news p + p { margin-top: 4px; }
+
 /* Іспит і грамота */
 .bv-badge.is-ok { background: var(--bv-good-bg); color: var(--bv-good); }
 .bv-link44 { display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; font-weight: 600; }

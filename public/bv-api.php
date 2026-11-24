@@ -25,6 +25,7 @@ require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
+require_once __DIR__ . '/../app/bugville/bv-progress.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -86,11 +87,29 @@ if ($credited !== null && ($credited['credited'] > 0 || $credited['skipped'] > 0
     $who['credited'] = $credited;
 }
 
+/**
+ * Звання, нові значки й серія після дії акаунта (app/bugville/bv-progress.php). Без таблиць міграції № 36 — null,
+ * гра працює й без них. $active — день активності для серії (правильна відповідь, завершений іспит, зарахований сеанс).
+ */
+$progress = static function (int $uid, int $xpBefore, bool $active) use ($pdo): ?array {
+    try {
+        return bv_progress_update($pdo, $uid, $xpBefore, $active);
+    } catch (Throwable $e) {
+        error_log('[bugville] progress: ' . get_class($e));
+
+        return null;
+    }
+};
+$xpNow = static fn(int $uid): int => bv_totals($pdo, $uid)['xp'];
+
 switch ($action) {
     case 'state':
     case 'confirm_age':
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
+            if (($credited['credited'] ?? 0) > 0) {
+                $who['progress'] = $progress((int) $ctx['user_id'], $who['totals']['xp'] - (int) $credited['xp'], true);
+            }
         }
         bv_api_out(['ok' => true] + $who);
 
@@ -123,6 +142,7 @@ switch ($action) {
         if ($token === '' || !(is_string($answer) || is_int($answer) || is_float($answer) || is_array($answer))) {
             bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
         }
+        $xpBefore = $ctx['user_id'] !== null ? $xpNow((int) $ctx['user_id']) : 0;
         $r = bv_check_and_reward($pdo, $token, $answer, $ctx);
         if (!$r['ok']) {
             $codes = ['rate_limited' => 429, 'not_found' => 404, 'forbidden' => 404, 'expired' => 410, 'bad_answer' => 400];
@@ -130,6 +150,9 @@ switch ($action) {
         }
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
+            if (empty($r['repeat']) && !empty($r['saved'])) {
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, !empty($r['correct']));
+            }
         }
         bv_api_out($r + $who);
 
@@ -170,7 +193,11 @@ switch ($action) {
             }
             $r = bv_exam_answer($pdo, $token, (int) $n, $answer, $ctx);
         } else {
+            $xpBefore = $xpNow((int) $ctx['user_id']);
             $r = bv_exam_finish($pdo, $token, $ctx);
+            if ($r['ok'] && empty($r['repeat'])) {
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, true);
+            }
         }
         if (!$r['ok']) {
             $codes = ['rate_limited' => 429, 'not_found' => 404, 'expired' => 410, 'bad_answer' => 400, 'auth_required' => 403,
