@@ -18,6 +18,7 @@
  */
 
 require_once __DIR__ . '/marketplace.php';
+require_once __DIR__ . '/bugville/bv-config.php';   // bugville_public — чи показувати «Власні продукти» → «Ігри» → «Багвіль»
 
 ?>
 <header class="site-header">
@@ -28,6 +29,26 @@ require_once __DIR__ . '/marketplace.php';
         <a class="site-nav__link" href="index.php"><?= htmlspecialchars(t('nav_home'), ENT_QUOTES) ?></a>
         <?php if (mp_public_nav_visible()): ?>
         <a class="site-nav__link" href="marketplace.php"><?= htmlspecialchars(t('nav_marketplace'), ENT_QUOTES) ?></a>
+        <?php endif; ?>
+        <?php
+        // «Власні продукти» → «Ігри» → «Багвіль». Пункт показується лише тим, хто може відкрити гру: усім, коли
+        // bugville_public = true, інакше лише admin (гостю посилання вело б на 404). <details> працює й без JS;
+        // закриття кліком поза меню / Escape — assets/js/site-nav-group.js.
+        $navBugville = bv_cfg('bugville_public') === true || auth_role() === 'admin';
+        ?>
+        <?php if ($navBugville): ?>
+        <details class="site-nav__group">
+            <summary class="site-nav__link site-nav__group-toggle"><?= htmlspecialchars(t('nav_own_products'), ENT_QUOTES) ?>
+                <svg class="site-nav__chevron" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </summary>
+            <div class="site-nav__menu">
+                <p class="site-nav__menu-title" id="siteNavGames"><?= htmlspecialchars(t('nav_games'), ENT_QUOTES) ?></p>
+                <ul class="site-nav__sub" aria-labelledby="siteNavGames">
+                    <li><a class="site-nav__sublink" href="bugville.php"><?= htmlspecialchars(t('nav_bugville'), ENT_QUOTES) ?></a></li>
+                </ul>
+            </div>
+        </details>
+        <script src="/assets/js/site-nav-group.js?v=<?= (int) @filemtime(__DIR__ . '/../public/assets/js/site-nav-group.js') ?>" defer></script>
         <?php endif; ?>
         <?php if (auth_check()): ?>
         <?php

@@ -388,6 +388,94 @@ require_once __DIR__ . '/ai-statement.php';   // «Як ми використо�
         flex-shrink: 0;
     }
 
+    /* ===== Розкривний пункт меню «Власні продукти» → «Ігри» → «Багвіль» (app/site-header.php) =====
+       <details>: на комп'ютері — панель під пунктом, у мобільному меню (≤ 768px) — розкривається на місці. */
+    .site-nav__group {
+        position: relative;
+    }
+
+    .site-nav__group > summary {
+        list-style: none;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .site-nav__group > summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .site-nav__group > summary:focus-visible {
+        outline: 2px solid #ffffff;
+        outline-offset: 2px;
+    }
+
+    .site-nav__chevron {
+        flex-shrink: 0;
+        transition: transform 0.15s ease;
+    }
+
+    .site-nav__group[open] > summary {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .site-nav__group[open] .site-nav__chevron {
+        transform: rotate(180deg);
+    }
+
+    .site-nav__menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        z-index: 60;
+        min-width: 220px;
+        padding: 10px;
+        border-radius: 14px;
+        background: #0b0f4a;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .site-nav__menu-title {
+        margin: 2px 10px 6px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.55);
+    }
+
+    .site-nav__sub {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+    }
+
+    .site-nav__sublink {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        box-sizing: border-box;
+        padding: 0 12px 0 22px;
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.85);
+    }
+
+    .site-nav__sublink:hover,
+    .site-nav__sublink:focus-visible {
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .site-nav__chevron {
+            transition: none;
+        }
+    }
+
     /* Мобільна шапка (< 768px): «Головна / Кабінет / Увійти» — у гамбургер.
        Повний набір правил нижче, після базових стилів перемикача мови
        (щоб перебивати їх за рівної специфічності). */
@@ -1232,6 +1320,27 @@ require_once __DIR__ . '/ai-statement.php';   // «Як ми використо�
             padding: 0 14px;
             border-radius: 10px;
             font-size: 1rem;
+        }
+
+        /* «Власні продукти» у мобільному меню: розкривається на місці, без плаваючої панелі. */
+        .site-header .site-nav .site-nav__group > summary {
+            width: 100%;
+        }
+
+        .site-header .site-nav .site-nav__chevron {
+            margin-left: auto;
+        }
+
+        .site-header .site-nav .site-nav__menu {
+            position: static;
+            min-width: 0;
+            margin: 2px 0 4px 14px;
+            padding: 4px 0 4px 10px;
+            border: 0;
+            border-left: 2px solid rgba(255, 255, 255, 0.18);
+            border-radius: 0;
+            background: transparent;
+            box-shadow: none;
         }
 
         /* order: -1 — базові правила .site-lang для ≤ 480px ставлять order: 3 (перемикач у шапці). */
