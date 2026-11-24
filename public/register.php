@@ -39,11 +39,22 @@ function e(mixed $value): string
 $errors = [];
 $old = ['name' => '', 'email' => ''];
 
+// Реєстрація з гри «Багвіль» (next=bugville…): необовʼязковий чекбокс «Мені виповнилося N років» → bv_players.
+// Без нього акаунт грає як гість, доки не підтвердить вік у самій грі.
+$bvFromGame = str_starts_with((string) ($_SESSION['after_login_next'] ?? ''), 'bugville');
+$bvMinAge = 16;
+if ($bvFromGame) {
+    require_once __DIR__ . '/../app/bugville/bv-player.php';
+    $bvMinAge = bv_min_age();
+}
+$bvAge = false;
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $old['name'] = trim((string) ($_POST['name'] ?? ''));
     $old['email'] = trim((string) ($_POST['email'] ?? ''));
     $password = (string) ($_POST['password'] ?? '');
     $passwordConfirm = (string) ($_POST['password_confirm'] ?? '');
+    $bvAge = $bvFromGame && ($_POST['bv_age'] ?? '') === '1';
 
     if ($old['name'] === '') {
         $errors[] = t('err_name_required');
@@ -91,6 +102,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $newUserId = (int) $pdo->lastInsertId();
             acq_signup_record($pdo, $newUserId);   // реєстрація з реклами ?ref=house-… → ad_house_signups
             auth_login(['id' => $newUserId, 'role' => 'user']);
+            if ($bvAge) {
+                try {
+                    bv_confirm_age($pdo, $newUserId);
+                } catch (Throwable $bvEx) {
+                    error_log('[bugville] confirm age on register: ' . get_class($bvEx));   // таблиць гри немає — підтвердить у грі
+                }
+            }
 
             header('Location: ' . auth_after_login_url());
             exit;
@@ -367,6 +385,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <button type="button" class="pw-toggle" data-pw-toggle="password_confirm" aria-label="<?= htmlspecialchars(t('pw_show_aria'), ENT_QUOTES) ?>"><?= htmlspecialchars(t('pw_show'), ENT_QUOTES) ?></button>
                     </div>
                 </div>
+                <?php if ($bvFromGame): ?>
+                <div class="field">
+                    <label class="field__check" style="display:flex;gap:10px;align-items:flex-start;min-height:44px;cursor:pointer">
+                        <input type="checkbox" name="bv_age" value="1" style="width:22px;height:22px;margin-top:2px;flex:0 0 22px"<?= $bvAge ? ' checked' : '' ?>>
+                        <span>Мені виповнилося <?= (int) $bvMinAge ?> років — зберігати мій прогрес у грі «Багвіль»</span>
+                    </label>
+                </div>
+                <?php endif; ?>
                 <button type="submit" class="btn btn--primary btn--block"><?= htmlspecialchars(t('action_register'), ENT_QUOTES) ?></button>
             </form>
 

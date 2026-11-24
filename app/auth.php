@@ -154,6 +154,7 @@ const AUTH_NEXT_PAGES = [
     'marketplace-my.php', 'marketplace-offer.php', 'offer.php', 'asset-post.php', 'asset.php', 'assets.php',
     'mp-verify-email.php', 'advertise.php', 'saved.php', 'mp-favorites.php', 'marketplace-favorites.php',
     'mp-thread.php', 'mp-messages.php', 'mp-notify-settings.php',
+    'bugville.php', 'bugville-mission.php',   // гра «Багвіль»: після входу — назад у ту саму місію
 ];
 
 /**

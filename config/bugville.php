@@ -31,7 +31,10 @@ return [
     'bugville_exam_retry_minutes' => 60,
     'bugville_exam_xp' => 50,
     'bugville_exam_coins' => 30,
+    // Сторінки гри (bugville*.php) для всіх; false — лише для admin (на хостингу, доки місії не наповнені кроком «Контент»).
+    'bugville_public' => false,
     // Демо-місія 900001 (зразковий генератор) для локальної перевірки API; на хостингу — false.
+    // Локально також грається як місія 1.5 «Остання монета» на карті (app/bugville/bv-world.php).
     'bugville_demo' => false,
     // Строк дії токена спроби (хв) і скільки годин зберігати незараховані спроби гостей (не менше 24).
     'bugville_attempt_ttl_minutes' => 120,

@@ -322,3 +322,34 @@ function bv_delete_player_data(PDO $pdo, int $userId, bool $dryRun = false): arr
 
     return $out;
 }
+
+// ---------- Прогрес для карти (крок 3) -----------------------------------------------------------------------------
+
+/**
+ * Найкращі зірки по місіях: акаунт 16+ — сума приростів у bv_xp_log, гість — найкращі в сесії ($_SESSION['bv_guest']['best']).
+ * @return array<int,int> mission_id => зірки (0–3)
+ */
+function bv_stars_by_mission(PDO $pdo, ?int $userId): array
+{
+    if ($userId === null) {
+        return array_map('intval', (array) ($_SESSION['bv_guest']['best'] ?? []));
+    }
+    $st = $pdo->prepare('SELECT mission_id, SUM(stars) FROM bv_xp_log WHERE user_id = :u GROUP BY mission_id');
+    $st->execute([':u' => $userId]);
+
+    return array_map('intval', $st->fetchAll(PDO::FETCH_KEY_PAIR) ?: []);
+}
+
+/** Підсумки гостя в сесії (як в акаунта, але без монет): XP і зірки з найкращих результатів місій. */
+function bv_guest_totals(): array
+{
+    $xp = 0;
+    $stars = 0;
+    foreach ((array) ($_SESSION['bv_guest']['best'] ?? []) as $s) {
+        $r = bv_reward_for((int) $s, false);
+        $xp += $r['xp'];
+        $stars += $r['stars'];
+    }
+
+    return ['xp' => $xp, 'stars' => $stars, 'coins' => 0];
+}

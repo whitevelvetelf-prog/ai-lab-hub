@@ -1,0 +1,188 @@
+/* AI LAB HUB — «Багвіль» (крок 3). Бренд: #00032c, #2116ad, білий; світлі картки; системні шрифти.
+   Телефон 390 px без горизонтальної прокрутки, елементи від 44 px, поля від 16 px, safe-area, prefers-reduced-motion. */
+:root {
+    --bv-ink: #00032c;
+    --bv-brand: #2116ad;
+    --bv-brand-soft: #eceafd;
+    --bv-bg: #f6f6fb;
+    --bv-card: #ffffff;
+    --bv-line: #dcdcec;
+    --bv-muted: #555a7a;
+    --bv-good: #1d7a4b;
+    --bv-good-bg: #e8f6ee;
+    --bv-bad: #a1361a;
+    --bv-bad-bg: #fbeee9;
+    --bv-star: #c98a00;
+    --bv-radius: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body.bv {
+    margin: 0;
+    background: var(--bv-bg);
+    color: var(--bv-ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+a { color: var(--bv-brand); }
+img, svg { max-width: 100%; }
+.bv-skip { position: absolute; left: -9999px; top: 0; }
+.bv-skip:focus { left: 8px; top: 8px; z-index: 20; background: #fff; padding: 8px 12px; border-radius: 8px; }
+:focus-visible { outline: 3px solid var(--bv-brand); outline-offset: 2px; }
+
+/* Шапка */
+.bv-top {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 4px;
+    min-height: 56px;
+    padding: 4px max(8px, env(safe-area-inset-right)) 4px max(8px, env(safe-area-inset-left));
+    padding-top: max(4px, env(safe-area-inset-top));
+    background: var(--bv-ink); color: #fff;
+}
+.bv-top__btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border: 0; border-radius: 10px;
+    background: transparent; color: #fff; cursor: pointer; text-decoration: none;
+}
+.bv-top__btn:hover { background: rgba(255, 255, 255, .12); }
+.bv-top__brand { display: inline-flex; align-items: center; gap: 8px; color: #fff; text-decoration: none; font-weight: 700; font-size: 18px; min-height: 44px; }
+.bv-top__brand img { border-radius: 6px; background: #fff; }
+.bv-top__spacer { flex: 1; }
+.bv-top__link {
+    display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px;
+    color: #fff; text-decoration: none; font-weight: 600; border-radius: 10px;
+}
+.bv-top__link:hover { background: rgba(255, 255, 255, .12); }
+.bv-toast {
+    position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%);
+    max-width: calc(100% - 32px); margin: 0; padding: 10px 16px; border-radius: 10px;
+    background: var(--bv-ink); color: #fff; z-index: 30; overflow-wrap: anywhere;
+}
+
+/* Основа */
+.bv-main { flex: 1; width: 100%; max-width: 760px; margin: 0 auto; padding: 16px 16px 32px; }
+.bv-title { font-size: 28px; line-height: 1.2; margin: 8px 0 12px; }
+.bv-lead { font-size: 18px; margin: 0 0 12px; }
+.bv-note, .bv-muted { color: var(--bv-muted); }
+.bv-card, .bv-level, .bv-hero {
+    background: var(--bv-card); border: 1px solid var(--bv-line); border-radius: var(--bv-radius);
+    padding: 16px; margin: 0 0 16px;
+}
+.bv-hero { background: linear-gradient(160deg, #fff 0%, var(--bv-brand-soft) 100%); }
+.bv-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px; }
+.bv-totals div { background: #fff; border: 1px solid var(--bv-line); border-radius: 10px; padding: 6px 14px; min-width: 88px; }
+.bv-totals dt { font-size: 13px; color: var(--bv-muted); }
+.bv-totals dd { margin: 0; font-size: 22px; font-weight: 700; }
+.bv-reveal { border-color: var(--bv-brand); background: var(--bv-brand-soft); }
+
+/* Карта */
+.bv-chapter__title { font-size: 21px; margin: 24px 0 12px; }
+.bv-level__head { display: flex; gap: 12px; align-items: flex-start; }
+.bv-level__icon { flex: 0 0 56px; width: 56px; height: 56px; }
+.bv-level__title { font-size: 19px; margin: 0 0 4px; }
+.bv-level__intro { margin: 0; color: var(--bv-muted); }
+.bv-missions { list-style: none; margin: 12px 0 8px; padding: 0; display: grid; gap: 8px; }
+.bv-mission__link {
+    display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 8px 12px;
+    border: 1px solid var(--bv-line); border-radius: 12px; background: #fff;
+    color: var(--bv-ink); text-decoration: none;
+}
+a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-brand-soft); }
+.bv-mission.is-soon .bv-mission__link { background: #f2f2f7; color: var(--bv-muted); }
+.bv-mission__n {
+    display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 28px;
+    padding: 0 6px; border-radius: 8px; background: var(--bv-brand); color: #fff; font-weight: 700; font-size: 14px;
+}
+.bv-mission.is-soon .bv-mission__n { background: #9a9cb8; }
+.bv-mission__title { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.bv-stars { white-space: nowrap; color: var(--bv-star); letter-spacing: 1px; }
+.bv-star { color: #b9bbd0; }
+.bv-star.is-on { color: var(--bv-star); }
+.bv-stars--big { font-size: 30px; margin: 4px 0 8px; }
+.bv-soon, .bv-badge {
+    display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 13px; font-weight: 600;
+    background: #ebebf3; color: var(--bv-muted); white-space: nowrap;
+}
+.bv-level__exam { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 0; font-size: 14px; }
+.bv-soon-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.bv-soon-list li { background: #fff; border: 1px solid var(--bv-line); border-radius: 12px; padding: 10px 12px; }
+.bv-path { display: inline-block; min-width: 60px; font-size: 13px; font-weight: 700; color: var(--bv-brand); }
+
+/* Місія */
+.bv-crumbs { font-size: 14px; color: var(--bv-muted); }
+.bv-scene__text { font-size: 18px; margin: 0 0 12px; }
+.bv-scene__items { margin: 0 0 12px; padding-left: 20px; }
+.bv-options { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0; }
+.bv-question { font-weight: 700; font-size: 17px; margin: 0 0 8px; padding: 0; }
+.bv-option {
+    display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 10px 12px;
+    border: 2px solid var(--bv-line); border-radius: 12px; background: #fff; cursor: pointer;
+}
+.bv-option:hover { border-color: var(--bv-brand); }
+.bv-option input { width: 22px; height: 22px; margin: 0; flex: 0 0 22px; accent-color: var(--bv-brand); }
+.bv-option:has(input:checked) { border-color: var(--bv-brand); background: var(--bv-brand-soft); }
+.bv-option__text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.bv-option__mark { font-weight: 700; font-size: 14px; white-space: nowrap; }
+.bv-option.is-right, .bv-option.is-right:has(input:checked) { border-color: var(--bv-good); background: var(--bv-good-bg); }
+.bv-option.is-right .bv-option__mark { color: var(--bv-good); }
+.bv-option.is-wrong, .bv-option.is-wrong:has(input:checked) { border-color: var(--bv-bad); background: var(--bv-bad-bg); }
+.bv-option.is-wrong .bv-option__mark { color: var(--bv-bad); }
+.bv-input { width: 100%; min-height: 48px; font-size: 16px; padding: 8px 12px; border: 2px solid var(--bv-line); border-radius: 12px; }
+.bv-hint { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #fff7df; border: 1px solid #f0dc9a; }
+.bv-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 0; }
+.bv-btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 18px;
+    border: 2px solid var(--bv-brand); border-radius: 12px; background: var(--bv-brand); color: #fff;
+    font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+}
+.bv-btn:hover { background: #1a118c; }
+.bv-btn:disabled { opacity: .55; cursor: default; }
+.bv-btn--ghost { background: #fff; color: var(--bv-brand); }
+.bv-btn--ghost:hover { background: var(--bv-brand-soft); }
+.bv-btn--small { min-height: 44px; padding: 0 14px; }
+.bv-msg { margin: 8px 0 0; font-weight: 600; }
+.bv-msg.is-bad { color: var(--bv-bad); }
+.bv-loading { color: var(--bv-muted); }
+.bv-result { margin-top: 16px; padding: 16px; border-radius: var(--bv-radius); border: 2px solid var(--bv-line); }
+.bv-result.is-good { border-color: var(--bv-good); background: var(--bv-good-bg); }
+.bv-result.is-bad { border-color: var(--bv-bad); background: var(--bv-bad-bg); }
+.bv-result__title { font-size: 22px; margin: 0 0 4px; }
+.bv-result__sub { font-size: 16px; margin: 12px 0 4px; }
+.bv-word { margin: 12px 0 0; padding: 12px; border-radius: 12px; background: #fff; border: 1px dashed var(--bv-brand); }
+.bv-word__label { margin: 0; font-size: 13px; font-weight: 700; color: var(--bv-brand); text-transform: uppercase; letter-spacing: .04em; }
+.bv-word__word { margin: 2px 0; font-size: 26px; font-weight: 800; }
+.bv-word__say { margin: 0; }
+.bv-reward { font-weight: 700; color: var(--bv-good); }
+.bv-save { position: relative; margin: 12px 0 0; padding: 12px 44px 12px 12px; border-radius: 12px; background: #fff; border: 1px solid var(--bv-line); }
+.bv-save p { margin: 0; }
+.bv-save .bv-actions { margin-top: 8px; }
+.bv-save__close {
+    position: absolute; top: 2px; right: 2px; width: 44px; height: 44px; border: 0; background: transparent;
+    font-size: 24px; color: var(--bv-muted); cursor: pointer; border-radius: 10px;
+}
+.bv-age { border-color: var(--bv-brand); }
+.bv-age p { margin-top: 0; }
+
+/* Сторінка для батьків */
+.bv-prose h2 { font-size: 20px; margin: 20px 0 8px; }
+.bv-prose ul { padding-left: 20px; }
+
+/* Підвал */
+.bv-foot {
+    padding: 16px 16px max(16px, env(safe-area-inset-bottom)); text-align: center;
+    color: var(--bv-muted); font-size: 14px; border-top: 1px solid var(--bv-line); background: #fff;
+}
+.bv-foot p { margin: 4px 0; }
+.bv-foot a, .bv-crumbs a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px; }
+
+@media (max-width: 420px) {
+    .bv-title { font-size: 24px; }
+    .bv-level__icon { flex-basis: 44px; width: 44px; height: 44px; }
+    .bv-actions .bv-btn { flex: 1 1 auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
