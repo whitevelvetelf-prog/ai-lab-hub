@@ -1396,6 +1396,37 @@
         });
     }
 
+    // ---------- Майстерня: купити / вдягнути / зняти / аватар. Баланс і вигляд рахує сервер; після дії — свіжа сторінка ----------
+    var ws = document.getElementById('bv-workshop');
+    if (ws && ws.getAttribute('data-account') === '1') {
+        var wsMsg = document.getElementById('bvw-msg');
+        var flash = null;
+        try { flash = sessionStorage.getItem('bvWsMsg'); sessionStorage.removeItem('bvWsMsg'); } catch (err) { flash = null; }
+        if (flash && wsMsg) { wsMsg.className = 'bv-msg is-good'; wsMsg.textContent = flash; }
+        var WSERR = { not_enough: 'Не вистачає монет. Пройдіть ще місії або іспит.', owned: 'Цей предмет уже ваш.',
+            not_owned: 'Спершу купіть цей предмет.', not_found: 'Такого предмета немає.', auth_required: 'Майстерня — для акаунтів із підтвердженим віком.',
+            rate_limited: 'Забагато дій за хвилину. Зачекайте трохи.' };
+        ws.addEventListener('click', function (e) {
+            var b = e.target.closest('button[data-action]');
+            if (!b || b.disabled) { return; }
+            var action = b.getAttribute('data-action');
+            var data = action === 'ws_avatar' ? { avatar: b.getAttribute('data-item') }
+                : { item: b.getAttribute('data-item') || '', kind: b.getAttribute('data-kind') || '' };
+            b.disabled = true;
+            post(action, data).then(function (r) {
+                if (!r.ok) {
+                    b.disabled = false;
+                    if (wsMsg) { wsMsg.className = 'bv-msg is-bad'; wsMsg.textContent = WSERR[r.error] || 'Не вдалося. Спробуйте ще раз.'; }
+                    return;
+                }
+                var t = action === 'ws_buy' ? 'Куплено: «' + r.item.title + '». Тепер його можна вдягнути.'
+                    : (action === 'ws_avatar' ? 'Аватар змінено.' : (data.item ? 'Вдягнуто.' : 'Знято.'));
+                try { sessionStorage.setItem('bvWsMsg', t); } catch (err) { /* без сховища — просто оновимо */ }
+                location.reload();
+            });
+        });
+    }
+
     // ---------- Місія ----------
     var game = document.getElementById('bv-game');
     if (!game) { return; }

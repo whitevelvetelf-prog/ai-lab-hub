@@ -285,7 +285,7 @@ function bv_reward_checked(PDO $pdo, string $token, array $r, array $ctx): array
  */
 const BV_PLAYER_TABLES = [
     'bv_xp_log', 'bv_exam_tasks', 'bv_attempts', 'bv_seen_variants',
-    'bv_progress', 'bv_wallet', 'bv_user_badges', 'bv_user_words', 'bv_user_items', 'bv_streaks', 'bv_certificates',
+    'bv_progress', 'bv_wallet', 'bv_user_badges', 'bv_user_words', 'bv_user_items', 'bv_user_look', 'bv_streaks', 'bv_certificates',
     'bv_players',
 ];
 

@@ -11,6 +11,7 @@ declare(strict_types=1);
  *                              з панеллю «відповідь і розбір», «Згенерувати 5 прикладів».
  *   ?view=exams              — пул кожного іспиту: завдання, вага, статус, лічильник «пул / потрібно» (іспит вмикається сам,
  *                              коли пул ≥ 3 × завдань).
+ *   ?view=workshop           — каталог Майстерні (перегляд): предмет, вид, ціна, статус, скільки разів куплено.
  *   ?view=words              — Книга чарівних слів: слова з bv_words, статус, скільки гравців вивчили (перегляд).
  * Звання, значки й майстерня зʼявляться тут разом із їхніми таблицями.
  */
@@ -20,6 +21,7 @@ require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-crm.php';
 require_once __DIR__ . '/../app/bugville/bv-words.php';
+require_once __DIR__ . '/../app/bugville/bv-workshop.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -114,7 +116,7 @@ $adminPanel = static function (array $pv) use ($e): string {
         . ($pv['hint'] !== '' ? '<p><strong>Підказка:</strong> ' . $e($pv['hint']) . '</p>' : '')
         . '<p class="rep__note">Ключ варіанта: ' . $e($pv['key']) . ($pv['seed'] !== null ? ' · seed ' . $e($pv['seed']) : '') . '</p></div>';
 };
-$tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => 'Звання й значки', 'words' => 'Слова'];
+$tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => 'Звання й значки', 'words' => 'Слова', 'workshop' => 'Майстерня'];
 ?>
 <!DOCTYPE html>
 <html lang="uk">
@@ -128,6 +130,12 @@ $tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => '�
         .bvc-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
         .bvc-warn { color: #fde047; }
         .bvc-ok { color: #bbf7d0; }
+        /* фони Майстерні — ті самі правила, що в assets/css/bugville.css */
+        .bvw-swatch { display: inline-block; width: 56px; height: 36px; border-radius: 8px; border: 1px solid #3a4a9a; }
+        .bvw-bg--bg_sunset { background: linear-gradient(180deg, #ff9f43 0%, #ff6b5b 55%, #6a3a8f 100%); }
+        .bvw-bg--bg_night { background: radial-gradient(circle at 20% 25%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 70% 15%, #fff 0 1.2px, transparent 2px), radial-gradient(circle at 85% 60%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 35% 75%, #ffd23f 0 1.4px, transparent 2px), linear-gradient(180deg, #141c4a, #27408f); }
+        .bvw-bg--bg_meadow { background: linear-gradient(180deg, #bfe8ff 0%, #bfe8ff 55%, #9be15d 55.5%, #5fae3a 100%); }
+        .bvw-bg--bg_city { background: linear-gradient(180deg, transparent 62%, #1b2a6e 62%), linear-gradient(90deg, transparent 10%, #ffd23f 10% 14%, transparent 14% 60%, #ffd23f 60% 64%, transparent 64%) 0 70% / 100% 8% no-repeat, linear-gradient(180deg, #27408f, #3a5ab0); }
         .bvc-bad { color: #fecaca; }
         .bvc-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
         .bvc-card { border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; background: rgba(255, 255, 255, 0.04); overflow-wrap: anywhere; }
@@ -363,6 +371,36 @@ $tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => '�
                 <td><?= $e($ms !== null ? $ms['n'] . ' ' . $ms['title'] : '#' . $w['mission_id']) ?></td>
                 <td class="<?= $w['status'] === 'active' ? 'bvc-ok' : 'bvc-warn' ?>"><?= $e($w['status']) ?></td>
                 <td><?= (int) ($wlearned[$w['word_key']] ?? 0) ?></td></tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table></div>
+
+<?php elseif ($view === 'workshop'):
+    $irows = [];
+    $ibought = [];
+    $isource = 'БД (bv_workshop_items)';
+    try {
+        $irows = $pdo->query("SELECT item_key, kind, title, description, price, status FROM bv_workshop_items WHERE lang = 'uk' ORDER BY sort, item_key")->fetchAll(PDO::FETCH_ASSOC);
+        $ibought = $pdo->query('SELECT item_key, COUNT(*) FROM bv_user_items GROUP BY item_key')->fetchAll(PDO::FETCH_KEY_PAIR) ?: [];
+    } catch (Throwable) {
+        $irows = [];
+    }
+    if ($irows === []) {
+        $isource = 'запасний каталог із коду (таблиця bv_workshop_items порожня — запустіть сид)';
+        foreach (bv_ws_items_content() as $it) {
+            $irows[] = ['item_key' => $it['key'], 'kind' => $it['kind'], 'title' => $it['title'], 'description' => $it['description'], 'price' => $it['price'], 'status' => 'active'];
+        }
+    } ?>
+    <p class="rep__note">Каталог Майстерні: <?= count($irows) ?> предметів, джерело — <?= $e($isource) ?>. Перегляд: каталог змінюється сидом
+        (MAIN_TASK §7), малюнки — у коді (app/bugville/bv-workshop.php). Лише монети гри, реальних грошей немає. Аватари (безкоштовно): <?= $e(implode(', ', BV_WS_AVATARS)) ?>.</p>
+    <div class="rep-table-wrap"><table class="rep-table">
+        <thead><tr><th>Малюнок</th><th>Предмет</th><th>Вид</th><th>Ціна, монет</th><th>Статус</th><th>Куплено</th></tr></thead>
+        <tbody>
+        <?php foreach ($irows as $it): $art = ['key' => $it['item_key'], 'kind' => $it['kind'], 'title' => $it['title']]; ?>
+            <tr><td><?= $it['kind'] === 'background' ? '<span class="bvw-swatch bvw-bg--' . $e($it['item_key']) . '"></span>' : (bv_ws_has_art($art) ? bv_ws_item_svg($art) : '—') ?></td>
+                <td><strong><?= $e($it['title']) ?></strong> <code><?= $e($it['item_key']) ?></code><br><span class="rep__note"><?= $e($it['description']) ?></span></td>
+                <td><?= $e(BV_WS_KINDS[$it['kind']] ?? $it['kind']) ?></td><td><?= (int) $it['price'] ?></td>
+                <td class="<?= $it['status'] === 'active' ? 'bvc-ok' : 'bvc-warn' ?>"><?= $e($it['status']) ?></td><td><?= (int) ($ibought[$it['item_key']] ?? 0) ?></td></tr>
         <?php endforeach; ?>
         </tbody>
     </table></div>

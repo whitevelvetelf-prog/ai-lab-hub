@@ -247,6 +247,31 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 .bv-map-words { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--bv-ink); }
 .bv-map-words__icon { font-size: 2rem; }
 
+/* Майстерня (bugville-workshop.php): вигляд гравця, аватари, предмети; фони карти — лише CSS */
+.bvw-me { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; }
+.bvw-look { width: 136px; height: 136px; border-radius: 20px; display: grid; place-items: center; border: 1px solid var(--bv-line); flex: none; }
+.bvw-look__svg { display: block; }
+.bvw-coins { font-size: 1.15rem; margin: 0 0 4px; }
+.bvw-grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.bvw-grid--avatars { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.bvw-avatar { width: 100%; min-height: 44px; display: grid; justify-items: center; gap: 4px; padding: 8px; border: 2px solid var(--bv-line); border-radius: var(--bv-radius); background: #fff; font: inherit; font-size: .88rem; color: var(--bv-ink); cursor: pointer; }
+.bvw-avatar.is-on { border-color: var(--bv-brand); background: var(--bv-brand-soft); font-weight: 700; }
+.bvw-item { border: 1px solid var(--bv-line); border-radius: var(--bv-radius); padding: 10px; background: #fff; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.bvw-item.is-owned { border-color: var(--bv-good); }
+.bvw-item.is-worn { background: var(--bv-good-bg); }
+.bvw-item p { margin: 0; }
+.bvw-item__art { height: 96px; border-radius: 12px; display: grid; place-items: center; background: var(--bv-bg); }
+.bvw-item__desc { font-size: .88rem; }
+.bvw-item__state { color: var(--bv-good); font-weight: 700; font-size: .9rem; }
+.bvw-item__price { font-weight: 700; }
+.bvw-bg--none { background: var(--bv-bg); }
+.bvw-bg--bg_sunset { background: linear-gradient(180deg, #ff9f43 0%, #ff6b5b 55%, #6a3a8f 100%); }
+.bvw-bg--bg_night { background: radial-gradient(circle at 20% 25%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 70% 15%, #fff 0 1.2px, transparent 2px), radial-gradient(circle at 85% 60%, #fff 0 1.5px, transparent 2px), radial-gradient(circle at 35% 75%, #ffd23f 0 1.4px, transparent 2px), linear-gradient(180deg, #141c4a, #27408f); }
+.bvw-bg--bg_meadow { background: linear-gradient(180deg, #bfe8ff 0%, #bfe8ff 55%, #9be15d 55.5%, #5fae3a 100%); }
+.bvw-bg--bg_city { background: linear-gradient(180deg, transparent 62%, #1b2a6e 62%), linear-gradient(90deg, transparent 10%, #ffd23f 10% 14%, transparent 14% 60%, #ffd23f 60% 64%, transparent 64%) 0 70% / 100% 8% no-repeat, linear-gradient(180deg, #27408f, #3a5ab0); }
+.bv-map-look { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--bv-ink); }
+.bv-map-look .bvw-look { width: 76px; height: 76px; border-radius: 14px; }
+
 /* ======================================================================================================
    Інтерактивні сцени Розділу 1 (window.BVScene у bugville.js). Вигляд — із затвердженого прототипу
    docs/bugville/prototype/bugville_prototype_avtomat.html: вечірній Багвіль. Палітра діє лише всередині .bvs

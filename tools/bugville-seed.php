@@ -22,6 +22,7 @@ require_once __DIR__ . '/../app/bugville/bv-content.php';
 require_once __DIR__ . '/../app/bugville/bv-config.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';   // звання й значки за замовчуванням
 require_once __DIR__ . '/../app/bugville/bv-words.php';      // 15 чарівних слів (міграція № 37)
+require_once __DIR__ . '/../app/bugville/bv-workshop.php';   // 12 предметів Майстерні (міграція № 39)
 
 $sqlOnly = in_array('--sql', array_slice($argv, 1), true);
 $flags = JSON_UNESCAPED_UNICODE;
@@ -61,6 +62,13 @@ function bv_seed_statements(): array
             'params' => [':k' => $w['key'], ':say' => $w['say'], ':m' => $w['meaning'], ':en' => $w['example_en'], ':tr' => $w['example_tr'],
                 ':mid' => $w['mission_id'], ':s' => $w['sort'], ':k2' => $w['key']]];
     }
+    foreach (bv_ws_items_content() as $it) {
+        $out[] = ['sql' => "INSERT INTO bv_workshop_items (item_key, lang, kind, title, description, price, sort, status, updated_at)
+                SELECT :k, 'uk', :kind, :t, :d, :p, :s, 'active', UTC_TIMESTAMP() FROM DUAL
+                WHERE NOT EXISTS (SELECT 1 FROM bv_workshop_items WHERE item_key = :k2 AND lang = 'uk')",
+            'params' => [':k' => $it['key'], ':kind' => $it['kind'], ':t' => $it['title'], ':d' => $it['description'], ':p' => $it['price'],
+                ':s' => $it['sort'], ':k2' => $it['key']]];
+    }
     foreach (bv_exam_pool_content() as $examId => $items) {
         foreach ($items as $it) {
             $out[] = ['sql' => "INSERT INTO bv_exam_items (exam_id, mission_id, lang, weight, status, created_at)
@@ -97,11 +105,11 @@ if ($sqlOnly) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
-$added = ['variants' => 0, 'exam_items' => 0, 'ranks' => 0, 'badges' => 0, 'words' => 0];
+$added = ['variants' => 0, 'exam_items' => 0, 'ranks' => 0, 'badges' => 0, 'words' => 0, 'items' => 0];
 foreach ($stmts as $s) {
     $st = $pdo->prepare($s['sql']);
     $st->execute($s['params']);
     $table = preg_match('/INSERT INTO (bv_\w+)/', $s['sql'], $m) === 1 ? $m[1] : '';
-    $added[['bv_exam_items' => 'exam_items', 'bv_ranks' => 'ranks', 'bv_badges' => 'badges', 'bv_words' => 'words'][$table] ?? 'variants'] += $st->rowCount();
+    $added[['bv_exam_items' => 'exam_items', 'bv_ranks' => 'ranks', 'bv_badges' => 'badges', 'bv_words' => 'words', 'bv_workshop_items' => 'items'][$table] ?? 'variants'] += $st->rowCount();
 }
-echo "Додано: варіантів пулу {$added['variants']}, завдань іспитів {$added['exam_items']}, звань {$added['ranks']}, значків {$added['badges']}, слів {$added['words']} (наявне не змінювалося).\n";
+echo "Додано: варіантів пулу {$added['variants']}, завдань іспитів {$added['exam_items']}, звань {$added['ranks']}, значків {$added['badges']}, слів {$added['words']}, предметів Майстерні {$added['items']} (наявне не змінювалося).\n";

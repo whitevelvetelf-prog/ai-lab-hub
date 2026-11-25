@@ -15,6 +15,9 @@ declare(strict_types=1);
  *   scene_finish — {token} → «Здати роботу»: знайдене рахує сервер зі свого стану; ≥ min_found — зірки й нагорода.
  *   word_quiz    — {word} → вправа «Що означає…?» (4 варіанти, правильний лише в сесії); лише акаунт 16+.
  *   word_check   — {word, option} → правильно / ні, «вивчено» й нові значки; вправа одноразова.
+ *   ws_buy       — {item} → купити предмет Майстерні за монети гри (лише акаунт 16+); баланс рахує сервер.
+ *   ws_equip     — {kind: frame|sticker|background, item: ключ або ''} → вдягнути куплене / зняти.
+ *   ws_avatar    — {avatar} → аватар із набору (безкоштовно).
  *   confirm_age  — {confirm: true} для того, хто ввійшов: «мені виповнилося N років» → зарахування гостьового сеансу.
  *   exam_state   — {exam} → доступність, складено, грамота, повтор (для всіх).
  *   exam_start   — {exam} → {token, tasks: [{n, scene, answered}]}; незавершений іспит продовжується (лише акаунт 16+).
@@ -32,6 +35,7 @@ require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
 require_once __DIR__ . '/../app/bugville/bv-scene-play.php';
 require_once __DIR__ . '/../app/bugville/bv-words.php';
+require_once __DIR__ . '/../app/bugville/bv-workshop.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -276,6 +280,32 @@ switch ($action) {
             bv_api_out(['ok' => false, 'error' => $r['error']], ['not_found' => 404, 'locked' => 409, 'no_quiz' => 409][$r['error']] ?? 400);
         }
         bv_api_out($r + $who);
+
+    // ---------- Майстерня (MAIN_TASK §7): лише акаунт із підтвердженим віком, лише монети гри ----------
+    case 'ws_buy':
+    case 'ws_equip':
+    case 'ws_avatar':
+        if ($ctx['user_id'] === null) {
+            bv_api_out(['ok' => false, 'error' => 'auth_required'] + $who, 403);
+        }
+        if (!bv_check_rate_ok($pdo, $ctx)) {
+            bv_api_out(['ok' => false, 'error' => 'rate_limited'], 429);
+        }
+        $uid = (int) $ctx['user_id'];
+        $key = is_string($in['item'] ?? ($in['avatar'] ?? null)) ? (string) ($in['item'] ?? $in['avatar']) : '';
+        if ($key !== '' && preg_match('/^[a-z_]{1,32}$/', $key) !== 1) {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        $r = match ($action) {
+            'ws_buy' => $key === '' ? ['ok' => false, 'error' => 'bad_request'] : bv_ws_buy($pdo, $uid, $key),
+            'ws_equip' => bv_ws_equip($pdo, $uid, is_string($in['kind'] ?? null) ? $in['kind'] : '', $key),
+            default => bv_ws_set_avatar($pdo, $uid, $key),
+        };
+        if (!$r['ok']) {
+            $codes = ['not_found' => 404, 'owned' => 409, 'not_enough' => 409, 'not_owned' => 409, 'auth_required' => 403];
+            bv_api_out(['ok' => false, 'error' => $r['error']] + array_intersect_key($r, ['price' => 1, 'balance' => 1]), $codes[$r['error']] ?? 400);
+        }
+        bv_api_out($r + ['balance' => bv_ws_balance($pdo, $uid)] + $who);
 
     default:
         bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);

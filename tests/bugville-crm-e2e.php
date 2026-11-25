@@ -124,6 +124,9 @@ try {
     $ja = $login($mk('admin'));
     $home = page($ja, $base . '/crm-bugville.php');
     check($home['code'] === 200 && substr_count($home['body'], 'view=mission&amp;m=') === 15, 'admin: 15 місій у списку');
+    $wsv = page($ja, $base . '/crm-bugville.php?view=workshop');
+    check($wsv['code'] === 200 && str_contains($wsv['body'], 'Каталог Майстерні: 12 предметів') && substr_count($wsv['body'], '<svg class="bvw-look__svg"') === 8
+        && substr_count($wsv['body'], 'bvw-swatch bvw-bg--') === 4 && !str_contains($wsv['body'], '<form' . ' method="post" class="bvc-ws'), 'admin: вкладка «Майстерня» — 12 предметів (8 малюнків, 4 фони), лише перегляд');
     check(str_contains($home['body'], 'менше 6 активних варіантів (0)') && str_contains($home['body'], 'Місій із попередженнями: 1 з 15'),
         'попередження «менше 6» лише в 2.5 (її посіяні варіанти вимкнено на час тесту)');
     check(str_contains(page($ja, $base . '/account.php')['body'], 'crm-bugville.php'), 'посилання «Багвіль» у CRM кабінету адміна');

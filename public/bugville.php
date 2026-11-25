@@ -14,6 +14,7 @@ require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
 require_once __DIR__ . '/../app/bugville/bv-words.php';
+require_once __DIR__ . '/../app/bugville/bv-workshop.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
 
@@ -136,6 +137,29 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
             </a>
         </section>
     <?php endif; ?>
+
+    <?php
+    $wsLook = null;
+    $wsCoins = 0;
+    if ($saveId !== null) {
+        try {
+            $wsLook = bv_ws_look($pdo, (int) $saveId);
+            $wsCoins = bv_ws_balance($pdo, (int) $saveId)['coins'];
+        } catch (Throwable) {
+            $wsLook = null;
+        }
+    } ?>
+    <section class="bv-card">
+        <a class="bv-map-look" href="bugville-workshop.php">
+            <?php if ($wsLook !== null): ?>
+                <span class="bvw-look bvw-bg--<?= bv_h($wsLook['background'] ?? 'none') ?>"><?= bv_ws_look_svg($wsLook, 64) ?></span>
+                <span><strong>Майстерня</strong><br><span class="bv-muted">Монети: <?= (int) $wsCoins ?> · рамки, наклейки й фони карти</span></span>
+            <?php else: ?>
+                <span class="bv-map-words__icon" aria-hidden="true">🛠</span>
+                <span><strong>Майстерня</strong><br><span class="bv-muted">Прикраси для героя за монети гри — для акаунтів від <?= bv_min_age() ?> років</span></span>
+            <?php endif; ?>
+        </a>
+    </section>
 
     <?php if ($prog !== null && $prog['badges'] !== []): $got = count(array_filter($prog['badges'], static fn($b) => $b['earned'])); ?>
         <section class="bv-card" aria-labelledby="bv-badges-h">
