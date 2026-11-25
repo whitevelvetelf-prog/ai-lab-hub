@@ -94,6 +94,25 @@ function bv_words_book(PDO $pdo, int $userId): array
 }
 
 /**
+ * Книга для гостя (або акаунта без підтвердженого віку): відкриті слова — з місій, пройдених у цьому сеансі
+ * ($_SESSION['bv_guest']['best']); лише перегляд, без вправ і «вивчено» (MAIN_TASK, розділ 6: прогрес — для акаунтів).
+ * @return list<array>
+ */
+function bv_words_book_guest(PDO $pdo): array
+{
+    $best = (array) ($_SESSION['bv_guest']['best'] ?? []);
+    $missions = bv_world_missions();
+    $out = [];
+    foreach (bv_words_all($pdo) as $w) {
+        $ms = $missions[$w['mission_id']] ?? null;
+        $out[] = $w + ['state' => ((int) ($best[$w['mission_id']] ?? 0)) > 0 ? 'open' : 'locked', 'mission_n' => $ms['n'] ?? '',
+            'mission_title' => $ms['title'] ?? ''];
+    }
+
+    return $out;
+}
+
+/**
  * Вправа до відкритого слова: 4 варіанти значення з одноразовими id; правильний — у сесії.
  * @return array{ok:bool, error?:string, word?:string, question?:string, options?:list<array{id:string,text:string}>}
  */

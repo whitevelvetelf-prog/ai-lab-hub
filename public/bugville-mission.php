@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
+require_once __DIR__ . '/../app/bugville/bv-words.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -32,6 +33,10 @@ $play = bv_world_playable($id);
 $self = 'bugville-mission.php?m=' . $id;
 $next = $play ? bv_world_next_playable($id) : null;
 $word = bv_word_card($ms['word']);
+$wdb = bv_words_all($pdo)[$ms['word']] ?? null;   // тексти з Книги слів (CRM / сид), приклад речення
+if ($word !== null && $wdb !== null) {
+    $word = ['word' => $word['word'], 'say' => $wdb['say'], 'meaning' => $wdb['meaning'], 'example' => $wdb['example_en'], 'example_tr' => $wdb['example_tr']];
+}
 
 bv_page_start($ms['n'] . ' ' . $ms['title'], ['user' => $account, 'back' => 'bugville.php', 'next' => $self,
     'body_class' => 'bv-mission-page']);

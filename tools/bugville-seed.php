@@ -6,7 +6,7 @@ declare(strict_types=1);
  * AI LAB HUB — сид контенту «Багвіля», Етап 1 (крок 6; MAIN_TASK, розділ 11): сюжети пулів 1.5, 2.5, 3.5 і пули іспитів
  * трьох рівнів; звання й значки за замовчуванням (app/bugville/bv-progress.php, міграція № 36). Ідемпотентно: сюжет
  * додається, лише якщо в місії ще немає варіанта з тим самим payload.key; завдання іспиту — лише якщо для (іспит, місія)
- * ще немає рядка; звання й значок — лише якщо їхнього ключа ще немає. Наявне (зокрема змінене в CRM) не змінюється й не видаляється.
+ * ще немає рядка; звання, значок і чарівне слово — лише якщо їхнього ключа ще немає. Наявне (зокрема змінене в CRM) не змінюється й не видаляється.
  *   php tools/bugville-seed.php          — записати в локальну БД (config/database.php)
  *   php tools/bugville-seed.php --sql    — лише надрукувати SQL для phpMyAdmin (INSERT … SELECT … WHERE NOT EXISTS),
  *                                          по одному запиту на рядок — для імпорту на живу базу після «так» власниці
@@ -21,6 +21,7 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../app/bugville/bv-content.php';
 require_once __DIR__ . '/../app/bugville/bv-config.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';   // звання й значки за замовчуванням
+require_once __DIR__ . '/../app/bugville/bv-words.php';      // 15 чарівних слів (міграція № 37)
 
 $sqlOnly = in_array('--sql', array_slice($argv, 1), true);
 $flags = JSON_UNESCAPED_UNICODE;
@@ -52,6 +53,13 @@ function bv_seed_statements(): array
                 WHERE NOT EXISTS (SELECT 1 FROM bv_badges WHERE badge_key = :k2 AND lang = 'uk')",
             'params' => [':k' => $b['key'], ':t' => $b['title'], ':d' => $b['description'], ':s' => ($i + 1) * 10, ':k2' => $b['key']]
                 + ($b['param'] === null ? [] : [':p' => $b['param']])];
+    }
+    foreach (bv_words_content() as $w) {
+        $out[] = ['sql' => "INSERT INTO bv_words (word_key, lang, say, meaning, example_en, example_tr, mission_id, sort, status, updated_at)
+                SELECT :k, 'uk', :say, :m, :en, :tr, :mid, :s, 'active', UTC_TIMESTAMP() FROM DUAL
+                WHERE NOT EXISTS (SELECT 1 FROM bv_words WHERE word_key = :k2 AND lang = 'uk')",
+            'params' => [':k' => $w['key'], ':say' => $w['say'], ':m' => $w['meaning'], ':en' => $w['example_en'], ':tr' => $w['example_tr'],
+                ':mid' => $w['mission_id'], ':s' => $w['sort'], ':k2' => $w['key']]];
     }
     foreach (bv_exam_pool_content() as $examId => $items) {
         foreach ($items as $it) {
@@ -89,11 +97,11 @@ if ($sqlOnly) {
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
-$added = ['variants' => 0, 'exam_items' => 0, 'ranks' => 0, 'badges' => 0];
+$added = ['variants' => 0, 'exam_items' => 0, 'ranks' => 0, 'badges' => 0, 'words' => 0];
 foreach ($stmts as $s) {
     $st = $pdo->prepare($s['sql']);
     $st->execute($s['params']);
     $table = preg_match('/INSERT INTO (bv_\w+)/', $s['sql'], $m) === 1 ? $m[1] : '';
-    $added[['bv_exam_items' => 'exam_items', 'bv_ranks' => 'ranks', 'bv_badges' => 'badges'][$table] ?? 'variants'] += $st->rowCount();
+    $added[['bv_exam_items' => 'exam_items', 'bv_ranks' => 'ranks', 'bv_badges' => 'badges', 'bv_words' => 'words'][$table] ?? 'variants'] += $st->rowCount();
 }
-echo "Додано: варіантів пулу {$added['variants']}, завдань іспитів {$added['exam_items']}, звань {$added['ranks']}, значків {$added['badges']} (наявне не змінювалося).\n";
+echo "Додано: варіантів пулу {$added['variants']}, завдань іспитів {$added['exam_items']}, звань {$added['ranks']}, значків {$added['badges']}, слів {$added['words']} (наявне не змінювалося).\n";

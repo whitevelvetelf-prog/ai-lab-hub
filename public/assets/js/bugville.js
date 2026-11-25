@@ -202,6 +202,15 @@
             back.appendChild(w);
             back.appendChild(el('em', null, o.word.meaning));
             back.appendChild(el('small', null, '[' + o.word.say + ']'));
+            if (o.word.example) {
+                flip.classList.add('has-example');
+                var ex = el('small', 'bvs-face__ex', '«' + o.word.example + '»');
+                ex.setAttribute('lang', 'en');
+                back.appendChild(ex);
+                if (o.word.example_tr) { back.appendChild(el('small', 'bvs-face__tr', o.word.example_tr)); }
+            }
+            var more = el('a', 'bvs-face__book', '📖 Книга чарівних слів');
+            more.href = 'bugville-words.php';
             inner.appendChild(back);
             flip.appendChild(inner);
             flip.addEventListener('click', function () {
@@ -210,6 +219,7 @@
                 flip.setAttribute('aria-label', on ? 'Чарівне слово: ' + o.word.word + ' — ' + o.word.meaning : 'Перевернути картку чарівного слова');
             });
             box.appendChild(flip);
+            box.appendChild(more);   // посилання на Книгу — під карткою слова
         }
         if (o.note) { box.appendChild(el('p', 'bvs-note', o.note)); }
         if (o.extra) { o.extra(box); }
@@ -1307,6 +1317,83 @@
 
             load();
         })();
+    }
+
+    // ---------- Книга чарівних слів: вправа «Що означає…?» (правильний варіант знає лише сервер) ----------
+    var words = document.getElementById('bv-words');
+    if (words && words.getAttribute('data-account') === '1') {
+        var WERR = { auth_required: 'Вправи — лише для акаунтів із підтвердженим віком.', locked: 'Це слово ще не відкрито.',
+            no_quiz: 'Вправа застаріла. Почніть її ще раз.', rate_limited: 'Забагато спроб за хвилину. Зачекайте трохи.' };
+        var counter = document.getElementById('bv-words-count');
+        words.addEventListener('click', function (e) {
+            var b = e.target.closest('.bv-wquiz-btn');
+            if (!b) { return; }
+            var card = b.closest('.bv-wcard');
+            var word = card.getAttribute('data-word');
+            var box = card.querySelector('.bv-wquiz');
+            b.disabled = true;
+            post('word_quiz', { word: word }).then(function (r) {
+                b.disabled = false;
+                while (box.firstChild) { box.removeChild(box.firstChild); }
+                box.hidden = false;
+                if (!r.ok) { box.appendChild(el('p', 'bv-msg is-bad', WERR[r.error] || 'Вправа зараз недоступна.')); return; }
+                var form = el('form', 'bv-wquiz__form');
+                form.noValidate = true;
+                var fs = el('fieldset', 'bv-options');
+                var lg = el('legend', 'bv-question', r.question);
+                fs.appendChild(lg);
+                r.options.forEach(function (o, i) {
+                    var lab = el('label', 'bv-option');
+                    var inp = el('input');
+                    inp.type = 'radio';
+                    inp.name = 'bv-w-' + word;
+                    inp.value = o.id;
+                    inp.id = 'bv-w-' + word + '-' + i;
+                    lab.appendChild(inp);
+                    lab.appendChild(el('span', 'bv-option__text', o.text));
+                    fs.appendChild(lab);
+                });
+                form.appendChild(fs);
+                var row = el('p', 'bv-actions');
+                var go = el('button', 'bv-btn bv-btn--small', 'Перевірити');
+                go.type = 'submit';
+                row.appendChild(go);
+                form.appendChild(row);
+                var msg = el('p', 'bv-msg');
+                msg.setAttribute('role', 'status');
+                form.appendChild(msg);
+                form.addEventListener('submit', function (ev) {
+                    ev.preventDefault();
+                    var picked = form.querySelector('input:checked');
+                    if (!picked) { msg.textContent = 'Спершу оберіть відповідь.'; return; }
+                    go.disabled = true;
+                    post('word_check', { word: word, option: picked.value }).then(function (c) {
+                        if (!c.ok) { go.disabled = false; msg.className = 'bv-msg is-bad'; msg.textContent = WERR[c.error] || 'Не вдалося перевірити.'; return; }
+                        form.querySelectorAll('input').forEach(function (i) { i.disabled = true; });
+                        row.hidden = true;
+                        msg.className = 'bv-msg ' + (c.correct ? 'is-good' : 'is-bad');
+                        msg.textContent = c.correct ? '✓ Правильно! «' + word + '» — ' + c.meaning + '. Слово вивчено.'
+                            : '✗ Не зовсім. «' + word + '» означає: ' + c.meaning + '. Спробуйте вправу ще раз.';
+                        if (c.correct && !card.classList.contains('is-learned')) {
+                            card.classList.remove('is-open');
+                            card.classList.add('is-learned');
+                            var stEl = card.querySelector('.bv-wcard__state');
+                            if (stEl) { stEl.textContent = '✓ Вивчено'; }
+                            b.textContent = 'Повторити вправу';
+                            if (counter && typeof c.learned_count === 'number') {
+                                var strong = counter.querySelector('strong');
+                                if (strong) { strong.textContent = String(c.learned_count); }
+                            }
+                        }
+                        var news = progressNews({ new_badges: c.new_badges || [] });
+                        if (news) { box.appendChild(news); }
+                    });
+                });
+                box.appendChild(form);
+                var first = form.querySelector('input');
+                if (first) { first.focus(); }
+            });
+        });
     }
 
     // ---------- Місія ----------

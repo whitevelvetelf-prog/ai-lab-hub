@@ -11,7 +11,7 @@ declare(strict_types=1);
  *                              з панеллю «відповідь і розбір», «Згенерувати 5 прикладів».
  *   ?view=exams              — пул кожного іспиту: завдання, вага, статус, лічильник «пул / потрібно» (іспит вмикається сам,
  *                              коли пул ≥ 3 × завдань).
- *   ?view=words              — чарівні слова Етапу 1.
+ *   ?view=words              — Книга чарівних слів: слова з bv_words, статус, скільки гравців вивчили (перегляд).
  * Звання, значки й майстерня зʼявляться тут разом із їхніми таблицями.
  */
 
@@ -19,6 +19,7 @@ require_once __DIR__ . '/../app/auth.php';
 require_once __DIR__ . '/../app/csrf.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-crm.php';
+require_once __DIR__ . '/../app/bugville/bv-words.php';
 
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
@@ -333,11 +334,35 @@ $tabs = ['missions' => 'Місії', 'exams' => 'Іспити', 'progress' => '�
     <?php endforeach; ?>
 
 <?php elseif ($view === 'words'): ?>
+    <?php
+    $wrows = [];
+    $wlearned = [];
+    $wsource = 'БД (bv_words)';
+    try {
+        $wrows = $pdo->query("SELECT word_key, say, meaning, example_en, example_tr, mission_id, status FROM bv_words WHERE lang = 'uk' ORDER BY sort, word_key")->fetchAll(PDO::FETCH_ASSOC);
+        $wlearned = $pdo->query('SELECT word_key, COUNT(*) FROM bv_user_words GROUP BY word_key')->fetchAll(PDO::FETCH_KEY_PAIR) ?: [];
+    } catch (Throwable) {
+        $wrows = [];
+    }
+    if ($wrows === []) {
+        $wsource = 'запасні тексти з коду (таблиця bv_words порожня — запустіть сид)';
+        foreach (bv_words_content() as $w) {
+            $wrows[] = ['word_key' => $w['key'], 'say' => $w['say'], 'meaning' => $w['meaning'], 'example_en' => $w['example_en'],
+                'example_tr' => $w['example_tr'], 'mission_id' => $w['mission_id'], 'status' => 'active'];
+        }
+    }
+    ?>
+    <p class="rep__note">Книга чарівних слів: <?= count($wrows) ?> слів, джерело — <?= $e($wsource) ?>. Перегляд; тексти змінюються сидом
+        (нові слова) або в БД. «Вивчили» — скільки гравців правильно виконали вправу.</p>
     <div class="rep-table-wrap"><table class="rep-table">
-        <thead><tr><th>Слово</th><th>Вимова</th><th>Значення</th><th>Місія</th></tr></thead>
+        <thead><tr><th>Слово</th><th>Вимова</th><th>Значення</th><th>Приклад</th><th>Місія</th><th>Статус</th><th>Вивчили</th></tr></thead>
         <tbody>
-        <?php foreach ($all as $ms): $w = bv_word_card($ms['word']); ?>
-            <tr><td lang="en"><strong><?= $e($ms['word']) ?></strong></td><td><?= $e($w['say'] ?? '') ?></td><td><?= $e($w['meaning'] ?? '') ?></td><td><?= $e($ms['n'] . ' ' . $ms['title']) ?></td></tr>
+        <?php foreach ($wrows as $w): $ms = $all[(int) $w['mission_id']] ?? null; ?>
+            <tr><td lang="en"><strong><?= $e($w['word_key']) ?></strong></td><td><?= $e($w['say']) ?></td><td><?= $e($w['meaning']) ?></td>
+                <td><span lang="en"><?= $e($w['example_en']) ?></span><br><span class="rep__note"><?= $e($w['example_tr']) ?></span></td>
+                <td><?= $e($ms !== null ? $ms['n'] . ' ' . $ms['title'] : '#' . $w['mission_id']) ?></td>
+                <td class="<?= $w['status'] === 'active' ? 'bvc-ok' : 'bvc-warn' ?>"><?= $e($w['status']) ?></td>
+                <td><?= (int) ($wlearned[$w['word_key']] ?? 0) ?></td></tr>
         <?php endforeach; ?>
         </tbody>
     </table></div>

@@ -229,6 +229,24 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 
+/* Книга чарівних слів (bugville-words.php) */
+.bv-words { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.bv-wcard { border: 1px solid var(--bv-line); border-radius: var(--bv-radius); padding: 12px; background: #fff; min-width: 0; }
+.bv-wcard.is-locked { background: var(--bv-bg); color: var(--bv-muted); border-style: dashed; }
+.bv-wcard.is-learned { border-color: var(--bv-good); background: var(--bv-good-bg); }
+.bv-wcard p { margin: 0 0 6px; }
+.bv-wcard__state { font-size: .85rem; font-weight: 700; color: var(--bv-brand); }
+.bv-wcard.is-learned .bv-wcard__state { color: var(--bv-good); }
+.bv-wcard__word { font-size: 1.6rem; font-weight: 800; color: var(--bv-ink); line-height: 1.1; }
+.bv-wcard__say { font-weight: 600; }
+.bv-wcard__ex { font-size: .92rem; overflow-wrap: anywhere; }
+.bv-wcard__from { font-size: .85rem; }
+.bv-wquiz { margin-top: 8px; border-top: 1px solid var(--bv-line); padding-top: 8px; }
+.bv-msg.is-good { color: var(--bv-good); }
+.bv-words-count { font-size: 1.05rem; margin: 0 0 4px; }
+.bv-map-words { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--bv-ink); }
+.bv-map-words__icon { font-size: 2rem; }
+
 /* ======================================================================================================
    Інтерактивні сцени Розділу 1 (window.BVScene у bugville.js). Вигляд — із затвердженого прототипу
    docs/bugville/prototype/bugville_prototype_avtomat.html: вечірній Багвіль. Палітра діє лише всередині .bvs
@@ -366,6 +384,10 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 .bvs-face--b strong { font: 800 2rem var(--f-display); }
 .bvs-face--b em { font-style: normal; font-weight: 800; }
 .bvs-face--b small { font-weight: 700; line-height: 1.25; }
+.bvs-flip.has-example { height: 200px; }
+.bvs-face__ex { font-style: italic; margin-top: 4px; }
+.bvs-face__tr { font-weight: 600 !important; opacity: .85; }
+.bvs-face__book { color: var(--lemon); font-weight: 800; justify-self: center; }
 .bvs-note { color: var(--muted); font-size: .88rem; margin: 0; }
 .bvs-result .bv-reward, .bvs-result .bv-muted, .bvs-result .bv-save { color: var(--ink); text-align: left; }
 .bvs-result .bv-save { background: #2c3a85; border-color: var(--line); }

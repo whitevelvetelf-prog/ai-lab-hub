@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
+require_once __DIR__ . '/../app/bugville/bv-words.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
 
@@ -117,6 +118,24 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
                 Звання, значки й щоденна серія — теж для акаунтів.</p>
         <?php endif; ?>
     </section>
+
+    <?php
+    try {
+        $wbook = $saveId !== null ? bv_words_book($pdo, (int) $saveId) : bv_words_book_guest($pdo);
+    } catch (Throwable) {
+        $wbook = [];
+    }
+    if ($wbook !== []): $wOpen = count(array_filter($wbook, static fn($w) => $w['state'] !== 'locked'));
+        $wLearned = count(array_filter($wbook, static fn($w) => $w['state'] === 'learned')); ?>
+        <section class="bv-card">
+            <a class="bv-map-words" href="bugville-words.php">
+                <span class="bv-map-words__icon" aria-hidden="true">📖</span>
+                <span><strong>Книга чарівних слів</strong><br><span class="bv-muted"><?= $saveId !== null
+                    ? 'Вивчено ' . $wLearned . ' з ' . count($wbook) . ' · відкрито ' . $wOpen
+                    : 'Відкрито в цьому сеансі: ' . $wOpen . ' з ' . count($wbook) ?></span></span>
+            </a>
+        </section>
+    <?php endif; ?>
 
     <?php if ($prog !== null && $prog['badges'] !== []): $got = count(array_filter($prog['badges'], static fn($b) => $b['earned'])); ?>
         <section class="bv-card" aria-labelledby="bv-badges-h">

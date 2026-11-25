@@ -13,6 +13,8 @@ declare(strict_types=1);
  *   check        — {token, answer} → результат, розбір побаченого варіанта; акаунт → earned + saved, гість → would_earn.
  *   scene_act    — {token, op: buy|claim|refill, input ≤ 30} → реакція сцени від сервера (інтерактивні місії Розділу 1).
  *   scene_finish — {token} → «Здати роботу»: знайдене рахує сервер зі свого стану; ≥ min_found — зірки й нагорода.
+ *   word_quiz    — {word} → вправа «Що означає…?» (4 варіанти, правильний лише в сесії); лише акаунт 16+.
+ *   word_check   — {word, option} → правильно / ні, «вивчено» й нові значки; вправа одноразова.
  *   confirm_age  — {confirm: true} для того, хто ввійшов: «мені виповнилося N років» → зарахування гостьового сеансу.
  *   exam_state   — {exam} → доступність, складено, грамота, повтор (для всіх).
  *   exam_start   — {exam} → {token, tasks: [{n, scene, answered}]}; незавершений іспит продовжується (лише акаунт 16+).
@@ -29,6 +31,7 @@ require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
 require_once __DIR__ . '/../app/bugville/bv-scene-play.php';
+require_once __DIR__ . '/../app/bugville/bv-words.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -244,6 +247,33 @@ switch ($action) {
         }
         if ($action === 'exam_finish') {
             $r['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
+        }
+        bv_api_out($r + $who);
+
+    // ---------- Книга чарівних слів: лише акаунт із підтвердженим віком ----------
+    case 'word_quiz':
+    case 'word_check':
+        if ($ctx['user_id'] === null) {
+            bv_api_out(['ok' => false, 'error' => 'auth_required'] + $who, 403);
+        }
+        $word = is_string($in['word'] ?? null) ? $in['word'] : '';
+        if (preg_match('/^[a-z]{1,32}$/', $word) !== 1) {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        if (!bv_check_rate_ok($pdo, $ctx)) {
+            bv_api_out(['ok' => false, 'error' => 'rate_limited'], 429);
+        }
+        if ($action === 'word_quiz') {
+            $r = bv_word_quiz($pdo, (int) $ctx['user_id'], $word);
+        } else {
+            $opt = is_string($in['option'] ?? null) ? $in['option'] : '';
+            if (preg_match('/^w[0-9a-f]{6}$/', $opt) !== 1) {
+                bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+            }
+            $r = bv_word_check($pdo, (int) $ctx['user_id'], $word, $opt);
+        }
+        if (!$r['ok']) {
+            bv_api_out(['ok' => false, 'error' => $r['error']], ['not_found' => 404, 'locked' => 409, 'no_quiz' => 409][$r['error']] ?? 400);
         }
         bv_api_out($r + $who);
 
