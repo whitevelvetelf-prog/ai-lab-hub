@@ -48,10 +48,11 @@ function bv_world(): array
         201 => 'required_field', 202 => 'email_valid', 203 => 'phone_digits', 204 => 'name_length',
         301 => 'bad_date', 302 => 'duplicate_row', 303 => 'empty_cell', 304 => 'swapped_columns', 305 => 'report_mix'];
     // Інтерактивні сцени (app/bugville/bv-scenes.php): тип сцени й генератор правил. Генератор вибору ($gen) лишається для іспитів.
-    $scene = [101 => 'machine_change', 102 => 'machine_zero', 103 => 'machine_limit', 104 => 'machine_minus', 105 => 'machine_boundary'];
+    $scene = [101 => 'machine_change', 102 => 'machine_zero', 103 => 'machine_limit', 104 => 'machine_minus', 105 => 'machine_boundary',
+        201 => 'form_required', 202 => 'form_email', 203 => 'form_phone', 204 => 'form_length', 205 => 'form_duplicate'];
     $m = static fn(int $id, string $n, string $title, string $word, string $mode) =>
         ['id' => $id, 'n' => $n, 'title' => $title, 'word' => $word, 'mode' => $mode, 'generator' => $gen[$id] ?? null, 'generator_json' => [],
-            'scene' => isset($scene[$id]) ? 'input_machine' : null, 'scene_gen' => $scene[$id] ?? null];
+            'scene' => isset($scene[$id]) ? ($id < 200 ? 'input_machine' : 'form_scene') : null, 'scene_gen' => $scene[$id] ?? null];
     $world = [
         ['id' => 1, 'path' => 'Junior', 'title' => 'Перші поломки', 'access' => 'free', 'status' => 'open', 'levels' => [
             ['id' => 1, 'icon' => 'vending', 'title' => 'Автомат', 'intro' => 'Торговий автомат приймає монети, рахує решту й видає смаколики. Іноді він помиляється.',

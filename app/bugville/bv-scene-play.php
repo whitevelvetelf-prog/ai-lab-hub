@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bv-player.php';
 
-const BV_SCENE_OPS = ['buy', 'claim', 'refill'];
+const BV_SCENE_OPS = ['buy', 'claim', 'refill', 'submit'];
 
 /** Ліміт дій у сцені: гравець / сесія і IP (окремо від лімітів перевірок — дій у сцені набагато більше). */
 function bv_scene_rate_ok(PDO $pdo, array $ctx): bool
@@ -91,8 +91,8 @@ function bv_scene_act(PDO $pdo, string $token, string $op, mixed $input, array $
     if (!in_array($op, BV_SCENE_OPS, true)) {
         return ['ok' => false, 'error' => 'bad_request'];
     }
-    $clean = bv_scene_clean_input($input);
-    if ($clean === null) {
+    $clean = is_array($input) ? null : bv_scene_clean_input($input);   // бланк (масив) чиститься після завантаження правил
+    if ($clean === null && !is_array($input)) {
         return ['ok' => false, 'error' => 'too_long'];
     }
     if (!bv_scene_rate_ok($pdo, $ctx)) {
@@ -113,7 +113,17 @@ function bv_scene_act(PDO $pdo, string $token, string $op, mixed $input, array $
         return ['ok' => false, 'error' => 'too_many_actions'];
     }
     $state = (array) json_decode((string) $a['scene_state_json'], true) + bv_scene_initial_state($rules);
-    [$react, $state] = bv_scene_machine_act($rules, $state, $op, $clean);
+    if ($rules['type'] === 'form_scene') {
+        $values = bv_form_clean($rules, is_array($input) ? $input : []);
+        if ($values === null || !is_array($input)) {
+            return ['ok' => false, 'error' => 'too_long'];
+        }
+        [$react, $state] = bv_scene_form_act($rules, $state, $op, $values);
+    } elseif ($clean === null) {
+        return ['ok' => false, 'error' => 'too_long'];
+    } else {
+        [$react, $state] = bv_scene_machine_act($rules, $state, $op, $clean);
+    }
     $upd = $pdo->prepare('UPDATE bv_attempts SET scene_state_json = :s, act_count = act_count + 1
                           WHERE id = :id AND used = 0 AND act_count = :old');
     $upd->execute([':s' => json_encode($state, JSON_UNESCAPED_UNICODE), ':id' => (int) $a['id'], ':old' => $count]);
@@ -127,11 +137,12 @@ function bv_scene_act(PDO $pdo, string $token, string $op, mixed $input, array $
 }
 
 /** Розбір після здачі: що знайдено і скільки лишилося (самі незнайдені поломки не розкриваються — для повтору). */
-function bv_scene_explain(array $sum): string
+function bv_scene_explain(array $sum, string $type = 'input_machine'): string
 {
+    $where = $type === 'form_scene' ? 'у бланку пошти' : 'в автоматі';
     $t = "Знайдено поломок: {$sum['found']} з {$sum['total']}.";
     if ($sum['missing'] > 0) {
-        $t .= ' Ще ' . $sum['missing'] . ' ' . ($sum['missing'] === 1 ? 'ховається' : 'ховаються') . ' в автоматі — їх можна пошукати під час повтору.';
+        $t .= ' Ще ' . $sum['missing'] . ' ' . ($sum['missing'] === 1 ? 'ховається' : 'ховаються') . ' ' . $where . ' — їх можна пошукати під час повтору.';
     } else {
         $t .= ' Усі знайдено!';
     }
@@ -139,7 +150,8 @@ function bv_scene_explain(array $sum): string
         $t .= " Перевірок, де автомат працював правильно, а ви сказали «поломка»: {$sum['useless']}.";
     }
 
-    return $t . ' Помилки люблять жити на межах: найменше, найбільше і на крок за ними.';
+    return $t . ($type === 'form_scene' ? ' Форма має зупиняти те, що не можна прийняти: порожнє, задовге, неправильне чи повторне.'
+        : ' Помилки люблять жити на межах: найменше, найбільше і на крок за ними.');
 }
 
 /**
@@ -160,7 +172,7 @@ function bv_scene_finish(PDO $pdo, string $token, array $ctx): array
     $found = array_map(static fn(string $b) => bv_scene_bug_card($rules, $b)['title'], array_values(array_intersect($state['f'], $rules['bugs'])));
     if ((int) $a['used'] === 1) {
         return ['ok' => true, 'repeat' => true, 'awarded' => false, 'correct' => true, 'score' => (int) $a['score'], 'stars' => (int) $a['stars'],
-            'summary' => $sum, 'explain' => bv_scene_explain($sum), 'saved' => $a['user_id'] !== null];
+            'summary' => $sum, 'explain' => bv_scene_explain($sum, (string) $rules['type']), 'saved' => $a['user_id'] !== null];
     }
     if (bv_scene_expired($a)) {
         return ['ok' => false, 'error' => 'expired'];
@@ -174,10 +186,10 @@ function bv_scene_finish(PDO $pdo, string $token, array $ctx): array
     $upd->execute([':f' => bv_now(), ':sc' => $score, ':stars' => $stars, ':id' => (int) $a['id']]);
     if ($upd->rowCount() !== 1) {   // паралельне «Здати» встигло першим
         return ['ok' => true, 'repeat' => true, 'awarded' => false, 'correct' => true, 'score' => $score, 'stars' => $stars,
-            'summary' => $sum, 'explain' => bv_scene_explain($sum), 'saved' => $a['user_id'] !== null];
+            'summary' => $sum, 'explain' => bv_scene_explain($sum, (string) $rules['type']), 'saved' => $a['user_id'] !== null];
     }
     $r = ['ok' => true, 'repeat' => false, 'correct' => true, 'score' => $score, 'stars' => $stars, 'summary' => $sum,
-        'found_titles' => $found, 'hint_used' => (int) $a['hint_used'] === 1, 'explain' => bv_scene_explain($sum)];
+        'found_titles' => $found, 'hint_used' => (int) $a['hint_used'] === 1, 'explain' => bv_scene_explain($sum, (string) $rules['type'])];
 
     return bv_reward_checked($pdo, $token, $r, $ctx);
 }

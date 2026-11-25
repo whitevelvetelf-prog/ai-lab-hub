@@ -142,6 +142,29 @@ try {
     check(($b['json']['reaction']['result'] ?? '') === 'ok' && ($b['json']['found'] ?? -1) === 0, 'оплата купюрою з поломкою — автомат не підказує, що це поломка');
     $cl = call($base, $jar, $csrfOf($html3), ['action' => 'scene_act', 'token' => $ct, 'op' => 'claim', 'input' => (string) ($note - $cr['price'])]);
     check(($cl['json']['found'] ?? 0) === 1 && ($cl['json']['can_submit'] ?? false), 'скарга з правильною рештою — поломку знайдено');
+
+    echo "7. «Пошта» (2.1) через API\n";
+    $html4 = page($jar, $base . '/bugville-mission.php?m=201');
+    $c4 = $csrfOf($html4);
+    check(!preg_match('/empty:|blank:|"bugs"/', $html4), 'HTML 2.1 без поломок');
+    $p = call($base, $jar, $c4, ['action' => 'start', 'mission' => 201]);
+    $tokens[] = $pt = (string) ($p['json']['token'] ?? '');
+    check(($p['json']['scene']['type'] ?? '') === 'form_scene' && !preg_match('/empty:|blank:|"bugs"|no_base/', $p['body']), 'start 2.1: бланк без категорій поломок');
+    $pseed = (string) $pdo->query('SELECT seed FROM bv_attempts WHERE token = ' . $pdo->quote($pt))->fetchColumn();
+    $pr = bv_scene_rules('form_required', $pseed, 201);
+    $vals = array_column($pr['fields'], 'value', 'key');
+    $forged = call($base, $jar, $c4, ['action' => 'scene_act', 'token' => $pt, 'op' => 'submit', 'input' => $vals + ['found' => 'yes']]);
+    check($forged['code'] === 400, 'зайве поле в бланку — 400');
+    $longF = call($base, $jar, $c4, ['action' => 'scene_act', 'token' => $pt, 'op' => 'submit', 'input' => [array_key_first($vals) => str_repeat('x', 31)] + $vals]);
+    check($longF['code'] === 400 && ($longF['json']['error'] ?? '') === 'too_long', 'поле 31 символ — 400');
+    $ok1 = call($base, $jar, $c4, ['action' => 'scene_act', 'token' => $pt, 'op' => 'submit', 'input' => $vals]);
+    check(($ok1['json']['reaction']['accepted'] ?? false) === true && ($ok1['json']['found'] ?? -1) === 0, 'правильний бланк — прийнято');
+    $emptyKey = substr($pr['bugs'][0], 6);
+    $hit = call($base, $jar, $c4, ['action' => 'scene_act', 'token' => $pt, 'op' => 'submit', 'input' => [$emptyKey => ''] + $vals]);
+    check(($hit['json']['found'] ?? 0) === 1 && isset($hit['json']['reaction']['record']['no']), 'порожнє поле з поломкою — знайдено, запис у журналі');
+    $f1 = call($base, $jar, $c4, ['action' => 'scene_finish', 'token' => $pt]);
+    $f2 = call($base, $jar, $c4, ['action' => 'scene_finish', 'token' => $pt]);
+    check(($f1['json']['stars'] ?? 0) === 3 && ($f2['json']['repeat'] ?? false) === true && !isset($f2['json']['would_earn']), 'здано 3 зірки; повтор токена — без нагороди');
 } finally {
     foreach ($tokens as $t) {
         $pdo->prepare('DELETE FROM bv_attempts WHERE token = :t AND user_id IS NULL')->execute([':t' => $t]);

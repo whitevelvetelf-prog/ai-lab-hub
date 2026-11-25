@@ -402,55 +402,19 @@
         stage.appendChild(el('div', 'bvs-ground'));
         grid.appendChild(stage);
 
-        // ----- бічна колонка -----
-        var side = el('aside', 'bvs-side');
-        var mentor = new Mentor();
-        var mc = el('section', 'bvs-card');
-        mc.appendChild(el('h3', null, 'Майстер Гайка'));
-        var mm = el('div', 'bvs-mentor');
-        mm.appendChild(mentor.svg);
-        var bub = el('div', 'bvs-bubble');
-        bub.setAttribute('aria-live', 'polite');
-        bub.appendChild(mentor.bubble);
-        var hintBtn = el('button', 'bvs-hintbtn', 'Підказка (мінус одна зірка)');
-        hintBtn.type = 'button';
-        bub.appendChild(hintBtn);
-        mm.appendChild(bub);
-        mc.appendChild(mm);
-        side.appendChild(mc);
-
-        var coll = new Collection(sc.total);
-        var cc = el('section', 'bvs-card');
-        // «2 / 5», не «2 з 5»: у верхньому регістрі Rubik літера «З» схожа на цифру 3
-        var ch = el('h3', null, 'Зібрані поломки: ');
-        ch.appendChild(coll.count);
-        ch.appendChild(document.createTextNode(' / ' + sc.total));
-        cc.appendChild(ch);
-        cc.appendChild(coll.list);
-        side.appendChild(cc);
-
-        var log = new Log();
-        var lc = el('section', 'bvs-card');
-        lc.appendChild(el('h3', null, 'Що ви вводили'));
-        lc.appendChild(log.list);
-        side.appendChild(lc);
-
-        var submit = el('button', 'bvs-submit');
-        submit.type = 'button';
-        side.appendChild(submit);
-        grid.appendChild(side);
+        // ----- бічна колонка (спільна для всіх сцен) -----
+        var P = sidePanel(o, sc, {
+            title: sc.good.charAt(0).toUpperCase() + sc.good.slice(1) + ': автомат перевірено!',
+            again: 'Пройти ще раз (новий автомат)',
+            busy: function () { return busy; },
+            say: function (t) { msg.textContent = t; }
+        });
+        grid.appendChild(P.side);
         root.appendChild(grid);
         host.appendChild(root);
-
+        var mentor = P.mentor, coll = P.coll, log = P.log;
         var found = 0;
-        function updateSubmit(can) {
-            submit.disabled = !can;
-            submit.textContent = can ? 'Здати роботу майстру (знайдено ' + found + ' з ' + sc.total + ')'
-                : 'Здати роботу майстру (потрібно знайти ' + sc.min_found + ')';
-        }
-        updateSubmit(false);
-        mentor.say(sc.intro, 'happy');
-        if (!reduced) { mentor.act('wave', 1900); }
+        function updateSubmit(can) { P.update(found, can); }
 
         function drop(goods, change) {
             while (tray.firstChild) { tray.removeChild(tray.firstChild); }
@@ -478,7 +442,7 @@
         }
 
         function send(op, input, retry) {
-            if (busy || done) { return; }
+            if (busy || P.done()) { return; }
             busy = true;
             buy.disabled = true;
             o.api('scene_act', { token: o.token, op: op, input: input }).then(function (r) {
@@ -537,6 +501,62 @@
             });
         }
 
+        lcd.focus({ preventScroll: true });
+    }
+
+    /**
+     * Спільна бічна колонка сцени: майстер Гайка з підказками, колекція, журнал, «Здати роботу» → фінал.
+     * cfg: {title — заголовок фіналу, again — підпис повтору, busy() — сцена чекає сервера, say(text) — повідомлення сцени}.
+     */
+    function sidePanel(o, sc, cfg) {
+        var done = false;
+        var finishing = false;
+        var hints = null;
+        var hintN = 0;
+        var side = el('aside', 'bvs-side');
+        var mentor = new Mentor();
+        var mc = el('section', 'bvs-card');
+        mc.appendChild(el('h3', null, 'Майстер Гайка'));
+        var mm = el('div', 'bvs-mentor');
+        mm.appendChild(mentor.svg);
+        var bub = el('div', 'bvs-bubble');
+        bub.setAttribute('aria-live', 'polite');
+        bub.appendChild(mentor.bubble);
+        var hintBtn = el('button', 'bvs-hintbtn', 'Підказка (мінус одна зірка)');
+        hintBtn.type = 'button';
+        bub.appendChild(hintBtn);
+        mm.appendChild(bub);
+        mc.appendChild(mm);
+        side.appendChild(mc);
+
+        var coll = new Collection(sc.total);
+        var cc = el('section', 'bvs-card');
+        // «2 / 5», не «2 з 5»: у верхньому регістрі Rubik літера «З» схожа на цифру 3
+        var ch = el('h3', null, 'Зібрані поломки: ');
+        ch.appendChild(coll.count);
+        ch.appendChild(document.createTextNode(' / ' + sc.total));
+        cc.appendChild(ch);
+        cc.appendChild(coll.list);
+        side.appendChild(cc);
+
+        var log = new Log();
+        var lc = el('section', 'bvs-card');
+        lc.appendChild(el('h3', null, 'Що ви вводили'));
+        lc.appendChild(log.list);
+        side.appendChild(lc);
+
+        var submit = el('button', 'bvs-submit');
+        submit.type = 'button';
+        side.appendChild(submit);
+        function update(found, can) {
+            submit.disabled = !can;
+            submit.textContent = can ? 'Здати роботу майстру (знайдено ' + found + ' з ' + sc.total + ')'
+                : 'Здати роботу майстру (потрібно знайти ' + sc.min_found + ')';
+        }
+        update(0, false);
+        mentor.say(sc.intro, 'happy');
+        if (!reduced) { mentor.act('wave', 1900); }
+
         hintBtn.addEventListener('click', function () {
             if (hints) {
                 mentor.say(hints[hintN % hints.length], 'happy');
@@ -557,13 +577,13 @@
         });
 
         submit.addEventListener('click', function () {
-            if (busy || done) { return; }
-            busy = true;
+            if (cfg.busy() || done || finishing) { return; }
+            finishing = true;
             submit.disabled = true;
             o.api('scene_finish', { token: o.token }).then(function (r) {
-                busy = false;
+                finishing = false;
                 if (!r.ok) {
-                    if (r.error === 'not_enough') { updateSubmit(false); msg.textContent = 'Щоб здати роботу, знайдіть поломок: щонайменше ' + r.min_found + '.'; return; }
+                    if (r.error === 'not_enough') { update(0, false); cfg.say('Щоб здати роботу, знайдіть поломок: щонайменше ' + r.min_found + '.'); return; }
                     if (r.error === 'expired') { o.err('expired'); return; }
                     submit.disabled = false;
                     o.toast('Не вдалося здати роботу. Спробуйте ще раз.');
@@ -577,20 +597,216 @@
                 if (e && e.xp > 0) { chips.unshift('+' + e.xp + ' XP'); }
                 if (r.earned && r.earned.coins > 0) { chips.push('+' + r.earned.coins + ' монет'); }
                 finale({
-                    title: sc.good.charAt(0).toUpperCase() + sc.good.slice(1) + ': автомат перевірено!',
-                    stars: r.stars || 0, chips: chips, word: o.word,
+                    title: cfg.title, stars: r.stars || 0, chips: chips, word: o.word,
                     note: (r.explain || '') + (r.hint_used ? ' Підказку використано.' : ''),
                     extra: function (b) { o.reward(b, r); },
                     actions: [o.nextUrl ? { text: 'Наступна місія', href: o.nextUrl, primary: true } : null,
-                        { text: 'Пройти ще раз (новий автомат)', onClick: o.onRestart, primary: !o.nextUrl },
+                        { text: cfg.again, onClick: o.onRestart, primary: !o.nextUrl },
                         { text: 'До карти', href: 'bugville.php' }].filter(Boolean)
                 });
             });
         });
-        lcd.focus({ preventScroll: true });
+
+        return { side: side, mentor: mentor, coll: coll, log: log, update: update, done: function () { return done || finishing; } };
     }
 
-    window.BVScene = { machine: machine, Mentor: Mentor, Collection: Collection, Log: Log, finale: finale, stamp: stamp, pop: pop, Sound: Sound };
+    /** Знахідка(и) від сервера: штамп, сплив, колекція, реакція майстра. Спільне для сцен. */
+    function showBugs(P, stage, anchor, x, shownInput) {
+        var list = x.bugs || (x.bug ? [x.bug] : []);
+        Sound.tone(160, 0.35, 'sawtooth');
+        if (list.length) {
+            list.forEach(function (b) { P.log.add(shownInput, b.title, true); P.coll.add(b); });
+            stamp(stage, list.length > 1 ? 'Знайдено ' + list.length + ' поломки!' : 'Знайдено поломку!');
+            pop(stage, anchor, '+' + list.length + ' поломка');
+            if (!reduced) { P.mentor.act('cheer', 1600); }
+            Sound.tone(660, 0.12, 'sine', 0.25); Sound.tone(880, 0.2, 'sine', 0.4);
+            P.mentor.say('Оце так! <b>' + list[0].title + '</b>. ' + (list[0].say || '') + ' Я записав це в колекцію.', 'wow');
+        } else {
+            P.log.add(shownInput, x.bug_title || 'поломка', true);
+            P.mentor.say('Цю поломку ви вже знайшли. Спробуйте щось інше.', 'neutral');
+        }
+    }
+
+    // ---------- Сцена «Пошта» (form_scene) ----------
+    var POST_SVG = '<svg class="bvs-post__svg" viewBox="0 0 120 70" aria-hidden="true" focusable="false">'
+        + '<rect x="6" y="22" width="108" height="46" rx="4" fill="#1b2a6e" stroke="#3a4a9a" stroke-width="2"/>'
+        + '<path d="M2 24 L60 2 L118 24 Z" fill="#ff6b5b" stroke="#3a2a00" stroke-width="2" stroke-linejoin="round"/>'
+        + '<rect x="24" y="30" width="72" height="12" rx="3" fill="#ffd23f"/><text x="60" y="39.5" text-anchor="middle" font-size="8" font-weight="800" fill="#3a2a00" font-family="system-ui">ПОШТА</text>'
+        + '<rect x="50" y="46" width="20" height="22" rx="2" fill="#0f1a3d"/><rect x="14" y="48" width="14" height="10" fill="#ffd23f"/><rect x="92" y="48" width="14" height="10" fill="#ffd23f"/></svg>';
+    var ENVELOPE = '<svg viewBox="0 0 28 20" width="28" height="20" aria-hidden="true" focusable="false"><rect x="1" y="1" width="26" height="18" rx="2" fill="#fffbe0" stroke="#3a2a00" stroke-width="1.5"/><path d="M1 2 L14 12 L27 2" fill="none" stroke="#3a2a00" stroke-width="1.5"/></svg>';
+
+    function form(o) {
+        var sc = o.scene;
+        var busy = false;
+        var host = o.host;
+        while (host.firstChild) { host.removeChild(host.firstChild); }
+        host.setAttribute('aria-busy', 'false');
+        var root = el('div', 'bvs');
+        var top = el('div', 'bvs-top');
+        var stats = el('div', 'bvs-stats');
+        var chipS = el('div', 'bvs-chip');
+        chipS.appendChild(Sound.button());
+        stats.appendChild(chipS);
+        top.appendChild(stats);
+        root.appendChild(top);
+
+        var grid = el('div', 'bvs-grid');
+        var stage = el('section', 'bvs-scene bvs-post');
+        stage.setAttribute('aria-label', 'Пошта Багвіля: бланк «' + sc.title + '»');
+        stage.appendChild(svgEl(BACKDROP));
+        var office = el('div', 'bvs-post__office');
+        office.appendChild(svgEl(POST_SVG));
+        stage.appendChild(office);
+
+        var paper = el('form', 'bvs-paper');
+        paper.noValidate = true;
+        paper.setAttribute('autocomplete', 'off');
+        var head = el('div', 'bvs-paper__head');
+        head.appendChild(el('span', 'bvs-paper__org', 'Пошта Багвіля'));
+        head.appendChild(el('h3', 'bvs-paper__title', sc.title));
+        paper.appendChild(head);
+        paper.appendChild(el('p', 'bvs-paper__note', sc.note));
+        var inputs = {};
+        var errs = {};
+        var initial = {};
+        sc.fields.forEach(function (f, i) {
+            var row = el('div', 'bvs-field');
+            var id = 'bvs-f' + i;
+            var lab = el('label', null, f.label + (f.req ? ' *' : ''));
+            lab.htmlFor = id;
+            row.appendChild(lab);
+            var inp = el('input', 'bvs-field__input');
+            inp.id = id;
+            inp.type = 'text';
+            inp.value = f.value;
+            inp.maxLength = sc.max_input || 30;
+            inp.spellcheck = false;
+            inp.setAttribute('autocomplete', 'off');
+            inp.setAttribute('autocapitalize', 'off');
+            if (f.input !== 'text') { inp.inputMode = f.input === 'numeric' ? 'numeric' : f.input; }
+            if (f.req) { inp.setAttribute('aria-required', 'true'); }
+            row.appendChild(inp);
+            var meta = el('div', 'bvs-field__meta');
+            var note = el('span', 'bvs-field__note', f.note || '');
+            note.id = id + '-n';
+            meta.appendChild(note);
+            if (f.max) {
+                var cnt = el('span', 'bvs-field__count');
+                cnt.setAttribute('aria-hidden', 'true');
+                var upd = function () { var n = inp.value.trim().length; cnt.textContent = n + ' / ' + f.max; cnt.classList.toggle('is-over', n > f.max); };
+                inp.addEventListener('input', upd);
+                upd();
+                meta.appendChild(cnt);
+            }
+            row.appendChild(meta);
+            var er = el('p', 'bvs-field__err');
+            er.id = id + '-e';
+            er.hidden = true;
+            row.appendChild(er);
+            inp.setAttribute('aria-describedby', note.id + ' ' + er.id);
+            paper.appendChild(row);
+            inputs[f.key] = inp;
+            errs[f.key] = er;
+            initial[f.key] = f.value;
+        });
+        var send = el('button', 'bvs-buy', 'Надіслати');
+        send.type = 'submit';
+        paper.appendChild(send);
+        var msg = el('div', 'bvs-msg', 'Змініть бланк як завгодно й натисніть «Надіслати».');
+        msg.setAttribute('aria-live', 'polite');
+        msg.setAttribute('role', 'status');
+        paper.appendChild(msg);
+        stage.appendChild(paper);
+
+        var jour = el('div', 'bvs-journal');
+        jour.appendChild(el('h3', null, 'Журнал пошти'));
+        var jl = el('ul', 'bvs-journal__list');
+        jl.appendChild(el('li', 'bvs-journal__empty', 'Поки що жодного запису.'));
+        jour.appendChild(jl);
+        stage.appendChild(jour);
+        stage.appendChild(el('div', 'bvs-ground'));
+        grid.appendChild(stage);
+
+        var P = sidePanel(o, sc, { title: '«' + sc.title + '»: бланк перевірено!', again: 'Пройти ще раз (новий бланк)',
+            busy: function () { return busy; }, say: function (t) { msg.textContent = t; } });
+        grid.appendChild(P.side);
+        root.appendChild(grid);
+        host.appendChild(root);
+
+        function changed(vals) {
+            var parts = [];
+            sc.fields.forEach(function (f) {
+                if (vals[f.key] !== initial[f.key]) {
+                    var v = vals[f.key];
+                    parts.push(f.label + ': ' + (v === '' ? '(порожньо)' : (v.trim() === '' ? '(пробіли)' : v)));
+                }
+            });
+            return parts.length ? parts.join('; ') : 'без змін';
+        }
+        function record(rec) {
+            var empty = jl.querySelector('.bvs-journal__empty');
+            if (empty) { jl.removeChild(empty); }
+            var li = el('li', 'bvs-drop');
+            li.appendChild(svgEl(ENVELOPE));
+            li.appendChild(el('b', null, '№ ' + rec.no));
+            li.appendChild(el('span', null, rec.text));
+            jl.insertBefore(li, jl.firstChild);
+            Sound.tone(520, 0.08, 'triangle');
+        }
+
+        paper.addEventListener('submit', function (e) {
+            e.preventDefault();
+            go(false);
+        });
+        function go(retry) {
+            if (busy || P.done()) { return; }
+            var vals = {};
+            Object.keys(inputs).forEach(function (k) { vals[k] = inputs[k].value; });
+            busy = true;
+            send.disabled = true;
+            o.api('scene_act', { token: o.token, op: 'submit', input: vals }).then(function (r) {
+                busy = false;
+                send.disabled = false;
+                if (!r.ok) {
+                    if (r.error === 'conflict' && !retry) { busy = false; go(true); return; }
+                    if (r.error === 'expired') { o.err('expired'); return; }
+                    var t = { too_long: 'Задовге значення: не більше ' + (sc.max_input || 30) + ' символів у полі.',
+                        too_many_actions: 'Дій у цій спробі вже ' + sc.max_actions + '. Здайте роботу або почніть заново.',
+                        already_checked: 'Роботу вже здано.', rate_limited: 'Забагато натискань за хвилину. Зачекайте трохи.' }[r.error];
+                    msg.textContent = t || 'Пошта не відповідає. Спробуйте ще раз.';
+                    msg.className = 'bvs-msg is-bad';
+                    return;
+                }
+                var x = r.reaction;
+                Object.keys(errs).forEach(function (k) { errs[k].hidden = true; errs[k].textContent = ''; inputs[k].removeAttribute('aria-invalid'); });
+                var fe = x.field_errors || {};
+                Object.keys(fe).forEach(function (k) {
+                    if (!errs[k]) { return; }
+                    errs[k].textContent = '✗ ' + fe[k];
+                    errs[k].hidden = false;
+                    inputs[k].setAttribute('aria-invalid', 'true');
+                });
+                msg.textContent = (x.tone === 'bad' ? '⚠ ' : (x.accepted ? '✓ ' : '✗ ')) + x.text;
+                msg.className = 'bvs-msg' + (x.tone === 'bad' ? ' is-bad' : (x.accepted ? '' : ' is-refused'));
+                if (x.record) { record(x.record); }
+                var shown = changed(vals);
+                if (x.result === 'bug') {
+                    if (!reduced) { paper.classList.remove('is-shake'); void paper.offsetWidth; paper.classList.add('is-shake'); }
+                    showBugs(P, stage, send, x, shown);
+                } else if (x.result === 'ok') {
+                    if (!reduced) { P.mentor.act('jump', 600); }
+                    P.log.add(shown, x.accepted ? 'прийнято, усе правильно' : 'пошта правильно відхилила', false);
+                    P.mentor.say(x.accepted ? 'Бланк правильний, і пошта його прийняла. Тепер спробуйте щось зіпсувати.'
+                        : 'Пошта помітила проблему й не пропустила бланк. Тут вона працює правильно.', 'happy');
+                }
+                P.update(r.found, r.can_submit);
+            });
+        }
+        var first = inputs[sc.fields[0].key];
+        if (first) { first.focus({ preventScroll: true }); }
+    }
+
+    window.BVScene = { machine: machine, form: form, Mentor: Mentor, Collection: Collection, Log: Log, finale: finale, stamp: stamp, pop: pop, Sound: Sound };
 })();
 
 (function () {
@@ -1195,9 +1411,10 @@
             ageBox();
             token = r.token;
             scene = r.scene;
-            if (scene && scene.type === 'input_machine' && window.BVScene) {
+            var sceneFn = scene && window.BVScene ? { input_machine: 'machine', form_scene: 'form' }[scene.type] : null;
+            if (sceneFn) {
                 game.classList.add('bv-game--scene');
-                window.BVScene.machine({ host: box, scene: scene, token: token, api: api, word: word, nextUrl: nextUrl,
+                window.BVScene[sceneFn]({ host: box, scene: scene, token: token, api: api, word: word, nextUrl: nextUrl,
                     onRestart: start, reward: reward, setWho: setWho, toast: toast, err: errorView });
                 return;
             }

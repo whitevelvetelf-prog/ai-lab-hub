@@ -17,8 +17,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bv-config.php';
 require_once __DIR__ . '/bv-content.php';
+require_once __DIR__ . '/bv-scene-form.php';
 
-const BV_SCENE_TYPES = ['input_machine'];   // далі: form_scene (Етап B), table_scene (Етап C)
+const BV_SCENE_TYPES = ['input_machine', 'form_scene'];   // далі: table_scene (Етап C)
 const BV_SCENE_WALLET = 100;
 const BV_SCENE_BOTTLE_GOODS = ['лимонад', 'сік', 'вода', 'какао', 'компот', 'кефір'];
 const BV_SCENE_NOTES = [10, 20, 50, 100, 200];
@@ -27,7 +28,7 @@ const BV_SCENE_NOTES = [10, 20, 50, 100, 200];
 function bv_scene_generators(): array
 {
     return ['machine_change' => 'bv_scene_gen_change', 'machine_zero' => 'bv_scene_gen_zero', 'machine_limit' => 'bv_scene_gen_limit',
-        'machine_minus' => 'bv_scene_gen_minus', 'machine_boundary' => 'bv_scene_gen_boundary'];
+        'machine_minus' => 'bv_scene_gen_minus', 'machine_boundary' => 'bv_scene_gen_boundary'] + bv_form_generators();
 }
 
 function bv_scene_cfg_int(string $key, int $default): int
@@ -202,6 +203,9 @@ function bv_scene_intro(array $r): string
  */
 function bv_scene_public(array $r): array
 {
+    if (($r['type'] ?? '') === 'form_scene') {
+        return bv_form_public($r);
+    }
     $good = (string) $r['good'];
     $title = mb_strtoupper($good);
     $base = ['type' => 'input_machine', 'kind' => $r['kind'], 'good' => $good, 'total' => count($r['bugs']), 'min_found' => (int) $r['min_found'],
@@ -227,6 +231,9 @@ function bv_scene_public(array $r): array
 /** Картка знайденої поломки (і реплика майстра) — з чисел саме цього варіанта. */
 function bv_scene_bug_card(array $r, string $bug, array $ctx = []): array
 {
+    if (($r['type'] ?? '') === 'form_scene') {
+        return bv_form_bug_card($r, $bug, $ctx);
+    }
     $p = (int) ($r['price'] ?? 0);
     $max = (int) ($r['max'] ?? 0);
     $kind = (string) ($r['kinds'][$bug] ?? '');

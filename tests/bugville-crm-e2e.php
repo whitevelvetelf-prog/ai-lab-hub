@@ -141,7 +141,8 @@ try {
     }
     $ids = $own();
     check(count($ids) === 6, '6 варіантів збережено');
-    check(!str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '5 активних + чернетка — місія ще не грається');
+    // 2.5 з Етапу B — сцена «Пошта» (сюжети з генератора), тож грається й без 6 активних варіантів; пул лишається для іспиту
+    check(str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '5 активних + чернетка — 2.5 (сцена) все одно грається');
     page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => $ids[0]] + $variant(1));
     check(str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '6 активних — місія грається');
     $home2 = page($ja, $base . '/crm-bugville.php');
