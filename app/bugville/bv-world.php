@@ -12,6 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bv-variants.php';
 require_once __DIR__ . '/bv-config.php';
+require_once __DIR__ . '/bv-scenes.php';
 
 /** Чарівні слова Етапу 1: слово → [вимова українськими літерами, значення]. */
 const BV_WORDS = [
@@ -46,8 +47,11 @@ function bv_world(): array
     $gen = [101 => 'change_due', 102 => 'zero_qty', 103 => 'over_limit', 104 => 'negative_input', 105 => 'boundary_mix',
         201 => 'required_field', 202 => 'email_valid', 203 => 'phone_digits', 204 => 'name_length',
         301 => 'bad_date', 302 => 'duplicate_row', 303 => 'empty_cell', 304 => 'swapped_columns', 305 => 'report_mix'];
+    // Інтерактивні сцени (app/bugville/bv-scenes.php): тип сцени й генератор правил. Генератор вибору ($gen) лишається для іспитів.
+    $scene = [101 => 'machine_change', 102 => 'machine_zero', 103 => 'machine_limit', 104 => 'machine_minus', 105 => 'machine_boundary'];
     $m = static fn(int $id, string $n, string $title, string $word, string $mode) =>
-        ['id' => $id, 'n' => $n, 'title' => $title, 'word' => $word, 'mode' => $mode, 'generator' => $gen[$id] ?? null, 'generator_json' => []];
+        ['id' => $id, 'n' => $n, 'title' => $title, 'word' => $word, 'mode' => $mode, 'generator' => $gen[$id] ?? null, 'generator_json' => [],
+            'scene' => isset($scene[$id]) ? 'input_machine' : null, 'scene_gen' => $scene[$id] ?? null];
     $world = [
         ['id' => 1, 'path' => 'Junior', 'title' => 'Перші поломки', 'access' => 'free', 'status' => 'open', 'levels' => [
             ['id' => 1, 'icon' => 'vending', 'title' => 'Автомат', 'intro' => 'Торговий автомат приймає монети, рахує решту й видає смаколики. Іноді він помиляється.',
@@ -123,6 +127,12 @@ function bv_register_world_missions(?PDO $pdo = null): void
         $hasGen = $ms['generator'] !== null && isset($gens[$ms['generator']]);
         $hasPool = ($active[$ms['id']] ?? 0) >= BV_POOL_MIN_ACTIVE;
         $mode = $ms['mode'];
+        $sceneGen = $ms['scene_gen'] !== null && isset(bv_scene_generators()[$ms['scene_gen']]) ? $ms['scene_gen'] : null;
+        if ($sceneGen !== null) {   // місія-сцена грабельна за генератором сцени; режим варіантів лишається для іспитів
+            bv_register_mission(['id' => $ms['id'], 'variant_mode' => $mode, 'generator_key' => $hasGen ? $ms['generator'] : null,
+                'generator_json' => $ms['generator_json'], 'skill' => $ms['word'], 'scene' => $ms['scene'], 'scene_gen' => $sceneGen]);
+            continue;
+        }
         if ($mode === 'generator' && !$hasGen) {
             continue;
         }

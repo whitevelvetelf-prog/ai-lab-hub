@@ -38,6 +38,15 @@ return [
     // Строк дії токена спроби (хв) і скільки годин зберігати незараховані спроби гостей (не менше 24).
     'bugville_attempt_ttl_minutes' => 120,
     'bugville_guest_attempt_keep_hours' => 24,
+    // Інтерактивні сцени Розділу 1 (app/bugville/bv-scenes.php). Скільки поломок треба знайти, щоб здати місію
+    // (не більше, ніж є у варіанті): за id місії або 'default'. 1.5 «Остання монета» — 3 з 5, як у прототипі.
+    'bugville_scene_min_found' => ['default' => 1, 105 => 3],
+    // Дій у сцені за спробу (журнал) і довжина одного вводу, символів.
+    'bugville_scene_max_actions' => 50,
+    'bugville_scene_max_input' => 30,
+    // Дій у сцені за хвилину (кожне «Купити» — запит до сервера): на гравця / сесію і на IP.
+    'bugville_acts_per_min_player' => 120,
+    'bugville_acts_per_min_ip' => 2400,
     // Мова за замовчуванням (поки лише uk).
     'bugville_default_lang' => 'uk',
     'bugville_ip_salt' => '',
