@@ -129,7 +129,7 @@ try {
     $x = bv_streak_touch($pdo, $s['id']);
     check($x['current'] === 1 && $x['best'] === 3, 'другий пропуск того ж тижня — з початку (1), рекорд 3');
     $day('2026-11-20');
-    check(bv_streak_view($pdo, $s['id']) === ['current' => 0, 'best' => 3], 'після довгої перерви показ — 0, рекорд 3');
+    check(array_intersect_key(bv_streak_view($pdo, $s['id']), ['current' => 1, 'best' => 1]) === ['current' => 0, 'best' => 3], 'після довгої перерви показ — 0, рекорд 3');
     unset($GLOBALS['bv_today']);
 
     echo "Значки\n";
@@ -163,8 +163,8 @@ try {
     check(bv_badges_check($pdo, $u['id']) === [], 'повторна перевірка — нічого нового');
     $sum = bv_progress_summary($pdo, $u['id']);
     $earned = array_filter($sum['badges'], static fn($b) => $b['earned']);
-    check(count($sum['badges']) === 12 && count($earned) === 6 && !isset(array_column($earned, null, 'key')['words_beginner']),
-        'підсумок: 12 значків, отримано 6, слів — ні (книги слів ще немає)');
+    check(count($sum['badges']) === 15 && count($earned) === 6 && !isset(array_column($earned, null, 'key')['words_beginner']),
+        'підсумок: 15 значків, отримано 6, слів — ні (книги слів ще немає)');
 
     echo "Підвищення звання\n";
     $v = $mk('rankup');
@@ -206,9 +206,9 @@ try {
     api($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $st['token'] ?? '', 'op' => 'buy', 'input' => '0']);
     $ck = api($base, $jar, $csrf, ['action' => 'scene_finish', 'token' => $st['token'] ?? '']);
     check(($ck['correct'] ?? false) && in_array('first_bug', array_column($ck['progress']['new_badges'] ?? [], 'key'), true)
-        && ($ck['progress']['streak']['current'] ?? 0) === 1, 'відповідь акаунта: у відповіді «Перша поломка» і серія 1');
+        && ($ck['progress']['streak']['current'] ?? -1) === 0, 'відповідь акаунта: у відповіді «Перша поломка»; серію звичайна місія не зараховує (лише Поломка дня)');
     $map = page($jar, $base . '/bugville.php')['body'];
-    check(str_contains($map, 'Звання: <strong>Учень-шукач</strong>') && str_contains($map, 'Значки: 2 з 12') && str_contains($map, 'Серія: 1 дн.'),
+    check(str_contains($map, 'Звання: <strong>Учень-шукач</strong>') && str_contains($map, 'Значки: 2 з 15') && str_contains($map, 'Серія: 0 дн.'),
         'карта акаунта: звання, серія, значки');
     $g = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvg');
     $gm = page($g, $base . '/bugville.php')['body'];

@@ -7,8 +7,9 @@ declare(strict_types=1);
  *
  * Звання: bv_ranks (назва й поріг XP редагуються в CRM), звання гравця — найбільший min_xp ≤ XP.
  * Значки: умова — у коді за badge_key (bv_badge_conditions), поріг — bv_badges.param; видаються один раз (bv_user_badges).
- * Серія: день активності — правильна відповідь у місії або завершений іспит (дата за Києвом); пропуск одного дня на
- * тиждень пробачається (grace_week = ISO-тиждень), інакше серія починається знову з 1; рекорд (best_days) не зменшується.
+ * Серія (мʼяка): день зараховує лише здана «Поломка дня» (app/bugville/bv-daily.php), дата — за bugville_daily_timezone;
+ * пропуск одного дня на ISO-тиждень не обриває серію (вихідний; grace_week — тиждень, де його вже використано;
+ * config bugville_streak_rest_per_week), інакше серія починається знову з 1; рекорд (best_days) не зменшується.
  * Початкові назви й пороги — bv_ranks_content() / bv_badges_content(), у БД їх пише сид tools/bugville-seed.php.
  */
 
@@ -33,6 +34,9 @@ function bv_badges_content(): array
         ['key' => 'first_bug', 'title' => 'Перша поломка', 'description' => 'Знайдено першу поломку.', 'param' => null],
         ['key' => 'three_stars', 'title' => 'Три зірки', 'description' => 'Місію пройдено на три зірки.', 'param' => null],
         ['key' => 'streak', 'title' => 'Серія {n} дні', 'description' => 'Грати {n} дні поспіль.', 'param' => 3],
+        ['key' => 'streak_7', 'title' => 'Тиждень пошуків', 'description' => 'Поломка дня — {n} днів поспіль. Так тримати!', 'param' => 7],
+        ['key' => 'streak_14', 'title' => 'Два тижні уважності', 'description' => 'Поломка дня — {n} днів поспіль. Чудова звичка!', 'param' => 14],
+        ['key' => 'streak_30', 'title' => 'Місяць майстра', 'description' => 'Поломка дня — {n} днів поспіль. Справжній майстер Багвіля!', 'param' => 30],
         ['key' => 'words_beginner', 'title' => 'Слова-початківець', 'description' => 'Вивчено {n} чарівних слів.', 'param' => 5],
         ['key' => 'level_words', 'title' => 'Усі слова рівня', 'description' => 'Вивчено всі чарівні слова одного рівня.', 'param' => null],
         ['key' => 'level_1', 'title' => 'Автоматник', 'description' => 'Пройдено всі місії рівня «Автомат».', 'param' => null],
@@ -45,10 +49,34 @@ function bv_badges_content(): array
     ];
 }
 
-/** Сьогодні за Києвом ('Y-m-d'); тести підміняють через $GLOBALS['bv_today']. */
+/** Часовий пояс дня гри (config bugville_daily_timezone, за замовчуванням Europe/Kyiv). */
+function bv_day_tz(): DateTimeZone
+{
+    try {
+        return new DateTimeZone((string) (bv_cfg('bugville_daily_timezone') ?: 'Europe/Kyiv'));
+    } catch (Throwable) {
+        return new DateTimeZone('Europe/Kyiv');
+    }
+}
+
+/** День гри ('Y-m-d') для моменту $at (час UTC, як у bv_now(), або 'now'). */
+function bv_day_at(string $at = 'now'): string
+{
+    return (new DateTimeImmutable($at, new DateTimeZone('UTC')))->setTimezone(bv_day_tz())->format('Y-m-d');
+}
+
+/** Сьогодні за bugville_daily_timezone ('Y-m-d'); тести підміняють через $GLOBALS['bv_today']. */
 function bv_today(): string
 {
-    return (string) ($GLOBALS['bv_today'] ?? (new DateTimeImmutable('now', new DateTimeZone('Europe/Kyiv')))->format('Y-m-d'));
+    return (string) ($GLOBALS['bv_today'] ?? bv_day_at());
+}
+
+/** Скільки пропущених днів на ISO-тиждень не обривають серію (0 або 1). */
+function bv_streak_rest_per_week(): int
+{
+    $v = bv_cfg('bugville_streak_rest_per_week');
+
+    return is_int($v) ? max(0, min(1, $v)) : 1;
 }
 
 // ---------- Звання -----------------------------------------------------------------------------------------------
@@ -86,10 +114,14 @@ function bv_rank_for(array $ranks, int $xp): array
 
 // ---------- Серія ------------------------------------------------------------------------------------------------
 
-/** Позначити день активності. @return array{current:int, best:int, changed:bool} */
-function bv_streak_touch(PDO $pdo, int $userId): array
+/**
+ * Зарахувати день серії: здана «Поломка дня» за день $day (за замовчуванням сьогодні). День, не пізніший за останній
+ * зарахований, нічого не змінює (повтор того ж дня, здача вчорашньої спроби після опівночі).
+ * @return array{current:int, best:int, changed:bool, rested:bool, restarted:bool}
+ */
+function bv_streak_touch(PDO $pdo, int $userId, ?string $day = null): array
 {
-    $today = bv_today();
+    $today = $day ?? bv_today();
     $st = $pdo->prepare('SELECT * FROM bv_streaks WHERE user_id = :u');
     $st->execute([':u' => $userId]);
     $row = $st->fetch(PDO::FETCH_ASSOC) ?: null;
@@ -97,20 +129,23 @@ function bv_streak_touch(PDO $pdo, int $userId): array
     $best = (int) ($row['best_days'] ?? 0);
     $last = $row['last_day'] ?? null;
     $grace = $row['grace_week'] ?? null;
-    if ($last === $today) {
-        return ['current' => $cur, 'best' => $best, 'changed' => false];
+    if ($last !== null && (string) $last >= $today) {
+        return ['current' => $cur, 'best' => $best, 'changed' => false, 'rested' => false, 'restarted' => false];
     }
     $t = new DateTimeImmutable($today);
     $week = $t->format('o-\WW');
     $gap = $last === null ? null : (int) (new DateTimeImmutable((string) $last))->diff($t)->days;
+    $rested = false;
     if ($gap === 1) {
         $cur++;
-    } elseif ($gap === 2 && $grace !== $week) {
-        $cur++;            // один пропущений день на тиждень пробачається
+    } elseif ($gap === 2 && $grace !== $week && bv_streak_rest_per_week() > 0) {
+        $cur++;            // вихідний: один пропущений день на тиждень серію не обриває
         $grace = $week;
+        $rested = true;
     } else {
-        $cur = 1;          // серія починається знову; рекорд лишається
+        $cur = 1;          // нова серія починається сьогодні; рекорд лишається; вихідний цього тижня не повертається
     }
+    $restarted = $cur === 1 && $last !== null;
     $best = max($best, $cur);
     $pdo->prepare('INSERT INTO bv_streaks (user_id, current_days, best_days, last_day, grace_week, updated_at)
                    VALUES (:u, :c, :b, :d, :g, :t)
@@ -118,23 +153,28 @@ function bv_streak_touch(PDO $pdo, int $userId): array
                        last_day = VALUES(last_day), grace_week = VALUES(grace_week), updated_at = VALUES(updated_at)')
         ->execute([':u' => $userId, ':c' => $cur, ':b' => $best, ':d' => $today, ':g' => $grace, ':t' => bv_now()]);
 
-    return ['current' => $cur, 'best' => $best, 'changed' => true];
+    return ['current' => $cur, 'best' => $best, 'changed' => true, 'rested' => $rested, 'restarted' => $restarted];
 }
 
-/** Поточна серія для показу: якщо останній день був давніше вчора (і пропуск не пробачається) — 0. */
+/**
+ * Серія для показу: якщо останній день був давніше вчора (і вихідний не рятує) — 0. rest_left — чи лишився вихідний
+ * цього тижня; today — чи сьогоднішній день уже зараховано.
+ */
 function bv_streak_view(PDO $pdo, int $userId): array
 {
     $st = $pdo->prepare('SELECT current_days, best_days, last_day, grace_week FROM bv_streaks WHERE user_id = :u');
     $st->execute([':u' => $userId]);
     $row = $st->fetch(PDO::FETCH_ASSOC);
-    if (!$row) {
-        return ['current' => 0, 'best' => 0];
-    }
     $t = new DateTimeImmutable(bv_today());
+    $restLeft = bv_streak_rest_per_week() > 0 && (!$row || $row['grace_week'] !== $t->format('o-\WW'));
+    if (!$row || $row['last_day'] === null) {
+        return ['current' => 0, 'best' => (int) ($row['best_days'] ?? 0), 'rest_left' => $restLeft, 'today' => false];
+    }
     $gap = (int) (new DateTimeImmutable((string) $row['last_day']))->diff($t)->days;
-    $alive = $gap <= 1 || ($gap === 2 && $row['grace_week'] !== $t->format('o-\WW'));
+    $alive = $gap <= 1 || ($gap === 2 && $restLeft);
 
-    return ['current' => $alive ? (int) $row['current_days'] : 0, 'best' => (int) $row['best_days']];
+    return ['current' => $alive ? (int) $row['current_days'] : 0, 'best' => (int) $row['best_days'], 'rest_left' => $restLeft,
+        'today' => (string) $row['last_day'] === bv_today()];
 }
 
 // ---------- Значки -----------------------------------------------------------------------------------------------
@@ -200,7 +240,7 @@ function bv_badge_met(string $key, ?int $param, array $f, PDO $pdo, int $userId)
     return match (true) {
         $key === 'first_bug' => array_filter($f['stars']) !== [],
         $key === 'three_stars' => in_array(3, $f['stars'], true) || max([0, ...$f['stars']]) >= 3,
-        $key === 'streak' => $f['streak_best'] >= max(1, (int) $param),
+        $key === 'streak', str_starts_with($key, 'streak_') => $f['streak_best'] >= max(1, (int) ($param ?? substr($key, 7))),
         $key === 'words_beginner' => count($f['words']) >= max(1, (int) $param),
         $key === 'level_words' => array_filter($levels, static fn($l) => array_diff($l['words'], $f['words']) === []) !== [],
         str_starts_with($key, 'level_') => isset($levels[(int) substr($key, 6)]) && $solved($levels[(int) substr($key, 6)]['missions']),
@@ -235,12 +275,13 @@ function bv_badges_check(PDO $pdo, int $userId): array
 // ---------- Після дії гравця --------------------------------------------------------------------------------------
 
 /**
- * Після перевірки місії / іспиту / слова: серія (лише коли $active), нові значки, звання (рівень піднявся?).
+ * Після перевірки місії / іспиту / слова / Поломки дня: серія (лише коли $active — здана Поломка дня за день $day),
+ * нові значки, звання (рівень піднявся?).
  * @return array{rank: array, next: ?array, to_next: int, rank_up: bool, new_badges: list<array>, streak: array}
  */
-function bv_progress_update(PDO $pdo, int $userId, int $xpBefore, bool $active): array
+function bv_progress_update(PDO $pdo, int $userId, int $xpBefore, bool $active, ?string $day = null): array
 {
-    $streak = $active ? bv_streak_touch($pdo, $userId) : bv_streak_view($pdo, $userId);
+    $streak = $active ? bv_streak_touch($pdo, $userId, $day) : bv_streak_view($pdo, $userId);
     $new = bv_badges_check($pdo, $userId);
     $ranks = bv_ranks($pdo);
     $xp = bv_totals($pdo, $userId)['xp'];
@@ -248,7 +289,8 @@ function bv_progress_update(PDO $pdo, int $userId, int $xpBefore, bool $active):
     $before = bv_rank_for($ranks, $xpBefore);
 
     return $now + ['rank_up' => $now['rank']['key'] !== $before['rank']['key'], 'new_badges' => $new,
-        'streak' => ['current' => $streak['current'], 'best' => $streak['best']]];
+        'streak' => ['current' => $streak['current'], 'best' => $streak['best'], 'rested' => !empty($streak['rested']),
+            'restarted' => !empty($streak['restarted'])]];
 }
 
 /** Усе для карти: XP, звання, серія, значки (з позначкою «отримано»). */

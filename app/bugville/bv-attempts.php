@@ -131,12 +131,14 @@ function bv_attempt_start(PDO $pdo, int $missionId, array $ctx, string $kind = '
  */
 function bv_stars_for(PDO $pdo, array $attempt): int
 {
+    // «Поломка дня»: рахуються лише здані спроби того самого дня (variant_key = 'd:дата')
+    $day = ($attempt['kind'] ?? '') === 'daily' ? ' AND variant_key = ' . $pdo->quote((string) $attempt['variant_key']) : '';
     if ($attempt['user_id'] !== null) {
-        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE user_id = :w AND mission_id = :m AND used = 1 AND id <> :id');
+        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE user_id = :w AND mission_id = :m AND used = 1 AND id <> :id' . $day);
         $st->execute([':w' => (int) $attempt['user_id'], ':m' => (int) $attempt['mission_id'], ':id' => (int) $attempt['id']]);
     } else {
         // той самий гість: усі спроби його сесії, і ще не зараховані, і вже зараховані акаунту після входу
-        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE session_hash = :w AND mission_id = :m AND used = 1 AND id <> :id');
+        $st = $pdo->prepare('SELECT COUNT(*) FROM bv_attempts WHERE session_hash = :w AND mission_id = :m AND used = 1 AND id <> :id' . $day);
         $st->execute([':w' => (string) $attempt['session_hash'], ':m' => (int) $attempt['mission_id'], ':id' => (int) $attempt['id']]);
     }
     $before = (int) $st->fetchColumn();

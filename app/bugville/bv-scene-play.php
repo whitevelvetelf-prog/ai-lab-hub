@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/bv-player.php';
+require_once __DIR__ . '/bv-daily.php';
 
 const BV_SCENE_OPS = ['buy', 'claim', 'refill', 'submit', 'check', 'report'];
 
@@ -182,9 +183,11 @@ function bv_scene_finish(PDO $pdo, string $token, array $ctx): array
     $state = (array) json_decode((string) $a['scene_state_json'], true) + bv_scene_initial_state($rules);
     $sum = bv_scene_summary($rules, $state);
     $found = array_map(static fn(string $b) => bv_scene_bug_card($rules, $b)['title'], array_values(array_intersect($state['f'], $rules['bugs'])));
+    $daily = bv_daily_attempt_day($a);
     if ((int) $a['used'] === 1) {
         return ['ok' => true, 'repeat' => true, 'awarded' => false, 'correct' => true, 'score' => (int) $a['score'], 'stars' => (int) $a['stars'],
-            'summary' => $sum, 'explain' => bv_scene_explain($sum, (string) $rules['type']), 'saved' => $a['user_id'] !== null];
+            'summary' => $sum, 'explain' => bv_scene_explain($sum, (string) $rules['type']), 'saved' => $a['user_id'] !== null]
+            + ($daily !== null ? ['daily' => ['day' => $daily, 'tomorrow' => true]] : []);
     }
     if (bv_scene_expired($a)) {
         return ['ok' => false, 'error' => 'expired'];
@@ -202,6 +205,10 @@ function bv_scene_finish(PDO $pdo, string $token, array $ctx): array
     }
     $r = ['ok' => true, 'repeat' => false, 'correct' => true, 'score' => $score, 'stars' => $stars, 'summary' => $sum,
         'found_titles' => $found, 'hint_used' => (int) $a['hint_used'] === 1, 'explain' => bv_scene_explain($sum, (string) $rules['type'])];
+
+    if ($daily !== null) {   // «Поломка дня»: своя нагорода (раз на день), гостьова спроба не зараховується
+        return bv_daily_reward($pdo, $a, $r);
+    }
 
     return bv_reward_checked($pdo, $token, $r, $ctx);
 }

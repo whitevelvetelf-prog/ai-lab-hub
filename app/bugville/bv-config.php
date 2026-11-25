@@ -8,7 +8,7 @@ declare(strict_types=1);
 
 const BV_VARIANT_MODES = ['generator', 'pool', 'mixed'];
 const BV_VARIANT_STATUSES = ['draft', 'active', 'off'];
-const BV_ATTEMPT_KINDS = ['mission', 'exam'];
+const BV_ATTEMPT_KINDS = ['mission', 'exam', 'daily'];
 const BV_LANGS = ['uk'];   // англійська — пізніше (лише додати сюди й рядки в bv_strings / варіанти з lang = 'en')
 
 /** Значення з config/bugville.php + config/bugville.local.php (+ підміни з тестів). */

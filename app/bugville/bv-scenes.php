@@ -29,7 +29,45 @@ const BV_SCENE_NOTES = [10, 20, 50, 100, 200];
 function bv_scene_generators(): array
 {
     return ['machine_change' => 'bv_scene_gen_change', 'machine_zero' => 'bv_scene_gen_zero', 'machine_limit' => 'bv_scene_gen_limit',
-        'machine_minus' => 'bv_scene_gen_minus', 'machine_boundary' => 'bv_scene_gen_boundary'] + bv_form_generators() + bv_table_generators();
+        'machine_minus' => 'bv_scene_gen_minus', 'machine_boundary' => 'bv_scene_gen_boundary'] + bv_form_generators() + bv_table_generators()
+        + bv_daily_generators();
+}
+
+/** Короткі коди генераторів дня в seed спроби (bv_attempts.seed — VARCHAR(32)). */
+const BV_DAILY_GEN_CODES = ['dm' => 'daily_machine', 'df' => 'daily_form', 'dt' => 'daily_table'];
+
+/** «Поломка дня» (app/bugville/bv-daily.php): короткі варіанти на bugville_daily_bugs поломок, по одному на тип сцени. */
+function bv_daily_generators(): array
+{
+    return ['daily_machine' => 'bv_daily_gen_machine', 'daily_form' => 'bv_daily_gen_form', 'daily_table' => 'bv_daily_gen_table'];
+}
+
+/** Скільки поломок у варіанті дня (2…5, config bugville_daily_bugs). */
+function bv_daily_bugs(): int
+{
+    return max(2, min(5, bv_scene_cfg_int('bugville_daily_bugs', 3)));
+}
+
+/** Автомат дня: основа 1.5 «Остання монета», але лише N із пʼяти поломок (які саме — від seed дня). */
+function bv_daily_gen_machine(BvRng $rng, int $missionId): array
+{
+    $r = bv_scene_gen_boundary($rng, $missionId);
+    $pick = array_slice($rng->shuffle($r['bugs']), 0, bv_daily_bugs());
+    $r['bugs'] = array_values(array_filter($r['bugs'], static fn(string $b) => in_array($b, $pick, true)));
+
+    return $r;
+}
+
+/** Пошта дня: «Дивна адреса» або «Літери замість цифр» з N поломками. */
+function bv_daily_gen_form(BvRng $rng, int $missionId): array
+{
+    return $rng->int(0, 1) === 0 ? bv_form_gen_email($rng, $missionId, bv_daily_bugs()) : bv_form_gen_phone($rng, $missionId, bv_daily_bugs());
+}
+
+/** Бібліотека дня: «Порожня клітинка» або «Переплутані стовпці» з N поломками (у таблиці їх не більше 3). */
+function bv_daily_gen_table(BvRng $rng, int $missionId): array
+{
+    return $rng->int(0, 1) === 0 ? bv_table_gen_empty($rng, $missionId, bv_daily_bugs()) : bv_table_gen_swap($rng, $missionId, bv_daily_bugs());
 }
 
 function bv_scene_cfg_int(string $key, int $default): int
@@ -61,12 +99,27 @@ function bv_scene_min_found(int $missionId, int $total): int
 /** Будує правила варіанту від seed. null — невідомий генератор. */
 function bv_scene_rules(string $genKey, string $seed, int $missionId): ?array
 {
+    if ($genKey === 'daily') {   // «Поломка дня»: seed спроби = «код генератора:seed дня» (bv_daily_attempt_seed, ≤ 32 символи)
+        [$code, $seed] = array_pad(explode(':', $seed, 2), 2, '');
+        $genKey = BV_DAILY_GEN_CODES[$code] ?? '';
+        if ($genKey === '') {
+            return null;
+        }
+    }
     $fn = bv_scene_generators()[$genKey] ?? null;
     if ($fn === null || $seed === '') {
         return null;
     }
     $rules = $fn(new BvRng('scene|' . $seed), $missionId);
     $rules['min_found'] = bv_scene_min_found($missionId, count($rules['bugs']));
+    if (isset(bv_daily_generators()[$genKey])) {
+        $need = max(1, min(bv_scene_cfg_int('bugville_daily_min_found', 2), count($rules['bugs'])));
+        $rules['min_found'] = $need;
+        $rules['daily'] = true;
+        if (isset($rules['intro'])) {   // пошта / бібліотека: вступ місії просить одну поломку — у Поломці дня їх більше
+            $rules['intro'] = str_replace('Знайдіть <b>поломку</b>.', 'Сьогодні поломок ' . count($rules['bugs']) . '. Знайдіть щонайменше <b>' . bv_pl($need, 'поломку', 'поломки', 'поломок') . '</b>.', (string) $rules['intro']);
+        }
+    }
 
     return $rules;
 }

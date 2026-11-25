@@ -95,10 +95,10 @@ function bv_form_gen_required(BvRng $rng, int $missionId): array
 }
 
 /** 2.2 «Дивна адреса» (valid): дві з чотирьох неправильних адрес пошта приймає. */
-function bv_form_gen_email(BvRng $rng, int $missionId): array
+function bv_form_gen_email(BvRng $rng, int $missionId, int $n = 2): array
 {
     [$name, $latin] = bv_form_person($rng);
-    $bugs = array_slice($rng->shuffle(array_keys(BV_EMAIL_BUGS)), 0, 2);
+    $bugs = array_slice($rng->shuffle(array_keys(BV_EMAIL_BUGS)), 0, max(1, min($n, count(BV_EMAIL_BUGS))));
 
     return bv_form_rules($rng, 'email', 'Сповіщення про посилку', 'Сповіщення ввімкнено', [bv_f('name', 'Імʼя', true, 'text', $name),
         bv_f('email', 'Email', true, 'email', "{$latin}@poshta.bv"), bv_f('city', 'Місто', true, 'text', $rng->pick(BV_CITIES))], $bugs,
@@ -108,10 +108,10 @@ function bv_form_gen_email(BvRng $rng, int $missionId): array
 }
 
 /** 2.3 «Літери замість цифр» (invalid): дві літери, схожі на цифри, пошта вважає цифрами. */
-function bv_form_gen_phone(BvRng $rng, int $missionId): array
+function bv_form_gen_phone(BvRng $rng, int $missionId, int $n = 2): array
 {
     [$name, , $sur] = bv_form_person($rng);
-    $bugs = array_slice($rng->shuffle(array_keys(BV_LOOKALIKES)), 0, 2);
+    $bugs = array_slice($rng->shuffle(array_keys(BV_LOOKALIKES)), 0, max(1, min($n, count(BV_LOOKALIKES))));
 
     return bv_form_rules($rng, 'phone', 'SMS про посилку', 'SMS-сповіщення ввімкнено', [bv_f('to', 'Отримувач', true, 'text', "{$name} {$sur}"),
         bv_f('phone', 'Телефон', true, 'phone', bv_form_phone($rng)), bv_f('office', 'Відділення', true, 'text', '№ ' . $rng->int(1, 120))], $bugs,

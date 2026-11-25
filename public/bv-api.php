@@ -9,6 +9,7 @@ declare(strict_types=1);
  * Дії (поле action):
  *   state        — хто грає (гість / акаунт 16+), мінімальний вік, підсумки акаунта; зарахування сеансу, якщо щойно ввійшли.
  *   start        — {mission} → {token, scene}: лише сцена, без відповіді й параметрів поломки.
+ *                  {daily: true} → «Поломка дня»: сцена дня (однакова для всіх), {daily: {day, title, done}}.
  *   hint         — {token} → підказка (безкоштовна, лише знижує зірки: максимум 2).
  *   check        — {token, answer} → результат, розбір побаченого варіанта; акаунт → earned + saved, гість → would_earn.
  *   scene_act    — {token, op: buy|claim|refill, input ≤ 30} → реакція сцени від сервера (інтерактивні місії Розділу 1).
@@ -99,11 +100,11 @@ if ($credited !== null && ($credited['credited'] > 0 || $credited['skipped'] > 0
 
 /**
  * Звання, нові значки й серія після дії акаунта (app/bugville/bv-progress.php). Без таблиць міграції № 36 — null,
- * гра працює й без них. $active — день активності для серії (правильна відповідь, завершений іспит, зарахований сеанс).
+ * гра працює й без них. Серію днів ($active) зараховує лише здана «Поломка дня» за свій день $day.
  */
-$progress = static function (int $uid, int $xpBefore, bool $active) use ($pdo): ?array {
+$progress = static function (int $uid, int $xpBefore, bool $active = false, ?string $day = null) use ($pdo): ?array {
     try {
-        return bv_progress_update($pdo, $uid, $xpBefore, $active);
+        return bv_progress_update($pdo, $uid, $xpBefore, $active, $day);
     } catch (Throwable $e) {
         error_log('[bugville] progress: ' . get_class($e));
 
@@ -118,12 +119,19 @@ switch ($action) {
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
             if (($credited['credited'] ?? 0) > 0) {
-                $who['progress'] = $progress((int) $ctx['user_id'], $who['totals']['xp'] - (int) $credited['xp'], true);
+                $who['progress'] = $progress((int) $ctx['user_id'], $who['totals']['xp'] - (int) $credited['xp']);
             }
         }
         bv_api_out(['ok' => true] + $who);
 
     case 'start':
+        if (($in['daily'] ?? null) === true) {   // «Поломка дня»: місію обирає сервер
+            $r = bv_daily_start($pdo, $ctx);
+            if (!$r['ok']) {
+                bv_api_out(['ok' => false, 'error' => $r['error']], ['rate_limited' => 429, 'unavailable' => 503][$r['error']] ?? 404);
+            }
+            bv_api_out(['ok' => true, 'token' => $r['token'], 'scene' => $r['scene'], 'daily' => $r['daily']] + $who);
+        }
         $mission = filter_var($in['mission'] ?? null, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
         if ($mission === false) {
             bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
@@ -175,8 +183,8 @@ switch ($action) {
         }
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
-            if (empty($r['repeat']) && !empty($r['saved'])) {   // звання, значки, серія — як після check
-                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, true);
+            if (empty($r['repeat']) && !empty($r['saved'])) {   // звання, значки; серія — лише за здану Поломку дня
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, isset($r['daily']), $r['daily']['day'] ?? null);
             }
         }
         bv_api_out($r + $who);
@@ -196,7 +204,7 @@ switch ($action) {
         if ($ctx['user_id'] !== null) {
             $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
             if (empty($r['repeat']) && !empty($r['saved'])) {
-                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, !empty($r['correct']));
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore);
             }
         }
         bv_api_out($r + $who);
@@ -241,7 +249,7 @@ switch ($action) {
             $xpBefore = $xpNow((int) $ctx['user_id']);
             $r = bv_exam_finish($pdo, $token, $ctx);
             if ($r['ok'] && empty($r['repeat'])) {
-                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, true);
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore);
             }
         }
         if (!$r['ok']) {

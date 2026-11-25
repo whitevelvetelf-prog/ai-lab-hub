@@ -146,15 +146,16 @@ function bv_table_gen_twin(BvRng $rng, int $missionId): array
 }
 
 /** 3.3 «Порожня клітинка» (missing): дві порожні клітинки в різних рядках і стовпцях. */
-function bv_table_gen_empty(BvRng $rng, int $missionId): array
+function bv_table_gen_empty(BvRng $rng, int $missionId, int $n = 2): array
 {
     $rows = bv_table_loans($rng, 6);
     $cols = ['Книжка', 'Читач', 'Видано', 'Повернути'];
-    [$c1, $c2] = array_slice($rng->shuffle([1, 2, 3]), 0, 2);
+    $cs = array_slice($rng->shuffle([1, 2, 3]), 0, max(1, min($n, 3)));   // різні стовпці, по одному в рядках 0, 1, 2
     $say = [1 => 'Книжку видали, але не записали кому. Бракує даних — її не знайдуть.', 2 => 'Без дати видачі не порахувати, коли книжку повертати.',
         3 => 'Без дати повернення ніхто не нагадає про книжку.'];
     $bugs = [];
-    foreach ([[0, $c1, 'empty_a'], [1, $c2, 'empty_b']] as [$r, $c, $id]) {
+    foreach ($cs as $r => $c) {
+        $id = 'empty_' . chr(97 + $r);
         $bugs[] = ['id' => $id, 'cells' => [[$r, $c]], 'card' => ['title' => "Порожня клітинка «{$cols[$c]}»", 'inp' => "«{$rows[$r][0]}» · {$cols[$c]}: (порожньо)",
             'got' => 'Книжку видали без цього запису.', 'exp' => "Заповнити «{$cols[$c]}».", 'say' => $say[$c]]];
         $rows[$r][$c] = '';
@@ -168,7 +169,7 @@ function bv_table_gen_empty(BvRng $rng, int $missionId): array
 }
 
 /** 3.4 «Переплутані стовпці» (mismatch): у двох рядках значення стоять не у своїх стовпцях. */
-function bv_table_gen_swap(BvRng $rng, int $missionId): array
+function bv_table_gen_swap(BvRng $rng, int $missionId, int $n = 2): array
 {
     $books = array_slice($rng->shuffle(BV_BOOKS), 0, 6);
     $rows = [];
@@ -178,7 +179,8 @@ function bv_table_gen_swap(BvRng $rng, int $missionId): array
     $cols = ['Книжка', 'Автор', 'Рік', 'Читач'];
     $pairs = $rng->shuffle([[1, 2], [2, 3], [1, 3]]);
     $bugs = [];
-    foreach ([[0, $pairs[0], 'swap_a'], [1, $pairs[1], 'swap_b']] as [$r, [$a, $b], $id]) {
+    foreach (array_slice($pairs, 0, max(1, min($n, 3))) as $r => [$a, $b]) {
+        $id = 'swap_' . chr(97 + $r);
         [$rows[$r][$a], $rows[$r][$b]] = [$rows[$r][$b], $rows[$r][$a]];
         $bugs[] = ['id' => $id, 'cells' => [[$r, $a], [$r, $b]], 'card' => ['title' => 'Переплутані стовпці',
             'inp' => "«{$rows[$r][0]}»: {$cols[$a]} = {$rows[$r][$a]}", 'got' => "У «{$cols[$a]}» стоїть {$rows[$r][$a]}, а в «{$cols[$b]}» — {$rows[$r][$b]}.",

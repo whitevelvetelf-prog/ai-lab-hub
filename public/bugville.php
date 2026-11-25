@@ -13,6 +13,7 @@ require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
+require_once __DIR__ . '/../app/bugville/bv-daily.php';
 require_once __DIR__ . '/../app/bugville/bv-words.php';
 require_once __DIR__ . '/../app/bugville/bv-workshop.php';
 require_once __DIR__ . '/../app/bugville/bv-view.php';
@@ -45,7 +46,7 @@ $prog = null;
 if ($saveId !== null) {
     try {
         if (($cr['credited'] ?? 0) > 0) {
-            bv_progress_update($pdo, $saveId, $totals['xp'] - $credXp, true);   // значки й серія за зарахований сеанс
+            bv_progress_update($pdo, $saveId, $totals['xp'] - $credXp, false);   // значки за зарахований сеанс (серія — лише Поломка дня)
         }
         $prog = bv_progress_summary($pdo, $saveId);
     } catch (Throwable $e) {
@@ -119,6 +120,31 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
                 Звання, значки й щоденна серія — теж для акаунтів.</p>
         <?php endif; ?>
     </section>
+
+    <?php $daily = bv_daily_card($pdo, $saveId); if ($daily !== null): $ds = $daily['streak']; ?>
+        <section class="bv-card bv-daily<?= $daily['done'] ? ' is-done' : '' ?>" aria-labelledby="bv-daily-h">
+            <div class="bv-daily__icon" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="8" y="12" width="48" height="44" rx="6" fill="#2116ad"/>
+                <rect x="8" y="12" width="48" height="12" rx="6" fill="#e4572e"/><rect x="8" y="18" width="48" height="6" fill="#e4572e"/>
+                <rect x="18" y="6" width="5" height="12" rx="2" fill="#00032c"/><rect x="41" y="6" width="5" height="12" rx="2" fill="#00032c"/>
+                <circle cx="32" cy="40" r="10" fill="#fff"/><circle cx="32" cy="40" r="4" fill="#f2b632"/>
+                <path d="M32 27v5M32 48v5M19 40h5M40 40h5" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg></div>
+            <div class="bv-daily__body">
+                <h2 class="bv-chapter__title" id="bv-daily-h">Поломка дня<?php if ($daily['done']): ?>
+                    <span class="bv-daily__done"><span aria-hidden="true">✓</span> Пройдено</span><?php endif; ?></h2>
+                <p><?= bv_h($daily['teaser']) ?></p>
+                <?php if ($ds !== null): ?>
+                    <p class="bv-daily__streak">Днів поспіль: <strong><?= (int) $ds['current'] ?></strong> · Найкраща серія: <strong><?= (int) $ds['best'] ?></strong></p>
+                    <p class="bv-muted"><?= $ds['current'] === 0 && $ds['best'] > 0 && !$daily['done'] ? 'Нова серія починається сьогодні! ' : '' ?>Один пропущений день
+                        на тиждень — вихідний: серія не обривається.<?= $ds['rest_left'] ? ' Вихідний цього тижня ще є.' : ' Вихідний цього тижня вже був.' ?></p>
+                <?php elseif ($saveId === null): ?>
+                    <p class="bv-muted"><?= $account === null
+                        ? '<a href="' . bv_h(auth_login_url('bugville.php', 'register.php')) . '">Зареєструйтесь</a>, щоб рахувати дні підряд.'
+                        : 'Підтвердьте вік у будь-якій місії, щоб рахувати дні підряд.' ?></p>
+                <?php endif; ?>
+                <p class="bv-actions"><a class="bv-btn<?= $daily['done'] ? ' bv-btn--ghost' : '' ?>" href="bugville-daily.php"><?= $daily['done'] ? 'Зіграти ще раз' : 'Грати' ?></a></p>
+            </div>
+        </section>
+    <?php endif; ?>
 
     <?php
     try {

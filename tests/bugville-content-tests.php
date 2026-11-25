@@ -143,8 +143,8 @@ $out = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__D
 check(str_contains($out, 'варіантів пулу 0, завдань іспитів 0'), 'сид ідемпотентний: повторний запуск нічого не додає');
 $sql = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/../tools/bugville-seed.php') . ' --sql 2>&1');
 $sql = (string) preg_replace('/^--.*$/m', '', $sql);   // коментарі заголовка не рахуються
-check(substr_count($sql, 'INSERT INTO') === 77 && preg_match('/\b(DELETE|UPDATE|DROP|TRUNCATE|ALTER)\b|^USE /mi', $sql) === 0,
-    'SQL для проду: 77 INSERT … WHERE NOT EXISTS (з 15 словами й 12 предметами Майстерні), без DELETE / UPDATE / DROP / USE');
+check(substr_count($sql, 'INSERT INTO') === 80 && preg_match('/\b(DELETE|UPDATE|DROP|TRUNCATE|ALTER)\b|^USE /mi', $sql) === 0,
+    'SQL для проду: 80 INSERT … WHERE NOT EXISTS (з 15 словами, 12 предметами Майстерні й 15 значками), без DELETE / UPDATE / DROP / USE');
 
 echo "\n" . ($fails === 0 ? "PASS $total/$total" : "FAIL $fails з $total") . "\n";
 exit($fails === 0 ? 0 : 1);

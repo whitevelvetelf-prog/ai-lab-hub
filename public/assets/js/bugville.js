@@ -603,15 +603,15 @@
                 o.setWho(r);
                 var s = r.summary || {};
                 var chips = ['Поломок: ' + s.found + ' з ' + s.total];
-                var e = r.earned || r.would_earn;
+                var e = r.earned || (r.daily ? null : r.would_earn);   // гостю Поломки дня XP не обіцяємо
                 if (e && e.xp > 0) { chips.unshift('+' + e.xp + ' XP'); }
-                if (r.earned && r.earned.coins > 0) { chips.push('+' + r.earned.coins + ' монет'); }
+                if (r.earned && r.earned.coins > 0) { chips.push('+' + r.earned.coins + (r.earned.coins % 10 >= 2 && r.earned.coins % 10 <= 4 && (r.earned.coins % 100 < 12 || r.earned.coins % 100 > 14) ? ' монети' : (r.earned.coins % 10 === 1 && r.earned.coins % 100 !== 11 ? ' монета' : ' монет'))); }
                 finale({
-                    title: cfg.title, stars: r.stars || 0, chips: chips, word: o.word,
-                    note: (r.explain || '') + (r.hint_used ? ' Підказку використано.' : ''),
+                    title: o.daily ? o.daily.title + ': роботу здано!' : cfg.title, stars: r.stars || 0, chips: chips, word: o.word,
+                    note: (r.explain || '') + (r.hint_used ? ' Підказку використано.' : '') + (r.daily ? ' Завтра буде нова поломка.' : ''),
                     extra: function (b) { o.reward(b, r); },
                     actions: [o.nextUrl ? { text: 'Наступна місія', href: o.nextUrl, primary: true } : null,
-                        { text: cfg.again, onClick: o.onRestart, primary: !o.nextUrl },
+                        { text: o.daily ? 'Зіграти ще раз' : cfg.again, onClick: o.onRestart, primary: !o.nextUrl },
                         { text: 'До карти', href: 'bugville.php' }].filter(Boolean)
                 });
             });
@@ -1044,6 +1044,11 @@
         var lines = [];
         if (p.rank_up && p.rank) { lines.push('🎖 Нове звання: ' + p.rank.title + '!'); }
         (p.new_badges || []).forEach(function (b) { lines.push('★ Новий значок: ' + b.title + ' — ' + b.description); });
+        if (p.daily && p.streak) {   // лише після Поломки дня: спокійно, без «втратили»
+            if (p.streak.restarted) { lines.push('Нова серія починається сьогодні!'); }
+            if (p.streak.rested) { lines.push('Пропущений день став вихідним — серія триває.'); }
+            lines.push('Днів поспіль: ' + p.streak.current + '. Найкраща серія: ' + p.streak.best + '.');
+        }
         if (!lines.length) { return null; }
         var box = el('div', 'bv-news');
         box.setAttribute('role', 'status');
@@ -1432,6 +1437,7 @@
     if (!game) { return; }
     var box = document.getElementById('bv-scene');
     var mission = parseInt(game.getAttribute('data-mission'), 10);
+    var isDaily = game.getAttribute('data-daily') === '1';   // «Поломка дня»: місію обирає сервер
     var nextUrl = game.getAttribute('data-next') || '';
     var loginUrl = game.getAttribute('data-login') || 'login.php';
     var registerUrl = game.getAttribute('data-register') || 'register.php';
@@ -1684,6 +1690,7 @@
 
     function reward(res, r) {
         if (r.repeat) { return; }
+        if (r.daily) { dailyReward(res, r); return; }
         if (r.saved && r.earned) {
             var e = r.earned;
             if (e.xp > 0) {
@@ -1730,6 +1737,42 @@
         res.appendChild(save);
     }
 
+    /** «Поломка дня»: нагорода раз на день; гостю — мʼяка пропозиція рахувати дні (без тиску, можна закрити). */
+    function dailyReward(res, r) {
+        if (r.saved && r.earned) {
+            res.appendChild(el('p', r.earned.xp > 0 ? 'bv-reward' : 'bv-muted', r.earned.xp > 0
+                ? 'Збережено: +' + r.earned.xp + ' XP' + (r.earned.coins > 0 ? ', +' + r.earned.coins + ' монети' : '') + '. День зараховано в серію.'
+                : 'Нагороду за сьогоднішню поломку вже отримано. Грати ще можна скільки завгодно.'));
+            return;
+        }
+        if (who.logged_in) {
+            res.appendChild(el('p', 'bv-muted', 'Щоб рахувати дні підряд, підтвердьте вік угорі сторінки (від ' + minAge + ' років).'));
+            return;
+        }
+        var hidden = false;
+        try { hidden = sessionStorage.getItem('bvSaveHidden') === '1'; } catch (err) { hidden = false; }
+        if (hidden) { return; }
+        var save = el('aside', 'bv-save');
+        save.appendChild(el('p', null, 'Зареєструйтесь, щоб рахувати дні підряд і зберігати XP (від ' + minAge + ' років). А можна просто грати далі.'));
+        var row = el('p', 'bv-actions');
+        var reg = el('a', 'bv-btn bv-btn--small', 'Зареєструватись');
+        reg.href = registerUrl;
+        var lin = el('a', 'bv-btn bv-btn--small bv-btn--ghost', 'Увійти');
+        lin.href = loginUrl;
+        row.appendChild(reg);
+        row.appendChild(lin);
+        save.appendChild(row);
+        var x = el('button', 'bv-save__close', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Закрити пропозицію');
+        x.addEventListener('click', function () {
+            try { sessionStorage.setItem('bvSaveHidden', '1'); } catch (err) { /* без сховища — лише ховаємо */ }
+            save.parentNode.removeChild(save);
+        });
+        save.appendChild(x);
+        res.appendChild(save);
+    }
+
     function start() {
         if (busy) { return; }
         busy = true;
@@ -1737,7 +1780,7 @@
         clear();
         box.setAttribute('aria-busy', 'true');
         box.appendChild(el('p', 'bv-loading', 'Готуємо новий варіант…'));
-        api('start', { mission: mission }).then(function (r) {
+        api('start', isDaily ? { daily: true } : { mission: mission }).then(function (r) {
             busy = false;
             if (!r.ok) { errorView(r.error); return; }
             setWho(r);
@@ -1748,8 +1791,12 @@
             if (sceneFn) {
                 game.classList.add('bv-game--scene');
                 window.BVScene[sceneFn]({ host: box, scene: scene, token: token, api: api, word: word, nextUrl: nextUrl,
-                    onRestart: start,
-                    reward: function (n, res) { reward(n, res); var news = progressNews(res.progress); if (news) { n.appendChild(news); } },
+                    onRestart: start, daily: r.daily || null,
+                    reward: function (n, res) {
+                        reward(n, res);
+                        var news = progressNews(res.progress && res.daily ? Object.assign({ daily: true }, res.progress) : res.progress);
+                        if (news) { n.appendChild(news); }
+                    },
                     setWho: setWho, toast: toast, err: errorView });
                 return;
             }

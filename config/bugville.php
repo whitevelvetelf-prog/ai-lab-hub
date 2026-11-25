@@ -51,6 +51,20 @@ return [
     // Дій у сцені за хвилину (кожне «Купити» — запит до сервера): на гравця / сесію і на IP.
     'bugville_acts_per_min_player' => 120,
     'bugville_acts_per_min_ip' => 2400,
+    // «Поломка дня» (app/bugville/bv-daily.php): одна коротка сцена на день, однакова для всіх. День — за цим поясом.
+    'bugville_daily_timezone' => 'Europe/Kyiv',
+    // Сіль вибору місії дня — лише в config/bugville.local.php (не в git). Порожня — похідна від bugville_ip_salt.
+    'bugville_daily_salt' => '',
+    // Типи сцен, з яких обирається місія дня (лише прийняті етапи).
+    'bugville_daily_types' => ['input_machine', 'form_scene', 'table_scene'],
+    // Коротка версія: поломок у варіанті і скільки треба знайти, щоб здати.
+    'bugville_daily_bugs' => 3,
+    'bugville_daily_min_found' => 2,
+    // Нагорода за перший успішний прохід дня (лише акаунт 16+); повторний прохід того ж дня — без нагороди.
+    'bugville_daily_xp' => 15,
+    'bugville_daily_coins' => 2,
+    // Мʼяка серія днів: скільки пропущених днів на ISO-тиждень не обривають серію (0 — без вихідних, максимум 1).
+    'bugville_streak_rest_per_week' => 1,
     // Мова за замовчуванням (поки лише uk).
     'bugville_default_lang' => 'uk',
     'bugville_ip_salt' => '',
