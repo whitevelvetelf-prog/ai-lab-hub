@@ -91,8 +91,14 @@ function bv_coins(int $n): string
 /** Спільна основа автомата з кількістю: товар, ціна, межа «від 1 до max» за раз. */
 function bv_scene_qty_base(BvRng $rng, int $maxFrom, int $maxTo): array
 {
-    return ['type' => 'input_machine', 'kind' => 'qty', 'good' => $rng->pick(BV_SCENE_BOTTLE_GOODS), 'price' => $rng->int(2, 9) * ($rng->int(0, 1) ? 1 : 2),
-        'min' => 1, 'max' => $rng->int($maxFrom, $maxTo), 'stock' => null, 'wallet' => BV_SCENE_WALLET, 'bugs' => [], 'kinds' => []];
+    // Ціна така, щоб покупка «межа + 1» (і «запас + 1» у 1.3) вміщалася в повний гаманець сцени: інакше поломку
+    // «на крок за межею» не можна було б викликати (виправлено 2026-11-25: ціна до 18 при межі до 9 давала до 180 монет).
+    $good = $rng->pick(BV_SCENE_BOTTLE_GOODS);
+    $max = $rng->int($maxFrom, $maxTo);
+    $price = $rng->int(2, max(2, intdiv(BV_SCENE_WALLET, $max + 1)));
+
+    return ['type' => 'input_machine', 'kind' => 'qty', 'good' => $good, 'price' => $price,
+        'min' => 1, 'max' => $max, 'stock' => null, 'wallet' => BV_SCENE_WALLET, 'bugs' => [], 'kinds' => []];
 }
 
 /** 1.2 «Нуль» (check): лише поломка на 0 (вид — як у затверджених прикладах: списує гроші / видає безкоштовно / видає й рахує одну). */
