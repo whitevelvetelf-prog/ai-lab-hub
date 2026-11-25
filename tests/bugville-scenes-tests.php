@@ -70,6 +70,18 @@ check($sameCount, 'рівноцінність: у всіх варіантів м
 check(min(array_keys($maxes)) >= 3 && max(array_keys($maxes)) <= 9 && count($maxes) >= 5, 'межа 1.5 від 3 до 9 і справді змінюється (' . count($maxes) . ' різних)');
 check(count($prices) >= 5, 'ціна змінюється між варіантами (' . count($prices) . ' різних)');
 check(bv_scene_rules('nope', 's', 105) === null, 'невідомий генератор → null');
+$afford = true;
+foreach (['machine_zero' => 102, 'machine_limit' => 103, 'machine_minus' => 104, 'machine_boundary' => 105] as $g => $mid) {
+    for ($i = 0; $i < 400; $i++) {
+        $r = bv_scene_rules($g, "w$i", $mid);
+        $need = $r['stock'] !== null ? ($r['stock'] + 1) * $r['price'] : ($r['max'] + 1) * $r['price'];
+        // з повного гаманця (кнопка «+») поломку на крок за межею / за запасом завжди можна викликати
+        [$x] = run($r, [['buy', (string) ($r['stock'] !== null ? $r['stock'] + 1 : $r['max'] + 1)]]);
+        $afford = $afford && $need <= BV_SCENE_WALLET && $r['price'] >= 2
+            && (!in_array('over', $r['bugs'], true) && !in_array('stock', $r['bugs'], true) || $x[0]['result'] === 'bug');
+    }
+}
+check($afford, 'поломки «межа + 1» і «запас + 1» завжди по кишені з повного гаманця (1.2–1.5, 1600 варіантів)');
 check(bv_scene_rules('machine_boundary', 'x', 105)['min_found'] === 3 && bv_scene_rules('machine_zero', 'x', 102)['min_found'] === 1,
     'мінімум для здачі з config: 1.5 — 3 з 5, 1.2 — 1');
 
@@ -128,7 +140,7 @@ for ($i = 0; ($lim === null || $stk === null) && $i < 50; $i++) {
         $stk = $stk ?? $t;
     }
 }
-[, $s] = run($lim, [['buy', (string) $lim['max']], ['buy', (string) ($lim['max'] + 1)]]);
+[, $s] = run($lim, [['buy', (string) $lim['max']], ['refill', ''], ['buy', (string) ($lim['max'] + 1)]]);
 check($s['f'] === ['over'], '1.3 «за раз»: max — правильно, max + 1 — поломка');
 [$x, $s] = run($stk, [['buy', (string) $stk['stock']], ['buy', (string) ($stk['stock'] + 1)]]);
 check($x[0]['result'] === 'ok' && $s['f'] === ['stock'] && $x[1]['goods'] === $stk['stock'], '1.3 «запас»: усе, що є, — правильно; на одну більше — гроші взято, видано лише запас');

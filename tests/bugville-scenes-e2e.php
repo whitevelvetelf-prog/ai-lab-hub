@@ -109,6 +109,7 @@ try {
     $ok = call($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $tok, 'op' => 'buy', 'input' => '1']);
     check(($ok['json']['reaction']['result'] ?? '') === 'ok' && ($ok['json']['found'] ?? -1) === 1 && !isset($ok['json']['reaction']['bug']),
         '1 пляшка — працює правильно (знайдене не змінилося)');
+    call($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $tok, 'op' => 'refill', 'input' => '']);   // повний гаманець перед «max + 1»
     $found = [];
     foreach (['0', '-2', (string) ($rules['max'] + 1)] as $in) {
         $x = call($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $tok, 'op' => 'buy', 'input' => $in]);
