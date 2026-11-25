@@ -806,7 +806,205 @@
         if (first) { first.focus({ preventScroll: true }); }
     }
 
-    window.BVScene = { machine: machine, form: form, Mentor: Mentor, Collection: Collection, Log: Log, finale: finale, stamp: stamp, pop: pop, Sound: Sound };
+    // ---------- Сцена «Бібліотека» (table_scene) ----------
+    var SHELF_SVG = '<svg class="bvs-lib__svg" viewBox="0 0 160 54" aria-hidden="true" focusable="false">'
+        + '<rect x="2" y="48" width="156" height="5" rx="2" fill="#8a5a00"/><rect x="2" y="2" width="156" height="5" rx="2" fill="#8a5a00"/>'
+        + '<g stroke="#3a2a00" stroke-width="1.5"><rect x="10" y="12" width="12" height="36" fill="#ff6b5b"/><rect x="23" y="16" width="10" height="32" fill="#ffd23f"/>'
+        + '<rect x="34" y="10" width="14" height="38" fill="#4fe0b6"/><rect x="49" y="14" width="10" height="34" fill="#9be15d"/><rect x="60" y="12" width="12" height="36" fill="#ff9f43"/>'
+        + '<rect x="88" y="16" width="12" height="32" fill="#ffd23f"/><rect x="101" y="11" width="14" height="37" fill="#ff6b5b"/><rect x="116" y="14" width="10" height="34" fill="#4fe0b6"/>'
+        + '<rect x="127" y="12" width="12" height="36" fill="#9be15d"/><rect x="140" y="16" width="10" height="32" fill="#ff9f43"/></g>'
+        + '<path d="M74 48 L86 20 L90 22 L79 48 Z" fill="#fffbe0" stroke="#3a2a00" stroke-width="1.5"/></svg>';
+
+    function table(o) {
+        var sc = o.scene;
+        var busy = false;
+        var locked = false;
+        var host = o.host;
+        while (host.firstChild) { host.removeChild(host.firstChild); }
+        host.setAttribute('aria-busy', 'false');
+        var root = el('div', 'bvs');
+        var top = el('div', 'bvs-top');
+        var stats = el('div', 'bvs-stats');
+        var chipS = el('div', 'bvs-chip');
+        chipS.appendChild(Sound.button());
+        stats.appendChild(chipS);
+        top.appendChild(stats);
+        root.appendChild(top);
+
+        var grid = el('div', 'bvs-grid');
+        var stage = el('section', 'bvs-scene bvs-lib');
+        stage.setAttribute('aria-label', 'Бібліотека Багвіля: таблиця');
+        stage.appendChild(svgEl(BACKDROP));
+        var shelfBox = el('div', 'bvs-lib__shelf');
+        shelfBox.appendChild(svgEl(SHELF_SVG));
+        stage.appendChild(shelfBox);
+        var book = el('div', 'bvs-ledger');
+        book.appendChild(el('span', 'bvs-paper__org', 'Бібліотека Багвіля'));
+        book.appendChild(el('p', 'bvs-ledger__cap', sc.caption));
+        var wrap = el('div', 'bvs-ledger__wrap');
+        var tbl = el('table', 'bvs-ledger__table');
+        var thead = el('thead');
+        var hr = el('tr');
+        sc.cols.forEach(function (c) { var th = el('th', null, c); th.scope = 'col'; hr.appendChild(th); });
+        thead.appendChild(hr);
+        tbl.appendChild(thead);
+        var tbody = el('tbody');
+        var cells = {};
+        var marked = [];
+        sc.rows.forEach(function (row, ri) {
+            var tr = el('tr');
+            row.forEach(function (v, ci) {
+                var td = el('td');
+                if (sc.mode === 'mark') {
+                    var b = el('button', 'bvs-cell', v === '' ? ' ' : v);
+                    b.type = 'button';
+                    b.setAttribute('aria-pressed', 'false');
+                    b.setAttribute('aria-label', sc.cols[ci] + ', рядок ' + (ri + 1) + ': ' + (v === '' ? 'порожньо' : v));
+                    b.addEventListener('click', function () { toggle(ri, ci); });
+                    cells[ri + ':' + ci] = b;
+                    td.appendChild(b);
+                } else {
+                    td.textContent = v;
+                }
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        tbl.appendChild(tbody);
+        wrap.appendChild(tbl);
+        book.appendChild(wrap);
+
+        var msg = el('div', 'bvs-msg', sc.mode === 'mark' ? 'Позначте до ' + sc.max_marks + ' клітинок, які здаються неправильними.' : 'Запишіть звіт для майстра.');
+        msg.setAttribute('aria-live', 'polite');
+        msg.setAttribute('role', 'status');
+        var act = el('div', 'bvs-ledger__act');
+        var go;
+        var rep = {};
+        if (sc.mode === 'mark') {
+            go = el('button', 'bvs-buy', 'Перевірити позначене');
+            go.type = 'button';
+            go.addEventListener('click', function () { send('check', marked.slice()); });
+            var clr = el('button', 'bvs-btn bvs-btn--ghost bvs-ledger__clear', 'Зняти позначки');
+            clr.type = 'button';
+            clr.addEventListener('click', function () { marked.slice().forEach(function (m) { toggle(m[0], m[1]); }); });
+            act.appendChild(go);
+            act.appendChild(clr);
+        } else {
+            var rf = el('form', 'bvs-report');
+            rf.noValidate = true;
+            [['expected', 'Очікувано'], ['actual', 'Фактично']].forEach(function (p, i) {
+                var row = el('div', 'bvs-field');
+                var lab = el('label', null, p[1] + ':');
+                lab.htmlFor = 'bvs-rep' + i;
+                var inp = el('input', 'bvs-field__input');
+                inp.id = 'bvs-rep' + i;
+                inp.type = 'text';
+                inp.maxLength = sc.max_input || 30;
+                inp.setAttribute('autocomplete', 'off');
+                row.appendChild(lab);
+                row.appendChild(inp);
+                rf.appendChild(row);
+                rep[p[0]] = inp;
+            });
+            go = el('button', 'bvs-buy', 'Записати звіт');
+            go.type = 'submit';
+            rf.appendChild(go);
+            rf.addEventListener('submit', function (e) { e.preventDefault(); send('report', { expected: rep.expected.value, actual: rep.actual.value }); });
+            act.appendChild(rf);
+        }
+        book.appendChild(act);
+        book.appendChild(msg);
+        stage.appendChild(book);
+        stage.appendChild(el('div', 'bvs-ground'));
+        grid.appendChild(stage);
+
+        var P = sidePanel(o, sc, { title: 'Таблицю бібліотеки перевірено!', again: 'Пройти ще раз (нова таблиця)',
+            busy: function () { return busy; }, say: function (t) { msg.textContent = t; } });
+        grid.appendChild(P.side);
+        root.appendChild(grid);
+        host.appendChild(root);
+
+        function toggle(r, c) {
+            if (busy || locked || P.done()) { return; }
+            var key = r + ':' + c;
+            var b = cells[key];
+            if (!b || b.classList.contains('is-found')) { return; }
+            var i = -1;
+            marked.forEach(function (m, j) { if (m[0] === r && m[1] === c) { i = j; } });
+            if (i >= 0) {
+                marked.splice(i, 1);
+                b.setAttribute('aria-pressed', 'false');
+            } else {
+                if (marked.length >= sc.max_marks) { msg.textContent = 'За раз можна позначити не більше ' + sc.max_marks + ' клітинок.'; return; }
+                marked.push([r, c]);
+                b.setAttribute('aria-pressed', 'true');
+                b.classList.remove('is-wrong');
+            }
+            go.textContent = 'Перевірити позначене' + (marked.length ? ' (' + marked.length + ')' : '');
+            Sound.tone(440, 0.05, 'square');
+        }
+        function describe(op, input) {
+            if (op === 'report') { return 'Очікувано: ' + input.expected + ' / Фактично: ' + input.actual; }
+            return input.map(function (m) {
+                var v = sc.rows[m[0]][m[1]];
+                return '«' + sc.rows[m[0]][0] + '» · ' + sc.cols[m[1]] + ': ' + (v === '' ? '(порожньо)' : v);
+            }).join('; ');
+        }
+        function send(op, input, retry) {
+            if (busy || P.done()) { return; }
+            busy = true;
+            go.disabled = true;
+            o.api('scene_act', { token: o.token, op: op, input: input }).then(function (r) {
+                busy = false;
+                go.disabled = locked;
+                if (!r.ok) {
+                    if (r.error === 'conflict' && !retry) { send(op, input, true); return; }
+                    if (r.error === 'expired') { o.err('expired'); return; }
+                    var t = { too_long: 'Задовге значення або забагато позначок.', too_many_actions: 'Дій у цій спробі вже ' + sc.max_actions + '. Здайте роботу або почніть заново.',
+                        already_checked: 'Роботу вже здано.', rate_limited: 'Забагато натискань за хвилину. Зачекайте трохи.' }[r.error];
+                    msg.textContent = t || 'Бібліотека не відповідає. Спробуйте ще раз.';
+                    msg.className = 'bvs-msg is-bad';
+                    return;
+                }
+                var x = r.reaction;
+                msg.textContent = (x.tone === 'bad' ? '⚠ ' : '') + x.text + (x.wrong_left !== undefined && x.result !== 'bug' ? ' Хибних позначок ще можна: ' + x.wrong_left + '.' : '');
+                msg.className = 'bvs-msg' + (x.tone === 'bad' ? ' is-bad' : '');
+                (x.marks || []).forEach(function (m) {
+                    var b = cells[m.r + ':' + m.c];
+                    if (!b) { return; }
+                    b.setAttribute('aria-pressed', 'false');
+                    if (m.res === 'bug' || m.res === 'repeat') {
+                        b.classList.add('is-found');
+                        b.setAttribute('aria-label', b.getAttribute('aria-label') + ' — помилку знайдено');
+                    } else {
+                        b.classList.add('is-wrong');
+                    }
+                });
+                if (op === 'check') { marked = []; go.textContent = 'Перевірити позначене'; }
+                if (x.locked) {
+                    locked = true;
+                    go.disabled = true;
+                    P.mentor.say('Забагато хибних позначок. Якщо вже є знахідка — здайте роботу, інакше почніть з <b>новою таблицею</b>.', 'neutral');
+                }
+                if (x.result === 'info') { P.update(r.found, r.can_submit); return; }
+                var shown = describe(op, input);
+                if (x.result === 'bug') {
+                    if (!reduced) { book.classList.remove('is-shake'); void book.offsetWidth; book.classList.add('is-shake'); }
+                    showBugs(P, stage, go, x, shown);
+                } else if (x.result === 'useless') {
+                    P.log.add(shown, op === 'report' ? 'майстер не погодився' : 'тут усе гаразд', null);
+                    if (!x.locked) { P.mentor.say(x.text, 'neutral'); }
+                } else {
+                    P.log.add(shown, x.text, null);
+                }
+                P.update(r.found, r.can_submit);
+            });
+        }
+        var firstBtn = tbody.querySelector('button') || rep.expected;
+        if (firstBtn) { firstBtn.focus({ preventScroll: true }); }
+    }
+
+    window.BVScene = { machine: machine, form: form, table: table, Mentor: Mentor, Collection: Collection, Log: Log, finale: finale, stamp: stamp, pop: pop, Sound: Sound };
 })();
 
 (function () {
@@ -1411,7 +1609,7 @@
             ageBox();
             token = r.token;
             scene = r.scene;
-            var sceneFn = scene && window.BVScene ? { input_machine: 'machine', form_scene: 'form' }[scene.type] : null;
+            var sceneFn = scene && window.BVScene ? { input_machine: 'machine', form_scene: 'form', table_scene: 'table' }[scene.type] : null;
             if (sceneFn) {
                 game.classList.add('bv-game--scene');
                 window.BVScene[sceneFn]({ host: box, scene: scene, token: token, api: api, word: word, nextUrl: nextUrl,

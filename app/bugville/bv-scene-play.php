@@ -15,7 +15,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/bv-player.php';
 
-const BV_SCENE_OPS = ['buy', 'claim', 'refill', 'submit'];
+const BV_SCENE_OPS = ['buy', 'claim', 'refill', 'submit', 'check', 'report'];
 
 /** Ліміт дій у сцені: гравець / сесія і IP (окремо від лімітів перевірок — дій у сцені набагато більше). */
 function bv_scene_rate_ok(PDO $pdo, array $ctx): bool
@@ -119,6 +119,12 @@ function bv_scene_act(PDO $pdo, string $token, string $op, mixed $input, array $
             return ['ok' => false, 'error' => 'too_long'];
         }
         [$react, $state] = bv_scene_form_act($rules, $state, $op, $values);
+    } elseif ($rules['type'] === 'table_scene') {
+        $in = bv_table_clean($rules, $op, is_array($input) ? $input : null);
+        if ($in === null) {
+            return ['ok' => false, 'error' => 'too_long'];
+        }
+        [$react, $state] = bv_scene_table_act($rules, $state, $op, $in);
     } elseif ($clean === null) {
         return ['ok' => false, 'error' => 'too_long'];
     } else {
@@ -139,7 +145,7 @@ function bv_scene_act(PDO $pdo, string $token, string $op, mixed $input, array $
 /** Розбір після здачі: що знайдено і скільки лишилося (самі незнайдені поломки не розкриваються — для повтору). */
 function bv_scene_explain(array $sum, string $type = 'input_machine'): string
 {
-    $where = $type === 'form_scene' ? 'у бланку пошти' : 'в автоматі';
+    $where = ['form_scene' => 'у бланку пошти', 'table_scene' => 'у таблиці бібліотеки'][$type] ?? 'в автоматі';
     $t = "Знайдено поломок: {$sum['found']} з {$sum['total']}.";
     if ($sum['missing'] > 0) {
         $t .= ' Ще ' . $sum['missing'] . ' ' . ($sum['missing'] === 1 ? 'ховається' : 'ховаються') . ' ' . $where . ' — їх можна пошукати під час повтору.';
@@ -147,7 +153,13 @@ function bv_scene_explain(array $sum, string $type = 'input_machine'): string
         $t .= ' Усі знайдено!';
     }
     if ($sum['useless'] > 0) {
-        $t .= " Перевірок, де автомат працював правильно, а ви сказали «поломка»: {$sum['useless']}.";
+        $t .= $type === 'table_scene'
+            ? " Хибних позначок і звітів, які майстер не прийняв: {$sum['useless']}."
+            : " Перевірок, де автомат працював правильно, а ви сказали «поломка»: {$sum['useless']}.";
+    }
+
+    if ($type === 'table_scene') {
+        return $t . ' Таблиця має бути чесною: справжні дати, без двійників і порожніх клітинок, кожне значення у своєму стовпці. Звіт — «очікувано» і «фактично».';
     }
 
     return $t . ($type === 'form_scene' ? ' Форма має зупиняти те, що не можна прийняти: порожнє, задовге, неправильне чи повторне.'

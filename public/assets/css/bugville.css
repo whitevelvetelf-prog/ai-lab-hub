@@ -406,6 +406,36 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 .bvs-journal__list li span { overflow-wrap: anywhere; min-width: 0; }
 .bvs-journal__empty { color: var(--muted); }
 
+
+/* ---------- Сцена «Бібліотека» (table_scene): журнал-таблиця, позначки клітинок, звіт ---------- */
+.bvs-lib__shelf { position: relative; z-index: 1; display: flex; justify-content: center; margin-bottom: -4px; }
+.bvs-lib__svg { width: 170px; height: auto; }
+.bvs-ledger { position: relative; z-index: 1; max-width: 460px; margin: 0 auto; background: #fffbe0; color: #2c2c2c; border-radius: 10px; padding: 12px; display: grid; gap: 10px;
+    box-shadow: 0 18px 30px rgba(0, 0, 0, .35); border-left: 8px solid #8a5a00; }
+.bvs-ledger.is-shake { animation: bvs-shake .5s; }
+.bvs-ledger__cap { margin: 0; font-weight: 800; color: #1b2559; font-size: .92rem; }
+.bvs-ledger__wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bvs-ledger__table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.bvs-ledger__table th { text-align: left; font: 800 .72rem var(--f-display); letter-spacing: .04em; text-transform: uppercase; color: #8a5a00; padding: 4px; border-bottom: 2px solid #c9c2a0; }
+.bvs-ledger__table td { padding: 2px; border-bottom: 1px solid #e3dcb8; vertical-align: top; }
+.bvs-cell { display: block; width: 100%; min-height: 44px; text-align: left; padding: 4px 5px; background: transparent; border: 2px solid transparent; border-radius: 6px;
+    font: 700 .82rem/1.2 var(--f-body); color: #222; overflow-wrap: break-word; hyphens: manual; }
+.bvs-cell:hover { background: #f4ecc4; }
+.bvs-cell[aria-pressed="true"] { border-color: #2116ad; background: #eceafd; }
+.bvs-cell[aria-pressed="true"]::before { content: "◎ "; color: #2116ad; }
+.bvs-cell.is-found { border-color: #b3261e; background: #ffe3de; cursor: default; }
+.bvs-cell.is-found::before { content: "⚠ "; color: #b3261e; }
+.bvs-cell.is-wrong:not([aria-pressed="true"]) { border-color: #9aa0b8; border-style: dashed; }
+.bvs-cell.is-wrong:not([aria-pressed="true"])::after { content: " ✓"; color: #1d7a4b; }
+.bvs-cell:focus-visible { outline: 3px solid #2116ad; outline-offset: 1px; }
+.bvs-ledger__table td:not(:has(button)) { padding: 6px 5px; font-weight: 700; }
+.bvs-ledger__act { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bvs-ledger__act .bvs-buy { flex: 1 1 200px; }
+.bvs-ledger__clear { color: #1b2559; border-color: #c9c2a0; }
+.bvs-report { display: grid; gap: 8px; width: 100%; }
+.bvs-ledger .bvs-msg { background: #e3f7ee; }
+.bvs-ledger .bvs-msg.is-bad { background: #ffd9d4; color: #7a1308; }
+
 @media (max-width: 420px) {
     .bvs { padding: 10px; border-radius: 16px; }
     .bvs-scene { padding: 14px 8px 0; }

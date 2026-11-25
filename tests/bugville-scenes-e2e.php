@@ -165,6 +165,37 @@ try {
     $f1 = call($base, $jar, $c4, ['action' => 'scene_finish', 'token' => $pt]);
     $f2 = call($base, $jar, $c4, ['action' => 'scene_finish', 'token' => $pt]);
     check(($f1['json']['stars'] ?? 0) === 3 && ($f2['json']['repeat'] ?? false) === true && !isset($f2['json']['would_earn']), 'здано 3 зірки; повтор токена — без нагороди');
+
+    echo "8. «Бібліотека» (3.4 і 3.5) через API\n";
+    $html5 = page($jar, $base . '/bugville-mission.php?m=304');
+    $c5 = $csrfOf($html5);
+    $t = call($base, $jar, $c5, ['action' => 'start', 'mission' => 304]);
+    $tokens[] = $tt = (string) ($t['json']['token'] ?? '');
+    check(($t['json']['scene']['type'] ?? '') === 'table_scene' && !preg_match('/bug_defs|"cells"|"bugs"/', $t['body']), 'start 3.4: таблиця без координат поломок');
+    $tseed = (string) $pdo->query('SELECT seed FROM bv_attempts WHERE token = ' . $pdo->quote($tt))->fetchColumn();
+    $tr = bv_scene_rules('table_swap', $tseed, 304);
+    $all = [];
+    foreach ($tr['rows'] as $ri => $row) {
+        foreach ($row as $ci => $v) {
+            $all[] = [$ri, $ci];
+        }
+    }
+    $many = call($base, $jar, $c5, ['action' => 'scene_act', 'token' => $tt, 'op' => 'check', 'input' => $all]);
+    check($many['code'] === 400, 'позначити всю таблицю одним запитом — 400');
+    $str = call($base, $jar, $c5, ['action' => 'scene_act', 'token' => $tt, 'op' => 'check', 'input' => [['1', '2']]]);
+    check($str['code'] === 400, 'координати рядками — 400');
+    $hitT = call($base, $jar, $c5, ['action' => 'scene_act', 'token' => $tt, 'op' => 'check', 'input' => [$tr['bug_defs'][0]['cells'][1]]]);
+    check(($hitT['json']['found'] ?? 0) === 1 && ($hitT['json']['reaction']['marks'][0]['res'] ?? '') === 'bug', 'переплутана клітинка — знайдено');
+    $ft = call($base, $jar, $c5, ['action' => 'scene_finish', 'token' => $tt]);
+    check(($ft['json']['stars'] ?? 0) === 3, '3.4 здано');
+    $html6 = page($jar, $base . '/bugville-mission.php?m=305');
+    $c6 = $csrfOf($html6);
+    $rp = call($base, $jar, $c6, ['action' => 'start', 'mission' => 305]);
+    $tokens[] = $rt = (string) ($rp['json']['token'] ?? '');
+    $rr = bv_scene_rules('table_report', (string) $pdo->query('SELECT seed FROM bv_attempts WHERE token = ' . $pdo->quote($rt))->fetchColumn(), 305);
+    check(($rp['json']['scene']['mode'] ?? '') === 'report' && !str_contains($rp['body'], '"expected"'), 'start 3.5: звіт без правильних відповідей');
+    $rep = call($base, $jar, $c6, ['action' => 'scene_act', 'token' => $rt, 'op' => 'report', 'input' => ['expected' => $rr['expected'], 'actual' => $rr['actual']]]);
+    check(($rep['json']['found'] ?? 0) === 1, 'правильний звіт — поломку записано');
 } finally {
     foreach ($tokens as $t) {
         $pdo->prepare('DELETE FROM bv_attempts WHERE token = :t AND user_id IS NULL')->execute([':t' => $t]);
