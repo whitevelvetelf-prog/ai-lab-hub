@@ -232,6 +232,16 @@ function bv_check_and_reward(PDO $pdo, string $token, mixed $given, array $ctx):
     if (!$r['ok']) {
         return $r;
     }
+
+    return bv_reward_checked($pdo, $token, $r, $ctx);
+}
+
+/**
+ * Нагорода після перевіреної спроби ($r — результат bv_attempt_check або bv_scene_finish: ok, repeat, correct, stars):
+ * акаунт → bv_xp_log (приріст), почато гостем і здано з акаунтом → зарахування з лімітами, гість → would_earn.
+ */
+function bv_reward_checked(PDO $pdo, string $token, array $r, array $ctx): array
+{
     $st = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
     $st->execute([':t' => $token]);
     $a = (array) $st->fetch(PDO::FETCH_ASSOC);

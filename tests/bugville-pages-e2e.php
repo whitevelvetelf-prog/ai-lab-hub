@@ -143,15 +143,12 @@ try {
     echo "Гість грає, потім реєструється з гри\n";
     $csrf = $csrfOf($ms['body']);
     $st = $api($jar, $csrf, ['action' => 'start', 'mission' => 105]);
-    check(($st['ok'] ?? false) && !empty($st['scene']['options']), 'гість: start дає сцену');
-    // Правильну відповідь бере тест із сервера (як перевірка), браузер її не бачить.
-    $row = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
-    $row->execute([':t' => $st['token']]);
-    $a = $row->fetch(PDO::FETCH_ASSOC);
-    $variant = bv_build_variant($pdo, bv_mission(105), $a['variant_id'] !== null ? (int) $a['variant_id'] : null, $a['seed'], 'uk');
-    $map105 = (array) json_decode((string) $a['opt_map_json'], true);
-    $pub = (string) array_search($variant['answer']['correct'], $map105, true);
-    $ck = $api($jar, $csrf, ['action' => 'check', 'token' => $st['token'], 'answer' => $pub]);
+    // 1.5 — інтерактивна сцена «Автомат» (bv-scenes.php): гість діє сам, знайдене рахує сервер.
+    check(($st['ok'] ?? false) && ($st['scene']['type'] ?? '') === 'input_machine', 'гість: start дає сцену');
+    foreach (['0', '-1', 'abc'] as $in) {
+        $api($jar, $csrf, ['action' => 'scene_act', 'token' => $st['token'], 'op' => 'buy', 'input' => $in]);
+    }
+    $ck = $api($jar, $csrf, ['action' => 'scene_finish', 'token' => $st['token']]);
     check(($ck['correct'] ?? false) === true && ($ck['stars'] ?? 0) === 3 && ($ck['would_earn']['xp'] ?? 0) === 20, 'гість: правильно, 3 зірки, would_earn 20 XP');
     $map2 = http($jar, $base . '/bugville.php');
     check(str_contains($map2['body'], '<dd>20</dd>') && str_contains($map2['body'], 'Зірок: 3 з 3'), 'карта гостя: 20 XP і 3 зірки в місії');

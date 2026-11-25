@@ -11,6 +11,8 @@ declare(strict_types=1);
  *   start        — {mission} → {token, scene}: лише сцена, без відповіді й параметрів поломки.
  *   hint         — {token} → підказка (безкоштовна, лише знижує зірки: максимум 2).
  *   check        — {token, answer} → результат, розбір побаченого варіанта; акаунт → earned + saved, гість → would_earn.
+ *   scene_act    — {token, op: buy|claim|refill, input ≤ 30} → реакція сцени від сервера (інтерактивні місії Розділу 1).
+ *   scene_finish — {token} → «Здати роботу»: знайдене рахує сервер зі свого стану; ≥ min_found — зірки й нагорода.
  *   confirm_age  — {confirm: true} для того, хто ввійшов: «мені виповнилося N років» → зарахування гостьового сеансу.
  *   exam_state   — {exam} → доступність, складено, грамота, повтор (для всіх).
  *   exam_start   — {exam} → {token, tasks: [{n, scene, answered}]}; незавершений іспит продовжується (лише акаунт 16+).
@@ -26,6 +28,7 @@ require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-exam.php';
 require_once __DIR__ . '/../app/bugville/bv-progress.php';
+require_once __DIR__ . '/../app/bugville/bv-scene-play.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
@@ -134,7 +137,42 @@ switch ($action) {
             $codes = ['rate_limited' => 429, 'not_found' => 404, 'forbidden' => 404, 'already_checked' => 409];
             bv_api_out(['ok' => false, 'error' => $r['error'] === 'forbidden' ? 'not_found' : $r['error']], $codes[$r['error']] ?? 400);
         }
-        bv_api_out(['ok' => true, 'hint' => $r['hint']] + $who);
+        bv_api_out(['ok' => true, 'hint' => $r['hint']] + (isset($r['hints']) ? ['hints' => $r['hints']] : []) + $who);
+
+    // ---------- Інтерактивні сцени (Розділ 1): сирі дії → реакція від сервера; знайдене рахує лише сервер ----------
+    case 'scene_act':
+        $token = is_string($in['token'] ?? null) ? $in['token'] : '';
+        $op = is_string($in['op'] ?? null) ? $in['op'] : '';
+        if ($token === '' || $op === '') {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        $r = bv_scene_act($pdo, $token, $op, $in['input'] ?? '', $ctx);
+        if (!$r['ok']) {
+            $codes = ['rate_limited' => 429, 'not_found' => 404, 'forbidden' => 404, 'expired' => 410, 'bad_request' => 400, 'too_long' => 400,
+                'already_checked' => 409, 'too_many_actions' => 409, 'conflict' => 409];
+            bv_api_out(['ok' => false, 'error' => $r['error'] === 'forbidden' ? 'not_found' : $r['error']], $codes[$r['error']] ?? 400);
+        }
+        bv_api_out($r);
+
+    case 'scene_finish':
+        $token = is_string($in['token'] ?? null) ? $in['token'] : '';
+        if ($token === '') {
+            bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
+        }
+        $xpBefore = $ctx['user_id'] !== null ? $xpNow((int) $ctx['user_id']) : 0;
+        $r = bv_scene_finish($pdo, $token, $ctx);   // поля на кшталт «found» від клієнта не читаються взагалі
+        if (!$r['ok']) {
+            $codes = ['rate_limited' => 429, 'not_found' => 404, 'forbidden' => 404, 'expired' => 410, 'not_enough' => 409];
+            bv_api_out(['ok' => false, 'error' => $r['error'] === 'forbidden' ? 'not_found' : $r['error']]
+                + array_intersect_key($r, ['found' => 1, 'min_found' => 1]), $codes[$r['error']] ?? 400);
+        }
+        if ($ctx['user_id'] !== null) {
+            $who['totals'] = bv_totals($pdo, (int) $ctx['user_id']);
+            if (empty($r['repeat']) && !empty($r['saved'])) {   // звання, значки, серія — як після check
+                $r['progress'] = $progress((int) $ctx['user_id'], $xpBefore, true);
+            }
+        }
+        bv_api_out($r + $who);
 
     case 'check':
         $token = is_string($in['token'] ?? null) ? $in['token'] : '';

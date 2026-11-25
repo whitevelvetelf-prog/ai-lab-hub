@@ -202,12 +202,9 @@ try {
     $mp = page($jar, $base . '/bugville-mission.php?m=102');
     $csrf = csrf_of($mp['body']);
     $st = api($base, $jar, $csrf, ['action' => 'start', 'mission' => 102]);
-    $row = $pdo->prepare('SELECT * FROM bv_attempts WHERE token = :t');
-    $row->execute([':t' => $st['token'] ?? '']);
-    $a = $row->fetch(PDO::FETCH_ASSOC);
-    $var = bv_build_variant($pdo, bv_mission(102), null, $a['seed'], 'uk');
-    $pub = (string) array_search($var['answer']['correct'], (array) json_decode((string) $a['opt_map_json'], true), true);
-    $ck = api($base, $jar, $csrf, ['action' => 'check', 'token' => $st['token'], 'answer' => $pub]);
+    // 1.2 — інтерактивна сцена «Автомат»: поломка на 0, далі «Здати роботу» (scene_finish нараховує й прогрес)
+    api($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $st['token'] ?? '', 'op' => 'buy', 'input' => '0']);
+    $ck = api($base, $jar, $csrf, ['action' => 'scene_finish', 'token' => $st['token'] ?? '']);
     check(($ck['correct'] ?? false) && in_array('first_bug', array_column($ck['progress']['new_badges'] ?? [], 'key'), true)
         && ($ck['progress']['streak']['current'] ?? 0) === 1, 'відповідь акаунта: у відповіді «Перша поломка» і серія 1');
     $map = page($jar, $base . '/bugville.php')['body'];

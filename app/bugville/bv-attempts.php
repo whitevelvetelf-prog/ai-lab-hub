@@ -14,6 +14,7 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . '/bv-variants.php';
+require_once __DIR__ . '/bv-scenes.php';
 
 /** Контекст поточного запиту: користувач, ключ гостя з сесії, IP, мова. */
 function bv_ctx(?int $userId, string $lang = 'uk'): array
@@ -97,6 +98,9 @@ function bv_attempt_start(PDO $pdo, int $missionId, array $ctx, string $kind = '
         || ($ipHash !== null && !bv_rate_hit($pdo, 'bv_start_ip', $ipHash, (int) bv_cfg('bugville_starts_per_min_ip')))) {
         return ['ok' => false, 'error' => 'rate_limited'];
     }
+    if (!empty($mission['scene_gen']) && $kind === 'mission') {
+        return bv_scene_start($pdo, $mission, $ctx);
+    }
     $picked = bv_pick_variant($pdo, $mission, $ctx['user_id'], $ctx['lang']);
     if ($picked === null) {
         return ['ok' => false, 'error' => 'no_variant'];
@@ -169,6 +173,13 @@ function bv_attempt_hint(PDO $pdo, string $token, array $ctx): array
     if ((int) $a['used'] === 1) {
         return ['ok' => false, 'error' => 'already_checked'];
     }
+    if (($a['scene_state_json'] ?? null) !== null) {   // інтерактивна сцена: підказки з правил її варіанта
+        $rules = bv_scene_rules((string) ($mission['scene_gen'] ?? ''), (string) $a['seed'], (int) $a['mission_id']);
+        $hints = array_values(array_map('strval', (array) ($rules['hints'] ?? [])));
+        $pdo->prepare('UPDATE bv_attempts SET hint_used = 1 WHERE id = :id')->execute([':id' => (int) $a['id']]);
+
+        return ['ok' => true, 'hint' => $hints[0] ?? 'Подивіться уважно на межі.', 'hints' => $hints];
+    }
     $v = bv_build_variant($pdo, $mission, $a['variant_id'] !== null ? (int) $a['variant_id'] : null, $a['seed'], (string) $a['lang']);
     $pdo->prepare('UPDATE bv_attempts SET hint_used = 1 WHERE id = :id')->execute([':id' => (int) $a['id']]);
 
@@ -238,6 +249,9 @@ function bv_attempt_check(PDO $pdo, string $token, mixed $given, array $ctx): ar
     if (!$owner) {
         return ['ok' => false, 'error' => 'forbidden'];
     }
+    if (($a['scene_state_json'] ?? null) !== null) {
+        return ['ok' => false, 'error' => 'bad_answer'];   // сцену здають лише через scene_finish: обхід «вибором відповіді» закрито
+    }
     $mission = bv_mission((int) $a['mission_id']);
     $variant = $mission === null ? null
         : bv_build_variant($pdo, $mission, $a['variant_id'] !== null ? (int) $a['variant_id'] : null, $a['seed'], (string) $a['lang']);
@@ -269,6 +283,56 @@ function bv_attempt_check(PDO $pdo, string $token, mixed $given, array $ctx): ar
 
     return ['ok' => true, 'repeat' => !$first, 'awarded' => $first && $ok, 'correct' => $ok, 'score' => $score, 'stars' => $stars,
         'explain' => $explain, 'correct_ids' => $correctIds];
+}
+
+// ---------- Старт інтерактивної сцени (bv-scenes.php) ---------------------------------------------------------
+
+/**
+ * Нова спроба сцени: seed (не той, що в попередній спробі, і за можливості — небачений), токен, початковий стан.
+ * Браузер отримує лише bv_scene_public(); правила й seed лишаються на сервері.
+ */
+function bv_scene_start(PDO $pdo, array $mission, array $ctx): array
+{
+    $mid = (int) $mission['id'];
+    $gen = (string) $mission['scene_gen'];
+    $seen = bv_seen($pdo, $mid, $ctx['user_id']);
+    $last = bv_last_key($pdo, $mid, $ctx['user_id']);
+    $seed = null;
+    $rules = null;
+    $key = '';
+    for ($i = 0; $i < 12; $i++) {
+        $seed = bin2hex(random_bytes(8));
+        $rules = bv_scene_rules($gen, $seed, $mid);
+        if ($rules === null) {
+            return ['ok' => false, 'error' => 'no_variant'];
+        }
+        $key = 's:' . bv_fingerprint($rules);
+        if (!isset($seen[$key]) && $key !== $last) {
+            break;
+        }
+    }
+    if ($key === $last) {
+        return ['ok' => false, 'error' => 'no_variant'];
+    }
+    $token = bv_new_token();
+    try {
+        $pdo->prepare("INSERT INTO bv_attempts (token, user_id, session_hash, mission_id, variant_id, seed, variant_key, kind, lang,
+                           opt_map_json, started_at, ip_hash, scene_state_json, act_count)
+                       VALUES (:t, :u, :s, :m, NULL, :seed, :k, 'mission', :l, NULL, :at, :ip, :st, 0)")
+            ->execute([':t' => $token, ':u' => $ctx['user_id'], ':s' => $ctx['user_id'] === null ? bv_session_hash($ctx['guest_key']) : null,
+                ':m' => $mid, ':seed' => $seed, ':k' => $key, ':l' => $ctx['lang'], ':at' => bv_now(), ':ip' => bv_ip_hash((string) $ctx['ip']),
+                ':st' => json_encode(bv_scene_initial_state($rules), JSON_UNESCAPED_UNICODE)]);
+    } catch (PDOException $e) {
+        error_log('[bugville] scene start failed (migration 38?): ' . $e->getCode());
+
+        return ['ok' => false, 'error' => 'unavailable'];
+    }
+    bv_mark_seen($pdo, $mid, $ctx['user_id'], $key);
+    if ($ctx['user_id'] === null) {
+        $_SESSION['bv_guest']['tokens'][] = $token;
+    }
+
+    return ['ok' => true, 'token' => $token, 'scene' => bv_scene_public($rules)];
 }
 
 // ---------- Прибирання гостьових спроб (перший із двох DELETE гри) ---------------------------------------------
