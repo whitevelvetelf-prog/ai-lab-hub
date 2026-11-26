@@ -24,6 +24,7 @@ $base = rtrim($argv[1] ?? 'http://127.0.0.1:8099', '/');
 $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-crm.php';
+require_once __DIR__ . '/bugville-unlock-helper.php';
 bv_load_missions($pdo);
 
 $fails = 0;
@@ -199,20 +200,27 @@ try {
     $jar = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvg');
     $lp = page($jar, $base . '/login.php');
     page($jar, $base . '/login.php', ['csrf' => csrf_of($lp['body']), 'email' => $w['email'], 'password' => $pass]);
-    $mp = page($jar, $base . '/bugville-mission.php?m=102');
+    // Етап 0: перша місія акаунта — 1.1 (місії відкриваються по черзі). Дії — як у гравця, поломку визначає сервер.
+    $mp = page($jar, $base . '/bugville-mission.php?m=101');
     $csrf = csrf_of($mp['body']);
-    $st = api($base, $jar, $csrf, ['action' => 'start', 'mission' => 102]);
-    // 1.2 — інтерактивна сцена «Автомат»: поломка на 0, далі «Здати роботу» (scene_finish нараховує й прогрес)
-    api($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $st['token'] ?? '', 'op' => 'buy', 'input' => '0']);
+    $st = api($base, $jar, $csrf, ['action' => 'start', 'mission' => 101]);
+    $GLOBALS['BVT_TOKENS'][] = (string) ($st['token'] ?? '');
+    $seed = (string) $pdo->query('SELECT seed FROM bv_attempts WHERE token = ' . $pdo->quote((string) ($st['token'] ?? '')))->fetchColumn();
+    foreach (bvt_moves(bv_scene_rules('machine_change', $seed, 101)) as [$op, $in]) {
+        $x = api($base, $jar, $csrf, ['action' => 'scene_act', 'token' => $st['token'] ?? '', 'op' => $op, 'input' => $in]);
+        if (($x['can_submit'] ?? false) === true) {
+            break;
+        }
+    }
     $ck = api($base, $jar, $csrf, ['action' => 'scene_finish', 'token' => $st['token'] ?? '']);
     check(($ck['correct'] ?? false) && in_array('first_bug', array_column($ck['progress']['new_badges'] ?? [], 'key'), true)
         && ($ck['progress']['streak']['current'] ?? -1) === 0, 'відповідь акаунта: у відповіді «Перша поломка»; серію звичайна місія не зараховує (лише Поломка дня)');
     $map = page($jar, $base . '/bugville.php')['body'];
-    check(str_contains($map, 'Звання: <strong>Учень-шукач</strong>') && str_contains($map, 'Значки: 2 з 15') && str_contains($map, 'Серія: 0 дн.'),
+    check(str_contains($map, '<b>Учень-шукач</b>') && str_contains($map, 'Значки: 2 з 15') && str_contains($map, 'Днів поспіль: <b>0</b>'),
         'карта акаунта: звання, серія, значки');
     $g = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvg');
     $gm = page($g, $base . '/bugville.php')['body'];
-    check(str_contains($gm, 'Звання, значки й щоденна серія — теж для акаунтів') && !str_contains($gm, 'bv-badges'), 'гостю — лише підказка, без значків');
+    check(str_contains($gm, 'Ваше звання') && !str_contains($gm, 'bv-badges') && !str_contains($gm, 'підтвердьте вік'), 'гостю — звання сеансу, без значків і без вимоги віку');
     $cp = page($jar, $base . '/crm-bugville.php?view=progress');
     check(str_contains($cp['body'] ?? '', 'account.php') || $cp['code'] !== 200 || !str_contains($cp['body'], 'Звання за XP'), 'CRM «Звання й значки» — не для user');
 
@@ -221,6 +229,7 @@ try {
     check(($dry['bv_user_badges'] ?? 0) === 6 && ($dry['bv_streaks'] ?? 0) === 1, 'видалення охоплює 6 значків і серію');
 } finally {
     unset($GLOBALS['bv_today']);
+    bvt_cleanup($pdo);
     foreach ($users as $id) {
         bv_delete_player_data($pdo, $id);
         $pdo->prepare('DELETE FROM users WHERE id = :u')->execute([':u' => $id]);

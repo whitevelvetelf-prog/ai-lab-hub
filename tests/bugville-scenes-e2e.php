@@ -20,6 +20,7 @@ $base = rtrim($argv[1] ?? 'http://127.0.0.1:8097', '/');
 /** @var PDO $pdo */
 $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/bugville/bv-scene-play.php';
+require_once __DIR__ . '/bugville-unlock-helper.php';   // Етап 0: місії по черзі — гість чесно проходить попередні
 
 $fails = 0;
 $total = 0;
@@ -63,6 +64,7 @@ $jar2 = (string) tempnam(sys_get_temp_dir(), 'bvs');
 $tokens = [];
 
 try {
+    bvt_unlock($base, $jar, $pdo, 105);   // Етап 0: місії по черзі — гість чесно проходить 1.1–1.4
     echo "1. Сторінка місії\n";
     $html = page($jar, $base . '/bugville-mission.php?m=105');
     $csrf = $csrfOf($html);
@@ -167,6 +169,7 @@ try {
     $f2 = call($base, $jar, $c4, ['action' => 'scene_finish', 'token' => $pt]);
     check(($f1['json']['stars'] ?? 0) === 3 && ($f2['json']['repeat'] ?? false) === true && !isset($f2['json']['would_earn']), 'здано 3 зірки; повтор токена — без нагороди');
 
+    bvt_unlock($base, $jar, $pdo, 304);
     echo "8. «Бібліотека» (3.4 і 3.5) через API\n";
     $html5 = page($jar, $base . '/bugville-mission.php?m=304');
     $c5 = $csrfOf($html5);
@@ -189,6 +192,7 @@ try {
     check(($hitT['json']['found'] ?? 0) === 1 && ($hitT['json']['reaction']['marks'][0]['res'] ?? '') === 'bug', 'переплутана клітинка — знайдено');
     $ft = call($base, $jar, $c5, ['action' => 'scene_finish', 'token' => $tt]);
     check(($ft['json']['stars'] ?? 0) === 3, '3.4 здано');
+    bvt_unlock($base, $jar, $pdo, 305);
     $html6 = page($jar, $base . '/bugville-mission.php?m=305');
     $c6 = $csrfOf($html6);
     $rp = call($base, $jar, $c6, ['action' => 'start', 'mission' => 305]);
@@ -198,6 +202,7 @@ try {
     $rep = call($base, $jar, $c6, ['action' => 'scene_act', 'token' => $rt, 'op' => 'report', 'input' => ['expected' => $rr['expected'], 'actual' => $rr['actual']]]);
     check(($rep['json']['found'] ?? 0) === 1, 'правильний звіт — поломку записано');
 } finally {
+    bvt_cleanup($pdo);
     foreach ($tokens as $t) {
         $pdo->prepare('DELETE FROM bv_attempts WHERE token = :t AND user_id IS NULL')->execute([':t' => $t]);
     }

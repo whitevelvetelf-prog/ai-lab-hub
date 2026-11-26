@@ -26,6 +26,7 @@ $pdo = require __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../app/bugville/bv-player.php';
 require_once __DIR__ . '/../app/bugville/bv-missions.php';
 require_once __DIR__ . '/../app/bugville/bv-parents.php';
+require_once __DIR__ . '/bugville-unlock-helper.php';
 bv_load_missions($pdo);
 
 $fails = 0;
@@ -104,14 +105,23 @@ try {
 
     echo "Сторінки\n";
     $map = http($jar, $base . '/bugville.php');
-    check($map['code'] === 200 && str_contains($map['body'], 'Остання монета'), 'карта 200, є місія 1.5');
-    check(substr_count($map['body'], 'class="bv-soon"') === 6, '«скоро» — лише глави 2–7');
-    check(substr_count($map['body'], 'href="bugville-mission.php?m=') === 15, 'на карті 15 посилань на місії');
+    // Етап 0: місії відкриваються по черзі; новий гість бачить лише 1.1, назви ще не досягнутих — «???».
+    check($map['code'] === 200 && str_contains($map['body'], 'Скільки монет?') && !str_contains($map['body'], 'Остання монета'),
+        'карта 200: є 1.1, назва закритої 1.5 прихована');
+    check(substr_count($map['body'], '>скоро<') === 6, '«скоро» — лише глави 2–7');
+    preg_match_all('~href="bugville-mission\.php\?m=(\d+)"~', $map['body'], $mm);
+    check(array_values(array_unique($mm[1])) === ['101'], 'новому гостю — посилання лише на 1.1');
+    $ms = http($jar, $base . '/bugville-mission.php?m=105');
+    check($ms['code'] === 200 && !str_contains($ms['body'], 'id="bv-game"') && str_contains($ms['body'], 'ще закрита'),
+        'закрита 1.5 за прямим посиланням — без гри, «ще закрита»');
+    $lockedApi = $api($jar, $csrfOf($ms['body']), ['action' => 'start', 'mission' => 105]);
+    check(($lockedApi['error'] ?? '') === 'locked', 'API: start закритої 1.5 — locked');
+    bvt_unlock($base, $jar, $pdo, 105);   // гість чесно проходить 1.1–1.4
     $ms = http($jar, $base . '/bugville-mission.php?m=105');
     check($ms['code'] === 200 && str_contains($ms['body'], 'data-mission="105"') && str_contains($ms['body'], 'data-next="bugville-mission.php?m=201"'),
-        'місія 1.5 200, оболонка гри, наступна — 2.1');
+        'після 1.1–1.4 місія 1.5 відкрита, оболонка гри, наступна — 2.1');
     $m101 = http($jar, $base . '/bugville-mission.php?m=101');
-    check($m101['code'] === 200 && str_contains($m101['body'], 'id="bv-game"') && !str_contains($m101['body'], 'ще готується'), 'місія 1.1 грається');
+    check($m101['code'] === 200 && str_contains($m101['body'], 'id="bv-game"') && !str_contains($m101['body'], 'ще готується'), 'пройдена 1.1 грається повторно');
     check(http($jar, $base . '/bugville-mission.php?m=999')['code'] === 404, 'невідома місія — 404');
     check(http($jar, $base . '/bugville-mission.php?m=abc')['code'] === 404, 'місія не числом — 404');
     check(http($jar, $base . '/bugville-parents.php')['code'] === 404, '«Для батьків» — 404, поки є [ПІДТВЕРДИТИ]');
@@ -151,7 +161,9 @@ try {
     $ck = $api($jar, $csrf, ['action' => 'scene_finish', 'token' => $st['token']]);
     check(($ck['correct'] ?? false) === true && ($ck['stars'] ?? 0) === 3 && ($ck['would_earn']['xp'] ?? 0) === 20, 'гість: правильно, 3 зірки, would_earn 20 XP');
     $map2 = http($jar, $base . '/bugville.php');
-    check(str_contains($map2['body'], '<dd>20</dd>') && str_contains($map2['body'], 'Зірок: 3 з 3'), 'карта гостя: 20 XP і 3 зірки в місії');
+    $guestXp = preg_match('~<li><i>XP</i> (\d+)</li>~', $map2['body'], $gx) === 1 ? (int) $gx[1] : -1;
+    check($guestXp >= 20 && str_contains($map2['body'], 'Зірок: 3 з 3') && str_contains($map2['body'], 'Зареєструйтесь, щоб зберегти'),
+        'карта гостя: XP сеансу, 3 зірки в місії, «Зареєструйтесь, щоб зберегти»');
 
     $reg = http($jar, $base . '/register.php?next=' . rawurlencode('bugville-mission.php?m=105'));
     check($reg['code'] === 200 && str_contains($reg['body'], 'name="bv_age"') && str_contains($reg['body'], 'Мені виповнилося 16'),
@@ -166,14 +178,15 @@ try {
     check($done['code'] === 302 && $done['location'] === 'bugville-mission.php?m=105', 'після реєстрації — назад у ту саму місію');
     check($uid > 0 && bv_age_confirmed($pdo, $uid), 'вік підтверджено при реєстрації (bv_players)');
     $map3 = http($jar, $base . '/bugville.php');
-    check(bv_totals($pdo, $uid)['xp'] === 20 && str_contains($map3['body'], '<dd>20</dd>') && str_contains($map3['body'], 'Монети'),
-        'гостьову спробу зараховано: 20 XP на карті акаунта, є монети');
+    check(bv_totals($pdo, $uid)['xp'] === $guestXp && str_contains($map3['body'], '<li><i>XP</i> ' . $guestXp . '</li>') && str_contains($map3['body'], 'Монети'),
+        'гостьові спроби зараховано: XP сеансу на сторінці акаунта, є монети');
     check(str_contains($map3['body'], 'href="account.php"'), 'у шапці — «Кабінет» замість «Увійти»');
 } finally {
     foreach ($userIds as $u) {
         bv_delete_player_data($pdo, $u);
         $pdo->prepare('DELETE FROM users WHERE id = :u')->execute([':u' => $u]);
     }
+    bvt_cleanup($pdo);
     @unlink($jar);
     @unlink($jar2);
 }

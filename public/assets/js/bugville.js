@@ -1123,6 +1123,27 @@
         });
     }
 
+    // ---------- Перша сторінка (Етап 0): будинок → шлях його місій. Без JS видно всі шляхи; стан (відкрито / закрито) — із сервера ----------
+    var street = document.querySelector('.bvh-street');
+    if (street) {
+        var blds = street.querySelectorAll('.bvh-bld');
+        var showLevel = function (lv, focusPanel) {
+            blds.forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-level') === lv ? 'true' : 'false'); });
+            document.querySelectorAll('.bvh-path').forEach(function (p) { p.hidden = p.getAttribute('data-level') !== lv; });
+            var panel = document.getElementById('bvh-p' + lv);
+            if (focusPanel && panel) {
+                var r = panel.getBoundingClientRect();
+                if (r.top > window.innerHeight - 80) { panel.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' }); }
+            }
+        };
+        var pressed = street.querySelector('.bvh-bld[aria-pressed="true"]') || blds[0];
+        if (pressed) { showLevel(pressed.getAttribute('data-level'), false); }
+        street.addEventListener('click', function (e) {
+            var b = e.target.closest('.bvh-bld');
+            if (b) { showLevel(b.getAttribute('data-level'), true); }
+        });
+    }
+
     // ---------- Друк грамоти ----------
     document.querySelectorAll('[data-print]').forEach(function (b) {
         b.addEventListener('click', function () { window.print(); });
@@ -1155,6 +1176,7 @@
                 rate_limited: 'Забагато дій за хвилину. Зачекайте трохи.',
                 expired: 'Час на іспит минув. Завершіть його, щоб побачити результат.',
                 exam_unavailable: 'Іспит зараз недоступний.',
+                locked: 'Цей будинок ще закритий. Спершу пройдіть попередні місії.',
                 csrf: 'Сторінка застаріла. Оновіть її.',
                 cross_site: 'Сторінка застаріла. Оновіть її.'
             };
@@ -1524,6 +1546,7 @@
         rate_limited: 'Забагато спроб за хвилину. Зачекайте трохи й спробуйте знову.',
         expired: 'Час на цю спробу минув. Почнімо нову.',
         not_found: 'Місія зараз недоступна.',
+        locked: 'Ця місія ще закрита. Спершу пройдіть попередні.',
         no_variant: 'Місія зараз недоступна.',
         unavailable: 'Гра тимчасово недоступна.',
         csrf: 'Сторінка застаріла. Оновіть її.',

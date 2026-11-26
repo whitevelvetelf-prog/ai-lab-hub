@@ -145,9 +145,11 @@ try {
     $ids = $own();
     check(count($ids) === 6, '6 варіантів збережено');
     // 2.5 з Етапу B — сцена «Пошта» (сюжети з генератора), тож грається й без 6 активних варіантів; пул лишається для іспиту
-    check(str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '5 активних + чернетка — 2.5 (сцена) все одно грається');
+    // Етап 0: місії по черзі — для цього адміна 2.5 ще закрита, але не «готується» (контент є)
+    $pl = static fn(string $b) => !str_contains($b, 'ще готується') && (str_contains($b, 'id="bv-game"') || str_contains($b, 'ще закрита'));
+    check($pl(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body']), '5 активних + чернетка — 2.5 (сцена) все одно грабельна');
     page($ja, $base . '/crm-bugville.php', ['csrf' => $csrf, 'action' => 'save_variant', 'm' => POOL_M, 'id' => $ids[0]] + $variant(1));
-    check(str_contains(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body'], 'id="bv-game"'), '6 активних — місія грається');
+    check($pl(page($ja, $base . '/bugville-mission.php?m=' . POOL_M)['body']), '6 активних — місія грабельна');
     $home2 = page($ja, $base . '/crm-bugville.php');
     check(preg_match('~2\.5 Двічі натиснули</a></td>.*?<td>6 / 6</td>.*?<td class="bvc-warn">(.*?)</td>~s', $home2['body'], $row25) === 1 && trim($row25[1]) === '',
         'CRM: 6 / 6 і без попереджень для 2.5');

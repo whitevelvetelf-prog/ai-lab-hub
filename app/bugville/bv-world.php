@@ -37,9 +37,12 @@ const BV_WORDS = [
  * Глави: 1 — Етап 1 (відкрита), 2–7 — заглушки «скоро» (MAIN_TASK, розділ 4). access — 'free' / 'paid' (оплати немає).
  * Місія: id, n (номер на карті), title, word, mode (generator / pool / mixed), generator (ключ із bv_generators або null).
  */
-function bv_world(): array
+function bv_world(bool $reset = false): array
 {
     static $world = null;
+    if ($reset) {
+        $world = null;
+    }
     if ($world !== null) {
         return $world;
     }
@@ -88,7 +91,115 @@ function bv_world(): array
         ['id' => 6, 'path' => 'Senior', 'title' => 'Команда й ризики', 'access' => 'paid', 'status' => 'soon', 'levels' => []],
         ['id' => 7, 'path' => 'Senior', 'title' => 'Якість усього продукту', 'access' => 'paid', 'status' => 'soon', 'levels' => []],
     ];
+    // Назви й описи з бази (міграція № 41, bv_world_texts); без таблиці чи рядка — тексти вище.
+    $txt = bv_world_texts();
+    $sub = [1 => 'числа й межі', 2 => 'форми й поля', 3 => 'таблиці й дані'];
+    foreach ($world as &$ch) {
+        foreach ($ch['levels'] as &$lv) {
+            $t = $txt['level'][$lv['id']] ?? null;
+            $lv['subtitle'] = $t['subtitle'] ?? ($sub[$lv['id']] ?? '');
+            if ($t !== null) {
+                $lv['title'] = $t['title'];
+                $lv['intro'] = $t['intro'] ?? $lv['intro'];
+            }
+            foreach ($lv['missions'] as &$ms) {
+                if (isset($txt['mission'][$ms['id']])) {
+                    $ms['title'] = $txt['mission'][$ms['id']]['title'];
+                }
+            }
+            unset($ms);
+        }
+        unset($lv);
+    }
+    unset($ch);
+
     return $world;
+}
+
+/**
+ * Тексти світу з bv_world_texts: ['level' => [id => рядок], 'mission' => [id => рядок]]. Викликати з $pdo раз на запит
+ * (bv_load_missions) — далі повертає збережене. Без таблиці — порожньо (запасні тексти з коду).
+ */
+function bv_world_texts(?PDO $pdo = null, string $lang = 'uk'): array
+{
+    static $texts = ['level' => [], 'mission' => []];
+    if ($pdo !== null) {
+        $texts = ['level' => [], 'mission' => []];
+        try {
+            $st = $pdo->prepare("SELECT text_kind, ref_id, title, subtitle, intro FROM bv_world_texts WHERE lang = :l AND status = 'active'");
+            $st->execute([':l' => bv_lang($lang)]);
+            foreach ($st->fetchAll(PDO::FETCH_ASSOC) as $r) {
+                if (isset($texts[$r['text_kind']]) && trim((string) $r['title']) !== '') {
+                    $texts[$r['text_kind']][(int) $r['ref_id']] = $r;
+                }
+            }
+        } catch (Throwable) {
+            // таблиці ще немає (міграція № 41) — тексти з коду
+        }
+        bv_world(true);
+    }
+
+    return $texts;
+}
+
+/**
+ * Хід гравця Главою 1 (Етап 0): місії відкриваються по черзі. По зірках гравця ($stars: mission_id => зірки) повертає
+ * missions: id => 'done' | 'next' | 'locked' | 'soon' (без контенту), levels: id => ['open', 'done', 'total'],
+ * next: id наступної місії або null (усе пройдено). Пройдена місія лишається відкритою для повтору; наступна — перша
+ * непройдена грабельна за порядком; рівень відкритий, якщо в ньому є пройдена або наступна місія (перший — завжди).
+ */
+function bv_world_progress(array $stars): array
+{
+    $out = ['missions' => [], 'levels' => [], 'next' => null];
+    foreach (bv_world() as $ch) {
+        if ($ch['status'] !== 'open') {
+            continue;
+        }
+        foreach ($ch['levels'] as $i => $lv) {
+            $open = $i === 0;
+            $done = 0;
+            $total = 0;
+            foreach ($lv['missions'] as $ms) {
+                $id = (int) $ms['id'];
+                if (!bv_world_playable($id)) {
+                    $out['missions'][$id] = 'soon';
+                    continue;
+                }
+                $total++;
+                if (($stars[$id] ?? 0) > 0) {
+                    $out['missions'][$id] = 'done';
+                    $done++;
+                    $open = true;
+                } elseif ($out['next'] === null) {
+                    $out['missions'][$id] = 'next';
+                    $out['next'] = $id;
+                    $open = true;
+                } else {
+                    $out['missions'][$id] = 'locked';
+                }
+            }
+            $out['levels'][(int) $lv['id']] = ['open' => $open, 'done' => $done, 'total' => $total];
+        }
+    }
+
+    return $out;
+}
+
+/** Чи відкрита місія світу гравцеві (пройдена або наступна). Місії поза світом (Поломка дня, демо) — завжди так. */
+function bv_world_mission_open(PDO $pdo, ?int $userId, int $missionId): bool
+{
+    if (!isset(bv_world_missions()[$missionId])) {
+        return true;
+    }
+    $state = bv_world_progress(bv_stars_by_mission($pdo, $userId))['missions'][$missionId] ?? 'locked';
+
+    return $state === 'done' || $state === 'next';
+}
+
+/** Чи відкритий гравцеві рівень (будинок) Глави 1. */
+function bv_world_level_open(PDO $pdo, ?int $userId, int $levelId): bool
+{
+    return (bv_world_progress(bv_stars_by_mission($pdo, $userId))['levels'][$levelId]['open'] ?? false) === true;
 }
 
 /** Плоский список місій світу з рівнем і главою: id => місія + ['level' => …, 'chapter' => …]. */

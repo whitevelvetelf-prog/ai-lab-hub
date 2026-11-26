@@ -30,6 +30,14 @@ if ($id === false || !isset($all[$id])) {
 }
 $ms = $all[$id];
 $play = bv_world_playable($id);
+// Етап 0: місії відкриваються по черзі — закриту за прямим посиланням не показуємо (сервер перевіряє й у bv-api start).
+$progressUid = null;
+try {
+    $progressUid = $account !== null && bv_age_confirmed($pdo, (int) $account['id']) ? (int) $account['id'] : null;
+} catch (Throwable) {
+    $progressUid = null;
+}
+$locked = $play && !bv_world_mission_open($pdo, $progressUid, $id);
 $self = 'bugville-mission.php?m=' . $id;
 $next = $play ? bv_world_next_playable($id) : null;
 $word = bv_word_card($ms['word']);
@@ -45,7 +53,12 @@ bv_page_start($ms['n'] . ' ' . $ms['title'], ['user' => $account, 'back' => 'bug
     <nav class="bv-crumbs" aria-label="Де ви"><a href="bugville.php">Карта</a> › Рівень <?= (int) $ms['level'] ?>. <?= bv_h($ms['level_title']) ?></nav>
     <h1 class="bv-title"><span class="bv-mission__n"><?= bv_h($ms['n']) ?></span> <?= bv_h($ms['title']) ?></h1>
 
-    <?php if (!$play): ?>
+    <?php if ($locked): ?>
+        <section class="bv-card bv-locked" role="status">
+            <p><span aria-hidden="true">🔒</span> Ця місія ще закрита. Вона відкриється, коли ви пройдете попередні.</p>
+            <p><a class="bv-btn" href="bugville.php">До міста</a></p>
+        </section>
+    <?php elseif (!$play): ?>
         <section class="bv-card">
             <p>Ця місія ще готується. Загляньте трохи згодом.</p>
             <p><a class="bv-btn" href="bugville.php">До карти</a></p>

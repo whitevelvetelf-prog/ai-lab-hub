@@ -364,14 +364,14 @@ try {
     echo "Через HTTP\n";
     $g = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvd');
     $gm = page($g, $base . '/bugville.php')['body'];
-    check(str_contains($gm, 'id="bv-daily-h"') && str_contains($gm, 'Зареєструйтесь</a>, щоб рахувати дні підряд') && !str_contains($gm, 'Днів поспіль'),
+    check(str_contains($gm, 'id="bvh-daily-h"') && str_contains($gm, 'Зареєструйтесь</a>, щоб рахувати дні підряд') && !str_contains($gm, 'Днів поспіль'),
         'карта гостя: картка «Поломка дня» без серії, «Зареєструйтесь, щоб рахувати дні підряд»');
     $w = $mk('http');
     $jar = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvd');
     $lp = page($jar, $base . '/login.php');
     page($jar, $base . '/login.php', ['csrf' => csrf_of($lp['body']), 'email' => $w['email'], 'password' => $pass]);
     $m0 = page($jar, $base . '/bugville.php')['body'];
-    check(str_contains($m0, 'Днів поспіль: <strong>0</strong> · Найкраща серія: <strong>0</strong>') && !str_contains($m0, 'bv-daily__done') && str_contains($m0, '>Грати</a>'),
+    check(str_contains($m0, 'Днів поспіль: <b>0</b> · рекорд <b>0</b>') && !str_contains($m0, 'bvh-daily is-done') && str_contains($m0, '>Грати</a>'),
         'карта акаунта до проходу: серія 0, кнопка «Грати», без ✓');
     $dp = page($jar, $base . '/bugville-daily.php');
     $todayRow = bv_daily_get($pdo, bv_day_at());
@@ -390,7 +390,7 @@ try {
     $fh = api($base, $jar, $csrf, ['action' => 'scene_finish', 'token' => $sd['token']]);
     check($hits === 3 && ($fh['earned']['xp'] ?? 0) === 15 && ($fh['progress']['streak']['current'] ?? 0) === 1, 'гра через API: 3 поломки, +15 XP, серія 1');
     $m1 = page($jar, $base . '/bugville.php')['body'];
-    check(str_contains($m1, 'class="bv-daily__done"') && str_contains($m1, 'Днів поспіль: <strong>1</strong>') && str_contains($m1, 'Зіграти ще раз'),
+    check(str_contains($m1, 'bvh-daily is-done') && str_contains($m1, '✓ Пройдено') && str_contains($m1, 'Днів поспіль: <b>1</b>') && str_contains($m1, 'Зіграти ще раз'),
         'карта після проходу: ✓ Пройдено, серія 1, «Зіграти ще раз»');
     $sg = api($base, $g, csrf_of(page($g, $base . '/bugville-daily.php')['body']), ['action' => 'start', 'daily' => true]);
     $hg = bv_test_solve($rules, static fn(string $op, mixed $in) => api($base, $g, csrf_of(page($g, $base . '/bugville-daily.php')['body']),
@@ -398,7 +398,7 @@ try {
     $gcs = csrf_of(page($g, $base . '/bugville-daily.php')['body']);
     $fg = api($base, $g, $gcs, ['action' => 'scene_finish', 'token' => $sg['token'] ?? '']);
     check($hg === 3 && ($fg['ok'] ?? false) && empty($fg['saved']) && !isset($fg['progress']), 'гість через API: той самий варіант дня, результат без збереження');
-    check(str_contains(page($g, $base . '/bugville.php')['body'], 'class="bv-daily__done"'), 'карта гостя після проходу: ✓ у цьому сеансі');
+    check(str_contains(page($g, $base . '/bugville.php')['body'], 'bvh-daily is-done'), 'карта гостя після проходу: ✓ у цьому сеансі');
 
     echo "Видалення даних\n";
     $dry = bv_delete_player_data($pdo, $u['id'], true);

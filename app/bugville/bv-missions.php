@@ -21,6 +21,9 @@ function bv_load_missions(?PDO $pdo = null): void
         return;
     }
     $done = true;
+    if ($pdo !== null) {
+        bv_world_texts($pdo);   // назви рівнів і місій з bv_world_texts (міграція № 41)
+    }
     bv_register_world_missions($pdo);
     bv_daily_register();   // «Поломка дня» (BV_DAILY_ID): на карті світу її немає, лише в реєстрі для сцен
     if (bv_cfg('bugville_demo') === true) {

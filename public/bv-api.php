@@ -136,6 +136,9 @@ switch ($action) {
         if ($mission === false) {
             bv_api_out(['ok' => false, 'error' => 'bad_request'], 400);
         }
+        if (!bv_world_mission_open($pdo, $ctx['user_id'], (int) $mission)) {   // Етап 0: місії по черзі
+            bv_api_out(['ok' => false, 'error' => 'locked'], 403);
+        }
         $r = bv_attempt_start($pdo, (int) $mission, $ctx);
         if (!$r['ok']) {
             bv_api_out(['ok' => false, 'error' => $r['error']], $r['error'] === 'rate_limited' ? 429 : 404);
@@ -221,6 +224,10 @@ switch ($action) {
         }
         if ($ctx['user_id'] === null) {
             bv_api_out(['ok' => false, 'error' => 'auth_required'] + $who, 403);
+        }
+        $exLv = bv_exam_level((int) $exam);
+        if (!isset($GLOBALS['bv_exam_extra'][(int) $exam]) && !bv_world_level_open($pdo, (int) $ctx['user_id'], (int) $exLv['id'])) {
+            bv_api_out(['ok' => false, 'error' => 'locked'] + $who, 403);   // Етап 0: будинок ще закритий
         }
         $r = bv_exam_start($pdo, (int) $exam, $ctx);
         if (!$r['ok']) {

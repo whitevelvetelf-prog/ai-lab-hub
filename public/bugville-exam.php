@@ -30,13 +30,25 @@ if ($lv === null) {
 $examId = bv_exam_id((int) $level);
 $self = 'bugville-exam.php?e=' . (int) $level;
 $enabled = bv_exam_pool($pdo, $examId)['ok'];
+// Етап 0: іспит закритого будинку (рівня) за прямим посиланням не відкривається.
+try {
+    $progressUid = $account !== null && bv_age_confirmed($pdo, (int) $account['id']) ? (int) $account['id'] : null;
+} catch (Throwable) {
+    $progressUid = null;
+}
+$locked = !isset($GLOBALS['bv_exam_extra'][$examId]) && !bv_world_level_open($pdo, $progressUid, (int) $lv['id']);
 
 bv_page_start('Іспит: ' . $lv['title'], ['user' => $account, 'back' => 'bugville.php', 'next' => $self]);
 ?>
 <main class="bv-main" id="bv-main">
     <nav class="bv-crumbs" aria-label="Де ви"><a href="bugville.php">Карта</a> › Рівень <?= (int) $level ?>. <?= bv_h($lv['title']) ?></nav>
     <h1 class="bv-title">Іспит рівня «<?= bv_h($lv['title']) ?>»</h1>
-    <?php if (!$enabled): ?>
+    <?php if ($locked): ?>
+        <section class="bv-card bv-locked" role="status">
+            <p><span aria-hidden="true">🔒</span> Цей будинок ще закритий. Іспит відкриється разом із ним.</p>
+            <p><a class="bv-btn" href="bugville.php">До міста</a></p>
+        </section>
+    <?php elseif (!$enabled): ?>
         <section class="bv-card">
             <p>Іспит цього рівня ще готується. Поки що можна потренуватися в місіях.</p>
             <p><a class="bv-btn" href="bugville.php">До карти</a></p>

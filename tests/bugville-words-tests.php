@@ -176,8 +176,8 @@ try {
     check($gq['code'] === 403 && ($gq['json']['error'] ?? '') === 'auth_required', 'гість: word_quiz — 403');
     $map = page($g, $base . '/bugville.php')['body'];
     check(str_contains($map, 'href="bugville-words.php"') && str_contains($map, 'Книга чарівних слів'), 'на карті є посилання на Книгу');
-    $ms = page($g, $base . '/bugville-mission.php?m=105')['body'];
-    check(str_contains($ms, 'Bugs like to hide at the boundary.') || str_contains($ms, 'Bugs like to hide at the boundary'), 'картка слова в місії — з прикладом речення');
+    $ms = page($g, $base . '/bugville-mission.php?m=101')['body'];   // Етап 0: новому гостю відкрита лише 1.1
+    check(str_contains($ms, 'We found a bug in the vending machine'), 'картка слова в місії — з прикладом речення');
 
     $h = $mk('http');
     $jar = $jars[] = (string) tempnam(sys_get_temp_dir(), 'bvw');

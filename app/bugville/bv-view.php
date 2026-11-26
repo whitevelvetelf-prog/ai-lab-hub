@@ -87,7 +87,7 @@ function bv_page_end(bool $parents = false): void
 {
     ?>
 <footer class="bv-foot">
-    <p>Навчальна гра AI LAB HUB. Без реклами й сторонніх скриптів.</p>
+    <p>Навчальна гра AI LAB HUB. Без реклами й без зовнішніх посилань.</p>
     <p>
         <?php if ($parents): ?><a href="bugville-parents.php">Для батьків і вчителів</a> · <?php endif; ?>
         <a href="privacy.php">Конфіденційність</a> · <a href="/">AI LAB HUB</a>
