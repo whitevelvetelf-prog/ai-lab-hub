@@ -133,7 +133,9 @@ bv_page_start('Карта міста', ['user' => $account, 'back' => '/', 'next
                     <span class="bv-daily__done"><span aria-hidden="true">✓</span> Пройдено</span><?php endif; ?></h2>
                 <p><?= bv_h($daily['teaser']) ?></p>
                 <?php if ($ds !== null): ?>
-                    <p class="bv-daily__streak">Днів поспіль: <strong><?= (int) $ds['current'] ?></strong> · Найкраща серія: <strong><?= (int) $ds['best'] ?></strong></p>
+                    <p class="bv-daily__streak"><span class="bv-flame<?= (int) $ds['current'] > 0 ? '' : ' is-sleep' ?>" aria-hidden="true"><svg viewBox="0 0 24 28">
+                        <path class="f-out" d="M12 1c1 5 7 8 7 15a7 7 0 0 1-14 0c0-4 2-6 3-8 0 3 1 4 2 5 0-5 1-8 2-12z" fill="#e4572e"/>
+                        <path class="f-in" d="M12 12c.5 3 4 5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 2-4 0 1.5.5 2 1 2.5 0-3 .5-5 1-7z" fill="#f2b632"/></svg></span>Днів поспіль: <strong><?= (int) $ds['current'] ?></strong> · Найкраща серія: <strong><?= (int) $ds['best'] ?></strong></p>
                     <p class="bv-muted"><?= $ds['current'] === 0 && $ds['best'] > 0 && !$daily['done'] ? 'Нова серія починається сьогодні! ' : '' ?>Один пропущений день
                         на тиждень — вихідний: серія не обривається.<?= $ds['rest_left'] ? ' Вихідний цього тижня ще є.' : ' Вихідний цього тижня вже був.' ?></p>
                 <?php elseif ($saveId === null): ?>

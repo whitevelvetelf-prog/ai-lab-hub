@@ -515,7 +515,7 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
     .bvs-star { transform: none; }
 }
 
-/* ---------- Поломка дня (картка на карті) — без анімацій ---------- */
+/* ---------- Поломка дня (картка на карті); рух — у розділі «Рух на сторінках» нижче ---------- */
 .bv-daily { display: flex; gap: 16px; align-items: flex-start; border: 2px solid var(--bv-brand-soft); }
 .bv-daily.is-done { border-color: var(--bv-good-bg); }
 .bv-daily__icon { flex: 0 0 64px; width: 64px; height: 64px; }
@@ -528,4 +528,113 @@ a.bv-mission__link:hover { border-color: var(--bv-brand); background: var(--bv-b
 @media (max-width: 420px) {
     .bv-daily { gap: 12px; }
     .bv-daily__icon { flex-basis: 48px; width: 48px; height: 48px; }
+}
+
+/* ======================================================================================================
+   Рух на сторінках (карта, Книга слів, Майстерня, Поломка дня, іспит, грамота). Лише кольори бренду й ті,
+   що вже є в малюнках гри (#f2b632, #e4572e, #4caf7a). Усе вимикає prefers-reduced-motion (правило вище
+   та окремий блок нижче); у JS конфеті не запускається при reduced. Друк — без анімацій.
+   ====================================================================================================== */
+@keyframes bv-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes bv-grow { from { transform: scaleX(0); } }
+@keyframes bv-pop { 0% { transform: scale(.96); } 45% { transform: scale(1.03); } 100% { transform: none; } }
+@keyframes bv-shake { 0%, 100% { transform: none; } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(3px); } }
+@keyframes bv-shine { from { transform: translateX(-120%) skewX(-20deg); } to { transform: translateX(260%) skewX(-20deg); } }
+@keyframes bv-wiggle { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+@keyframes bv-nudge { 0%, 86%, 100% { transform: none; } 90% { transform: translateY(-5px) rotate(-6deg); } 95% { transform: translateY(0) rotate(5deg); } }
+@keyframes bv-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes bv-flicker { 0%, 100% { transform: scale(1, 1) rotate(-2deg); } 30% { transform: scale(.94, 1.08) rotate(2deg); } 60% { transform: scale(1.05, .95) rotate(-1deg); } }
+@keyframes bv-flicker-in { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.82, 1.12); opacity: .85; } }
+@keyframes bv-page { from { opacity: 0; transform: perspective(900px) rotateY(-75deg); } to { opacity: 1; transform: none; } }
+@keyframes bv-turn { 0% { transform: perspective(900px) rotateY(0); } 50% { transform: perspective(900px) rotateY(-90deg); } 100% { transform: perspective(900px) rotateY(0); } }
+@keyframes bv-glow { 0% { box-shadow: 0 0 0 0 rgba(29, 122, 75, .45); } 100% { box-shadow: 0 0 0 14px rgba(29, 122, 75, 0); } }
+@keyframes bv-confetti { 0% { transform: translate(0, 0) rotate(0); opacity: 1; } 100% { transform: translate(var(--dx), var(--dy)) rotate(var(--r)); opacity: 0; } }
+@keyframes bv-tryon { 0% { transform: scale(.85) rotate(-6deg); opacity: .4; } 60% { transform: scale(1.06) rotate(2deg); opacity: 1; } 100% { transform: none; } }
+
+/* Поява блоків сторінки сходинкою */
+.bv-main > * { animation: bv-in .45s cubic-bezier(.2, .8, .3, 1) both; }
+.bv-main > :nth-child(2) { animation-delay: .05s; }
+.bv-main > :nth-child(3) { animation-delay: .1s; }
+.bv-main > :nth-child(4) { animation-delay: .15s; }
+.bv-main > :nth-child(5) { animation-delay: .2s; }
+.bv-main > :nth-child(6) { animation-delay: .25s; }
+.bv-main > :nth-child(n+7) { animation-delay: .3s; }
+.bv-chapter .bv-level { animation: bv-in .45s cubic-bezier(.2, .8, .3, 1) .2s both; }
+.bv-chapter .bv-level + .bv-level { animation-delay: .3s; }
+.bv-chapter .bv-level + .bv-level + .bv-level { animation-delay: .4s; }
+
+/* Звання: смужка заповнюється */
+.bv-bar span { transform-origin: left center; animation: bv-grow 1.1s cubic-bezier(.2, .8, .3, 1) .35s both; }
+
+/* Значки: отримані блищать один раз */
+.bv-badge-item.is-earned { position: relative; overflow: hidden; }
+.bv-badge-item.is-earned::after {
+    content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 40%; pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(242, 182, 50, .35), transparent);
+    animation: bv-shine 1.2s ease-out .6s both;
+}
+.bv-badge-item.is-earned .bv-badge-item__icon { animation: bv-pop .5s ease-out .5s both; }
+
+/* Наведення: картки й кнопки трохи піднімаються */
+@media (hover: hover) {
+    .bv-mission__link, .bv-btn, .bvw-item, .bvw-avatar, .bv-wcard { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background-color .18s ease; }
+    a.bv-mission__link:hover, .bvw-item:hover, .bvw-avatar:hover, .bv-wcard:not(.is-locked):hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(33, 22, 173, .12); }
+    .bv-btn:not(:disabled):hover { transform: translateY(-1px); }
+    .bv-btn:not(:disabled):active { transform: translateY(1px); }
+    .bv-level:hover .bv-level__icon svg { animation: bv-wiggle .5s ease-in-out; }
+    .bv-map-words:hover .bv-map-words__icon, .bv-map-look:hover .bvw-look__svg { display: inline-block; animation: bv-wiggle .5s ease-in-out; }
+    .bvw-item:hover .bvw-item__art svg { animation: bv-float 1.4s ease-in-out infinite; }
+}
+.bv-mission.is-done .bv-star.is-on { display: inline-block; animation: bv-pop .45s ease-out .5s both; }
+
+/* Поломка дня: календар «підморгує», вогник серії */
+.bv-daily:not(.is-done) .bv-daily__icon svg { transform-origin: 50% 90%; animation: bv-nudge 4.5s ease-in-out 1.2s infinite; }
+.bv-flame { display: inline-block; width: 22px; height: 26px; vertical-align: -5px; margin-right: 2px; }
+.bv-flame svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.bv-flame .f-out { transform-origin: 50% 100%; transform-box: fill-box; animation: bv-flicker 1.1s ease-in-out infinite; }
+.bv-flame .f-in { transform-origin: 50% 100%; transform-box: fill-box; animation: bv-flicker-in .8s ease-in-out infinite; }
+.bv-flame.is-sleep { filter: grayscale(1); opacity: .5; }
+.bv-flame.is-sleep .f-out, .bv-flame.is-sleep .f-in { animation: none; }
+
+/* Іспит, місія (звичайні питання), результати */
+.bv-option { transition: border-color .15s ease, background-color .15s ease; }
+.bv-option.is-right { animation: bv-pop .45s ease-out; }
+.bv-option.is-wrong { animation: bv-shake .45s ease-in-out; }
+.bv-result, .bv-hint, .bv-word, .bv-wquiz { animation: bv-in .35s ease-out both; }
+.bv-news { animation: bv-pop .5s ease-out both; }
+.bv-news.is-celebrate { border-color: #f2b632; box-shadow: 0 0 0 3px rgba(242, 182, 50, .25); }
+
+/* Грамота: зʼявляється, як печатка */
+.bv-main > .bv-cert { animation: bv-pop .6s cubic-bezier(.3, 1.4, .5, 1) both; }
+.bv-cert__title { animation: bv-in .5s ease-out .25s both; }
+
+/* Книга чарівних слів: картки «перегортаються», вивчене слово — розворот і сяйво */
+.bv-wcard { transform-origin: left center; animation: bv-page .55s cubic-bezier(.2, .8, .3, 1) both; }
+.bv-words > :nth-child(2) { animation-delay: .07s; }
+.bv-words > :nth-child(3) { animation-delay: .14s; }
+.bv-words > :nth-child(4) { animation-delay: .21s; }
+.bv-words > :nth-child(n+5) { animation-delay: .28s; }
+.bv-wcard.is-turn { animation: bv-turn .6s ease-in-out, bv-glow .9s ease-out .5s; }
+.bv-wcard.is-oops { animation: bv-shake .45s ease-in-out; }
+
+/* Майстерня: герой дихає, примірка, покупка */
+.bvw-me .bvw-look__svg { animation: bv-float 3s ease-in-out infinite; }
+.bvw-look { transition: background .3s ease; }
+.bvw-look.is-try { outline: 3px dashed #f2b632; outline-offset: 3px; }
+.bvw-look.is-try .bvw-look__svg { animation: bv-tryon .5s cubic-bezier(.3, 1.4, .5, 1), bv-float 3s ease-in-out .5s infinite; }
+.bvw-try[aria-pressed="true"] { background: #fff7df; border-color: #f2b632; color: var(--bv-ink); }
+
+/* Конфеті (JS, лише без reduced-motion) */
+.bv-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 40; overflow: hidden; }
+.bv-confetti i {
+    position: absolute; width: 9px; height: 14px; border-radius: 2px; left: var(--x); top: var(--y);
+    animation: bv-confetti var(--t) cubic-bezier(.2, .6, .4, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bv-main > *, .bv-level, .bv-wcard, .bv-cert, .bv-cert__title, .bv-bar span { animation: none !important; opacity: 1 !important; transform: none !important; }
+    .bv-confetti { display: none; }
+}
+@media print {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
 }

@@ -1021,6 +1021,7 @@
     'use strict';
 
     var CSRF = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     function el(tag, cls, text) {
         var n = document.createElement(tag);
@@ -1053,7 +1054,43 @@
         var box = el('div', 'bv-news');
         box.setAttribute('role', 'status');
         lines.forEach(function (t) { box.appendChild(el('p', null, t)); });
+        if (p.rank_up || (p.new_badges || []).length) {   // свято: нове звання або значок
+            box.classList.add('is-celebrate');
+            setTimeout(function () { confetti(box.isConnected ? box : null, 46); }, 60);
+        }
         return box;
+    }
+
+    /** Конфеті з точки (центр елемента або верх екрана). Лише декор: aria-hidden, без reduced-motion, саме прибирається. */
+    var CONFETTI_COLORS = ['#2116ad', '#f2b632', '#e4572e', '#4caf7a', '#4c43d8'];
+    function confetti(anchor, count) {
+        if (reduced) { return; }
+        var w = window.innerWidth, h = window.innerHeight;
+        var x = w / 2, y = h * 0.3;
+        if (anchor) {
+            var r = anchor.getBoundingClientRect();
+            if (r.bottom > 0 && r.top < h) { x = r.left + r.width / 2; y = r.top + Math.min(r.height / 2, 40); }
+        }
+        var layer = el('div', 'bv-confetti');
+        layer.setAttribute('aria-hidden', 'true');
+        for (var i = 0; i < (count || 36); i++) {
+            var c = el('i');
+            var a = Math.random() * Math.PI * 2, d = 80 + Math.random() * Math.min(220, w * 0.45);
+            c.style.cssText = '--x:' + x + 'px;--y:' + y + 'px;--dx:' + Math.round(Math.cos(a) * d) + 'px;--dy:' + Math.round(Math.sin(a) * d * 0.7 + 140 + Math.random() * 120)
+                + 'px;--r:' + Math.round(Math.random() * 720 - 360) + 'deg;--t:' + (900 + Math.round(Math.random() * 700)) + 'ms;background:' + CONFETTI_COLORS[i % CONFETTI_COLORS.length]
+                + (i % 3 === 0 ? ';border-radius:50%;width:8px;height:8px' : '');
+            layer.appendChild(c);
+        }
+        document.body.appendChild(layer);
+        setTimeout(function () { layer.remove(); }, 1800);
+    }
+    /** Перезапуск короткої CSS-анімації класом (is-turn, is-oops). */
+    function replay(node, cls) {
+        node.classList.remove(cls);
+        void node.offsetWidth;
+        node.classList.add(cls);
+        clearTimeout(node.bvReplay);
+        node.bvReplay = setTimeout(function () { node.classList.remove(cls); }, 1500);
     }
 
     // ---------- Шапка ----------
@@ -1379,7 +1416,9 @@
                         msg.className = 'bv-msg ' + (c.correct ? 'is-good' : 'is-bad');
                         msg.textContent = c.correct ? '✓ Правильно! «' + word + '» — ' + c.meaning + '. Слово вивчено.'
                             : '✗ Не зовсім. «' + word + '» означає: ' + c.meaning + '. Спробуйте вправу ще раз.';
+                        replay(card, c.correct ? 'is-turn' : 'is-oops');
                         if (c.correct && !card.classList.contains('is-learned')) {
+                            setTimeout(function () { confetti(card, 28); }, 300);
                             card.classList.remove('is-open');
                             card.classList.add('is-learned');
                             var stEl = card.querySelector('.bv-wcard__state');
@@ -1408,6 +1447,36 @@
         var flash = null;
         try { flash = sessionStorage.getItem('bvWsMsg'); sessionStorage.removeItem('bvWsMsg'); } catch (err) { flash = null; }
         if (flash && wsMsg) { wsMsg.className = 'bv-msg is-good'; wsMsg.textContent = flash; }
+        var wsLook = ws.querySelector('.bvw-me .bvw-look');
+        if (flash && wsLook && /^Куплено|^Вдягнуто/.test(flash)) { setTimeout(function () { confetti(wsLook, 36); }, 250); }
+        // Примірка: показати предмет на своєму герої до покупки (лише в браузері, сервер нічого не змінює)
+        var tryOrig = wsLook ? { html: wsLook.innerHTML, cls: wsLook.className } : null;
+        var tryBtn = null;
+        function tryReset() {
+            if (!tryOrig) { return; }
+            wsLook.innerHTML = tryOrig.html;   // власна розмітка сторінки, збережена вище
+            wsLook.className = tryOrig.cls;
+            if (tryBtn) { tryBtn.setAttribute('aria-pressed', 'false'); tryBtn.textContent = 'Приміряти'; }
+            tryBtn = null;
+        }
+        ws.addEventListener('click', function (e) {
+            var t = e.target.closest('.bvw-try');
+            if (!t || !wsLook) { return; }
+            var was = tryBtn === t;
+            tryReset();
+            if (was) { if (wsMsg) { wsMsg.className = 'bv-msg'; wsMsg.textContent = 'Примірку знято.'; } return; }
+            var tpl = t.closest('.bvw-item').querySelector('template.bvw-try__svg');
+            if (!tpl) { return; }
+            wsLook.innerHTML = '';
+            wsLook.appendChild(tpl.content.cloneNode(true));
+            wsLook.className = 'bvw-look is-try bvw-bg--' + (t.getAttribute('data-bg') || 'none');
+            t.setAttribute('aria-pressed', 'true');
+            t.textContent = 'Зняти примірку';
+            tryBtn = t;
+            if (wsMsg) { wsMsg.className = 'bv-msg'; wsMsg.textContent = 'Примірка: «' + t.getAttribute('data-title') + '». Так ви виглядатимете після покупки.'; }
+            var r = wsLook.getBoundingClientRect();
+            if (r.bottom < 60 || r.top > window.innerHeight) { wsLook.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' }); }
+        });
         var WSERR = { not_enough: 'Не вистачає монет. Пройдіть ще місії або іспит.', owned: 'Цей предмет уже ваш.',
             not_owned: 'Спершу купіть цей предмет.', not_found: 'Такого предмета немає.', auth_required: 'Майстерня — для акаунтів із підтвердженим віком.',
             rate_limited: 'Забагато дій за хвилину. Зачекайте трохи.' };

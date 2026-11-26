@@ -99,7 +99,10 @@ bv_page_start('Майстерня', ['user' => $account, 'back' => 'bugville.php
                             <p class="bvw-item__price"><?= (int) $it['price'] ?> монет</p>
                         <?php elseif (!$has): $can = $bal['coins'] >= $it['price']; ?>
                             <p class="bv-actions"><button type="button" class="bv-btn bv-btn--small" data-action="ws_buy" data-item="<?= bv_h($it['key']) ?>"
-                                <?= $can ? '' : 'disabled' ?>><?= $can ? 'Купити за ' . (int) $it['price'] . ' монет' : 'Потрібно ' . (int) $it['price'] . ' монет' ?></button></p>
+                                <?= $can ? '' : 'disabled' ?>><?= $can ? 'Купити за ' . (int) $it['price'] . ' монет' : 'Потрібно ' . (int) $it['price'] . ' монет' ?></button>
+                                <button type="button" class="bv-btn bv-btn--small bv-btn--ghost bvw-try" data-try="<?= bv_h($kind) ?>"
+                                    data-bg="<?= bv_h($kind === 'background' ? $it['key'] : ($look['background'] ?? 'none')) ?>" data-title="<?= bv_h($it['title']) ?>" aria-pressed="false">Приміряти</button></p>
+                            <template class="bvw-try__svg"><?= bv_ws_look_svg(array_merge($look, [$kind => $it['key']]), 120, 'Примірка: ' . $it['title']) ?></template>
                         <?php else: ?>
                             <p class="bvw-item__state"><span aria-hidden="true">✓</span> <?= $worn ? 'Вдягнуто' : 'Куплено' ?></p>
                             <p class="bv-actions"><button type="button" class="bv-btn bv-btn--small<?= $worn ? ' bv-btn--ghost' : '' ?>" data-action="ws_equip"
